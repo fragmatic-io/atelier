@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 The CIR Authors
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
@@ -20,6 +22,8 @@ export default {
         'evals',
         'runtime',
         'compiler',
+        'schema',
+        'schemas',
         'manifest',
         'docs',
         'deps',

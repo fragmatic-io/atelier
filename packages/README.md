@@ -10,7 +10,7 @@ The **pnpm workspace root.** All publishable packages live here, one per directo
 | `@cir/runtime`    | Stub (Phase 2); source Phase 5 | The render SDK (web first; native/voice later)                                 |
 | `@cir/compiler`   | Stub (Phase 2); source Phase 5 | The LLM-backed compile service                                                 |
 | `@cir/components` | Phase 5                        | Runtime implementations of the 50-primitive baseline catalog                   |
-| `@cir/policies`   | Phase 2 (alongside schemas)    | Pure-function validators consumed by the compiler and runtime                  |
+| `@cir/policies`   | Phase 3                        | Pure-function validators consumed by the compiler and runtime                  |
 | `@cir/cli`        | Phase 5                        | Developer CLI: scaffold capabilities, run evals, publish registries            |
 | `@cir/evals`      | Phase 3                        | Eval harness and shared fixtures                                               |
 

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://cir.dev/schemas/component-definition.json",
+  "type": "object",
+  "properties": {
+    "props_schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "data_sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+      }
+    },
+    "actions_supported": {
+      "type": "array",
+      "items": {
+        "$ref": "#/properties/data_sources/items"
+      }
+    },
+    "responsive_targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "design_tokens": {
+      "type": "string",
+      "minLength": 1
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "text_render": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "props_schema",
+    "data_sources",
+    "actions_supported",
+    "responsive_targets",
+    "design_tokens",
+    "examples"
+  ],
+  "additionalProperties": false
+}

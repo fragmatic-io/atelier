@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://cir.dev/schemas/conversation-overlay.json",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "set_at_turn": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "scope",
+          "rule",
+          "set_at_turn"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "context_summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "overrides",
+    "context_summary"
+  ],
+  "additionalProperties": false
+}

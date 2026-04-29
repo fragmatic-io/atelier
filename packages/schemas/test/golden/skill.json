@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://cir.dev/schemas/skill.json",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[\\w.-]+)?(?:\\+[\\w.-]+)?$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilities_used": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+      }
+    },
+    "when_to_use": {
+      "type": "string",
+      "minLength": 1
+    },
+    "when_not_to_use": {
+      "type": "string",
+      "minLength": 1
+    },
+    "example_flow": {
+      "type": "string",
+      "minLength": 1
+    },
+    "known_failure_modes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "description",
+    "capabilities_used",
+    "when_to_use",
+    "when_not_to_use",
+    "example_flow",
+    "known_failure_modes"
+  ],
+  "additionalProperties": false
+}

@@ -37,11 +37,12 @@ cir/
 ├── policies/                   # Confirmation, data access, PII rules — Phase 3+
 ├── recipes/                    # Default manifests per persona — Phase 4+
 ├── evals/                      # Test cases for every artifact (*.eval.ts) — Phase 2+
-├── .well-known/                # Public discovery (cir.json) — Phase 5+
+├── .well-known/                # Public discovery (cir.json — Phase 5; schemas/ — Phase 2)
 ├── packages/                   # pnpm workspace
+│   ├── schemas/                #   @cir/schemas — Zod schemas + JSON Schemas (Phase 2)
 │   ├── runtime/                #   @cir/runtime — render SDK (stub Phase 2; source Phase 5)
 │   ├── compiler/               #   @cir/compiler — LLM compile service (stub Phase 2; source Phase 5)
-│   └── ...                     #   @cir/schemas, @cir/policies, ... arrive in Phase 2+
+│   └── ...                     #   @cir/policies, @cir/components, ... arrive in Phase 3+
 ├── scripts/                    # Repo-level harness scripts (sanity test, etc.)
 └── docs/
     ├── thesis.md               # Section 0: the one-line thesis
@@ -77,10 +78,10 @@ cir/
 
 ## When this repo grows
 
-Phase 1 ships the canonical directory skeleton — the artifact directories (`capabilities/`, `skills/`, `components/`, `policies/`, `recipes/`, `evals/`), the workspace (`packages/runtime/`, `packages/compiler/` stubs), and `.well-known/` all exist with README scaffolding. They are intentionally empty pending the phased build:
+Phase 1 shipped the canonical directory skeleton — the artifact directories (`capabilities/`, `skills/`, `components/`, `policies/`, `recipes/`, `evals/`), the workspace (`packages/runtime/`, `packages/compiler/` stubs), and `.well-known/` all exist with README scaffolding. Phase 2 added `@cir/schemas` and the generated JSON Schemas under `.well-known/schemas/`. The remaining directories are intentionally empty pending the phased build:
 
-- **Phase 2** — `@cir/schemas` (Zod) and `@cir/policies` packages; first capabilities, skills, eval suite begins.
-- **Phase 3** — manifest validators, eval harness, behavioral triggers.
+- **Phase 2** — `@cir/schemas` (Zod schemas + generated JSON Schemas in `.well-known/schemas/`). Done.
+- **Phase 3** — `@cir/policies`, manifest validators, eval harness, behavioral triggers.
 - **Phase 4** — component registry and runtime SDK source.
 - **Phase 5** — compiler service source and `.well-known/cir.json` discovery document.
 

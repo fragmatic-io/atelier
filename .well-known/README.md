@@ -1,10 +1,11 @@
 # .well-known/
 
-**Public discovery.** The single file `cir.json` advertises a CIR-compliant app's capability registry, skill library, and component catalog so any compatible compiler, agent, or runtime can find them. This is the entry point for the entire public surface.
+**Public discovery + schema artifacts.** The discovery document `cir.json` advertises a CIR-compliant app's capability registry, skill library, and component catalog so any compatible compiler, agent, or runtime can find them. The `schemas/` subdirectory holds the generated JSON Schemas for every CIR artifact type — this is the public, versioned contract third parties consume.
 
 ## Files
 
 - `cir.json` — the discovery document. Served at `https://{app-host}/.well-known/cir.json` in production.
+- `schemas/` — generated JSON Schemas for Capability, Skill, Component, Manifest, Trigger, Intent, Audit, etc. Generated from `@cir/schemas` via `pnpm schemas:dump`. Re-run after any schema change. The golden test in `packages/schemas/test/golden.test.ts` guards against drift.
 
 Shape:
 
@@ -34,4 +35,4 @@ Rules:
 
 ## Status
 
-Empty in Phase 1; populated starting in **Phase 2 (schemas)** when the first capabilities land. The file itself can ship as soon as the registry has its first signed entry.
+`schemas/` populated in **Phase 2** (12 generated JSON Schemas covering every CIR artifact type). `cir.json` itself lands when the first capability registry ships in **Phase 5**.

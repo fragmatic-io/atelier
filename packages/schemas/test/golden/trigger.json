@@ -1,0 +1,901 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://cir.dev/schemas/trigger.json",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "old_v": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[\\w.-]+)?(?:\\+[\\w.-]+)?$"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "capability.added"
+        },
+        "capability_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "capability_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "capability.changed"
+        },
+        "capability_id": {
+          "$ref": "#/anyOf/0/properties/capability_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "capability_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "capability.removed"
+        },
+        "capability_id": {
+          "$ref": "#/anyOf/0/properties/capability_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "capability_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "capability.version_bumped"
+        },
+        "capability_id": {
+          "$ref": "#/anyOf/0/properties/capability_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "capability_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "component.added"
+        },
+        "component_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "component_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "component.changed"
+        },
+        "component_id": {
+          "$ref": "#/anyOf/4/properties/component_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "component_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "component.removed"
+        },
+        "component_id": {
+          "$ref": "#/anyOf/4/properties/component_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "component_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "component.version_bumped"
+        },
+        "component_id": {
+          "$ref": "#/anyOf/4/properties/component_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "component_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "skill.added"
+        },
+        "skill_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "skill_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "skill.changed"
+        },
+        "skill_id": {
+          "$ref": "#/anyOf/8/properties/skill_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "skill_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "skill.removed"
+        },
+        "skill_id": {
+          "$ref": "#/anyOf/8/properties/skill_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "skill_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/new_v"
+        },
+        "type": {
+          "type": "string",
+          "const": "skill.version_bumped"
+        },
+        "skill_id": {
+          "$ref": "#/anyOf/8/properties/skill_id"
+        }
+      },
+      "required": [
+        "app_id",
+        "type",
+        "skill_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "policy.changed"
+        },
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "rule_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "app_id",
+        "rule_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "intent.preference_changed"
+        },
+        "user_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "intent.lens_switched"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "app": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "lens": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "app",
+        "lens"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "intent.rule_added"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "scope",
+        "rule"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "intent.rule_removed"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "scope",
+        "rule"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "intent.rule_modified"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "old_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "new_rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "scope",
+        "old_rule",
+        "new_rule"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "intent.vocabulary_updated"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        }
+      },
+      "required": [
+        "type",
+        "user_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "behavior.workaround_detected"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "occurrences": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "proposed_capability": {
+          "$ref": "#/anyOf/0/properties/capability_id"
+        },
+        "proposed_recompile": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "app_id",
+        "pattern",
+        "occurrences"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "behavior.feature_unused"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "feature": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unused_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "app_id",
+        "feature",
+        "unused_pct"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "behavior.error_pattern"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "app_id",
+        "pattern"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "user.recompile_route"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "route": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "route"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "user.recompile_all"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        }
+      },
+      "required": [
+        "type",
+        "user_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "user.revert_manifest"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "manifest_id": {
+          "type": "string",
+          "pattern": "^m_[a-z0-9]{8,}$"
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "manifest_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "user.try_lens"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "lens_name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "lens_name"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "system.compiler_upgraded"
+        },
+        "old_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        },
+        "new_v": {
+          "$ref": "#/anyOf/0/properties/old_v"
+        }
+      },
+      "required": [
+        "type",
+        "old_v",
+        "new_v"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "system.security_revocation"
+        },
+        "capability_id": {
+          "$ref": "#/anyOf/0/properties/capability_id"
+        },
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "app_id",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "turn.classified"
+        },
+        "conversation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "turn": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "classification": {
+          "type": "string",
+          "enum": [
+            "continue",
+            "extend",
+            "modify",
+            "replace",
+            "clarify"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "conversation_id",
+        "turn",
+        "classification"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "tool.result_changed_data_shape"
+        },
+        "capability_id": {
+          "$ref": "#/anyOf/0/properties/capability_id"
+        },
+        "conversation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "capability_id",
+        "conversation_id",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "topic.shifted"
+        },
+        "conversation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "conversation_id",
+        "from",
+        "to"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "context.threshold_reached"
+        },
+        "conversation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pct_used": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "type",
+        "conversation_id",
+        "pct_used"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "subagent.result_emitted"
+        },
+        "conversation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest_fragment_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "conversation_id",
+        "agent_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "schedule.fired"
+        },
+        "schedule_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "fired_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "schedule_id",
+        "user_id",
+        "fired_at"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

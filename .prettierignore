@@ -12,3 +12,7 @@ pnpm-lock.yaml
 .cir-cache
 .manifests-local
 local-vault
+
+# Generated JSON Schemas: byte-identical to CLI dump for golden diff
+packages/schemas/test/golden
+.well-known/schemas

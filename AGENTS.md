@@ -32,7 +32,7 @@ Implementation packages (under the pnpm workspace at `/packages/`):
 - `/packages/schemas/` — `@cir/schemas`: Zod schemas + generated JSON Schemas (Phase 2)
 - `/packages/runtime/` — `@cir/runtime`: the render SDK (stub in Phase 2; source Phase 5)
 - `/packages/compiler/` — `@cir/compiler`: the LLM-backed compile service (stub in Phase 2; source Phase 5)
-- `/packages/policies/` — `@cir/policies`: pure-function validators (Phase 2)
+- `/packages/policies/` — `@cir/policies`: pure-function validators (Phase 3)
 - `/packages/components/`, `/packages/cli/`, `/packages/evals/` — later phases per `packages/README.md`
 - `/scripts/` — repo-level harness scripts (e.g. `sanity.test.ts`); not for product code
 
@@ -129,6 +129,19 @@ The compiler is expensive. The runtime is free. When in doubt:
 A well-tuned skill set means the compiler does less reasoning and
 more lookup. Aim for compiler calls measured in tens per user per
 week, not per user per action.
+
+## Source file headers
+
+Every TypeScript/JavaScript source file (excluding tests, type declarations,
+and generated files) must start with an SPDX header:
+
+```
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 The CIR Authors
+```
+
+The check runs as part of `pnpm validate`. Run `pnpm fix:license-headers` to
+auto-insert the header into any file that lacks it.
 
 ## Forbidden patterns
 

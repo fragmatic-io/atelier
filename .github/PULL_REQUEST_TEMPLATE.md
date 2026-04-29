@@ -22,8 +22,9 @@ docs / tooling). One change = one artifact category where possible.
 - [ ] Component (`/components/**`)
 - [ ] Policy (`/policies/**`)
 - [ ] Recipe (`/recipes/**`)
-- [ ] Runtime (`/runtime/**`)
-- [ ] Compiler (`/compiler/**`)
+- [ ] Schemas (`packages/schemas/**`, `.well-known/schemas/**`)
+- [ ] Runtime (`packages/runtime/**`)
+- [ ] Compiler (`packages/compiler/**`)
 - [ ] Docs (`/docs/**`, `README.md`, `ETHOS.md`, `AGENTS.md`)
 - [ ] Tooling / CI / config (`.github/**`, build/lint/test config)
 

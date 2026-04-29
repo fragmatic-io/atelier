@@ -36,6 +36,8 @@ Husky hooks install automatically via the `prepare` script. Don't bypass them wi
 | `pnpm format:check`  | Prettier check (used in CI).                                                 |
 | `pnpm build`         | Recursive workspace build (where present).                                   |
 
+GitHub Actions workflows are validated by [actionlint](https://github.com/rhysd/actionlint) in CI; pre-validate locally with `actionlint .github/workflows/*.yml` if editing workflow files.
+
 ## Branches
 
 Branch off `main`. Use one of these prefixes — CI and review tooling key off them:

@@ -26,3 +26,8 @@
 # Generated files — exclude from language stats and diffs.
 pnpm-lock.yaml linguist-generated=true -diff
 *.lock         linguist-generated=true
+
+# Generated JSON Schemas — versioned but produced by `pnpm schemas:dump`.
+# Keep them out of language stats and mark as generated for review tooling.
+.well-known/schemas/*.json     linguist-generated=true
+packages/schemas/test/golden/*.json linguist-generated=true

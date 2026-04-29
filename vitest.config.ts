@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 The CIR Authors
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -11,33 +13,53 @@ import { defineConfig } from 'vitest/config';
  * "Evals" section). When that runner lands, point it at evals/ and keep this
  * config focused on unit/integration tests.
  *
- * Coverage thresholds are 0% during Phase 1 bootstrap. Bump them in the
- * `coverage.thresholds` block below as the codebase grows.
+ * Coverage thresholds are tuned per package via the `perFile` thresholds map
+ * below. New packages start at 0% and ratchet up as source lands. The repo-wide
+ * floor is the lowest acceptable bar; per-file overrides ratchet stricter
+ * packages individually.
  */
 export default defineConfig({
   test: {
     environment: 'node',
     globals: false,
     include: ['**/*.{test,spec}.ts'],
-    exclude: ['node_modules', 'dist', 'coverage', '.husky'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.husky/**', '**/.git/**'],
     passWithNoTests: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: 'coverage',
+      // Repo-wide floor — kept low so unrelated work is not blocked. Per-file
+      // thresholds (below) apply stricter bars to specific packages.
       thresholds: {
         lines: 0,
         functions: 0,
         branches: 0,
         statements: 0,
+        // @cir/schemas: schemas are nearly all declarative. Anything that drops
+        // below this floor likely means a new schema was added without tests.
+        // Functions threshold is lower because v8 attributes per-callback
+        // functions inside zod's `.refine()` chains; the real declarative
+        // coverage is captured by lines/statements/branches.
+        'packages/schemas/src/**/*.ts': {
+          lines: 95,
+          functions: 50,
+          branches: 80,
+          statements: 95,
+        },
       },
-      include: [
-        'packages/**/src/**/*.ts',
-        'runtime/**/*.ts',
-        'compiler/**/*.ts',
-        'policies/**/*.ts',
+      include: ['packages/**/src/**/*.ts'],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        '**/dist/**',
+        '**/node_modules/**',
+        '**/*.d.ts',
+        '**/cli/**',
+        // Re-export barrels carry no executable code; v8 reports 0% which
+        // skews the aggregate below the per-file thresholds.
+        '**/index.ts',
       ],
-      exclude: ['**/*.test.ts', '**/*.spec.ts', '**/dist/**', '**/node_modules/**', '**/*.d.ts'],
     },
   },
 });

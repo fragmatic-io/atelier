@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: License headers
+        run: pnpm check:license-headers
+
       - name: Type-check
         run: pnpm typecheck
 
@@ -45,6 +48,9 @@ jobs:
 
       - name: Format check
         run: pnpm format:check
+
+      - name: Validate data
+        run: pnpm validate:data
 
       - name: Test (with coverage)
         run: pnpm test --coverage

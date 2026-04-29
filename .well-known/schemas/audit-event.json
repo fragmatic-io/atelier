@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://cir.dev/schemas/audit-event.json",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^evt_[a-z0-9]+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "user_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "app_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "manifest.compiled",
+        "manifest.served",
+        "manifest.rolled_back",
+        "manifest.invalidated",
+        "action.executed",
+        "action.denied",
+        "intent.changed",
+        "capability.changed",
+        "skill.changed",
+        "component.changed",
+        "policy.evaluated",
+        "policy.violated"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "enum": [
+        "user",
+        "agent",
+        "system"
+      ]
+    },
+    "before_state_hash": {
+      "type": "string"
+    },
+    "after_state_hash": {
+      "type": "string"
+    },
+    "trigger_chain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "token_cost": {
+      "type": "number",
+      "minimum": 0
+    },
+    "policy_evaluations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_id",
+          "passed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "manifest_id": {
+      "type": "string",
+      "pattern": "^m_[a-z0-9]{8,}$"
+    }
+  },
+  "required": [
+    "event_id",
+    "timestamp",
+    "user_id",
+    "app_id",
+    "type",
+    "actor",
+    "before_state_hash",
+    "after_state_hash",
+    "trigger_chain",
+    "token_cost",
+    "policy_evaluations"
+  ],
+  "additionalProperties": false
+}

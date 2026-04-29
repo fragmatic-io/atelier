@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://cir.dev/schemas/manifest.json",
+  "type": "object",
+  "properties": {
+    "manifest_id": {
+      "type": "string",
+      "pattern": "^m_[a-z0-9]{8,}$"
+    },
+    "user_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "app_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "compiled_from": {
+      "type": "object",
+      "properties": {
+        "capability_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[\\w.-]+)?(?:\\+[\\w.-]+)?$"
+        },
+        "skill_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/properties/compiled_from/properties/capability_version"
+          },
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+          }
+        },
+        "component_catalog_version": {
+          "$ref": "#/properties/compiled_from/properties/capability_version"
+        },
+        "intent_profile_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "compiler_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiled_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "capability_version",
+        "skill_versions",
+        "component_catalog_version",
+        "intent_profile_version",
+        "compiler_model",
+        "compiled_at"
+      ],
+      "additionalProperties": false
+    },
+    "ttl": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "invalidates_on": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "redirect": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "layout": {
+            "type": "object",
+            "properties": {
+              "component": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "filter": {
+                    "type": "string"
+                  },
+                  "sort": {
+                    "type": "string"
+                  },
+                  "group_by": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source"
+                ],
+                "additionalProperties": false
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/properties/routes/items/properties/layout"
+                }
+              },
+              "props": {
+                "type": "object",
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "component"
+            ],
+            "additionalProperties": false
+          },
+          "refresh": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "string",
+                "minLength": 1
+              },
+              "structure": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "data",
+              "structure"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "policies_satisfied": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rollback_to": {
+      "$ref": "#/properties/manifest_id"
+    }
+  },
+  "required": [
+    "manifest_id",
+    "user_id",
+    "app_id",
+    "compiled_from",
+    "invalidates_on",
+    "routes",
+    "policies_satisfied"
+  ],
+  "additionalProperties": false
+}
