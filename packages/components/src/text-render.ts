@@ -19,12 +19,18 @@ import { alertTextRender } from './components/Alert.js';
 import { breadcrumbTextRender } from './components/Breadcrumb.js';
 import { buttonTextRender } from './components/Button.js';
 import { buttonGroupTextRender } from './components/ButtonGroup.js';
+import { calendarTextRender } from './components/Calendar.js';
 import { cardTextRender } from './components/Card.js';
+import { chartTextRender } from './components/Chart.js';
+import { chatThreadTextRender } from './components/ChatThread.js';
+import { codeEditorTextRender } from './components/CodeEditor.js';
+import { codeViewTextRender } from './components/CodeView.js';
 import { commandPaletteTextRender } from './components/CommandPalette.js';
 import { confirmDialogTextRender } from './components/ConfirmDialog.js';
 import { containerTextRender } from './components/Container.js';
 import { dateInputTextRender } from './components/DateInput.js';
 import { detailViewTextRender } from './components/DetailView.js';
+import { diffViewTextRender } from './components/DiffView.js';
 import { drawerTextRender } from './components/Drawer.js';
 import { emptyStateTextRender } from './components/EmptyState.js';
 import { fileUploadTextRender } from './components/FileUpload.js';
@@ -33,7 +39,9 @@ import { formTextRender } from './components/Form.js';
 import { galleryTextRender } from './components/Gallery.js';
 import { gridTextRender } from './components/Grid.js';
 import { kpiRowTextRender } from './components/KPIRow.js';
+import { kanbanTextRender } from './components/Kanban.js';
 import { listTextRender } from './components/List.js';
+import { mapTextRender } from './components/Map.js';
 import { markdownTextRender } from './components/Markdown.js';
 import { modalTextRender } from './components/Modal.js';
 import { multiSelectTextRender } from './components/MultiSelect.js';
@@ -41,11 +49,14 @@ import { navBarTextRender } from './components/NavBar.js';
 import { numberInputTextRender } from './components/NumberInput.js';
 import { paginationTextRender } from './components/Pagination.js';
 import { progressTextRender } from './components/Progress.js';
+import { richTextTextRender } from './components/RichText.js';
 import { searchTextRender } from './components/Search.js';
 import { selectTextRender } from './components/Select.js';
+import { sidebarTextRender } from './components/Sidebar.js';
 import { skeletonTextRender } from './components/Skeleton.js';
 import { sliderTextRender } from './components/Slider.js';
 import { spinnerTextRender } from './components/Spinner.js';
+import { splitTextRender } from './components/Split.js';
 import { stackTextRender } from './components/Stack.js';
 import { statCardTextRender } from './components/StatCard.js';
 import { stepperTextRender } from './components/Stepper.js';
@@ -53,8 +64,10 @@ import { tableTextRender } from './components/Table.js';
 import { tabsTextRender } from './components/Tabs.js';
 import { textInputTextRender } from './components/TextInput.js';
 import { timeInputTextRender } from './components/TimeInput.js';
+import { timelineTextRender } from './components/Timeline.js';
 import { toastTextRender } from './components/Toast.js';
 import { toggleTextRender } from './components/Toggle.js';
+import { treeTextRender } from './components/Tree.js';
 import { wizardTextRender } from './components/Wizard.js';
 
 /** Returns a plain-text representation of a component for non-visual render targets. */
@@ -67,12 +80,18 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Breadcrumb: breadcrumbTextRender as TextRenderer,
   Button: buttonTextRender as TextRenderer,
   ButtonGroup: buttonGroupTextRender as TextRenderer,
+  Calendar: calendarTextRender as TextRenderer,
   Card: cardTextRender as TextRenderer,
+  Chart: chartTextRender as TextRenderer,
+  ChatThread: chatThreadTextRender as TextRenderer,
+  CodeEditor: codeEditorTextRender as TextRenderer,
+  CodeView: codeViewTextRender as TextRenderer,
   CommandPalette: commandPaletteTextRender as TextRenderer,
   ConfirmDialog: confirmDialogTextRender as TextRenderer,
   Container: containerTextRender as TextRenderer,
   DateInput: dateInputTextRender as TextRenderer,
   DetailView: detailViewTextRender as TextRenderer,
+  DiffView: diffViewTextRender as TextRenderer,
   Drawer: drawerTextRender as TextRenderer,
   EmptyState: emptyStateTextRender as TextRenderer,
   FileUpload: fileUploadTextRender as TextRenderer,
@@ -81,7 +100,9 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Gallery: galleryTextRender as TextRenderer,
   Grid: gridTextRender as TextRenderer,
   KPIRow: kpiRowTextRender as TextRenderer,
+  Kanban: kanbanTextRender as TextRenderer,
   List: listTextRender as TextRenderer,
+  Map: mapTextRender as TextRenderer,
   Markdown: markdownTextRender as TextRenderer,
   Modal: modalTextRender as TextRenderer,
   MultiSelect: multiSelectTextRender as TextRenderer,
@@ -89,11 +110,14 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   NumberInput: numberInputTextRender as TextRenderer,
   Pagination: paginationTextRender as TextRenderer,
   Progress: progressTextRender as TextRenderer,
+  RichText: richTextTextRender as TextRenderer,
   Search: searchTextRender as TextRenderer,
   Select: selectTextRender as TextRenderer,
+  Sidebar: sidebarTextRender as TextRenderer,
   Skeleton: skeletonTextRender as TextRenderer,
   Slider: sliderTextRender as TextRenderer,
   Spinner: spinnerTextRender as TextRenderer,
+  Split: splitTextRender as TextRenderer,
   Stack: stackTextRender as TextRenderer,
   StatCard: statCardTextRender as TextRenderer,
   Stepper: stepperTextRender as TextRenderer,
@@ -101,7 +125,9 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Tabs: tabsTextRender as TextRenderer,
   TextInput: textInputTextRender as TextRenderer,
   TimeInput: timeInputTextRender as TextRenderer,
+  Timeline: timelineTextRender as TextRenderer,
   Toast: toastTextRender as TextRenderer,
   Toggle: toggleTextRender as TextRenderer,
+  Tree: treeTextRender as TextRenderer,
   Wizard: wizardTextRender as TextRenderer,
 });

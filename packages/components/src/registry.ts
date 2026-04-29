@@ -25,12 +25,18 @@ import { AlertBinding } from './components/Alert.js';
 import { BreadcrumbBinding } from './components/Breadcrumb.js';
 import { ButtonBinding } from './components/Button.js';
 import { ButtonGroupBinding } from './components/ButtonGroup.js';
+import { CalendarBinding } from './components/Calendar.js';
 import { CardBinding } from './components/Card.js';
+import { ChartBinding } from './components/Chart.js';
+import { ChatThreadBinding } from './components/ChatThread.js';
+import { CodeEditorBinding } from './components/CodeEditor.js';
+import { CodeViewBinding } from './components/CodeView.js';
 import { CommandPaletteBinding } from './components/CommandPalette.js';
 import { ConfirmDialogBinding } from './components/ConfirmDialog.js';
 import { ContainerBinding } from './components/Container.js';
 import { DateInputBinding } from './components/DateInput.js';
 import { DetailViewBinding } from './components/DetailView.js';
+import { DiffViewBinding } from './components/DiffView.js';
 import { DrawerBinding } from './components/Drawer.js';
 import { EmptyStateBinding } from './components/EmptyState.js';
 import { FileUploadBinding } from './components/FileUpload.js';
@@ -39,7 +45,9 @@ import { FormBinding } from './components/Form.js';
 import { GalleryBinding } from './components/Gallery.js';
 import { GridBinding } from './components/Grid.js';
 import { KPIRowBinding } from './components/KPIRow.js';
+import { KanbanBinding } from './components/Kanban.js';
 import { ListBinding } from './components/List.js';
+import { MapBinding } from './components/Map.js';
 import { MarkdownBinding } from './components/Markdown.js';
 import { ModalBinding } from './components/Modal.js';
 import { MultiSelectBinding } from './components/MultiSelect.js';
@@ -47,11 +55,14 @@ import { NavBarBinding } from './components/NavBar.js';
 import { NumberInputBinding } from './components/NumberInput.js';
 import { PaginationBinding } from './components/Pagination.js';
 import { ProgressBinding } from './components/Progress.js';
+import { RichTextBinding } from './components/RichText.js';
 import { SearchBinding } from './components/Search.js';
 import { SelectBinding } from './components/Select.js';
+import { SidebarBinding } from './components/Sidebar.js';
 import { SkeletonBinding } from './components/Skeleton.js';
 import { SliderBinding } from './components/Slider.js';
 import { SpinnerBinding } from './components/Spinner.js';
+import { SplitBinding } from './components/Split.js';
 import { StackBinding } from './components/Stack.js';
 import { StatCardBinding } from './components/StatCard.js';
 import { StepperBinding } from './components/Stepper.js';
@@ -59,8 +70,10 @@ import { TableBinding } from './components/Table.js';
 import { TabsBinding } from './components/Tabs.js';
 import { TextInputBinding } from './components/TextInput.js';
 import { TimeInputBinding } from './components/TimeInput.js';
+import { TimelineBinding } from './components/Timeline.js';
 import { ToastBinding } from './components/Toast.js';
 import { ToggleBinding } from './components/Toggle.js';
+import { TreeBinding } from './components/Tree.js';
 import { WizardBinding } from './components/Wizard.js';
 
 export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({
@@ -70,12 +83,18 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Breadcrumb: BreadcrumbBinding,
   Button: ButtonBinding,
   ButtonGroup: ButtonGroupBinding,
+  Calendar: CalendarBinding,
   Card: CardBinding,
+  Chart: ChartBinding,
+  ChatThread: ChatThreadBinding,
+  CodeEditor: CodeEditorBinding,
+  CodeView: CodeViewBinding,
   CommandPalette: CommandPaletteBinding,
   ConfirmDialog: ConfirmDialogBinding,
   Container: ContainerBinding,
   DateInput: DateInputBinding,
   DetailView: DetailViewBinding,
+  DiffView: DiffViewBinding,
   Drawer: DrawerBinding,
   EmptyState: EmptyStateBinding,
   FileUpload: FileUploadBinding,
@@ -84,7 +103,9 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Gallery: GalleryBinding,
   Grid: GridBinding,
   KPIRow: KPIRowBinding,
+  Kanban: KanbanBinding,
   List: ListBinding,
+  Map: MapBinding,
   Markdown: MarkdownBinding,
   Modal: ModalBinding,
   MultiSelect: MultiSelectBinding,
@@ -92,11 +113,14 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   NumberInput: NumberInputBinding,
   Pagination: PaginationBinding,
   Progress: ProgressBinding,
+  RichText: RichTextBinding,
   Search: SearchBinding,
   Select: SelectBinding,
+  Sidebar: SidebarBinding,
   Skeleton: SkeletonBinding,
   Slider: SliderBinding,
   Spinner: SpinnerBinding,
+  Split: SplitBinding,
   Stack: StackBinding,
   StatCard: StatCardBinding,
   Stepper: StepperBinding,
@@ -104,8 +128,10 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Tabs: TabsBinding,
   TextInput: TextInputBinding,
   TimeInput: TimeInputBinding,
+  Timeline: TimelineBinding,
   Toast: ToastBinding,
   Toggle: ToggleBinding,
+  Tree: TreeBinding,
   Wizard: WizardBinding,
 });
 
@@ -203,4 +229,26 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   NavBar: { can_contain: 'leaf' },
   Breadcrumb: { can_contain: 'leaf' },
   Pagination: { can_contain: 'leaf' },
+  // Phase 5c batch 3 — completes the 50-component baseline catalog.
+  // Split is a layout container with two arbitrary children (one per pane).
+  Split: { can_contain: '*', min_children: 2, max_children: 2 },
+  // Display-only leaves: Chart / Timeline / Tree / CodeView / DiffView / Map
+  // each consume their data from props (`data`, `entries`, `nodes`, `code`,
+  // `hunks`, `markers`) — manifest authors do not embed children.
+  Chart: { can_contain: 'leaf' },
+  Timeline: { can_contain: 'leaf' },
+  Tree: { can_contain: 'leaf' },
+  CodeView: { can_contain: 'leaf' },
+  DiffView: { can_contain: 'leaf' },
+  Map: { can_contain: 'leaf' },
+  // Phase 5c batch 4 — Input + Navigation + Specialized leaves. RichText /
+  // CodeEditor own their own contenteditable / textarea markup; Sidebar
+  // consumes its tree from `items`; Kanban / Calendar / ChatThread render
+  // their data from props with no manifest-level child slots.
+  RichText: { can_contain: 'leaf' },
+  CodeEditor: { can_contain: 'leaf' },
+  Sidebar: { can_contain: 'leaf' },
+  Kanban: { can_contain: 'leaf' },
+  Calendar: { can_contain: 'leaf' },
+  ChatThread: { can_contain: 'leaf' },
 });

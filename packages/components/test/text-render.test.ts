@@ -10,6 +10,23 @@ describe('TEXT_RENDERERS', () => {
   it('every renderer returns a non-empty string for plausible props', () => {
     const samples: Readonly<Record<string, unknown>> = {
       Accordion: { items: [{ id: 'a', header: 'h', content: 'c' }] },
+      Calendar: { ariaLabel: 'Pick a date', month: '2026-04' },
+      ChatThread: {
+        messages: [{ id: 'm1', role: 'user', content: 'hi' }],
+      },
+      Chart: { kind: 'line', data: [{ x: '2026-01', y: 1 }] },
+      CodeEditor: { value: 'x', onChange: () => undefined, label: 'Code' },
+      CodeView: { code: 'x' },
+      DiffView: { hunks: [{ kind: 'add', text: 'x' }] },
+      Kanban: {
+        columns: [{ id: 'todo', title: 'To Do', cards: [{ id: 'a', title: 'A' }] }],
+      },
+      Map: { center: { lat: 0, lng: 0 }, markers: [{ id: 'm', lat: 0, lng: 0 }] },
+      RichText: { value: '', onChange: () => undefined, label: 'Body' },
+      Sidebar: { items: [{ id: 'home', label: 'Home', href: '/' }] },
+      Split: { children: 'x' },
+      Timeline: { entries: [{ id: 'e', title: 't' }] },
+      Tree: { nodes: [{ id: 'n', label: 'n' }] },
       ActionMenu: {
         trigger: 'Open',
         items: [{ id: 'x', label: 'Item', onSelect: () => undefined }],

@@ -49,6 +49,9 @@ export type { ModalProps, ModalSize } from './components/Modal.js';
 export { Drawer, DrawerBinding } from './components/Drawer.js';
 export type { DrawerProps, DrawerSide } from './components/Drawer.js';
 
+export { Split, SplitBinding } from './components/Split.js';
+export type { SplitProps } from './components/Split.js';
+
 // -----------------------------------------------------------------------------
 // Display
 // -----------------------------------------------------------------------------
@@ -69,6 +72,24 @@ export type { DetailViewProps, DetailField } from './components/DetailView.js';
 
 export { StatCard, StatCardBinding } from './components/StatCard.js';
 export type { StatCardProps, StatCardDelta, StatTrend } from './components/StatCard.js';
+
+export { Chart, ChartBinding } from './components/Chart.js';
+export type { ChartProps, ChartDatum } from './components/Chart.js';
+
+export { Timeline, TimelineBinding } from './components/Timeline.js';
+export type { TimelineProps, TimelineEntry, TimelineStatus } from './components/Timeline.js';
+
+export { Tree, TreeBinding } from './components/Tree.js';
+export type { TreeProps, TreeNode } from './components/Tree.js';
+
+export { CodeView, CodeViewBinding } from './components/CodeView.js';
+export type { CodeViewProps } from './components/CodeView.js';
+
+export { DiffView, DiffViewBinding } from './components/DiffView.js';
+export type { DiffViewProps, DiffHunk, DiffKind } from './components/DiffView.js';
+
+export { Map, MapBinding } from './components/Map.js';
+export type { MapProps, MapMarker } from './components/Map.js';
 
 // -----------------------------------------------------------------------------
 // Input
@@ -106,6 +127,15 @@ export type { SliderProps } from './components/Slider.js';
 export { FileUpload, FileUploadBinding } from './components/FileUpload.js';
 export type { FileUploadProps } from './components/FileUpload.js';
 
+export { RichText, RichTextBinding, sanitizeRichTextHtml } from './components/RichText.js';
+export type { RichTextProps, RichTextToolbarItem } from './components/RichText.js';
+
+export { CodeEditor, CodeEditorBinding } from './components/CodeEditor.js';
+export type { CodeEditorProps } from './components/CodeEditor.js';
+
+export { Calendar, CalendarBinding } from './components/Calendar.js';
+export type { CalendarProps, CalendarHighlight, CalendarTone } from './components/Calendar.js';
+
 // -----------------------------------------------------------------------------
 // Navigation
 // -----------------------------------------------------------------------------
@@ -117,6 +147,14 @@ export type { BreadcrumbProps, BreadcrumbItem } from './components/Breadcrumb.js
 
 export { Pagination, PaginationBinding } from './components/Pagination.js';
 export type { PaginationProps } from './components/Pagination.js';
+
+export { Sidebar, SidebarBinding } from './components/Sidebar.js';
+export type {
+  SidebarProps,
+  SidebarItem,
+  SidebarChildItem,
+  SidebarSide,
+} from './components/Sidebar.js';
 
 // -----------------------------------------------------------------------------
 // Feedback
@@ -185,6 +223,12 @@ export type {
   StepperStatus,
   StepperOrientation,
 } from './components/Stepper.js';
+
+export { Kanban, KanbanBinding } from './components/Kanban.js';
+export type { KanbanProps, KanbanColumn, KanbanCard } from './components/Kanban.js';
+
+export { ChatThread, ChatThreadBinding } from './components/ChatThread.js';
+export type { ChatThreadProps, ChatMessage, ChatRole } from './components/ChatThread.js';
 
 // -----------------------------------------------------------------------------
 // Registry, composition rules, text renderers

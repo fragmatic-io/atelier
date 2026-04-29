@@ -8,12 +8,18 @@ const EXPECTED = [
   'Breadcrumb',
   'Button',
   'ButtonGroup',
+  'Calendar',
   'Card',
+  'Chart',
+  'ChatThread',
+  'CodeEditor',
+  'CodeView',
   'CommandPalette',
   'ConfirmDialog',
   'Container',
   'DateInput',
   'DetailView',
+  'DiffView',
   'Drawer',
   'EmptyState',
   'FileUpload',
@@ -22,7 +28,9 @@ const EXPECTED = [
   'Gallery',
   'Grid',
   'KPIRow',
+  'Kanban',
   'List',
+  'Map',
   'Markdown',
   'Modal',
   'MultiSelect',
@@ -30,11 +38,14 @@ const EXPECTED = [
   'NumberInput',
   'Pagination',
   'Progress',
+  'RichText',
   'Search',
   'Select',
+  'Sidebar',
   'Skeleton',
   'Slider',
   'Spinner',
+  'Split',
   'Stack',
   'StatCard',
   'Stepper',
@@ -42,13 +53,15 @@ const EXPECTED = [
   'Tabs',
   'TextInput',
   'TimeInput',
+  'Timeline',
   'Toast',
   'Toggle',
+  'Tree',
   'Wizard',
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 43 baseline components', () => {
+  it('contains exactly the 56 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -67,7 +80,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 43 ids', () => {
+  it('list() reports all 56 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -152,8 +165,29 @@ describe('COMPOSITION_RULES', () => {
       'NavBar',
       'Breadcrumb',
       'Pagination',
+      // Phase 5c batch 3 — Display leaves added by the parallel agent.
+      'Chart',
+      'Timeline',
+      'Tree',
+      'CodeView',
+      'DiffView',
+      'Map',
+      // Phase 5c batch 4 — Input + Navigation + Specialized leaves.
+      'RichText',
+      'CodeEditor',
+      'Sidebar',
+      'Kanban',
+      'Calendar',
+      'ChatThread',
     ] as const) {
       expect(COMPOSITION_RULES[leaf]?.can_contain).toBe('leaf');
     }
+  });
+
+  it('Split is a 2-pane layout container', () => {
+    const r = COMPOSITION_RULES['Split']!;
+    expect(r.can_contain).toBe('*');
+    expect(r.min_children).toBe(2);
+    expect(r.max_children).toBe(2);
   });
 });
