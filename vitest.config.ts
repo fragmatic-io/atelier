@@ -64,6 +64,16 @@ export default defineConfig({
           branches: 80,
           statements: 90,
         },
+        // @cir/runtime: orchestration (cache + fetch + dispatch + bus). Higher
+        // bar than evals because there's less CLI surface area; lower than
+        // schemas/policies because retry/abort branches and IDB shims pull
+        // coverage down a few points without cosmic test suites.
+        'packages/runtime/src/**/*.ts': {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
       },
       include: ['packages/**/src/**/*.ts'],
       exclude: [

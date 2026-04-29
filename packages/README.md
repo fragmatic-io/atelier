@@ -4,15 +4,15 @@ The **pnpm workspace root.** All publishable packages live here, one per directo
 
 ## Packages
 
-| Package           | Status                         | Purpose                                                                        |
-| ----------------- | ------------------------------ | ------------------------------------------------------------------------------ |
-| `@cir/schemas`    | **Phase 2** — schemas-first    | Zod schemas + generated JSON Schemas for capabilities, skills, manifests, etc. |
-| `@cir/runtime`    | Stub (Phase 2); source Phase 5 | The render SDK (web first; native/voice later)                                 |
-| `@cir/compiler`   | Stub (Phase 2); source Phase 5 | The LLM-backed compile service                                                 |
-| `@cir/components` | Phase 5                        | Runtime implementations of the 50-primitive baseline catalog                   |
-| `@cir/policies`   | Phase 3                        | Pure-function validators consumed by the compiler and runtime                  |
-| `@cir/cli`        | Phase 5                        | Developer CLI: scaffold capabilities, run evals, publish registries            |
-| `@cir/evals`      | Phase 3                        | Eval harness and shared fixtures                                               |
+| Package           | Status                                 | Purpose                                                                                                                                                                                                                                                    |
+| ----------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@cir/schemas`    | **Phase 2** — schemas-first            | Zod schemas + generated JSON Schemas for capabilities, skills, manifests, etc.                                                                                                                                                                             |
+| `@cir/policies`   | **Phase 3**                            | Pure-function validators consumed by the compiler and runtime                                                                                                                                                                                              |
+| `@cir/evals`      | **Phase 3**                            | Eval harness and shared fixtures                                                                                                                                                                                                                           |
+| `@cir/runtime`    | **Phase 4a** — framework-agnostic core | The render SDK. Phase 4a: manifest cache/fetcher/resolver, action dispatcher (confirm + LRU undo), trigger bus + invalidation wiring, component/action registries, `buildRenderPlan`, audit sink. Framework adapters and component impls land in Phase 4b. |
+| `@cir/components` | Phase 4b                               | Runtime implementations of the 50-primitive baseline catalog                                                                                                                                                                                               |
+| `@cir/compiler`   | Stub (Phase 2); source Phase 5         | The LLM-backed compile service                                                                                                                                                                                                                             |
+| `@cir/cli`        | Phase 5                                | Developer CLI: scaffold capabilities, run evals, publish registries                                                                                                                                                                                        |
 
 ## Conventions
 

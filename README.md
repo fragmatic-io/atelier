@@ -42,9 +42,9 @@ cir/
 │   ├── schemas/                #   @cir/schemas — Zod schemas + JSON Schemas (Phase 2)
 │   ├── policies/               #   @cir/policies — pure-function manifest validators (Phase 3)
 │   ├── evals/                  #   @cir/evals — eval harness + cir-evals CLI (Phase 3)
-│   ├── runtime/                #   @cir/runtime — render SDK (stub Phase 2; source Phase 5)
+│   ├── runtime/                #   @cir/runtime — render SDK; framework-agnostic core (Phase 4a)
 │   ├── compiler/               #   @cir/compiler — LLM compile service (stub Phase 2; source Phase 5)
-│   └── ...                     #   @cir/components, @cir/cli arrive in Phase 4+
+│   └── ...                     #   @cir/components, @cir/cli arrive in Phase 4b+
 ├── scripts/                    # Repo-level harness scripts (sanity test, etc.)
 └── docs/
     ├── thesis.md               # Section 0: the one-line thesis
@@ -84,7 +84,9 @@ Phase 1 shipped the canonical directory skeleton — the artifact directories (`
 
 - **Phase 2** — `@cir/schemas` (Zod schemas + generated JSON Schemas in `.well-known/schemas/`). Done.
 - **Phase 3** — `@cir/policies` (5 baseline validators + behavioral-detector contract), `@cir/evals` (harness + `cir-evals` CLI), commitlint workflow. Done.
-- **Phase 4** — component registry and runtime SDK source.
+- **Phase 4a** — `@cir/runtime` framework-agnostic core: manifest cache (memory + IndexedDB), fetcher, resolver, action dispatcher (confirm + LRU undo), trigger bus + invalidation wiring, component/action registries, `buildRenderPlan`, audit sink. Done.
+- **Phase 4b** — framework adapters (React first), `@cir/components` baseline implementations.
+- **Phase 4c** — real trigger transports (WebSocket / SSE / long-poll), byte-size cache accounting, stale-while-revalidate.
 - **Phase 5** — compiler service source and `.well-known/cir.json` discovery document.
 
 See [`docs/build-plan.md`](docs/build-plan.md) for the full schedule and [`AGENTS.md`](AGENTS.md) for the rules each artifact must follow once it lands.

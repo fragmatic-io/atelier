@@ -32,7 +32,7 @@ Implementation packages (under the pnpm workspace at `/packages/`):
 - `/packages/schemas/` — `@cir/schemas`: Zod schemas + generated JSON Schemas (Phase 2)
 - `/packages/policies/` — `@cir/policies`: pure-function manifest validators + `BehavioralPatternDetector` contract (Phase 3)
 - `/packages/evals/` — `@cir/evals`: eval harness, `defineEval()` helper, and `cir-evals` CLI (Phase 3)
-- `/packages/runtime/` — `@cir/runtime`: the render SDK (stub in Phase 2; source Phase 5)
+- `/packages/runtime/` — `@cir/runtime`: the render SDK. Framework-agnostic core (manifest cache/fetcher/resolver, action dispatcher, trigger bus, registries, render-plan derivation, audit sink) landed in Phase 4a. Framework adapters and component implementations land in Phase 4b.
 - `/packages/compiler/` — `@cir/compiler`: the LLM-backed compile service (stub in Phase 2; source Phase 5)
 - `/packages/components/`, `/packages/cli/` — later phases per `packages/README.md`
 - `/scripts/` — repo-level harness scripts (e.g. `sanity.test.ts`); not for product code

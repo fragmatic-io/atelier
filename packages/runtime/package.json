@@ -1,18 +1,30 @@
 {
   "name": "@cir/runtime",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "CIR render runtime — fetches manifests, binds components, dispatches actions",
+  "description": "CIR render runtime — framework-agnostic core: manifest fetcher/resolver, action dispatcher, trigger bus, component registry, render-plan derivation",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
   },
   "scripts": {
-    "build": "tsc --build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cir/policies": "workspace:*",
+    "@cir/schemas": "workspace:*",
+    "idb-keyval": "^6.2.1"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   },
   "publishConfig": {
     "access": "restricted"
