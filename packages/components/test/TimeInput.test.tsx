@@ -1,0 +1,52 @@
+// @vitest-environment happy-dom
+import './setup.js';
+import { createRef, useState, type ReactNode } from 'react';
+import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { TimeInput, TimeInputBinding } from '../src/components/TimeInput.js';
+
+describe('TimeInput', () => {
+  it('renders a labelled <input type="time">', () => {
+    render(<TimeInput label="Reminder" defaultValue="" />);
+    const input = screen.getByLabelText<HTMLInputElement>('Reminder');
+    expect(input.type).toBe('time');
+  });
+
+  it('renders helperText and error', () => {
+    render(<TimeInput label="Reminder" helperText="24h" error="too late" />);
+    expect(screen.getByText('24h')).toBeTruthy();
+    expect(screen.getByText('too late')).toBeTruthy();
+    const input = screen.getByLabelText<HTMLInputElement>('Reminder');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('controlled value round-trips', () => {
+    function Harness(): ReactNode {
+      const [v, setV] = useState('09:00');
+      return (
+        <TimeInput
+          label="Reminder"
+          value={v}
+          onChange={(e) => {
+            setV(e.currentTarget.value);
+          }}
+        />
+      );
+    }
+    render(<Harness />);
+    const input = screen.getByLabelText<HTMLInputElement>('Reminder');
+    expect(input.value).toBe('09:00');
+    fireEvent.change(input, { target: { value: '14:30' } });
+    expect(input.value).toBe('14:30');
+  });
+
+  it('forwards ref to the input', () => {
+    const ref = createRef<HTMLInputElement>();
+    render(<TimeInput label="Reminder" ref={ref} defaultValue="" />);
+    expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+
+  it('binding id matches', () => {
+    expect(TimeInputBinding.id).toBe('TimeInput');
+  });
+});

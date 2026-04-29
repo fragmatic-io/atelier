@@ -4,7 +4,8 @@
  * `@cir/components` — Phase 4b baseline React components for CIR.
  *
  * Public surface:
- *  - 23 React components covering Layout, Display, Input, Feedback, Action.
+ *  - 43 React components covering Layout, Display, Input, Navigation,
+ *    Feedback, Action, and Specialized primitives.
  *  - Their corresponding `ComponentBinding`s.
  *  - `ALL_COMPONENTS` (pre-built registry), `COMPONENT_BINDINGS`,
  *    `COMPOSITION_RULES`, `TEXT_RENDERERS`.
@@ -81,6 +82,42 @@ export type { TextInputProps } from './components/TextInput.js';
 export { Select, SelectBinding } from './components/Select.js';
 export type { SelectProps, SelectOption } from './components/Select.js';
 
+export { Search, SearchBinding } from './components/Search.js';
+export type { SearchProps } from './components/Search.js';
+
+export { NumberInput, NumberInputBinding } from './components/NumberInput.js';
+export type { NumberInputProps } from './components/NumberInput.js';
+
+export { DateInput, DateInputBinding } from './components/DateInput.js';
+export type { DateInputProps } from './components/DateInput.js';
+
+export { TimeInput, TimeInputBinding } from './components/TimeInput.js';
+export type { TimeInputProps } from './components/TimeInput.js';
+
+export { MultiSelect, MultiSelectBinding } from './components/MultiSelect.js';
+export type { MultiSelectProps, MultiSelectOption } from './components/MultiSelect.js';
+
+export { Toggle, ToggleBinding } from './components/Toggle.js';
+export type { ToggleProps } from './components/Toggle.js';
+
+export { Slider, SliderBinding } from './components/Slider.js';
+export type { SliderProps } from './components/Slider.js';
+
+export { FileUpload, FileUploadBinding } from './components/FileUpload.js';
+export type { FileUploadProps } from './components/FileUpload.js';
+
+// -----------------------------------------------------------------------------
+// Navigation
+// -----------------------------------------------------------------------------
+export { NavBar, NavBarBinding } from './components/NavBar.js';
+export type { NavBarProps, NavItem } from './components/NavBar.js';
+
+export { Breadcrumb, BreadcrumbBinding } from './components/Breadcrumb.js';
+export type { BreadcrumbProps, BreadcrumbItem } from './components/Breadcrumb.js';
+
+export { Pagination, PaginationBinding } from './components/Pagination.js';
+export type { PaginationProps } from './components/Pagination.js';
+
 // -----------------------------------------------------------------------------
 // Feedback
 // -----------------------------------------------------------------------------
@@ -104,6 +141,50 @@ export type { SkeletonProps, SkeletonRadius } from './components/Skeleton.js';
 // -----------------------------------------------------------------------------
 export { ConfirmDialog, ConfirmDialogBinding } from './components/ConfirmDialog.js';
 export type { ConfirmDialogProps } from './components/ConfirmDialog.js';
+
+export { ButtonGroup, ButtonGroupBinding } from './components/ButtonGroup.js';
+export type { ButtonGroupProps } from './components/ButtonGroup.js';
+
+export { ActionMenu, ActionMenuBinding } from './components/ActionMenu.js';
+export type {
+  ActionMenuProps,
+  ActionMenuItem,
+  ActionMenuPlacement,
+} from './components/ActionMenu.js';
+
+// -----------------------------------------------------------------------------
+// Specialized
+// -----------------------------------------------------------------------------
+export { Form, FormBinding } from './components/Form.js';
+export type { FormProps } from './components/Form.js';
+
+export { Wizard, WizardBinding } from './components/Wizard.js';
+export type { WizardProps, WizardStep } from './components/Wizard.js';
+
+export { FilterBar, FilterBarBinding } from './components/FilterBar.js';
+export type {
+  FilterBarProps,
+  FilterDefinition,
+  FilterOption,
+  FilterType,
+} from './components/FilterBar.js';
+
+export { KPIRow, KPIRowBinding } from './components/KPIRow.js';
+export type { KPIRowProps, KPIStat } from './components/KPIRow.js';
+
+export { Gallery, GalleryBinding } from './components/Gallery.js';
+export type { GalleryProps, GalleryItem } from './components/Gallery.js';
+
+export { CommandPalette, CommandPaletteBinding } from './components/CommandPalette.js';
+export type { CommandPaletteProps, CommandPaletteCommand } from './components/CommandPalette.js';
+
+export { Stepper, StepperBinding } from './components/Stepper.js';
+export type {
+  StepperProps,
+  StepperStep,
+  StepperStatus,
+  StepperOrientation,
+} from './components/Stepper.js';
 
 // -----------------------------------------------------------------------------
 // Registry, composition rules, text renderers

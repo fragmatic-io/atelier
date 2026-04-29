@@ -3,32 +3,52 @@ import { ALL_COMPONENTS, COMPONENT_BINDINGS, COMPOSITION_RULES } from '../src/re
 
 const EXPECTED = [
   'Accordion',
+  'ActionMenu',
   'Alert',
+  'Breadcrumb',
   'Button',
+  'ButtonGroup',
   'Card',
+  'CommandPalette',
   'ConfirmDialog',
   'Container',
+  'DateInput',
   'DetailView',
   'Drawer',
   'EmptyState',
+  'FileUpload',
+  'FilterBar',
+  'Form',
+  'Gallery',
   'Grid',
+  'KPIRow',
   'List',
   'Markdown',
   'Modal',
+  'MultiSelect',
+  'NavBar',
+  'NumberInput',
+  'Pagination',
   'Progress',
+  'Search',
   'Select',
   'Skeleton',
+  'Slider',
   'Spinner',
   'Stack',
   'StatCard',
+  'Stepper',
   'Table',
   'Tabs',
   'TextInput',
+  'TimeInput',
   'Toast',
+  'Toggle',
+  'Wizard',
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 23 baseline components', () => {
+  it('contains exactly the 43 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -47,7 +67,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 23 ids', () => {
+  it('list() reports all 43 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -84,8 +104,16 @@ describe('COMPOSITION_RULES', () => {
     expect(r.can_contain).toEqual(['Stack', 'Grid', 'Markdown', 'Table', 'EmptyState']);
   });
 
-  it('layout containers Tabs/Accordion/Modal/Drawer/List accept wildcard children', () => {
-    for (const id of ['Tabs', 'Accordion', 'Modal', 'Drawer', 'List'] as const) {
+  it('layout containers Tabs/Accordion/Modal/Drawer/List/ButtonGroup/Form accept wildcard children', () => {
+    for (const id of [
+      'Tabs',
+      'Accordion',
+      'Modal',
+      'Drawer',
+      'List',
+      'ButtonGroup',
+      'Form',
+    ] as const) {
       expect(COMPOSITION_RULES[id]?.can_contain).toBe('*');
     }
   });
@@ -106,6 +134,24 @@ describe('COMPOSITION_RULES', () => {
       'Toast',
       'Progress',
       'Skeleton',
+      'ActionMenu',
+      'Search',
+      'Wizard',
+      'FilterBar',
+      'KPIRow',
+      'Gallery',
+      'CommandPalette',
+      'Stepper',
+      'NumberInput',
+      'DateInput',
+      'TimeInput',
+      'MultiSelect',
+      'Toggle',
+      'Slider',
+      'FileUpload',
+      'NavBar',
+      'Breadcrumb',
+      'Pagination',
     ] as const) {
       expect(COMPOSITION_RULES[leaf]?.can_contain).toBe('leaf');
     }

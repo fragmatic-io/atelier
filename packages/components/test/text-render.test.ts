@@ -10,19 +10,56 @@ describe('TEXT_RENDERERS', () => {
   it('every renderer returns a non-empty string for plausible props', () => {
     const samples: Readonly<Record<string, unknown>> = {
       Accordion: { items: [{ id: 'a', header: 'h', content: 'c' }] },
+      ActionMenu: {
+        trigger: 'Open',
+        items: [{ id: 'x', label: 'Item', onSelect: () => undefined }],
+      },
       Alert: { severity: 'info', title: 'Notice' },
+      Breadcrumb: { items: [{ label: 'Home', href: '/' }] },
       Button: { children: 'OK', variant: 'primary' },
+      ButtonGroup: { 'aria-label': 'Toolbar', children: 'x' },
       Card: { title: 'Card title' },
+      CommandPalette: {
+        open: true,
+        commands: [{ id: 'c1', label: 'Open', onSelect: () => undefined }],
+        onClose: () => undefined,
+      },
       ConfirmDialog: { title: 'Delete?', onConfirm: () => undefined, onCancel: () => undefined },
       Container: { maxWidth: 'md' },
+      DateInput: { label: 'Date' },
       DetailView: { fields: [{ label: 'Name', value: 'Ada' }] },
       Drawer: { open: true, side: 'right', title: 'Filters', onClose: () => undefined },
       EmptyState: { title: 'Nothing here', description: 'try again' },
+      FileUpload: { label: 'Upload', onFiles: () => undefined },
+      FilterBar: {
+        filters: [{ id: 'q', label: 'Query', type: 'search' }],
+        onChange: () => undefined,
+      },
+      Form: { onSubmit: () => undefined },
+      Gallery: {
+        items: [{ id: '1', src: 'a.png', alt: 'A' }],
+      },
       Grid: { columns: 3 },
+      KPIRow: {
+        stats: [{ id: 's1', label: 'Users', value: 1234 }],
+      },
       List: { items: [1, 2, 3], renderItem: (n: number) => String(n) },
       Markdown: { content: '# hello' },
       Modal: { open: true, title: 'Edit', onClose: () => undefined },
+      MultiSelect: {
+        label: 'Tags',
+        options: [
+          { value: 'a', label: 'A' },
+          { value: 'b', label: 'B' },
+        ],
+        values: ['a'],
+        onChange: () => undefined,
+      },
+      NavBar: { items: [{ label: 'Home', href: '/' }] },
+      NumberInput: { label: 'Quantity', value: 1, onChange: () => undefined },
+      Pagination: { currentPage: 1, totalPages: 5, onPageChange: () => undefined },
       Progress: { value: 42 },
+      Search: { value: 'tea', onChange: () => undefined },
       Select: {
         label: 'Fruit',
         options: [
@@ -32,13 +69,30 @@ describe('TEXT_RENDERERS', () => {
         value: 'a',
       },
       Skeleton: {},
+      Slider: { label: 'Volume', value: 50, min: 0, max: 100, onChange: () => undefined },
       Spinner: { label: 'Loading' },
       Stack: { direction: 'horizontal' },
       StatCard: { label: 'Revenue', value: '$1.2M' },
+      Stepper: {
+        steps: [
+          { id: 'a', title: 'A', status: 'done' },
+          { id: 'b', title: 'B', status: 'active' },
+        ],
+      },
       Table: { columns: [{ key: 'k', header: 'h' }], rows: [{ k: 'v' }] },
       Tabs: { tabs: [{ id: 'a', label: 'A', content: '...' }] },
       TextInput: { label: 'Email' },
+      TimeInput: { label: 'Time' },
       Toast: { message: 'Saved', open: true, onClose: () => undefined },
+      Toggle: { label: 'Notifications', checked: true, onChange: () => undefined },
+      Wizard: {
+        steps: [
+          { id: 'a', title: 'A', content: 'a' },
+          { id: 'b', title: 'B', content: 'b' },
+        ],
+        currentId: 'a',
+        onStepChange: () => undefined,
+      },
     };
 
     for (const [id, renderer] of Object.entries(TEXT_RENDERERS)) {
