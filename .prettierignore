@@ -16,3 +16,6 @@ local-vault
 # Generated JSON Schemas: byte-identical to CLI dump for golden diff
 packages/schemas/test/golden
 .well-known/schemas
+
+# Next.js build output
+apps/*/.next

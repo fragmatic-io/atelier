@@ -24,7 +24,15 @@ export default defineConfig({
     environment: 'node',
     globals: false,
     include: ['**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.husky/**', '**/.git/**'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.husky/**',
+      '**/.git/**',
+      // apps/* is product code (Next.js demo, etc.); not unit-tested at this layer.
+      'apps/**',
+    ],
     passWithNoTests: false,
     coverage: {
       provider: 'v8',

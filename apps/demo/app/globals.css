@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+/* Component styling hooks — uses data-cir-component attrs from @cir/components */
+[data-cir-component='Stack'] {
+  display: flex;
+}
+[data-cir-component='Stack'][data-direction='vertical'] {
+  flex-direction: column;
+}
+[data-cir-component='Stack'][data-direction='horizontal'] {
+  flex-direction: row;
+}
+[data-cir-component='Stack'][data-gap='sm'] {
+  gap: 8px;
+}
+[data-cir-component='Stack'][data-gap='md'] {
+  gap: 16px;
+}
+[data-cir-component='Stack'][data-gap='lg'] {
+  gap: 24px;
+}
+
+[data-cir-component='Card'] {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+}
+[data-cir-component='Container'] {
+  @apply mx-auto px-4 py-6;
+}
+[data-cir-component='Container'][data-max-width='sm'] {
+  max-width: 640px;
+}
+[data-cir-component='Container'][data-max-width='md'] {
+  max-width: 960px;
+}
+[data-cir-component='Container'][data-max-width='lg'] {
+  max-width: 1280px;
+}
+
+[data-cir-component='Button'] {
+  @apply rounded px-3 py-1.5 text-sm font-medium transition-colors;
+}
+[data-cir-component='Button'][data-variant='primary'] {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+[data-cir-component='Button'][data-variant='secondary'] {
+  @apply bg-gray-200 text-gray-900 hover:bg-gray-300;
+}
+[data-cir-component='Button'][data-variant='destructive'] {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+[data-cir-component='Button'][data-variant='ghost'] {
+  @apply bg-transparent text-gray-700 hover:bg-gray-100;
+}
+[data-cir-component='Button']:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+[data-cir-component='Alert'] {
+  @apply rounded p-3 border;
+}
+[data-cir-component='Alert'][data-severity='info'] {
+  @apply bg-blue-50 border-blue-200 text-blue-900;
+}
+[data-cir-component='Alert'][data-severity='success'] {
+  @apply bg-green-50 border-green-200 text-green-900;
+}
+[data-cir-component='Alert'][data-severity='warning'] {
+  @apply bg-yellow-50 border-yellow-200 text-yellow-900;
+}
+[data-cir-component='Alert'][data-severity='error'] {
+  @apply bg-red-50 border-red-200 text-red-900;
+}
+
+[data-cir-component='EmptyState'] {
+  @apply text-center py-8 text-gray-500;
+}
+[data-cir-component='Spinner'] {
+  @apply inline-block;
+}
+
+dialog[data-cir-component='ConfirmDialog'] {
+  @apply rounded-lg p-6 shadow-xl border border-gray-200 max-w-md;
+}
+dialog[data-cir-component='ConfirmDialog']::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Domain components */
+[data-cir-component='DecisionQueue'] [data-cir-row] {
+  @apply flex items-center gap-3 py-3 border-b border-gray-100 last:border-b-0;
+}
+[data-cir-component='DecisionQueue'] [data-cir-avatar] {
+  @apply h-10 w-10 rounded-full flex items-center justify-center text-white font-medium shrink-0;
+}
+[data-cir-component='DecisionQueue'] [data-cir-thread-link] {
+  @apply font-medium text-gray-900 hover:text-blue-600;
+}
+[data-cir-component='DecisionQueue'] [data-cir-snippet] {
+  @apply text-sm text-gray-500 truncate;
+}
+
+[data-cir-component='TaskQueue'] [data-cir-task-group] {
+  @apply mb-4 last:mb-0;
+}
+[data-cir-component='TaskQueue'] [data-cir-task-group-header] {
+  @apply text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2;
+}
+[data-cir-component='TaskQueue'] [data-cir-task-row] {
+  @apply flex items-center gap-3 py-2 border-b border-gray-100 last:border-b-0;
+}
+[data-cir-component='TaskQueue'] [data-cir-task-row][data-status='done'] [data-cir-task-title] {
+  @apply line-through text-gray-400;
+}
+[data-cir-component='TaskQueue'] [data-cir-due-pill] {
+  @apply text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700;
+}
+[data-cir-component='TaskQueue'] [data-cir-task-row][data-overdue='true'] [data-cir-due-pill] {
+  @apply bg-red-100 text-red-700;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}

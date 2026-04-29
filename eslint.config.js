@@ -26,6 +26,13 @@ export default tseslint.config(
       'skills/**',
       'recipes/**',
       '.well-known/**',
+      // Next.js build output and auto-generated files in the demo app.
+      'apps/*/.next/**',
+      'apps/*/next-env.d.ts',
+      // The demo app uses its own tsconfig (not extending the workspace base);
+      // type-aware lint with `projectService` doesn't find these files in the
+      // root tsconfig and would error. Next.js validates them itself.
+      'apps/**',
     ],
   },
 

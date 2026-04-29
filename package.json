@@ -55,6 +55,7 @@
   },
   "devDependencies": {
     "@cir/components": "workspace:*",
+    "@cir/demo": "workspace:*",
     "@cir/evals": "workspace:*",
     "@cir/policies": "workspace:*",
     "@cir/react": "workspace:*",
@@ -98,7 +99,9 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "@tailwindcss/oxide",
+      "esbuild",
+      "sharp"
     ]
   }
 }

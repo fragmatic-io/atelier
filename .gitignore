@@ -49,6 +49,11 @@ Thumbs.db
 .manifests-local/
 local-vault/
 
+# Next.js demo (apps/demo)
+apps/*/.next/
+apps/*/next-env.d.ts
+apps/*/.turbo/
+
 # Misc
 .cache/
 .parcel-cache/
