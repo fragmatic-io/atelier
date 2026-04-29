@@ -5,6 +5,6 @@
     "composite": false,
     "incremental": true
   },
-  "include": ["scripts/**/*.ts", "*.config.ts", "*.config.mts"],
+  "include": ["scripts/**/*.ts", "evals/**/*.ts", "*.config.ts", "*.config.mts"],
   "references": []
 }

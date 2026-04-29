@@ -48,10 +48,14 @@
     "fix:license-headers": "tsx scripts/check-license-headers.ts --fix",
     "schemas:dump": "cir-schemas dump --out .well-known/schemas",
     "validate:data": "cir-schemas validate-data",
+    "evals": "cir-evals run",
+    "validate:fast": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm validate:data",
     "validate": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm validate:data && pnpm test",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@cir/evals": "workspace:*",
+    "@cir/policies": "workspace:*",
     "@cir/schemas": "workspace:*",
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",

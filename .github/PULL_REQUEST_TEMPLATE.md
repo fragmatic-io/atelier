@@ -23,6 +23,8 @@ docs / tooling). One change = one artifact category where possible.
 - [ ] Policy (`/policies/**`)
 - [ ] Recipe (`/recipes/**`)
 - [ ] Schemas (`packages/schemas/**`, `.well-known/schemas/**`)
+- [ ] Policies (`packages/policies/**`)
+- [ ] Evals (`packages/evals/**`, `evals/**`)
 - [ ] Runtime (`packages/runtime/**`)
 - [ ] Compiler (`packages/compiler/**`)
 - [ ] Docs (`/docs/**`, `README.md`, `ETHOS.md`, `AGENTS.md`)

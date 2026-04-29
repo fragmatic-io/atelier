@@ -18,7 +18,7 @@ Tracked work that intentionally did not land in earlier phases. Update as items 
 ## Phase 3+ candidates
 
 - [ ] Widen CI Node matrix from `[22]` to `[22, 24]` once Node 24 hits LTS.
-- [ ] Add a `commitlint` GitHub Action so PR titles get the same conventional-commit gating as local commits.
+- [x] Add a `commitlint` GitHub Action so PR titles get the same conventional-commit gating as local commits — landed in Phase 3 (`.github/workflows/commitlint.yml`).
 - [ ] Decide whether `actionlint` should also run on `dependabot` PRs (currently scoped to `push` + `pull_request`).
 - [ ] Tighten coverage thresholds package-by-package as source lands.
 - [ ] Sign capabilities/skills artifacts at publish time per [`docs/production-concerns.md`](docs/production-concerns.md) — needs a key-management decision.

@@ -30,10 +30,11 @@ CIR artifact directories (these define the framework surface):
 Implementation packages (under the pnpm workspace at `/packages/`):
 
 - `/packages/schemas/` — `@cir/schemas`: Zod schemas + generated JSON Schemas (Phase 2)
+- `/packages/policies/` — `@cir/policies`: pure-function manifest validators + `BehavioralPatternDetector` contract (Phase 3)
+- `/packages/evals/` — `@cir/evals`: eval harness, `defineEval()` helper, and `cir-evals` CLI (Phase 3)
 - `/packages/runtime/` — `@cir/runtime`: the render SDK (stub in Phase 2; source Phase 5)
 - `/packages/compiler/` — `@cir/compiler`: the LLM-backed compile service (stub in Phase 2; source Phase 5)
-- `/packages/policies/` — `@cir/policies`: pure-function validators (Phase 3)
-- `/packages/components/`, `/packages/cli/`, `/packages/evals/` — later phases per `packages/README.md`
+- `/packages/components/`, `/packages/cli/` — later phases per `packages/README.md`
 - `/scripts/` — repo-level harness scripts (e.g. `sanity.test.ts`); not for product code
 
 The user's intent vault is NOT in this repo. It is referenced by ID only.

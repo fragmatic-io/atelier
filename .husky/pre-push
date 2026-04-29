@@ -1,1 +1,3 @@
-pnpm typecheck && pnpm test
+# Fast pre-push: license headers, typecheck, lint, format, data validation.
+# Full test suite runs in CI on the resulting push (see .github/workflows/ci.yml).
+pnpm validate:fast

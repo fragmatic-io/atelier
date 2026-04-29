@@ -23,12 +23,14 @@ See [`../docs/architecture.md`](../docs/architecture.md) — section "Policy eng
 
 ## Status
 
-Empty in Phase 1; populated starting in **Phase 2** (Phase 2 of the build plan ships 10 baseline policies). Expect the set to grow as new capability domains land.
+Phase 3 ships the baseline policy set as the [`@cir/policies`](../packages/policies/README.md) package — five validators (the ones listed below), a composer (`validateManifest`), and the `BehavioralPatternDetector` contract for the runtime to plug into. This top-level `policies/` directory is reserved for **app-defined policies** that ship alongside capabilities (one rule per `.ts` file, format documented above); it stays empty until the first downstream rule lands.
 
-## Baseline policies (from the architecture doc)
+## Baseline policies (shipped in `@cir/policies`)
 
 - `data_access_within_grant`
 - `confirmation_required_for_destructive`
 - `no_pii_in_query_strings`
 - `rate_limited_actions_show_state`
 - `reversibility_surfaced`
+
+See [`../packages/policies/README.md`](../packages/policies/README.md) for the package surface, severities, and usage.

@@ -1,0 +1,69 @@
+import { describe, expect, it } from 'vitest';
+import { rateLimitedActionsShowState } from '../src/baseline/rate_limited_actions_show_state.ts';
+import { baselineContext } from './fixtures/manifest.ts';
+
+describe('rate_limited_actions_show_state', () => {
+  it('passes when no rate-limited capabilities are referenced', () => {
+    const ctx = baselineContext();
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(true);
+  });
+
+  it('warns when a rate-limited action is surfaced without a quota indicator', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(false);
+    expect(result.violations).toHaveLength(1);
+    const v = result.violations[0]!;
+    expect(v.severity).toBe('warn');
+    expect(v.policy_id).toBe('rate_limited_actions_show_state');
+    expect(v.message).toContain('thread.archive');
+    expect(v.hint).toContain('.quota');
+  });
+
+  it('passes when a sibling node binds a `*.quota` data source', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    ctx.manifest.routes[1]!.layout!.children!.push({
+      component: 'RateMeter',
+      data: { source: 'thread.quota' },
+    });
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(true);
+  });
+
+  it('passes when an ancestor exposes a `*.rate_limit` data source', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    // Reshape the route to wrap the layout in a parent that holds the quota.
+    ctx.manifest.routes[1]!.layout = {
+      component: 'Container',
+      data: { source: 'app.rate_limit' },
+      children: [ctx.manifest.routes[1]!.layout!],
+    };
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(true);
+  });
+
+  it('passes when a deeply nested child of the action node binds a `*.usage` source', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    // Attach a usage-bound child to the action-bearing node so subtreeHasQuotaSource
+    // walks recursively.
+    const actionNode = ctx.manifest.routes[1]!.layout!.children![0]!;
+    actionNode.children = [
+      {
+        component: 'Pane',
+        children: [
+          {
+            component: 'UsageMeter',
+            data: { source: 'thread.usage' },
+          },
+        ],
+      },
+    ];
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(true);
+  });
+});

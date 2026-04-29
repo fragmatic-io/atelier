@@ -40,9 +40,11 @@ cir/
 ├── .well-known/                # Public discovery (cir.json — Phase 5; schemas/ — Phase 2)
 ├── packages/                   # pnpm workspace
 │   ├── schemas/                #   @cir/schemas — Zod schemas + JSON Schemas (Phase 2)
+│   ├── policies/               #   @cir/policies — pure-function manifest validators (Phase 3)
+│   ├── evals/                  #   @cir/evals — eval harness + cir-evals CLI (Phase 3)
 │   ├── runtime/                #   @cir/runtime — render SDK (stub Phase 2; source Phase 5)
 │   ├── compiler/               #   @cir/compiler — LLM compile service (stub Phase 2; source Phase 5)
-│   └── ...                     #   @cir/policies, @cir/components, ... arrive in Phase 3+
+│   └── ...                     #   @cir/components, @cir/cli arrive in Phase 4+
 ├── scripts/                    # Repo-level harness scripts (sanity test, etc.)
 └── docs/
     ├── thesis.md               # Section 0: the one-line thesis
@@ -81,7 +83,7 @@ cir/
 Phase 1 shipped the canonical directory skeleton — the artifact directories (`capabilities/`, `skills/`, `components/`, `policies/`, `recipes/`, `evals/`), the workspace (`packages/runtime/`, `packages/compiler/` stubs), and `.well-known/` all exist with README scaffolding. Phase 2 added `@cir/schemas` and the generated JSON Schemas under `.well-known/schemas/`. The remaining directories are intentionally empty pending the phased build:
 
 - **Phase 2** — `@cir/schemas` (Zod schemas + generated JSON Schemas in `.well-known/schemas/`). Done.
-- **Phase 3** — `@cir/policies`, manifest validators, eval harness, behavioral triggers.
+- **Phase 3** — `@cir/policies` (5 baseline validators + behavioral-detector contract), `@cir/evals` (harness + `cir-evals` CLI), commitlint workflow. Done.
 - **Phase 4** — component registry and runtime SDK source.
 - **Phase 5** — compiler service source and `.well-known/cir.json` discovery document.
 

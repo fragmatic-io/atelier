@@ -5,8 +5,9 @@ import { defineConfig } from 'vitest/config';
 /**
  * CIR root Vitest configuration.
  *
- * Workspace-aware: picks up *.test.ts / *.spec.ts under packages/, runtime/,
- * compiler/, policies/, and the top-level scripts/ harness directory.
+ * Workspace-aware: picks up *.test.ts / *.spec.ts under packages/ (schemas,
+ * policies, evals, runtime, compiler) and the top-level scripts/ harness
+ * directory.
  *
  * Eval files (evals/**\/*.eval.ts) are intentionally NOT matched here — they
  * will be driven by a dedicated eval runner (see docs/production-concerns.md
@@ -47,6 +48,22 @@ export default defineConfig({
           branches: 80,
           statements: 95,
         },
+        // @cir/policies: pure-function validators. Easy to cover well; demand it.
+        'packages/policies/src/**/*.ts': {
+          lines: 95,
+          functions: 95,
+          branches: 90,
+          statements: 95,
+        },
+        // @cir/evals: orchestration with CLI + reporters; harder to fully cover
+        // without spawning real processes for every flag combo. Set a sensible
+        // bar that's already met and ratchet up as the harness grows.
+        'packages/evals/src/**/*.ts': {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
       },
       include: ['packages/**/src/**/*.ts'],
       exclude: [
@@ -56,9 +73,10 @@ export default defineConfig({
         '**/node_modules/**',
         '**/*.d.ts',
         '**/cli/**',
-        // Re-export barrels carry no executable code; v8 reports 0% which
-        // skews the aggregate below the per-file thresholds.
+        // Re-export barrels and types-only modules carry no executable code;
+        // v8 reports 0% which skews the aggregate below per-file thresholds.
         '**/index.ts',
+        '**/{result,types}.ts',
       ],
     },
   },

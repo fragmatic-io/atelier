@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 The CIR Authors
+/**
+ * `@cir/policies` — public surface.
+ *
+ * The compiler imports `validateManifest` and the baseline policies; the
+ * runtime imports the `BehavioralPatternDetector` interface to plug its own
+ * implementation in.
+ *
+ * See `/Users/vid/cir/docs/architecture.md` §"Policy engine" and
+ * `/Users/vid/cir/docs/triggers.md` §"Behavioral triggers" for context.
+ */
+
+// -----------------------------------------------------------------------------
+// Core types
+// -----------------------------------------------------------------------------
+export type {
+  NamedPolicy,
+  Policy,
+  PolicyContext,
+  PolicyResult,
+  PolicySeverity,
+  PolicyViolation,
+} from './result.js';
+
+// -----------------------------------------------------------------------------
+// Composer + baseline
+// -----------------------------------------------------------------------------
+export { BASELINE_POLICIES, validateManifest, type ValidateOptions } from './validate.js';
+
+// -----------------------------------------------------------------------------
+// Individual baseline policies (re-exported for granular composition)
+// -----------------------------------------------------------------------------
+export { dataAccessWithinGrant } from './baseline/data_access_within_grant.js';
+export {
+  confirmationRequiredForDestructive,
+  DESTRUCTIVE_SIDE_EFFECTS,
+} from './baseline/confirmation_required_for_destructive.js';
+export { noPiiInQueryStrings } from './baseline/no_pii_in_query_strings.js';
+export { rateLimitedActionsShowState } from './baseline/rate_limited_actions_show_state.js';
+export { reversibilitySurfaced } from './baseline/reversibility_surfaced.js';
+
+// -----------------------------------------------------------------------------
+// Internal helpers (exported so downstream policy authors can reuse them)
+// -----------------------------------------------------------------------------
+export {
+  collectLayoutNodes,
+  escapeJsonPointerSegment,
+  walkLayout,
+  walkManifest,
+  type LayoutVisitor,
+} from './internal/walk-layout.js';
+
+// -----------------------------------------------------------------------------
+// Behavioral pattern detector (Phase 4 plug-point)
+// -----------------------------------------------------------------------------
+export {
+  NoopBehavioralDetector,
+  type BehavioralPatternDetector,
+  type DetectedPattern,
+  type ObservedAction,
+} from './behavioral/detector.js';

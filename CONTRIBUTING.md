@@ -26,6 +26,7 @@ Husky hooks install automatically via the `prepare` script. Don't bypass them wi
 | Command              | What it does                                                                 |
 | -------------------- | ---------------------------------------------------------------------------- |
 | `pnpm validate`      | Runs typecheck, lint, format-check, and tests. Run this before opening a PR. |
+| `pnpm validate:fast` | Fast local check (everything except tests); used by the pre-push hook.       |
 | `pnpm test`          | Vitest, single-pass.                                                         |
 | `pnpm test:watch`    | Vitest in watch mode.                                                        |
 | `pnpm test:coverage` | Vitest with V8 coverage.                                                     |
@@ -52,6 +53,8 @@ Keep branches scoped. A branch that touches a capability schema, a runtime compo
 ## Commits
 
 CIR uses [Conventional Commits](https://www.conventionalcommits.org/). The commit-msg hook enforces the format, so you'll find out fast if you forget.
+
+Conventional commit format is enforced in three places: the local `commit-msg` hook (per-commit), the `.github/workflows/commitlint.yml` action (validates the commit range AND the PR title on every push), and the local `pre-push` hook running `pnpm validate:fast` (everything except tests). The full test suite runs in CI.
 
 ```
 <type>(<optional scope>): <subject>

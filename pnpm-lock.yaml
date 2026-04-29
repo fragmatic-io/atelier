@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      '@cir/evals':
+        specifier: workspace:*
+        version: link:packages/evals
+      '@cir/policies':
+        specifier: workspace:*
+        version: link:packages/policies
       '@cir/schemas':
         specifier: workspace:*
         version: link:packages/schemas
@@ -73,6 +79,44 @@ importers:
         version: 2.1.9(@types/node@22.19.17)
 
   packages/compiler: {}
+
+  packages/evals:
+    dependencies:
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+      fast-glob:
+        specifier: ^3.3.2
+        version: 3.3.3
+      kleur:
+        specifier: ^4.1.5
+        version: 4.1.5
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)
+
+  packages/policies:
+    dependencies:
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)
 
   packages/runtime: {}
 
@@ -1380,6 +1424,10 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  kleur@4.1.5:
+    resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
+    engines: {node: '>=6'}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -3096,6 +3144,8 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  kleur@4.1.5: {}
 
   levn@0.4.1:
     dependencies:
