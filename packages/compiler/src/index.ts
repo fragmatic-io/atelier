@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * `@cir/compiler` — public surface.
  *
@@ -48,6 +48,7 @@ export {
   type MemoryManifestStoreOptions,
   type StoredManifest,
 } from './manifest-store.js';
+export { RedisManifestStore, type RedisManifestStoreOptions } from './redis-manifest-store.js';
 
 // Resolver
 export {

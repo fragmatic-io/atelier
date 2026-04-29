@@ -12,7 +12,7 @@ Tracked work that intentionally did not land in earlier phases. Update as items 
 - [x] Move `runtime/` and `compiler/` under `packages/` — done.
 - [x] Bump coverage thresholds from 0 once `@cir/schemas` lands.
 - [x] Add `actionlint` step to CI.
-- [x] Add `scripts/check-license-headers.ts` (Apache-2.0 SPDX) and wire into `validate`.
+- [x] Add `scripts/check-license-headers.ts` (SPDX header check, MIT) and wire into `validate`.
 - [x] JSON-schema lint pass for `capabilities/*.json` and skills/components data files.
 
 ## Phase 3+ candidates

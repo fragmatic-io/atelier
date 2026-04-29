@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Capability · Intent · Render — a production architecture for dynamic software interfaces",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": {
     "name": "The CIR Authors",
     "email": "v@fragmatic.io"

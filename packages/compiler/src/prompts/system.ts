@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * The cached system prompt. Held constant per compiler-version so the model
  * provider's prompt-caching machinery (or our own KV cache) can keep it warm.

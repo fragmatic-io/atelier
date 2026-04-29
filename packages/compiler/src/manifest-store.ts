@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Tier-3 manifest cache (server-side). Lives in the compiler service's
  * process. Indexed by `(user_id, app_id, route, capability_v, intent_v,

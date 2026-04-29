@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Stack — flex layout primitive. Vertical or horizontal grouping of children
  * with a discrete `gap` token. Uses semantic `<div role="group">` because a

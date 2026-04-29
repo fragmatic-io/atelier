@@ -137,8 +137,8 @@ Every TypeScript/JavaScript source file (excluding tests, type declarations,
 and generated files) must start with an SPDX header:
 
 ```
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 ```
 
 The check runs as part of `pnpm validate`. Run `pnpm fix:license-headers` to

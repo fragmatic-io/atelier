@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Select — controlled native `<select>`. We use the platform widget on
  * purpose: it ships keyboard navigation, screen-reader support, and mobile

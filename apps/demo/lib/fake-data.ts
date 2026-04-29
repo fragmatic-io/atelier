@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * In-memory store for the demo. Persists across hot reloads in dev via
  * `globalThis`. Resets when the Next.js server restarts.

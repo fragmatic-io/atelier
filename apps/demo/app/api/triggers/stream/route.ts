@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * SSE endpoint. The demo's `SseTriggerTransport` connects here and listens
  * for trigger events broadcast by `/api/triggers/publish`.

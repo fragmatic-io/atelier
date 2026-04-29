@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * GeminiCompiler — calls Google's Gemini API (via @google/genai) to produce
  * manifests. Tier-routed: cold compiles use a heavier model (default

@@ -2,23 +2,33 @@ import { describe, expect, it } from 'vitest';
 import { ALL_COMPONENTS, COMPONENT_BINDINGS, COMPOSITION_RULES } from '../src/registry.js';
 
 const EXPECTED = [
+  'Accordion',
   'Alert',
   'Button',
   'Card',
   'ConfirmDialog',
   'Container',
+  'DetailView',
+  'Drawer',
   'EmptyState',
   'Grid',
+  'List',
   'Markdown',
+  'Modal',
+  'Progress',
   'Select',
+  'Skeleton',
   'Spinner',
   'Stack',
+  'StatCard',
   'Table',
+  'Tabs',
   'TextInput',
+  'Toast',
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 13 baseline components', () => {
+  it('contains exactly the 23 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -37,7 +47,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 13 ids', () => {
+  it('list() reports all 23 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -74,6 +84,12 @@ describe('COMPOSITION_RULES', () => {
     expect(r.can_contain).toEqual(['Stack', 'Grid', 'Markdown', 'Table', 'EmptyState']);
   });
 
+  it('layout containers Tabs/Accordion/Modal/Drawer/List accept wildcard children', () => {
+    for (const id of ['Tabs', 'Accordion', 'Modal', 'Drawer', 'List'] as const) {
+      expect(COMPOSITION_RULES[id]?.can_contain).toBe('*');
+    }
+  });
+
   it('leaves declare can_contain="leaf"', () => {
     for (const leaf of [
       'Markdown',
@@ -85,6 +101,11 @@ describe('COMPOSITION_RULES', () => {
       'EmptyState',
       'ConfirmDialog',
       'Table',
+      'DetailView',
+      'StatCard',
+      'Toast',
+      'Progress',
+      'Skeleton',
     ] as const) {
       expect(COMPOSITION_RULES[leaf]?.can_contain).toBe('leaf');
     }

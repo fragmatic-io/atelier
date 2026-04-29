@@ -98,8 +98,41 @@ describe('ActionDispatcher', () => {
     expect(mock).toHaveBeenCalledOnce();
     const arg = mock.mock.calls[0]?.[0];
     expect(arg?.level).toBe('modal');
-    expect(arg?.capability.id).toBe('mail.send');
-    expect(arg?.input).toEqual({ draft_id: 'd1' });
+    expect(arg?.capability_id).toBe('mail.send');
+    expect(arg?.side_effects).toEqual(['send']);
+    expect(arg?.verbal_phrase).toBeUndefined();
+    expect(arg?.prompt).toMatch(/mail\.send/);
+  });
+
+  it('populates verbal_phrase from the last segment of capability_id for verbal_required', async () => {
+    const caps: Record<string, Capability> = {
+      'pulls.merge': {
+        id: 'pulls.merge',
+        kind: 'action',
+        version: '1.0.0',
+        input: { pr_id: 'string' },
+        output: {},
+        side_effects: ['publish'],
+        permissions: ['pulls:write'],
+        confirmation: 'verbal_required',
+        reversible: false,
+      },
+    };
+    const registry = new MapActionRegistry();
+    registry.register('pulls.merge', () => Promise.resolve({ ok: true }));
+    const confirm: ConfirmationCallback = vi.fn(() => Promise.resolve({ confirmed: true }));
+    const dispatcher = new ActionDispatcher({
+      capabilities: caps,
+      registry,
+      confirm,
+    });
+    await dispatcher.dispatch('pulls.merge', { pr_id: 'pr1' }, ctx);
+    const mock = vi.mocked(confirm);
+    expect(mock).toHaveBeenCalledOnce();
+    const arg = mock.mock.calls[0]?.[0];
+    expect(arg?.level).toBe('verbal_required');
+    expect(arg?.verbal_phrase).toBe('merge');
+    expect(arg?.capability_id).toBe('pulls.merge');
   });
 
   it('does not require confirmation for `none` level', async () => {

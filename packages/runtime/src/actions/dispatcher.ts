@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Action dispatcher — validates input shape, gates on confirmation, executes
  * via a registered handler, records reversible actions on the undo stack,
@@ -54,6 +54,11 @@ export interface ActionDispatcherOptions {
   clock?: Clock;
 }
 
+function lastSegment(capabilityId: string): string {
+  const idx = capabilityId.lastIndexOf('.');
+  return idx >= 0 ? capabilityId.slice(idx + 1) : capabilityId;
+}
+
 let auditSeq = 0;
 function nextAuditId(): `evt_${string}` {
   auditSeq += 1;
@@ -89,11 +94,17 @@ export class ActionDispatcher {
     }
 
     if (requiresConfirmation(capability.confirmation)) {
+      // `requiresConfirmation` returns true only for 'modal' | 'verbal_required'.
+      // 'inline' is handled by component-side affordances, never via this gate.
+      const level = capability.confirmation as 'modal' | 'verbal_required';
+      const verbal_phrase = level === 'verbal_required' ? lastSegment(capability.id) : undefined;
+      const prompt = `Confirm ${capability.id}`;
       const decision: ConfirmationDecision = await this.#confirm({
-        capability,
-        level: capability.confirmation,
-        input,
-        ctx,
+        capability_id: capability.id,
+        prompt,
+        side_effects: capability.side_effects,
+        level,
+        ...(verbal_phrase ? { verbal_phrase } : {}),
       });
       if (!decision.confirmed) {
         return this.#deny(

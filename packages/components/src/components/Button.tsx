@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Button — minimally-styled action primitive. Variants are surfaced as
  * `data-variant` so a Phase 4c CSS layer can paint them; the only baked-in

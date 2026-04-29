@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 
 'use client';
 /**
@@ -17,9 +17,12 @@
  *  - Cancel button → resolves `{ confirmed: false, reason: 'user_cancelled' }`
  *  - Escape key → same as cancel
  *  - Only one modal at a time (the store guarantees this).
+ *  - When `request.level === 'verbal_required'`, an additional `<input>` is
+ *    rendered. The Confirm button is disabled until the (trimmed,
+ *    case-insensitive) input value matches `request.verbal_phrase`.
  */
 
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { ConfirmStore } from './confirm-store.js';
 
 export interface ConfirmPortalProps {
@@ -34,6 +37,12 @@ export function ConfirmPortal({ store }: ConfirmPortalProps): React.ReactElement
   );
 
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [verbalInput, setVerbalInput] = useState('');
+
+  // Reset the verbal input whenever the head request changes (queue advanced).
+  useEffect(() => {
+    setVerbalInput('');
+  }, [head]);
 
   // Open / close the native <dialog> in sync with the head.
   useEffect(() => {
@@ -59,13 +68,22 @@ export function ConfirmPortal({ store }: ConfirmPortalProps): React.ReactElement
 
   if (!head) return null;
 
-  const { capability } = head.request;
-  const title = `Confirm ${capability.id}`;
-  const description = capability.side_effects.length
-    ? `This action has side effects: ${capability.side_effects.join(', ')}.`
+  const { request } = head;
+  const title = request.prompt;
+  const description = request.side_effects.length
+    ? `This action has side effects: ${request.side_effects.join(', ')}.`
     : 'Please confirm this action.';
 
+  const isVerbal = request.level === 'verbal_required';
+  const requiredPhrase = request.verbal_phrase ?? '';
+  const phraseMatches =
+    !isVerbal ||
+    (requiredPhrase.length > 0 &&
+      verbalInput.trim().toLowerCase() === requiredPhrase.trim().toLowerCase());
+  const confirmDisabled = isVerbal && !phraseMatches;
+
   const onConfirm = (): void => {
+    if (confirmDisabled) return;
     store.resolveHead({ confirmed: true });
   };
   const onCancel = (): void => {
@@ -82,6 +100,7 @@ export function ConfirmPortal({ store }: ConfirmPortalProps): React.ReactElement
     <dialog
       ref={dialogRef}
       data-cir-confirm-portal=""
+      data-cir-confirm-level={request.level}
       onKeyDown={onKeyDown}
       onClose={onCancel}
       aria-labelledby="cir-confirm-title"
@@ -89,11 +108,28 @@ export function ConfirmPortal({ store }: ConfirmPortalProps): React.ReactElement
     >
       <h2 id="cir-confirm-title">{title}</h2>
       <p id="cir-confirm-desc">{description}</p>
+      {isVerbal ? (
+        <div data-cir-confirm-verbal="">
+          <label data-cir-confirm-verbal-label="">
+            Type <strong data-cir-confirm-verbal-phrase="">{requiredPhrase}</strong> to confirm
+            <input
+              type="text"
+              data-cir-confirm-verbal-input=""
+              value={verbalInput}
+              onChange={(e) => setVerbalInput(e.target.value)}
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              aria-label={`Type ${requiredPhrase} to confirm`}
+            />
+          </label>
+        </div>
+      ) : null}
       <div data-cir-confirm-actions="">
         <button type="button" data-cir-confirm-cancel="" onClick={onCancel}>
           Cancel
         </button>
-        <button type="button" data-cir-confirm-ok="" onClick={onConfirm}>
+        <button type="button" data-cir-confirm-ok="" onClick={onConfirm} disabled={confirmDisabled}>
           Confirm
         </button>
       </div>

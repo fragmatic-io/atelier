@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Spinner — accessible loading indicator. Rendered as `<output role="status"
  * aria-live="polite">` so the label is announced when it appears. The visual

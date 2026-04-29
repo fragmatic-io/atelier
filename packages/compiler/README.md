@@ -1,6 +1,6 @@
 # @cir/compiler
 
-The **LLM-backed compile service.** The only LLM-touching component in the hot system. Translates `(capabilities + skills + components + intent + trigger)` into a valid manifest, validated by the policy engine before it leaves.
+The **LLM-backed compile service.** The only LLM-touching component in the hot system. Translates `(capabilities + skills + components + intent + brand kit + trigger)` into a valid manifest, validated by the policy engine before it leaves.
 
 ## Responsibilities
 
@@ -11,20 +11,60 @@ The **LLM-backed compile service.** The only LLM-touching component in the hot s
 - Run **diff mode** when a previous manifest exists — produce only the changes (saves 80%+ of tokens).
 - Select the model tier per workload: routine recompile (small/fast), cold compile (large), cross-app workflow (large + extended context), trigger classification (tiny).
 
-## Background
+## Tier-3 manifest cache: choosing a `ManifestStore`
 
-See [`../../docs/architecture.md`](../../docs/architecture.md) — section "Compiler service in detail" for the full prompt structure, the diff-mode contract, and the model-tier selection rationale. Token-budget guidance is in [`../../AGENTS.md`](../../AGENTS.md) ("Token budget") and [`../../docs/token-economics.md`](../../docs/token-economics.md).
+The compiler service holds Tier-3 (server-side, cross-user) manifest cache state behind the `ManifestStore` interface. Two implementations ship:
 
-## Files
+| Use case                                | Store                 | Why                                                                                                               |
+| --------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Local dev, single-process, tests        | `MemoryManifestStore` | Zero config, no external deps. State is per-process and lost on restart — fine for the inner loop and unit tests. |
+| Production, multi-instance, persistence | `RedisManifestStore`  | Survives process restarts, shared across horizontally-scaled compilers. Trigger evictions reach every instance.   |
 
-Standard TypeScript service: `src/` (entry, prompt builders, model adapter, policy retry loop), `prompts/` (versioned system prompts), `tests/`, `package.json`.
+### Wire-up
+
+```ts
+import {
+  CompositeCompiler,
+  GeminiCompiler,
+  FallbackCompiler,
+  MemoryManifestStore,
+  RedisManifestStore,
+  ServerManifestResolver,
+} from '@cir/compiler';
+import { createClient } from 'redis';
+
+const compiler = new CompositeCompiler([
+  new GeminiCompiler({ apiKey: process.env.GEMINI_API_KEY! }),
+  new FallbackCompiler({ lookup: manifestForRoute }),
+]);
+
+// Dev / single-process:
+const store = new MemoryManifestStore({ maxEntries: 10_000 });
+
+// Production / multi-instance:
+const client = createClient({ url: process.env.REDIS_URL });
+await client.connect(); // caller owns lifecycle
+const prodStore = new RedisManifestStore({
+  client,
+  keyPrefix: 'cir:manifest:', // optional, default shown
+  ttlSeconds: 60 * 60 * 24 * 7, // optional, 7 days default; 0 disables
+});
+// ...later, on shutdown:
+await client.quit();
+
+const resolver = new ServerManifestResolver({ compiler, store: prodStore });
+```
+
+### Key-shape compatibility
+
+Both stores serialize the structured `ManifestStoreKey` the same way. Swapping `MemoryManifestStore` for `RedisManifestStore` does not require rebuilding routes or invalidating callers.
+
+### Stats
+
+`hits` / `misses` / `evictions` returned by `store.stats()` are **instance-local** for the Redis store — they reflect what this process has observed, not the cluster aggregate. Cluster-wide observability is a separate concern (see `docs/production-concerns.md`, "Observability").
 
 ## What does NOT live here
 
 - The runtime (`../runtime/`) — never makes LLM calls.
-- Inline LLM calls during render — explicitly forbidden by [`../../AGENTS.md`](../../AGENTS.md) ("Forbidden patterns"). Compile, cache, render — never inline.
+- Inline LLM calls during render — explicitly forbidden by `../../AGENTS.md` ("Forbidden patterns"). Compile, cache, render — never inline.
 - User intent — held by the vault, fetched by scope per compile.
-
-## Status
-
-Stub package in Phase 2 (workspace plumbing only). Source lands starting in **Phase 5 (hello-CIR loop)** with a single-tier compiler service serving the email vertical slice. Multi-tier model selection lands in Phase 3 of the build plan (production hardening).

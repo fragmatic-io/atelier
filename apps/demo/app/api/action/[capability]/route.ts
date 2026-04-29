@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Fake action endpoint. The demo's action handlers in `lib/cir-providers.tsx`
  * POST here. Each capability mutates the in-memory store and returns an

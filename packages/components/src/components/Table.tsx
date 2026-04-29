@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Table — semantic `<table>` with a column schema and a row dataset. When
  * `rows` is empty the component renders the `empty` slot (or a default

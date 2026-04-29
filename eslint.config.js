@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 // ESLint 9 flat config for CIR.
 // Project is "type": "module", so this file is ESM.
 // Uses typescript-eslint's helper to compose recommended-type-checked rules

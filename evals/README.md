@@ -6,13 +6,16 @@
 
 ```
 evals/
-├── capabilities/{name}.eval.ts     # input validation, side-effect checks, permission enforcement
-├── skills/{name}.eval.ts           # given a scenario, does the skill emit the expected capability sequence?
-├── components/{name}.eval.ts       # render, a11y, breakpoint, interaction tests
-├── manifests/{scenario}.eval.ts    # compile + policy-check + structural assertions
-├── recipes/{persona}.eval.ts       # recipe + representative intent compiles to a valid manifest
-└── e2e/{flow}.eval.ts              # intent → manifest → render → action → audit
+├── capability/{name}.eval.ts       # input validation, side-effect checks, permission enforcement
+├── skill/{name}.eval.ts            # given a scenario, does the skill emit the expected capability sequence?
+├── component/{name}.eval.ts        # render, a11y, breakpoint, interaction tests (Phase 5c)
+├── manifest/{scenario}.eval.ts     # compile + policy-check + structural assertions
+└── end-to-end/{flow}.eval.ts       # intent → manifest → render → action → audit
 ```
+
+The folder names match the five `EvalKind` values (`capability | skill |
+component | manifest | end-to-end`) so `--kind <kind>` filtering and the
+runner's discovery glob agree.
 
 - **Naming**: `*.eval.ts` (eval cases) — distinct from `*.test.ts` (unit/integration tests run by vitest).
 
@@ -57,4 +60,22 @@ export default defineEval({
 
 ## Status
 
-Phase 3 ships the [`@cir/evals`](../packages/evals/README.md) harness, the `cir-evals` CLI, and one sanity case (`example.eval.ts`) so the runner stays green. The 100+ scenario set called for in [`../docs/build-plan.md`](../docs/build-plan.md) lands in Phase 5 alongside capability/skill/component source. The harness is **not** wired into `pnpm validate` yet — that gate flips on once the suite is load-bearing.
+Phase 3 shipped the [`@cir/evals`](../packages/evals/README.md) harness, the
+`cir-evals` CLI, and one sanity case (`example.eval.ts`). Phase 5b lands
+the first round of real cases against the demo:
+
+- **capability/** — four evals pin side effects, reversibility, rollback
+  ids, and the snooze input shape on the demo's `CAPABILITIES` record.
+- **manifest/** — three evals validate the `/today` manifest's routes
+  against `RouteSchema`, run the full `BASELINE_POLICIES` + composition
+  rules over it, and assert every component id maps to a registered
+  binding.
+- **skill/** — two evals exercise `parseSkillMarkdown` on synthetic
+  `.skill.md` sources (no real `skills/*.md` ship yet) and check that
+  every `capabilities_used` entry resolves against the demo capability
+  set.
+- **end-to-end/** — one eval drives `ActionDispatcher` end-to-end for
+  `thread.archive`: confirmation gate, handler call, undo push, audit
+  emission.
+
+The 100+ scenario set called for in [`../docs/build-plan.md`](../docs/build-plan.md) continues to grow in Phase 5c. The harness is **not** wired into `pnpm validate` yet — that gate flips on once the suite is load-bearing.

@@ -88,7 +88,7 @@ graph TB
   Policies -.->|validate every| Manifest
 ```
 
-The five public artifacts on the left are signed and versioned by the app. The private intent on the right belongs to the user. The compiler is the only LLM-touching component. Once a manifest is produced, **nothing in the hot path is non-deterministic** — render is a pure function of `(manifest, data)`.
+The five public artifacts at the top are signed and versioned by the app. The private intent below them belongs to the user. The compiler is the only LLM-touching component. Once a manifest is produced, **nothing in the hot path is non-deterministic** — render is a pure function of `(manifest, data)`.
 
 ---
 
@@ -157,8 +157,9 @@ sequenceDiagram
 ### Triggers — the only thing that invalidates
 
 ```mermaid
-graph LR
+graph TB
   subgraph Sources["Trigger sources"]
+    direction TB
     A[capability.schema_changed]
     B[skill.version_changed]
     C[component.removed]
@@ -203,14 +204,15 @@ The full `trigger → invalidation` matrix is in [`docs/caching.md`](docs/cachin
 This is how an app stays on-brand even when the LLM is generating layouts:
 
 ```mermaid
-graph LR
+graph TB
   subgraph DS["Design System Integration"]
-    L1["Layer 1: TypeScript variant unions<br/>e.g. Button.variant: 'primary' | …<br/>(compile-time)"]
-    L2["Layer 2: Manifest schema<br/>per-component variant whitelists<br/>(schema-time)"]
-    L3["Layer 3: Compiler input<br/>BrandKit folded into system prompt<br/>(generation-time)"]
-    L4["Layer 4: Policy enforcement<br/>respects_brand_kit policy<br/>(runtime-time)"]
+    direction TB
+    L1["Layer 1 — TypeScript variant unions<br/>e.g. Button.variant: 'primary' | …<br/>(compile-time of the runtime)"]
+    L2["Layer 2 — Manifest schema<br/>per-component variant whitelists<br/>(wire-format-time)"]
+    L3["Layer 3 — Compiler input<br/>BrandKit folded into system prompt<br/>(generation-time)"]
+    L4["Layer 4 — Policy enforcement<br/>respects_brand_kit policy<br/>(runtime validation)"]
+    L1 --> L2 --> L3 --> L4
   end
-  L1 --> L2 --> L3 --> L4
   L4 -->|reject manifest if off-brand| Compiler[Compiler retries]
   L4 -->|else| Render[Render]
 ```
@@ -223,7 +225,7 @@ graph LR
 
 | Phase      | Status             | Commit    | What landed                                                                                                                                                                                                                                          |
 | ---------- | ------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1**      | ✅ shipped         | `29ea072` | Production-grade repo skeleton: TS strict, ESLint 9 flat, Prettier, Vitest, Husky, commitlint, GitHub Actions CI, Apache-2.0, 33 docs                                                                                                                |
+| **1**      | ✅ shipped         | `29ea072` | Production-grade repo skeleton: TS strict, ESLint 9 flat, Prettier, Vitest, Husky, commitlint, GitHub Actions CI, MIT license, 33 docs                                                                                                               |
 | **2**      | ✅ shipped         | `3018243` | `@cir/schemas` (Zod + JSON Schema codegen), validate-data CLI, license-header check, actionlint, coverage thresholds                                                                                                                                 |
 | **3**      | ✅ shipped         | `75ad088` | `@cir/policies` (5 baseline validators + composer + behavioral interface), `@cir/evals` (harness + CLI), commitlint GitHub Action, `pnpm validate:fast`                                                                                              |
 | **4a**     | ✅ shipped         | `df53c47` | `@cir/runtime` framework-agnostic core: manifest cache, fetcher, resolver, action dispatcher, trigger bus, registries, render plan                                                                                                                   |

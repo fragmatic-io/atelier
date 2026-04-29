@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Server-Sent Events transport for the trigger bus.
  *
@@ -79,7 +79,7 @@ export class SseTriggerTransport {
       (typeof globalThis !== 'undefined' &&
       'EventSource' in globalThis &&
       typeof (globalThis as { EventSource?: unknown }).EventSource === 'function'
-        ? (globalThis as { EventSource: EventSourceCtor }).EventSource
+        ? (globalThis as unknown as { EventSource: EventSourceCtor }).EventSource
         : undefined);
     this.#onOpen = opts.onOpen;
     this.#onError = opts.onError;

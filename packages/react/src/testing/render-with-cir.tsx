@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * `renderWithCir()` — Testing Library `render()` wrapper that mounts the
  * given React tree inside a `<CirRuntime>` provider with sane defaults.

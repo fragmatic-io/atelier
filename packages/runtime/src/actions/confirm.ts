@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Confirmation flow for action dispatch.
  *
@@ -16,14 +16,22 @@
  * unless the host says yes.
  */
 
-import type { Capability, ConfirmationLevel } from '@cir/schemas';
-import type { ActionExecutionContext } from './dispatcher.js';
+import type { ConfirmationLevel } from '@cir/schemas';
 
 export interface ConfirmationRequest {
-  capability: Capability;
-  level: ConfirmationLevel;
-  input: unknown;
-  ctx: ActionExecutionContext;
+  /** Capability id of the action awaiting confirmation. */
+  capability_id: string;
+  /** UI hint: what's being asked. */
+  prompt: string;
+  /** Side-effect summary (capability.side_effects). */
+  side_effects: readonly string[];
+  /** Confirmation level from the capability. */
+  level: 'inline' | 'modal' | 'verbal_required';
+  /**
+   * For `verbal_required`: phrase the user must type. Default: last segment
+   * of capability_id ("pulls.merge" → "merge"). Hosts can override per-call.
+   */
+  verbal_phrase?: string;
 }
 
 export interface ConfirmationDecision {

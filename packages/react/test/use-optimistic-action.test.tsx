@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';

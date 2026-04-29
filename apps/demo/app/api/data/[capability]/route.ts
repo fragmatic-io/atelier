@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Fake data endpoint. The demo's `DataResolver` (in `lib/cir-providers.tsx`)
  * fetches from here based on the manifest's component data binding spec.

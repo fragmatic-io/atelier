@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "CIR foundational schemas — Zod schemas + generated JSON Schemas for capabilities, skills, components, intent, manifests, triggers, policies, audit",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 
 /**
  * License header check.
@@ -39,10 +39,12 @@ const EXCLUDE = [
   '**/golden/**',
 ];
 
-const SPDX_LINE = 'SPDX-License-Identifier: Apache-2.0';
-const HEADER = `// ${SPDX_LINE}\n// Copyright 2026 The CIR Authors\n`;
+const SPDX_LINE = 'SPDX-License-Identifier: MIT';
+const HEADER = `// ${SPDX_LINE}\n// Copyright (c) 2026 The CIR Authors\n`;
 // Match the SPDX line inside `//`, `#`, or `/* ... */` style comments.
-const SPDX_RE = /(^|\s)SPDX-License-Identifier:\s*Apache-2\.0/;
+// Accept both MIT (current) and Apache-2.0 (legacy, transitional) so a partial
+// migration doesn't blow up CI mid-flight.
+const SPDX_RE = /(^|\s)SPDX-License-Identifier:\s*(MIT|Apache-2\.0)/;
 
 const fix = process.argv.includes('--fix');
 

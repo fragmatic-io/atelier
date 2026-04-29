@@ -106,7 +106,7 @@ Don't write UI for a new capability. UI is generated. If you find yourself reach
 
 ## License
 
-CIR is licensed under the [Apache License, Version 2.0](LICENSE). By submitting a contribution, you agree that your contribution is licensed under the same terms (Apache-2.0 §5, "Submission of Contributions"). The [`NOTICE`](NOTICE) file records the project's attribution; preserve it in derivative works as the license requires.
+CIR is licensed under the [MIT License](LICENSE). By submitting a contribution, you agree that your contribution is licensed under the same terms. The [`NOTICE`](NOTICE) file records the project's attribution; preserve it in derivative works.
 
 ## Code of Conduct
 

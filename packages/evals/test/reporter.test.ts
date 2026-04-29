@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConsoleReporter, JsonReporter } from '../src/reporter.ts';
 import type { EvalResult } from '../src/define.ts';

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "CIR render runtime — framework-agnostic core: manifest fetcher/resolver, action dispatcher, trigger bus, component registry, render-plan derivation",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

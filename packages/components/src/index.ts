@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * `@cir/components` — Phase 4b baseline React components for CIR.
  *
  * Public surface:
- *  - 13 React components covering Layout, Display, Input, Feedback, Action.
+ *  - 23 React components covering Layout, Display, Input, Feedback, Action.
  *  - Their corresponding `ComponentBinding`s.
  *  - `ALL_COMPONENTS` (pre-built registry), `COMPONENT_BINDINGS`,
  *    `COMPOSITION_RULES`, `TEXT_RENDERERS`.
@@ -36,6 +36,18 @@ export type {
 export { Grid, GridBinding } from './components/Grid.js';
 export type { GridProps, GridColumns } from './components/Grid.js';
 
+export { Tabs, TabsBinding } from './components/Tabs.js';
+export type { TabsProps, TabItem } from './components/Tabs.js';
+
+export { Accordion, AccordionBinding } from './components/Accordion.js';
+export type { AccordionProps, AccordionItem } from './components/Accordion.js';
+
+export { Modal, ModalBinding } from './components/Modal.js';
+export type { ModalProps, ModalSize } from './components/Modal.js';
+
+export { Drawer, DrawerBinding } from './components/Drawer.js';
+export type { DrawerProps, DrawerSide } from './components/Drawer.js';
+
 // -----------------------------------------------------------------------------
 // Display
 // -----------------------------------------------------------------------------
@@ -47,6 +59,15 @@ export type { TableProps, TableColumn } from './components/Table.js';
 
 export { EmptyState, EmptyStateBinding } from './components/EmptyState.js';
 export type { EmptyStateProps } from './components/EmptyState.js';
+
+export { List, ListBinding } from './components/List.js';
+export type { ListProps } from './components/List.js';
+
+export { DetailView, DetailViewBinding } from './components/DetailView.js';
+export type { DetailViewProps, DetailField } from './components/DetailView.js';
+
+export { StatCard, StatCardBinding } from './components/StatCard.js';
+export type { StatCardProps, StatCardDelta, StatTrend } from './components/StatCard.js';
 
 // -----------------------------------------------------------------------------
 // Input
@@ -68,6 +89,15 @@ export type { AlertProps, AlertSeverity } from './components/Alert.js';
 
 export { Spinner, SpinnerBinding } from './components/Spinner.js';
 export type { SpinnerProps } from './components/Spinner.js';
+
+export { Toast, ToastBinding } from './components/Toast.js';
+export type { ToastProps } from './components/Toast.js';
+
+export { Progress, ProgressBinding } from './components/Progress.js';
+export type { ProgressProps } from './components/Progress.js';
+
+export { Skeleton, SkeletonBinding } from './components/Skeleton.js';
+export type { SkeletonProps, SkeletonRadius } from './components/Skeleton.js';
 
 // -----------------------------------------------------------------------------
 // Action

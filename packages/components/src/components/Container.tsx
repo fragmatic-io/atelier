@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
  * Container — page-level width-constrained landmark. Renders `<main>` so the
  * accessibility tree picks it up as the document's primary content region.
