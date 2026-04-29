@@ -23,7 +23,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: false,
-    include: ['**/*.{test,spec}.ts'],
+    include: ['**/*.{test,spec}.{ts,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.husky/**', '**/.git/**'],
     passWithNoTests: false,
     coverage: {
@@ -74,11 +74,31 @@ export default defineConfig({
           branches: 80,
           statements: 90,
         },
+        // @cir/components: React components with happy-dom tests. Matches the
+        // runtime bar — DOM event branches and ref-forwarding paths pull
+        // coverage down marginally, but the bulk of each component is
+        // straightforward and reaches 95%+ with the suite shipped in 4b.
+        'packages/components/src/**/*.{ts,tsx}': {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
+        // @cir/react: provider, hooks, render walker, confirm portal. Same bar
+        // as runtime — the giant trigger-type switch in `route.tsx` adds many
+        // shallow branches, so 80% is the realistic ceiling without writing
+        // exhaustive case-by-case tests for every Trigger member.
+        'packages/react/src/**/*.{ts,tsx}': {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
       },
-      include: ['packages/**/src/**/*.ts'],
+      include: ['packages/**/src/**/*.{ts,tsx}'],
       exclude: [
-        '**/*.test.ts',
-        '**/*.spec.ts',
+        '**/*.test.{ts,tsx}',
+        '**/*.spec.{ts,tsx}',
         '**/dist/**',
         '**/node_modules/**',
         '**/*.d.ts',
