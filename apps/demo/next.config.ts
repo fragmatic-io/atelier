@@ -7,6 +7,7 @@ const config: NextConfig = {
   // The workspace packages ship raw TypeScript (their `main` points at `src/`).
   // Next.js needs to transpile them in this app.
   transpilePackages: [
+    '@cir/compiler',
     '@cir/components',
     '@cir/policies',
     '@cir/react',

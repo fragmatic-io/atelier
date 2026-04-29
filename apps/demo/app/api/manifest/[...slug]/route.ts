@@ -1,23 +1,29 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 The CIR Authors
 /**
- * Fake compiler endpoint. The runtime's `ManifestFetcher` calls
- * `GET /api/manifest/{user_id}/{app_id}/{encodedRoute}`. We dispatch on
- * the route segment and return a hand-written manifest.
+ * Manifest endpoint. The runtime's `ManifestFetcher` calls
+ * `GET /api/manifest/{user_id}/{app_id}/{encodedRoute}`. We delegate to the
+ * server-side `ServerManifestResolver`, which:
+ *   1. Checks the Tier-3 ManifestStore (server cache)
+ *   2. On miss, calls the CompositeCompiler (Gemini → fallback)
+ *   3. Validates the result via `@cir/policies` BASELINE_POLICIES
+ *   4. Stores the result, emits `manifest.compiled` audit
+ *   5. Returns the manifest
  *
- * In Phase 5 this endpoint becomes the real LLM-backed compiler service.
+ * Phase 5a swap-in. Replaces the previous fake `manifestForRoute()` direct call.
  */
 
 import { NextResponse } from 'next/server';
-import { manifestForRoute } from '@/lib/fake-manifests';
+import { getCirServer } from '@/lib/cir-server';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 interface RouteParams {
   params: Promise<{ slug: string[] }>;
 }
 
-export async function GET(_req: Request, { params }: RouteParams): Promise<Response> {
+export async function GET(req: Request, { params }: RouteParams): Promise<Response> {
   const { slug } = await params;
   if (slug.length < 3) {
     return NextResponse.json(
@@ -25,18 +31,34 @@ export async function GET(_req: Request, { params }: RouteParams): Promise<Respo
       { status: 400 },
     );
   }
-  const route = slug.slice(2).join('/');
-  // Route comes URL-decoded; slash leading is preserved as the first char of
-  // the segment, except when the path was multi-segment we joined above.
+  const [user_id, app_id, ...routeParts] = slug;
+  const route = routeParts.join('/');
   const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
-  const manifest = manifestForRoute(normalizedRoute);
-  if (!manifest) {
-    return NextResponse.json(
-      { error: `no manifest for route ${normalizedRoute}` },
-      { status: 404 },
-    );
+
+  const server = getCirServer();
+
+  try {
+    const result = await server.resolver.resolve({
+      user_id: user_id!,
+      app_id: app_id!,
+      route: normalizedRoute,
+      capabilities: server.capabilities,
+      components: server.components,
+      brandKit: server.brandKit,
+      signal: req.signal,
+    });
+
+    return NextResponse.json(result.manifest, {
+      headers: {
+        'cache-control': 'no-store',
+        ETag: `"${result.manifest.manifest_id}"`,
+        'x-cir-source': result.source,
+        'x-cir-compiler': result.compiler_id,
+        'x-cir-tokens': String(result.token_cost),
+        'x-cir-duration-ms': String(result.duration_ms),
+      },
+    });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message ?? String(err) }, { status: 500 });
   }
-  return NextResponse.json(manifest, {
-    headers: { 'Cache-Control': 'no-store', ETag: `"${manifest.manifest_id}"` },
-  });
 }

@@ -11,13 +11,14 @@ describe('validateManifest', () => {
     expect(result.violations).toEqual([]);
   });
 
-  it('exposes all 5 baseline policies in stable order', () => {
+  it('exposes all 6 baseline policies in stable order', () => {
     expect(BASELINE_POLICIES.map((p) => p.id)).toEqual([
       'data_access_within_grant',
       'confirmation_required_for_destructive',
       'no_pii_in_query_strings',
       'rate_limited_actions_show_state',
       'reversibility_surfaced',
+      'respects_brand_kit',
     ]);
   });
 

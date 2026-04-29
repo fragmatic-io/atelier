@@ -54,3 +54,9 @@ export {
   type DataBinding,
   type DataResolver,
 } from './data/data-resolver.js';
+
+// -----------------------------------------------------------------------------
+// Debug UI (for dev observability)
+// -----------------------------------------------------------------------------
+export { DebugPanel, type DebugPanelProps } from './debug/debug-panel.js';
+export { CompileBadge, type CompileBadgeProps } from './debug/compile-badge.js';

@@ -151,6 +151,20 @@ export {
 export { PolicySchema, type Policy } from './policy.js';
 
 // -----------------------------------------------------------------------------
+// Brand kit (design system)
+// -----------------------------------------------------------------------------
+export {
+  BrandKitSchema,
+  BrandTokensSchema,
+  BrandVariantsSchema,
+  BrandVoiceSchema,
+  type BrandKit,
+  type BrandTokens,
+  type BrandVariants,
+  type BrandVoice,
+} from './brand-kit.js';
+
+// -----------------------------------------------------------------------------
 // Audit
 // -----------------------------------------------------------------------------
 export {

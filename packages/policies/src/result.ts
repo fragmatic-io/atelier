@@ -12,7 +12,7 @@
  * §"Policy engine" for the baseline policy specs this package implements.
  */
 
-import type { Capability, IntentProfile, Manifest } from '@cir/schemas';
+import type { BrandKit, Capability, IntentProfile, Manifest } from '@cir/schemas';
 
 /** Severity of a policy violation. `error` blocks; `warn` records but permits. */
 export type PolicySeverity = 'error' | 'warn';
@@ -60,6 +60,12 @@ export interface PolicyContext {
   rate_limited_capability_ids: ReadonlySet<string>;
   /** Field names considered PII for this app/tenant. */
   pii_fields: ReadonlySet<string>;
+  /**
+   * Optional brand kit. When supplied, the `respects_brand_kit` policy
+   * checks layout props against the per-component variant whitelists and
+   * flags inline raw colors / pixel values.
+   */
+  brand_kit?: BrandKit | undefined;
 }
 
 /** A pure-function policy. */

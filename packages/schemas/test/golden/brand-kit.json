@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://cir.dev/schemas/brand-kit.json",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+"
+    },
+    "tokens": {
+      "type": "object",
+      "properties": {
+        "colors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "spacing": {
+          "$ref": "#/properties/tokens/properties/colors"
+        },
+        "typography": {
+          "type": "object",
+          "properties": {
+            "font_stack": {
+              "type": "string"
+            },
+            "scale": {
+              "$ref": "#/properties/tokens/properties/colors"
+            },
+            "weight": {
+              "$ref": "#/properties/tokens/properties/colors"
+            }
+          },
+          "required": [
+            "font_stack",
+            "scale"
+          ],
+          "additionalProperties": false
+        },
+        "motion": {
+          "type": "object",
+          "properties": {
+            "duration": {
+              "$ref": "#/properties/tokens/properties/colors"
+            },
+            "easing": {
+              "$ref": "#/properties/tokens/properties/colors"
+            }
+          },
+          "required": [
+            "duration",
+            "easing"
+          ],
+          "additionalProperties": false
+        },
+        "radius": {
+          "$ref": "#/properties/tokens/properties/colors"
+        },
+        "shadow": {
+          "$ref": "#/properties/tokens/properties/colors"
+        }
+      },
+      "required": [
+        "colors",
+        "spacing",
+        "typography"
+      ],
+      "additionalProperties": false
+    },
+    "variants": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "properties": {
+        "tone": {
+          "type": "string"
+        },
+        "do": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dont": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "tone",
+        "do",
+        "dont"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "tokens",
+    "variants",
+    "voice"
+  ],
+  "additionalProperties": false
+}

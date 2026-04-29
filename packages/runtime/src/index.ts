@@ -118,3 +118,8 @@ export type { RenderNode, RenderPlan } from './render/plan-types.js';
 // Audit
 // -----------------------------------------------------------------------------
 export { ConsoleAuditSink, NoopAuditSink, type AuditSink } from './audit/emit.js';
+export {
+  StreamingAuditSink,
+  type AuditListener,
+  type StreamingAuditSinkOptions,
+} from './audit/streaming.js';

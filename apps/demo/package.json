@@ -13,6 +13,7 @@
     "e2e:install": "playwright install chromium"
   },
   "dependencies": {
+    "@cir/compiler": "workspace:*",
     "@cir/components": "workspace:*",
     "@cir/policies": "workspace:*",
     "@cir/react": "workspace:*",

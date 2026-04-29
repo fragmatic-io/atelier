@@ -21,7 +21,6 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import {
   ActionDispatcher,
-  ConsoleAuditSink,
   InMemoryTriggerBus,
   ManifestFetcher,
   ManifestResolver,
@@ -29,14 +28,22 @@ import {
   MapComponentRegistry,
   MemoryManifestCache,
   SseTriggerTransport,
+  StreamingAuditSink,
   wireTriggerInvalidation,
   type ActionExecutionContext,
   type ConfirmationCallback,
 } from '@cir/runtime';
 import { COMPONENT_BINDINGS } from '@cir/components';
-import { CirRuntime, useReactConfirmation, type DataBinding } from '@cir/react';
+import {
+  CirRuntime,
+  CompileBadge,
+  DebugPanel,
+  useReactConfirmation,
+  type DataBinding,
+} from '@cir/react';
 import { validateManifest, BASELINE_POLICIES } from '@cir/policies';
 import type { Manifest } from '@cir/schemas';
+import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
 import { DEMO_BINDINGS } from '@/components';
 
@@ -69,7 +76,12 @@ const dataResolver = async (binding: DataBinding): Promise<unknown> => {
   return res.json();
 };
 
-function buildServices(confirm: ConfirmationCallback): CirServices {
+interface BuiltServices {
+  services: CirServices;
+  audit: StreamingAuditSink;
+}
+
+function buildServices(confirm: ConfirmationCallback): BuiltServices {
   // Component registry: combine @cir/components baseline + demo extensions
   const registry = new MapComponentRegistry({
     ...COMPONENT_BINDINGS,
@@ -91,7 +103,8 @@ function buildServices(confirm: ConfirmationCallback): CirServices {
   // Manifest fetcher → /api/manifest. Resolver validates via policy engine.
   const fetcher = new ManifestFetcher({ baseUrl: '/api' });
   const cache = new MemoryManifestCache();
-  const audit = new ConsoleAuditSink();
+  // StreamingAuditSink: feeds the DebugPanel + CompileBadge.
+  const audit = new StreamingAuditSink({ bufferSize: 200, echoToConsole: true });
   const resolver = new ManifestResolver({
     fetcher,
     cache,
@@ -116,6 +129,7 @@ function buildServices(confirm: ConfirmationCallback): CirServices {
           },
           rate_limited_capability_ids: new Set(),
           pii_fields: new Set(['email']),
+          brand_kit: DEMO_BRAND_KIT,
         },
         { policies: BASELINE_POLICIES },
       );
@@ -135,19 +149,23 @@ function buildServices(confirm: ConfirmationCallback): CirServices {
   });
 
   return {
-    resolver,
-    dispatcher,
-    registry,
-    bus,
+    services: {
+      resolver,
+      dispatcher,
+      registry,
+      bus,
+      audit,
+      identity: { user_id: 'demo-user', app_id: 'cir.demo' },
+    },
     audit,
-    identity: { user_id: 'demo-user', app_id: 'cir.demo' },
   };
 }
 
 export function CirProviders({ children }: { children: ReactNode }): React.JSX.Element {
   const { confirm, Portal } = useReactConfirmation();
   // Memoize so React strict mode and re-renders don't rebuild the cache.
-  const services = useMemo(() => buildServices(confirm), [confirm]);
+  const built = useMemo(() => buildServices(confirm), [confirm]);
+  const { services, audit } = built;
 
   // Connect the SSE transport on mount; tear down on unmount. The transport
   // bridges /api/triggers/stream events into the local bus, which the cache
@@ -177,6 +195,18 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
         {children}
       </CirRuntime>
       <Portal />
+      <DebugPanel sink={audit} />
+      <div
+        style={{
+          position: 'fixed',
+          top: 12,
+          right: 12,
+          zIndex: 90,
+          pointerEvents: 'none',
+        }}
+      >
+        <CompileBadge sink={audit} />
+      </div>
     </>
   );
 }

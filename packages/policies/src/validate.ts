@@ -12,12 +12,13 @@ import { dataAccessWithinGrant } from './baseline/data_access_within_grant.js';
 import { confirmationRequiredForDestructive } from './baseline/confirmation_required_for_destructive.js';
 import { noPiiInQueryStrings } from './baseline/no_pii_in_query_strings.js';
 import { rateLimitedActionsShowState } from './baseline/rate_limited_actions_show_state.js';
+import { respectsBrandKit } from './baseline/respects_brand_kit.js';
 import { reversibilitySurfaced } from './baseline/reversibility_surfaced.js';
 
 /**
- * The 5 baseline policies enumerated in `docs/architecture.md`. Order matters
- * only for stable violation ordering in audit output — the policies do not
- * depend on each other.
+ * The baseline policies enumerated in `docs/architecture.md` plus
+ * `respects_brand_kit` (Phase 5a). Order matters only for stable violation
+ * ordering in audit output — the policies do not depend on each other.
  */
 export const BASELINE_POLICIES: readonly NamedPolicy[] = [
   dataAccessWithinGrant,
@@ -25,6 +26,7 @@ export const BASELINE_POLICIES: readonly NamedPolicy[] = [
   noPiiInQueryStrings,
   rateLimitedActionsShowState,
   reversibilitySurfaced,
+  respectsBrandKit,
 ];
 
 export interface ValidateOptions {

@@ -39,6 +39,7 @@ export {
 export { noPiiInQueryStrings } from './baseline/no_pii_in_query_strings.js';
 export { rateLimitedActionsShowState } from './baseline/rate_limited_actions_show_state.js';
 export { reversibilitySurfaced } from './baseline/reversibility_surfaced.js';
+export { respectsBrandKit } from './baseline/respects_brand_kit.js';
 
 // -----------------------------------------------------------------------------
 // Internal helpers (exported so downstream policy authors can reuse them)

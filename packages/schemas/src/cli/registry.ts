@@ -10,6 +10,7 @@
  */
 
 import type { ZodSchema } from 'zod';
+import { BrandKitSchema } from '../brand-kit.js';
 import { CapabilitySchema } from '../capability.js';
 import { ComponentDefinitionSchema, ComponentRegistrySchema } from '../component.js';
 import { ConversationOverlaySchema, IntentProfileSchema } from '../intent.js';
@@ -32,6 +33,7 @@ export interface RegistryEntry {
  */
 export const SCHEMA_REGISTRY: readonly RegistryEntry[] = [
   { name: 'audit-event', schema: AuditEventSchema },
+  { name: 'brand-kit', schema: BrandKitSchema },
   { name: 'capability', schema: CapabilitySchema },
   { name: 'component-definition', schema: ComponentDefinitionSchema },
   { name: 'component-registry', schema: ComponentRegistrySchema },
