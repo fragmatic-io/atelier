@@ -33,7 +33,7 @@ import {
   type ActionExecutionContext,
   type ConfirmationCallback,
 } from '@cir/runtime';
-import { COMPONENT_BINDINGS } from '@cir/components';
+import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
 import {
   CirRuntime,
   CompileBadge,
@@ -41,7 +41,7 @@ import {
   useReactConfirmation,
   type DataBinding,
 } from '@cir/react';
-import { validateManifest, BASELINE_POLICIES } from '@cir/policies';
+import { validateManifest, BASELINE_POLICIES, composesAccordingTo } from '@cir/policies';
 import type { Manifest } from '@cir/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
@@ -131,7 +131,9 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           pii_fields: new Set(['email']),
           brand_kit: DEMO_BRAND_KIT,
         },
-        { policies: BASELINE_POLICIES },
+        {
+          policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
+        },
       );
       return { ok: result.ok, reasons: result.violations.map((v) => v.message) };
     },

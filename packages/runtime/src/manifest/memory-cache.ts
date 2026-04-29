@@ -47,6 +47,21 @@ export class MemoryManifestCache implements ManifestCache {
     return removed;
   }
 
+  async markStale(
+    predicate: (key: ManifestCacheKey, value: CachedManifest) => boolean,
+  ): Promise<number> {
+    let marked = 0;
+    for (const [serialized, value] of this.#store) {
+      const key = deserializeCacheKey(serialized);
+      if (!key) continue;
+      if (predicate(key, value)) {
+        this.#store.set(serialized, { ...value, stale: true });
+        marked += 1;
+      }
+    }
+    return marked;
+  }
+
   async size(): Promise<number> {
     return this.#store.size;
   }

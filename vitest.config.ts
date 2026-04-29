@@ -14,10 +14,19 @@ import { defineConfig } from 'vitest/config';
  * "Evals" section). When that runner lands, point it at evals/ and keep this
  * config focused on unit/integration tests.
  *
- * Coverage thresholds are tuned per package via the `perFile` thresholds map
+ * Coverage thresholds are tuned per package via the per-glob thresholds map
  * below. New packages start at 0% and ratchet up as source lands. The repo-wide
- * floor is the lowest acceptable bar; per-file overrides ratchet stricter
+ * floor is the lowest acceptable bar; per-package overrides ratchet stricter
  * packages individually.
+ *
+ * Ratchet policy (Phase 5b, Gap G):
+ *  - Each per-package threshold sits at roughly `current measured - 1%`, so
+ *    a small drop doesn't break CI but real regressions do.
+ *  - Files that are intentionally untested at this phase (debug overlays,
+ *    observability streaming, partially-implemented baseline policies, the
+ *    fresh @cir/compiler package) are excluded from `coverage.include` rather
+ *    than dragging package aggregates below the ratchet. Each exclusion
+ *    carries a comment naming the phase that should re-include it.
  */
 export default defineConfig({
   test: {
@@ -38,69 +47,83 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: 'coverage',
-      // Repo-wide floor — kept low so unrelated work is not blocked. Per-file
+      // Repo-wide floor — kept low so unrelated work is not blocked. Per-package
       // thresholds (below) apply stricter bars to specific packages.
       thresholds: {
         lines: 0,
         functions: 0,
         branches: 0,
         statements: 0,
-        // @cir/schemas: schemas are nearly all declarative. Anything that drops
-        // below this floor likely means a new schema was added without tests.
-        // Functions threshold is lower because v8 attributes per-callback
-        // functions inside zod's `.refine()` chains; the real declarative
-        // coverage is captured by lines/statements/branches.
+        // @cir/schemas: schemas are nearly all declarative and now reach 100%
+        // across every dimension. Ratchet aggressively — anything below this
+        // means a new schema landed without tests.
         'packages/schemas/src/**/*.ts': {
-          lines: 95,
-          functions: 50,
-          branches: 80,
-          statements: 95,
-        },
-        // @cir/policies: pure-function validators. Easy to cover well; demand it.
-        'packages/policies/src/**/*.ts': {
-          lines: 95,
+          lines: 99,
           functions: 95,
-          branches: 90,
-          statements: 95,
+          branches: 95,
+          statements: 99,
+        },
+        // @cir/policies: pure-function validators. The base set lands at
+        // 96–100% once the partially-implemented `respects_brand_kit` policy
+        // is excluded (see exclusions below). Ratchet to lock that in.
+        'packages/policies/src/**/*.ts': {
+          lines: 97,
+          functions: 97,
+          branches: 95,
+          statements: 97,
         },
         // @cir/evals: orchestration with CLI + reporters; harder to fully cover
-        // without spawning real processes for every flag combo. Set a sensible
-        // bar that's already met and ratchet up as the harness grows.
+        // without spawning real processes for every flag combo. Brief said
+        // leave at 90/90/80/90 (still maturing) — measured ~94/100/88/94.
         'packages/evals/src/**/*.ts': {
           lines: 90,
           functions: 90,
           branches: 80,
           statements: 90,
         },
-        // @cir/runtime: orchestration (cache + fetch + dispatch + bus). Higher
-        // bar than evals because there's less CLI surface area; lower than
-        // schemas/policies because retry/abort branches and IDB shims pull
-        // coverage down a few points without cosmic test suites.
+        // @cir/runtime: orchestration (cache + fetch + dispatch + bus). With
+        // `audit/streaming.ts` (Phase 4d streaming sink, no harness yet) and
+        // `render/plan-types.ts` (types-only) excluded below, the rest of the
+        // package sits at 97–100%. Ratchet without dragging.
         'packages/runtime/src/**/*.ts': {
-          lines: 90,
+          lines: 96,
           functions: 90,
-          branches: 80,
-          statements: 90,
+          branches: 88,
+          statements: 96,
         },
-        // @cir/components: React components with happy-dom tests. Matches the
-        // runtime bar — DOM event branches and ref-forwarding paths pull
-        // coverage down marginally, but the bulk of each component is
-        // straightforward and reaches 95%+ with the suite shipped in 4b.
+        // @cir/components: React components with happy-dom tests. Aggregates
+        // ~98/100/87/98 with the suite shipped in 4b. Ratchet branches up
+        // moderately (variant `className` ternaries are individually covered
+        // by their default path; both branches are not always hit).
         'packages/components/src/**/*.{ts,tsx}': {
-          lines: 90,
-          functions: 90,
-          branches: 80,
-          statements: 90,
+          lines: 95,
+          functions: 95,
+          branches: 85,
+          statements: 95,
         },
-        // @cir/react: provider, hooks, render walker, confirm portal. Same bar
-        // as runtime — the giant trigger-type switch in `route.tsx` adds many
-        // shallow branches, so 80% is the realistic ceiling without writing
-        // exhaustive case-by-case tests for every Trigger member.
+        // @cir/react: provider, hooks, render walker, confirm portal. The
+        // giant trigger-type switch in `route.tsx` adds many shallow branches
+        // and pulls overall branch coverage down a few points. With the debug
+        // overlays excluded (Phase 4d additions, untested), the rest of the
+        // package is ~95/100/90/95.
         'packages/react/src/**/*.{ts,tsx}': {
-          lines: 90,
-          functions: 90,
-          branches: 80,
-          statements: 90,
+          lines: 94,
+          functions: 95,
+          branches: 88,
+          statements: 94,
+        },
+        // @cir/compiler: NEW (Phase 5a). Tests are forthcoming — the package
+        // ships untested today. Threshold mirrors the brief's "current
+        // measured value MINUS 1%" rule: lines/statements measured at 0%, a
+        // few zod schemas in `manifest-store.ts` give branches/functions a
+        // small non-zero. Set the floor at 0/0/0/0 so the package is included
+        // in the coverage report (visibility) without breaking CI; ratchet up
+        // as soon as the first compiler tests land.
+        'packages/compiler/src/**/*.ts': {
+          lines: 0,
+          functions: 0,
+          branches: 0,
+          statements: 0,
         },
       },
       include: ['packages/**/src/**/*.{ts,tsx}'],
@@ -115,6 +138,19 @@ export default defineConfig({
         // v8 reports 0% which skews the aggregate below per-file thresholds.
         '**/index.ts',
         '**/{result,types}.ts',
+        // `render/plan-types.ts` is a types-only module that escapes the
+        // `{result,types}.ts` glob above (different filename shape).
+        'packages/runtime/src/render/plan-types.ts',
+        // Phase 4d streaming audit sink — no test harness lands until the
+        // SSE-paired streaming smoke spec in Phase 5c.
+        'packages/runtime/src/audit/streaming.ts',
+        // Phase 4d debug overlays (compile badge + debug panel). Visual-only
+        // dev tooling; tests follow when Phase 5c adds the inspector
+        // integration suite.
+        'packages/react/src/debug/**',
+        // Brand-kit baseline policy is partially implemented — only the
+        // detection scaffold is wired; rule evaluation lands in Phase 5b/c.
+        'packages/policies/src/baseline/respects_brand_kit.ts',
       ],
     },
   },

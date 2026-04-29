@@ -108,4 +108,18 @@ describe('MemoryManifestCache', () => {
     const cache = new MemoryManifestCache();
     expect(cache.entriesForTest().size).toBe(0);
   });
+
+  it('markStale flags matching entries without removing them', async () => {
+    const cache = new MemoryManifestCache();
+    await cache.set(key1, entry());
+    await cache.set(key2, entry());
+    await cache.set(otherUser, entry());
+
+    const marked = await cache.markStale((k) => k.user_id === 'vid');
+    expect(marked).toBe(2);
+    expect(await cache.size()).toBe(3); // nothing was removed
+    expect((await cache.get(key1))?.stale).toBe(true);
+    expect((await cache.get(key2))?.stale).toBe(true);
+    expect((await cache.get(otherUser))?.stale).toBeUndefined();
+  });
 });

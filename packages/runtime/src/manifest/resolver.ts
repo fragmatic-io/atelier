@@ -51,6 +51,26 @@ export interface ManifestResolverOptions {
   audit?: AuditSink;
   /** Override `Date.now` for tests. */
   clock?: Clock;
+  /**
+   * Stale-while-revalidate. When `true` and the cache returns an entry with
+   * `stale === true`, the resolver returns it immediately and kicks off a
+   * background refresh (fetch + validate + cache write). The background work
+   * is fire-and-forget; failures are reported via `onBackgroundError` if
+   * provided, otherwise swallowed. Default `false` (stale entries fall
+   * through to a normal fresh fetch).
+   *
+   * Pairs with `wireTriggerInvalidation({ markStaleInsteadOfEvict: true })`:
+   * a trigger marks matching entries stale, the next read serves them
+   * immediately, and a fresh manifest replaces them in the background. See
+   * `/Users/vid/cir/docs/caching.md` §"Semantic invalidation".
+   */
+  staleWhileRevalidate?: boolean;
+  /**
+   * Reports errors thrown by background refresh attempts when SWR is on.
+   * Best-effort; the resolver never re-throws background failures because
+   * the user has already been served the (stale) manifest.
+   */
+  onBackgroundError?: (error: unknown, key: ManifestCacheKey) => void;
 }
 
 export interface ResolveOptions {
@@ -88,6 +108,10 @@ export class ManifestResolver {
   readonly #validate: ((m: Manifest) => ManifestValidationResult) | undefined;
   readonly #audit: AuditSink;
   readonly #clock: Clock;
+  readonly #swr: boolean;
+  readonly #onBackgroundError: ((error: unknown, key: ManifestCacheKey) => void) | undefined;
+  /** Per-key in-flight background refreshes. Coalesces concurrent SWR reads. */
+  readonly #inflight = new Map<string, Promise<void>>();
 
   constructor(opts: ManifestResolverOptions) {
     this.#fetcher = opts.fetcher;
@@ -95,19 +119,39 @@ export class ManifestResolver {
     this.#validate = opts.validate;
     this.#audit = opts.audit ?? NoopAuditSink;
     this.#clock = opts.clock ?? isoNow;
+    this.#swr = opts.staleWhileRevalidate ?? false;
+    this.#onBackgroundError = opts.onBackgroundError;
   }
 
   async resolve(key: ManifestCacheKey, opts: ResolveOptions = {}): Promise<Manifest> {
     if (!opts.forceRefresh) {
       const cached = await this.#cache.get(key);
       if (cached) {
-        const updated: CachedManifest = { ...cached, last_used: this.#clock() };
-        await this.#cache.set(key, updated);
-        await this.#emitServed(key, cached.manifest);
-        return cached.manifest;
+        // Stale entry handling. Without SWR, a stale entry is treated like a
+        // miss (same as `evictMatching`). With SWR, we serve it immediately
+        // and refresh in the background.
+        if (cached.stale === true) {
+          if (this.#swr) {
+            const updated: CachedManifest = { ...cached, last_used: this.#clock() };
+            await this.#cache.set(key, updated);
+            await this.#emitServed(key, cached.manifest);
+            void this.#refreshInBackground(key);
+            return cached.manifest;
+          }
+          // SWR off: fall through to fetch.
+        } else {
+          const updated: CachedManifest = { ...cached, last_used: this.#clock() };
+          await this.#cache.set(key, updated);
+          await this.#emitServed(key, cached.manifest);
+          return cached.manifest;
+        }
       }
     }
 
+    return this.#fetchAndStore(key);
+  }
+
+  async #fetchAndStore(key: ManifestCacheKey): Promise<Manifest> {
     const fetched = await this.#fetcher.fetch(key);
 
     if (this.#validate) {
@@ -129,6 +173,29 @@ export class ManifestResolver {
     await this.#cache.set(key, cached);
     await this.#emitCompiled(key, fetched.manifest);
     return fetched.manifest;
+  }
+
+  /**
+   * Fire-and-forget background refresh used by the SWR path. Errors are
+   * reported via `onBackgroundError` (if provided) and otherwise swallowed
+   * — the foreground caller already received the stale manifest.
+   *
+   * Multiple SWR reads on the same key share one in-flight refresh.
+   */
+  #refreshInBackground(key: ManifestCacheKey): Promise<void> {
+    const serialized = `${key.user_id}:${key.app_id}:${key.route}`;
+    const existing = this.#inflight.get(serialized);
+    if (existing) return existing;
+    const task = this.#fetchAndStore(key)
+      .then(() => undefined)
+      .catch((err: unknown) => {
+        this.#onBackgroundError?.(err, key);
+      })
+      .finally(() => {
+        this.#inflight.delete(serialized);
+      });
+    this.#inflight.set(serialized, task);
+    return task;
   }
 
   async #emitServed(key: ManifestCacheKey, manifest: Manifest): Promise<void> {

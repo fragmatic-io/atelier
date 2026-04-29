@@ -27,8 +27,10 @@ import { existsSync } from 'node:fs';
 import fg from 'fast-glob';
 import Ajv2019 from 'ajv/dist/2019.js';
 import addFormats from 'ajv-formats';
+import { ZodError } from 'zod';
 import { toJsonSchema } from '../json-schema.js';
-import { PATH_DISPATCH, SCHEMA_REGISTRY } from './registry.js';
+import { parseSkillMarkdown } from '../skill-parser.js';
+import { MARKDOWN_DISPATCH, PATH_DISPATCH, SCHEMA_REGISTRY } from './registry.js';
 
 interface ParsedArgs {
   command: string;
@@ -105,6 +107,35 @@ async function validateData(rootDir: string): Promise<number> {
         console.error(`INVALID  ${relative(rootDir, file)} (schema=${schemaName})`);
         for (const e of validator.errors ?? []) {
           console.error(`         ${e.instancePath || '/'} ${e.message ?? ''}`);
+        }
+      }
+    }
+  }
+
+  // Markdown dispatch — skills/, etc.
+  for (const { dir, glob, kind } of MARKDOWN_DISPATCH) {
+    const abs = resolve(rootDir, dir);
+    if (!existsSync(abs)) {
+      continue;
+    }
+    const files = await fg(glob, { cwd: abs, absolute: true });
+    for (const file of files) {
+      total++;
+      const raw = await readFile(file, 'utf8');
+      try {
+        if (kind === 'skill') {
+          parseSkillMarkdown(raw);
+        }
+      } catch (err) {
+        failures++;
+        console.error(`INVALID  ${relative(rootDir, file)} (kind=${kind})`);
+        if (err instanceof ZodError) {
+          for (const issue of err.issues) {
+            const path = issue.path.length > 0 ? `/${issue.path.join('/')}` : '/';
+            console.error(`         ${path} ${issue.message}`);
+          }
+        } else {
+          console.error(`         ${(err as Error).message}`);
         }
       }
     }

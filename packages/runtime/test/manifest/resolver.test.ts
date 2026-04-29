@@ -141,4 +141,138 @@ describe('ManifestResolver', () => {
     expect(err.key).toEqual(KEY);
     expect(err.name).toBe('ManifestValidationError');
   });
+
+  describe('staleWhileRevalidate', () => {
+    it('serves a stale entry immediately and refreshes in the background', async () => {
+      const cache = new MemoryManifestCache();
+      const fetcher = fakeFetcherFromManifest('m_swr11111');
+      const { sink, events } = captureSink();
+
+      // Seed a stale cached manifest with a different id than the fetcher
+      // returns, so we can tell which one was served and which was refreshed.
+      const stale = fixtureManifest();
+      stale.manifest_id = 'm_stale000';
+      await cache.set(KEY, {
+        manifest: stale,
+        fetched_at: '2026-04-29T11:00:00Z',
+        last_used: '2026-04-29T11:00:00Z',
+        stale: true,
+      });
+
+      const resolver = new ManifestResolver({
+        fetcher,
+        cache,
+        audit: sink,
+        staleWhileRevalidate: true,
+      });
+      const m = await resolver.resolve(KEY);
+
+      // Foreground caller got the STALE manifest immediately.
+      expect(m.manifest_id).toBe('m_stale000');
+
+      // The background refresh is fire-and-forget. Wait for it to settle.
+      await new Promise((resolve) => setImmediate(resolve));
+      const after = await cache.get(KEY);
+      expect(after?.manifest.manifest_id).toBe('m_swr11111');
+      expect(after?.stale).toBeUndefined(); // freshly cached, not stale anymore.
+
+      // Both `manifest.served` (foreground) AND `manifest.compiled`
+      // (background refresh) should fire.
+      expect(events.map((e) => e.type).sort()).toEqual(['manifest.compiled', 'manifest.served']);
+    });
+
+    it('with SWR off: a stale entry is treated as a miss', async () => {
+      const cache = new MemoryManifestCache();
+      const fetcher = fakeFetcherFromManifest('m_swr22222');
+      const { sink, events } = captureSink();
+
+      const stale = fixtureManifest();
+      stale.manifest_id = 'm_stale111';
+      await cache.set(KEY, {
+        manifest: stale,
+        fetched_at: '2026-04-29T11:00:00Z',
+        last_used: '2026-04-29T11:00:00Z',
+        stale: true,
+      });
+
+      const resolver = new ManifestResolver({ fetcher, cache, audit: sink });
+      const m = await resolver.resolve(KEY);
+
+      // SWR off: caller blocks on the fresh fetch.
+      expect(m.manifest_id).toBe('m_swr22222');
+      expect(events.map((e) => e.type)).toEqual(['manifest.compiled']);
+      expect((await cache.get(KEY))?.manifest.manifest_id).toBe('m_swr22222');
+    });
+
+    it('coalesces concurrent SWR background refreshes for the same key', async () => {
+      const cache = new MemoryManifestCache();
+      let fetchCount = 0;
+      const fakeFetch = vi.fn(() => {
+        fetchCount += 1;
+        const m = fixtureManifest();
+        m.manifest_id = `m_swrxxxxx`;
+        return Promise.resolve(
+          new Response(JSON.stringify(m), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
+        );
+      });
+      const fetcher = new ManifestFetcher({ baseUrl: 'https://m', fetch: fakeFetch, retries: 0 });
+
+      const stale = fixtureManifest();
+      stale.manifest_id = 'm_stale222';
+      await cache.set(KEY, {
+        manifest: stale,
+        fetched_at: '2026-04-29T11:00:00Z',
+        last_used: '2026-04-29T11:00:00Z',
+        stale: true,
+      });
+
+      const resolver = new ManifestResolver({
+        fetcher,
+        cache,
+        staleWhileRevalidate: true,
+      });
+
+      // Two concurrent reads while the entry is stale should share one
+      // background refresh, not fire two.
+      const [a, b] = await Promise.all([resolver.resolve(KEY), resolver.resolve(KEY)]);
+      expect(a.manifest_id).toBe('m_stale222');
+      expect(b.manifest_id).toBe('m_stale222');
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(fetchCount).toBe(1);
+    });
+
+    it('reports background refresh errors via onBackgroundError', async () => {
+      const cache = new MemoryManifestCache();
+      const fakeFetch = vi.fn(() => Promise.resolve(new Response('boom', { status: 500 })));
+      const fetcher = new ManifestFetcher({ baseUrl: 'https://m', fetch: fakeFetch, retries: 0 });
+      const onBackgroundError = vi.fn();
+
+      const stale = fixtureManifest();
+      stale.manifest_id = 'm_stale333';
+      await cache.set(KEY, {
+        manifest: stale,
+        fetched_at: '2026-04-29T11:00:00Z',
+        last_used: '2026-04-29T11:00:00Z',
+        stale: true,
+      });
+
+      const resolver = new ManifestResolver({
+        fetcher,
+        cache,
+        staleWhileRevalidate: true,
+        onBackgroundError,
+      });
+      const m = await resolver.resolve(KEY);
+      expect(m.manifest_id).toBe('m_stale333');
+      // Wait for the background task to settle.
+      await new Promise((resolve) => setImmediate(resolve));
+      expect(onBackgroundError).toHaveBeenCalledOnce();
+      const stillCached = await cache.get(KEY);
+      // Cache still holds the stale entry — refresh failed.
+      expect(stillCached?.manifest.manifest_id).toBe('m_stale333');
+    });
+  });
 });

@@ -45,6 +45,7 @@ export {
 // Skill
 // -----------------------------------------------------------------------------
 export { SkillSchema, type Skill } from './skill.js';
+export { parseSkillMarkdown, type ParsedSkill } from './skill-parser.js';
 
 // -----------------------------------------------------------------------------
 // Component catalog

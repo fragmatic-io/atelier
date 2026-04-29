@@ -32,6 +32,15 @@ export interface CachedManifest {
   etag?: string;
   /** ISO 8601 timestamp the runtime last served this manifest. Updated on hit. */
   last_used: string;
+  /**
+   * When `true`, the entry is considered stale: it can still be served by a
+   * resolver running in `staleWhileRevalidate` mode, but the resolver should
+   * kick off a background refresh on the next read. Set by trigger
+   * invalidation when `markStaleInsteadOfEvict` is configured. Cleared on the
+   * next successful refetch. See `/Users/vid/cir/docs/caching.md` §"Semantic
+   * invalidation" for the rationale.
+   */
+  stale?: boolean;
 }
 
 /**
@@ -51,6 +60,15 @@ export interface ManifestCache {
   evictMatching(
     predicate: (key: ManifestCacheKey, value: CachedManifest) => boolean,
   ): Promise<number>;
+  /**
+   * Mark every entry where `predicate(key, value)` returns true as `stale`.
+   * Returns the number of entries that flipped to stale (entries already
+   * stale are still counted). Used by `wireTriggerInvalidation` when
+   * `markStaleInsteadOfEvict` is set, so a stale-while-revalidate resolver
+   * can keep serving the prior manifest while a fresh one compiles in the
+   * background.
+   */
+  markStale(predicate: (key: ManifestCacheKey, value: CachedManifest) => boolean): Promise<number>;
   /** Total number of entries currently held. */
   size(): Promise<number>;
 }

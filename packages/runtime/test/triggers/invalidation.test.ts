@@ -3,6 +3,8 @@ import type { Trigger } from '@cir/schemas';
 import { wireTriggerInvalidation } from '../../src/triggers/invalidation.ts';
 import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.ts';
 import { MemoryManifestCache } from '../../src/manifest/memory-cache.ts';
+import { ManifestFetcher } from '../../src/manifest/fetcher.ts';
+import { ManifestResolver } from '../../src/manifest/resolver.ts';
 import { fixtureManifest } from '../fixtures/manifest.ts';
 import type { CachedManifest } from '../../src/manifest/cache.ts';
 
@@ -127,5 +129,94 @@ describe('wireTriggerInvalidation', () => {
     // PolicyChangedTrigger carries app_id; no behavioral trigger should sneak in.
     await bus.emit({ type: 'policy.changed', app_id: 'mail.example.com', rule_id: 'r1' });
     expect(await cache.size()).toBe(1);
+  });
+
+  describe('markStaleInsteadOfEvict', () => {
+    it('marks matching entries stale instead of removing them', async () => {
+      const bus = new InMemoryTriggerBus();
+      const cache = new MemoryManifestCache();
+      const onEvict = vi.fn();
+      wireTriggerInvalidation({ bus, cache, markStaleInsteadOfEvict: true, onEvict });
+      await seed(cache);
+
+      await bus.emit({
+        type: 'capability.changed',
+        app_id: 'mail.example.com',
+        capability_id: 'thread.archive',
+      });
+
+      // Nothing was removed — entries were flipped to stale instead.
+      expect(await cache.size()).toBe(4);
+      expect(onEvict).toHaveBeenCalledWith('capability.changed', 3);
+      expect(
+        (await cache.get({ user_id: 'vid', app_id: 'mail.example.com', route: '/today' }))?.stale,
+      ).toBe(true);
+      expect(
+        (await cache.get({ user_id: 'vid', app_id: 'cal.example.com', route: '/today' }))?.stale,
+      ).toBeUndefined();
+    });
+
+    it('also routes user.recompile_route through stale-marking', async () => {
+      const bus = new InMemoryTriggerBus();
+      const cache = new MemoryManifestCache();
+      wireTriggerInvalidation({ bus, cache, markStaleInsteadOfEvict: true });
+      await seed(cache);
+
+      await bus.emit({ type: 'user.recompile_route', user_id: 'vid', route: '/today' });
+      expect(await cache.size()).toBe(4);
+      expect(
+        (await cache.get({ user_id: 'vid', app_id: 'mail.example.com', route: '/today' }))?.stale,
+      ).toBe(true);
+      expect(
+        (await cache.get({ user_id: 'vid', app_id: 'mail.example.com', route: '/inbox' }))?.stale,
+      ).toBeUndefined();
+    });
+
+    it('plays nicely with a SWR resolver: stale entries are still served', async () => {
+      const bus = new InMemoryTriggerBus();
+      const cache = new MemoryManifestCache();
+      wireTriggerInvalidation({ bus, cache, markStaleInsteadOfEvict: true });
+
+      // Seed one entry the resolver will read.
+      const key = { user_id: 'vid', app_id: 'mail.example.com', route: '/today' };
+      const seeded = fixtureManifest();
+      seeded.manifest_id = 'm_seeded00';
+      await cache.set(key, {
+        manifest: seeded,
+        fetched_at: '2026-04-29T11:00:00Z',
+        last_used: '2026-04-29T11:00:00Z',
+      });
+
+      // The resolver's fetcher will only be hit for the background refresh.
+      const refreshed = fixtureManifest();
+      refreshed.manifest_id = 'm_refresh1';
+      const fakeFetch = vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify(refreshed), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
+        ),
+      );
+      const fetcher = new ManifestFetcher({ baseUrl: 'https://m', fetch: fakeFetch, retries: 0 });
+      const resolver = new ManifestResolver({ fetcher, cache, staleWhileRevalidate: true });
+
+      // Trigger marks the entry stale instead of evicting.
+      await bus.emit({
+        type: 'capability.changed',
+        app_id: 'mail.example.com',
+        capability_id: 'thread.archive',
+      });
+      expect(await cache.size()).toBe(1);
+      expect((await cache.get(key))?.stale).toBe(true);
+
+      // Next read serves the (stale) seeded manifest immediately.
+      const m = await resolver.resolve(key);
+      expect(m.manifest_id).toBe('m_seeded00');
+
+      // After the background refresh settles, the cache holds the new one.
+      await new Promise((resolve) => setImmediate(resolve));
+      expect((await cache.get(key))?.manifest.manifest_id).toBe('m_refresh1');
+    });
   });
 });

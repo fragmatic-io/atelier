@@ -141,6 +141,28 @@ export class IndexedDBManifestCache implements ManifestCache {
     return removed;
   }
 
+  async markStale(
+    predicate: (key: ManifestCacheKey, value: CachedManifest) => boolean,
+  ): Promise<number> {
+    const all = await idbEntries<string, StoredManifest>(this.#store);
+    let marked = 0;
+    for (const [serialized, value] of all) {
+      const decoded = deserializeCacheKey(serialized);
+      if (!decoded) continue;
+      const { __bytes: _bytes, ...publicValue } = value;
+      if (predicate(decoded, publicValue)) {
+        const next: StoredManifest = {
+          ...publicValue,
+          stale: true,
+          __bytes: approximateBytes({ ...publicValue, stale: true }),
+        };
+        await idbSet(serialized, next, this.#store);
+        marked += 1;
+      }
+    }
+    return marked;
+  }
+
   async size(): Promise<number> {
     const all = await idbEntries<string, StoredManifest>(this.#store);
     return all.length;

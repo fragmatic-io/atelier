@@ -29,6 +29,11 @@ export type {
 export { BASELINE_POLICIES, validateManifest, type ValidateOptions } from './validate.js';
 
 // -----------------------------------------------------------------------------
+// Custom-policy registration
+// -----------------------------------------------------------------------------
+export { PolicyRegistry } from './registry.js';
+
+// -----------------------------------------------------------------------------
 // Individual baseline policies (re-exported for granular composition)
 // -----------------------------------------------------------------------------
 export { dataAccessWithinGrant } from './baseline/data_access_within_grant.js';
@@ -40,6 +45,11 @@ export { noPiiInQueryStrings } from './baseline/no_pii_in_query_strings.js';
 export { rateLimitedActionsShowState } from './baseline/rate_limited_actions_show_state.js';
 export { reversibilitySurfaced } from './baseline/reversibility_surfaced.js';
 export { respectsBrandKit } from './baseline/respects_brand_kit.js';
+export {
+  composesAccordingTo,
+  type CompositionRule,
+  type CompositionRules,
+} from './baseline/composition_rules.js';
 
 // -----------------------------------------------------------------------------
 // Internal helpers (exported so downstream policy authors can reuse them)

@@ -136,4 +136,14 @@ describe('IndexedDBManifestCache', () => {
     // The returned shape must match CachedManifest exactly — no __bytes leak.
     expect(Object.keys(got!).sort()).toEqual(['fetched_at', 'last_used', 'manifest']);
   });
+
+  it('markStale flips matching entries without removing them', async () => {
+    await cache.set(key1, entry('2026-04-29T12:00:00Z'));
+    await cache.set(key2, entry('2026-04-29T12:00:00Z'));
+    const marked = await cache.markStale((k) => k.route === '/today');
+    expect(marked).toBe(1);
+    expect(await cache.size()).toBe(2);
+    expect((await cache.get(key1))?.stale).toBe(true);
+    expect((await cache.get(key2))?.stale).toBeUndefined();
+  });
 });

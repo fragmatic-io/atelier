@@ -43,6 +43,11 @@ export {
 } from './hooks/use-resolver.js';
 export { useDispatcher, type DispatchFn } from './hooks/use-dispatcher.js';
 export { useTrigger, type TriggerEventType } from './hooks/use-trigger.js';
+export {
+  useOptimisticAction,
+  type UseOptimisticActionOptions,
+  type UseOptimisticActionResult,
+} from './hooks/use-optimistic-action.js';
 export { useReactConfirmation, type UseReactConfirmation } from './confirm/use-confirmation.js';
 
 // -----------------------------------------------------------------------------

@@ -48,14 +48,14 @@ export const SCHEMA_REGISTRY: readonly RegistryEntry[] = [
 ];
 
 /**
- * Path-based dispatch for `validate-data`.
+ * Path-based dispatch for `validate-data` (JSON files).
  *
  * Maps a directory (relative to repo root, or anywhere) to the schema that
  * JSON files inside it should validate against. The CLI walks each directory
  * (if it exists) and validates every `*.json` it finds.
  *
- * Skill markdown files are NOT in this map — they need a frontmatter parser
- * (Phase 3 in `@cir/policies`).
+ * Skill markdown files (`.md`) are handled by `MARKDOWN_DISPATCH` below via
+ * `parseSkillMarkdown`. Rare `.json` files inside `skills/` are skipped.
  */
 export const PATH_DISPATCH: ReadonlyArray<{
   /** Directory name (relative). */
@@ -68,3 +68,24 @@ export const PATH_DISPATCH: ReadonlyArray<{
   { dir: 'components', schemaName: 'component-registry' },
   { dir: 'policies', schemaName: 'policy' },
 ];
+
+/**
+ * Path-based dispatch for `validate-data` (Markdown files with frontmatter).
+ *
+ * `kind` selects the parser used to extract structured data from the file:
+ *  - `skill`: YAML frontmatter → `SkillSchema` via `parseSkillMarkdown`.
+ *
+ * `glob` narrows the walk to files that follow the project naming convention
+ * (e.g. `*.skill.md`); a directory README or other prose markdown alongside
+ * the skills is skipped.
+ *
+ * Kept parallel to `PATH_DISPATCH` so the CLI can dispatch on file extension.
+ */
+export const MARKDOWN_DISPATCH: ReadonlyArray<{
+  /** Directory name (relative). */
+  dir: string;
+  /** Glob (relative to `dir`) restricting which markdown files are validated. */
+  glob: string;
+  /** Discriminator selecting the markdown parser. */
+  kind: 'skill';
+}> = [{ dir: 'skills', glob: '**/*.skill.md', kind: 'skill' }];

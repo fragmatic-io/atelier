@@ -23,28 +23,55 @@
  * Returns an `Unsubscribe` that clears every subscription this helper made.
  */
 
-import type { ManifestCache } from '../manifest/cache.js';
+import type { ManifestCache, ManifestCacheKey } from '../manifest/cache.js';
 import type { Unsubscribe } from '../types.js';
 import type { TriggerSubscription } from './subscription.js';
 
 export interface WireTriggerInvalidationOptions {
   bus: TriggerSubscription;
   cache: ManifestCache;
-  /** Optional hook called with the number of entries evicted per trigger. */
+  /**
+   * Optional hook called with the number of entries removed (or marked
+   * stale, when `markStaleInsteadOfEvict` is true) per trigger.
+   */
   onEvict?: (triggerType: string, removed: number) => void;
+  /**
+   * When `true`, the wiring marks matching cache entries as `stale` instead
+   * of deleting them. Pair with `new ManifestResolver({ staleWhileRevalidate:
+   * true })` to keep serving the prior manifest while a fresh one compiles
+   * in the background. Default `false` (legacy behavior: evict).
+   *
+   * See `/Users/vid/cir/docs/caching.md` §"Semantic invalidation" — schema
+   * changes that don't change the manifest *shape* (e.g. a tweaked skill
+   * description) are ideal candidates for stale-marking, since the existing
+   * manifest is still safe to render.
+   */
+  markStaleInsteadOfEvict?: boolean;
 }
 
 export function wireTriggerInvalidation(opts: WireTriggerInvalidationOptions): Unsubscribe {
-  const { bus, cache, onEvict } = opts;
+  const { bus, cache, onEvict, markStaleInsteadOfEvict } = opts;
   const unsubs: Unsubscribe[] = [];
 
+  // Single dispatch: either evict or mark stale, depending on the option.
+  // The two paths share the same predicate so callers can flip the flag
+  // without changing trigger handlers.
+  const apply = async (
+    type: string,
+    predicate: (key: ManifestCacheKey) => boolean,
+  ): Promise<void> => {
+    const op = markStaleInsteadOfEvict
+      ? cache.markStale.bind(cache)
+      : cache.evictMatching.bind(cache);
+    const count = await op((key) => predicate(key));
+    onEvict?.(type, count);
+  };
+
   const evictByApp = async (type: string, app_id: string): Promise<void> => {
-    const removed = await cache.evictMatching((key) => key.app_id === app_id);
-    onEvict?.(type, removed);
+    await apply(type, (key) => key.app_id === app_id);
   };
   const evictByUser = async (type: string, user_id: string): Promise<void> => {
-    const removed = await cache.evictMatching((key) => key.user_id === user_id);
-    onEvict?.(type, removed);
+    await apply(type, (key) => key.user_id === user_id);
   };
 
   // Schema family — evict by app.
@@ -96,10 +123,7 @@ export function wireTriggerInvalidation(opts: WireTriggerInvalidationOptions): U
   unsubs.push(
     bus.subscribe('user.recompile_route', async (event) => {
       if (event.type !== 'user.recompile_route') return;
-      const removed = await cache.evictMatching(
-        (key) => key.user_id === event.user_id && key.route === event.route,
-      );
-      onEvict?.(event.type, removed);
+      await apply(event.type, (key) => key.user_id === event.user_id && key.route === event.route);
     }),
     bus.subscribe('user.recompile_all', async (event) => {
       if (event.type !== 'user.recompile_all') return;
