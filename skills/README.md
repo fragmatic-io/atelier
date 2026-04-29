@@ -1,0 +1,32 @@
+# skills/
+
+Markdown documents that teach the compiler **how to use capabilities well**. A skill names the capabilities it composes, when to use them, when not to, the example flow, and known failure modes. Skills are the cheapest place to push reasoning out of the compiler prompt — strong skills mean small compiler bills.
+
+## Files
+
+- **Format**: Markdown with YAML frontmatter (or pure YAML body — see the example in the docs)
+- **Naming**: `{name}.skill.md` — e.g. `email-triage.skill.md`, `weekly-review.skill.md`
+- **One skill per file.** Skills are flat (no nesting); the directory is browsed alphabetically.
+
+Required frontmatter fields: `name`, `version`, `description`, `capabilities_used`, `when_to_use`, `when_not_to_use`, `example_flow`, `known_failure_modes`.
+
+## Background
+
+See [`../docs/artifacts.md`](../docs/artifacts.md) — section "Skill" for the full template and the `email-triage` worked example.
+
+## Adding a skill
+
+When you add a capability, you also add its skill (see [`../AGENTS.md`](../AGENTS.md) "When asked to add a capability", step 2). When you add a skill alone — for a workflow that composes several existing capabilities — you must:
+
+1. List every capability in `capabilities_used` (the compiler resolves and version-pins these).
+2. Write `when_to_use` and `when_not_to_use` as crisp, testable conditions.
+3. Add eval cases at `/evals/skills/{name}.eval.json` covering at least the happy path, one negative case, and one known failure mode.
+4. Bump the skill version on any behavioral change. Emit `skill.version_changed` so the trigger bus invalidates affected manifests.
+
+## Status
+
+Empty in Phase 1; populated starting in **Phase 2 (schemas)** and grown alongside capabilities during the **Phase 5 hello-CIR loop**. Phase 1 of the build plan calls for 5 baseline skills (triage, summarize, draft, schedule, archive).
+
+## Token-budget reminder
+
+Per [`../AGENTS.md`](../AGENTS.md) "Token budget": move logic out of the compiler prompt and into structured skill descriptions. A well-written skill is the difference between compiler calls measured in tens per user per week and compiler calls measured in tens per user per action.

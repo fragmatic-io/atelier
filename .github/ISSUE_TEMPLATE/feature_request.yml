@@ -1,0 +1,72 @@
+name: Feature request
+description: Propose an enhancement to an existing capability, skill, component, policy, or recipe.
+title: '[Feature] '
+labels: ['enhancement', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to request a change to an **existing** artifact.
+
+        For a brand-new capability, please use the
+        [Capability proposal](./new?template=capability_proposal.yml) template instead.
+
+        See [`AGENTS.md`](../blob/main/AGENTS.md) — in CIR there is no
+        such thing as "a feature": every change is one or more new or
+        updated artifacts. Please be specific about which artifact(s)
+        this affects.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user need or system shortcoming is this solving?
+      placeholder: Today, when a user X, they can't Y because …
+    validations:
+      required: true
+  - type: checkboxes
+    id: artifacts
+    attributes:
+      label: Which artifact(s) are affected?
+      description: Tick all that apply.
+      options:
+        - label: Capability (`/capabilities/**`)
+        - label: Skill (`/skills/**`)
+        - label: Component (`/components/**`)
+        - label: Policy (`/policies/**`)
+        - label: Recipe (`/recipes/**`)
+        - label: Runtime (`/runtime/**`)
+        - label: Compiler (`/compiler/**`)
+        - label: Docs / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-change
+    attributes:
+      label: Proposed change
+      description: What concretely should change? Include schema sketches, prop additions, policy clauses, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you weigh? Why is this the right one?
+    validations:
+      required: false
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk assessment
+      description: |
+        Does this change break manifests pinned to old versions? Require a
+        capability version bump? Touch destructive actions? Affect PII or
+        confirmation policy? See ETHOS.md.
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Links, mockups, prior discussion.
+    validations:
+      required: false

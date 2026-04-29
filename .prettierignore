@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+out
+coverage
+.turbo
+.cache
+.parcel-cache
+pnpm-lock.yaml
+.husky/_
+*.tsbuildinfo
+.cir-cache
+.manifests-local
+local-vault
