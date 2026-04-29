@@ -86,6 +86,12 @@ export {
   wireTriggerInvalidation,
   type WireTriggerInvalidationOptions,
 } from './triggers/invalidation.js';
+export {
+  SseTriggerTransport,
+  type SseTriggerTransportOptions,
+  type EventSourceLike,
+  type EventSourceCtor,
+} from './triggers/sse-transport.js';
 
 // -----------------------------------------------------------------------------
 // Registries

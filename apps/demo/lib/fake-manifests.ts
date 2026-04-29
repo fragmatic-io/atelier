@@ -85,7 +85,48 @@ export function todayManifest(): Manifest {
   };
 }
 
+export function threadManifest(id: string): Manifest {
+  return {
+    manifest_id: `m_demo_thread_${id}`,
+    user_id: 'demo-user',
+    app_id: 'cir.demo',
+    compiled_from: COMPILED_FROM,
+    ttl: null,
+    invalidates_on: INVALIDATES_ON,
+    policies_satisfied: POLICIES_SATISFIED,
+    routes: [
+      {
+        path: `/thread/${id}`,
+        title: 'Thread',
+        layout: {
+          component: 'Container',
+          props: { maxWidth: 'md' },
+          children: [
+            {
+              component: 'ThreadView',
+              data: {
+                source: 'thread.get',
+                filter: `id = "${id}"`,
+              },
+              actions: ['thread.archive', 'task.create_from_thread'],
+              children: [],
+            },
+          ],
+        },
+        refresh: {
+          data: 'on_focus',
+          structure: 'never_unless_invalidated',
+        },
+      },
+    ],
+  };
+}
+
+const THREAD_ROUTE_RE = /^\/thread\/([\w-]+)$/;
+
 export function manifestForRoute(route: string): Manifest | null {
   if (route === '/today') return todayManifest();
+  const m = THREAD_ROUTE_RE.exec(route);
+  if (m && m[1]) return threadManifest(m[1]);
   return null;
 }

@@ -98,4 +98,42 @@ describe('IndexedDBManifestCache', () => {
     await c.set(key1, entry('2026-04-29T12:00:00Z'));
     expect(await c.get(key1)).not.toBeNull();
   });
+
+  it('reports total bytes via .bytes()', async () => {
+    await cache.set(key1, entry('2026-04-29T12:00:00Z'));
+    await cache.set(key2, entry('2026-04-29T12:01:00Z'));
+    const bytes = await cache.bytes();
+    expect(bytes).toBeGreaterThan(0);
+    expect(bytes).toBeGreaterThan(JSON.stringify(entry('2026-04-29T12:00:00Z')).length);
+  });
+
+  it('byte-evicts oldest entries when over maxBytes', async () => {
+    // Each cached fixture serializes to a few hundred bytes; cap at 1 KiB so
+    // the second insert forces an eviction.
+    const oneEntryBytes = JSON.stringify(entry('2026-04-29T12:00:00Z')).length * 2;
+    const small = new IndexedDBManifestCache({
+      dbName: `cir-manifests-bytes-${Math.random().toString(36).slice(2)}`,
+      maxEntries: 100,
+      maxBytes: oneEntryBytes + 50, // room for 1 entry only
+    });
+    const a: ManifestCacheKey = { user_id: 'vid', app_id: 'mail', route: '/a' };
+    const b: ManifestCacheKey = { user_id: 'vid', app_id: 'mail', route: '/b' };
+
+    await small.set(a, entry('2026-04-29T10:00:00Z'));
+    await small.set(b, entry('2026-04-29T11:00:00Z'));
+
+    // Oldest (a) should be evicted by byte cap.
+    expect(await small.get(a)).toBeNull();
+    expect(await small.get(b)).not.toBeNull();
+    expect(await small.size()).toBe(1);
+    expect(await small.bytes()).toBeLessThanOrEqual(oneEntryBytes + 50);
+  });
+
+  it('does not leak the private __bytes hint on get()', async () => {
+    await cache.set(key1, entry('2026-04-29T12:00:00Z'));
+    const got = await cache.get(key1);
+    expect(got).not.toBeNull();
+    // The returned shape must match CachedManifest exactly — no __bytes leak.
+    expect(Object.keys(got!).sort()).toEqual(['fetched_at', 'last_used', 'manifest']);
+  });
 });

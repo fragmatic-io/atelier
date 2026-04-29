@@ -8,6 +8,14 @@
  * Gateway; here they're just JS objects so the demo runs offline.
  */
 
+export interface ThreadMessage {
+  id: string;
+  from: { name: string; email: string };
+  to: { name: string; email: string }[];
+  sent_at: string; // ISO datetime
+  body: string; // markdown
+}
+
 export interface Thread {
   id: string;
   sender: { name: string; email: string };
@@ -16,6 +24,7 @@ export interface Thread {
   received_at: string; // ISO datetime
   requires_decision: boolean;
   archived: boolean;
+  messages: ThreadMessage[];
 }
 
 export interface Task {
@@ -52,6 +61,22 @@ const initial = (): Store => ({
       received_at: iso(daysFromNow(0)),
       requires_decision: true,
       archived: false,
+      messages: [
+        {
+          id: 'm_001_1',
+          from: { name: 'You', email: 'me@example.com' },
+          to: [{ name: 'Alice Chen', email: 'alice@portfolio-fund.example' }],
+          sent_at: iso(daysFromNow(-1)),
+          body: '# Q2 board update\n\nKey wins this quarter:\n\n- **Net new ARR:** $1.2M, up 38% QoQ\n- **Logo retention:** 97%\n- **Headcount:** 24 → 31\n\nFull deck attached.',
+        },
+        {
+          id: 'm_001_2',
+          from: { name: 'Alice Chen', email: 'alice@portfolio-fund.example' },
+          to: [{ name: 'You', email: 'me@example.com' }],
+          sent_at: iso(daysFromNow(0)),
+          body: 'Thanks for the update. One question on customer concentration — can you walk through the top 5 customers as a % of ARR? And which of those are renewing this half?\n\nAlso, what does the [pipeline](https://example.com/pipe) look like for Q3?',
+        },
+      ],
     },
     {
       id: 't_002',
@@ -62,6 +87,15 @@ const initial = (): Store => ({
       received_at: iso(daysFromNow(0)),
       requires_decision: true,
       archived: false,
+      messages: [
+        {
+          id: 'm_002_1',
+          from: { name: 'Bob Martinez', email: 'bob@enterprise-customer.example' },
+          to: [{ name: 'You', email: 'me@example.com' }],
+          sent_at: iso(daysFromNow(0)),
+          body: "Our procurement team flagged a few line items in the new SOW. Could we hop on a 30-min call before Friday?\n\nMain items:\n\n1. SLA target — they're asking for 99.95% (we have 99.9%)\n2. Data retention clause — needs revision\n3. ~~Pricing~~ Already locked, no concerns\n\nThanks!",
+        },
+      ],
     },
     {
       id: 't_003',
@@ -72,6 +106,15 @@ const initial = (): Store => ({
       received_at: iso(daysFromNow(0)),
       requires_decision: true,
       archived: false,
+      messages: [
+        {
+          id: 'm_003_1',
+          from: { name: 'Carol Singh', email: 'carol@team-internal.example' },
+          to: [{ name: 'You', email: 'me@example.com' }],
+          sent_at: iso(daysFromNow(0)),
+          body: "I'll handle the eng review writeup. Heads up: I'm shifting the onsite to next Tuesday since two folks have conflicts Friday.\n\n| Action | Owner | Due |\n| --- | --- | --- |\n| Writeup draft | Carol | Mon |\n| Review | You | Tue |\n| Onsite | All | Tue PM |",
+        },
+      ],
     },
     {
       id: 't_004',
@@ -81,6 +124,15 @@ const initial = (): Store => ({
       received_at: iso(daysFromNow(-1)),
       requires_decision: false,
       archived: false,
+      messages: [
+        {
+          id: 'm_004_1',
+          from: { name: 'no-reply', email: 'no-reply@notifications.example' },
+          to: [{ name: 'You', email: 'me@example.com' }],
+          sent_at: iso(daysFromNow(-1)),
+          body: 'Top stories this week.',
+        },
+      ],
     },
     {
       id: 't_005',
@@ -90,6 +142,15 @@ const initial = (): Store => ({
       received_at: iso(daysFromNow(-1)),
       requires_decision: true,
       archived: false,
+      messages: [
+        {
+          id: 'm_005_1',
+          from: { name: 'Dan Park', email: 'dan@former-employer.example' },
+          to: [{ name: 'You', email: 'me@example.com' }],
+          sent_at: iso(daysFromNow(-1)),
+          body: "Long time no chat. Free Tuesday or Thursday afternoon? Want to catch up on what you're building — heard great things.",
+        },
+      ],
     },
   ],
   tasks: [

@@ -18,7 +18,7 @@
  *  - DataResolver: GET /api/data/{capability}?filter=...&group_by=...
  */
 
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import {
   ActionDispatcher,
   ConsoleAuditSink,
@@ -28,6 +28,7 @@ import {
   MapActionRegistry,
   MapComponentRegistry,
   MemoryManifestCache,
+  SseTriggerTransport,
   wireTriggerInvalidation,
   type ActionExecutionContext,
   type ConfirmationCallback,
@@ -147,6 +148,29 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
   const { confirm, Portal } = useReactConfirmation();
   // Memoize so React strict mode and re-renders don't rebuild the cache.
   const services = useMemo(() => buildServices(confirm), [confirm]);
+
+  // Connect the SSE transport on mount; tear down on unmount. The transport
+  // bridges /api/triggers/stream events into the local bus, which the cache
+  // invalidation wiring listens to.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const transport = new SseTriggerTransport({
+      url: '/api/triggers/stream',
+      bus: services.bus,
+      onError: (err) => {
+        // EventSource auto-reconnects; this fires on transient drops.
+        console.warn('[cir] trigger stream error', err);
+      },
+      onParseError: (raw, err) => {
+        console.warn('[cir] dropped malformed trigger payload', raw, err);
+      },
+    });
+    transport.connect();
+    return () => {
+      transport.close();
+    };
+  }, [services]);
+
   return (
     <>
       <CirRuntime services={services} dataResolver={dataResolver}>

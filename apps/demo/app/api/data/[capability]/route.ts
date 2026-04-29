@@ -37,5 +37,21 @@ export async function GET(req: Request, { params }: RouteParams): Promise<Respon
     return NextResponse.json({ tasks: store.tasks });
   }
 
+  if (capability === 'thread.get') {
+    // The data binding's `filter` for a single thread is `id = "<thread_id>"`.
+    // Tiny ad-hoc parser; real apps would use a query language.
+    const m = filter.match(/id\s*=\s*"([^"]+)"/);
+    const id = m?.[1];
+    if (!id) {
+      return NextResponse.json(
+        { error: 'thread.get expects filter `id = "<thread_id>"`' },
+        { status: 400 },
+      );
+    }
+    const thread = store.threads.find((t) => t.id === id);
+    if (!thread) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    return NextResponse.json({ thread });
+  }
+
   return NextResponse.json({ error: `unknown capability ${capability}` }, { status: 404 });
 }

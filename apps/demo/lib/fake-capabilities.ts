@@ -24,6 +24,17 @@ export const CAPABILITIES: Record<string, Capability> = {
     confirmation: 'none',
     reversible: false,
   },
+  'thread.get': {
+    id: 'thread.get',
+    kind: 'data',
+    version: '1.0.0',
+    input: { thread_id: 'string' },
+    output: {},
+    side_effects: ['reads:thread'],
+    permissions: ['thread:read'],
+    confirmation: 'none',
+    reversible: false,
+  },
   'thread.archive': {
     id: 'thread.archive',
     kind: 'action',

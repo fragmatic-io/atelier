@@ -54,6 +54,11 @@ apps/*/.next/
 apps/*/next-env.d.ts
 apps/*/.turbo/
 
+# Playwright
+apps/*/test-results/
+apps/*/playwright-report/
+apps/*/playwright/.cache/
+
 # Misc
 .cache/
 .parcel-cache/

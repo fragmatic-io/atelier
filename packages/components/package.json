@@ -17,7 +17,10 @@
   },
   "dependencies": {
     "@cir/runtime": "workspace:*",
-    "@cir/schemas": "workspace:*"
+    "@cir/schemas": "workspace:*",
+    "react-markdown": "^9.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "peerDependencies": {
     "react": "^19.0.0",

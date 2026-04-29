@@ -53,12 +53,31 @@ See `docs/architecture.md` §"Compiler service in detail" for the full prompt st
 
 Tailwind 4 is CSS-first (no `tailwind.config.js`). Next.js 15 is the current LTS. React Server Components route the boundary correctly because every CIR file that needs hooks ships a `'use client'` directive. See `packages/react/README.md` §"Next.js / React Server Components".
 
-## What's deferred
+## Phase 4d additions
 
-- **WebSocket / SSE trigger transport** — Phase 4d. Today the trigger bus is local-only.
-- **IndexedDB cache + byte-size accounting** — Phase 4d. Today: in-memory.
-- **Sanitized markdown rendering** — Phase 5. Today `Markdown` is a `<pre>` stub.
-- **ThreadView + thread detail route** — left out to keep this turn focused.
+- **`/thread/[id]` route** + `ThreadView` component — renders an email thread with messages through the sanitized `Markdown` (GFM tables, strikethrough, autolinks; raw HTML stripped; `javascript:` URLs dropped; external links get `rel=noopener noreferrer`).
+- **SSE trigger transport** — the runtime's `SseTriggerTransport` connects to `/api/triggers/stream` on mount; published triggers flow into the local bus and trigger cache invalidation. Try it:
+
+  ```bash
+  curl -XPOST http://localhost:3000/api/triggers/publish \
+    -H 'content-type: application/json' \
+    -d '{"type":"user.recompile_route","user_id":"demo-user","manifest_id":"m_demo_today","route":"/today"}'
+  ```
+
+  The browser will refetch `/today` automatically.
+
+- **Playwright smoke tests** — `e2e/today.spec.ts` covers welcome banner, decision list, task list, navigation into thread view, GFM rendering, and SSE-driven invalidation.
+
+  ```bash
+  pnpm --filter @cir/demo e2e:install   # one-time chromium install
+  pnpm --filter @cir/demo e2e
+  ```
+
+## What's still deferred
+
+- Stale-while-revalidate (refresh in background while serving cached)
+- Optimistic UI for action mutations (the dispatcher's undo stack is wired but the UI doesn't surface "undo" affordances yet)
+- Cross-tab cache sync (the SSE bus already does this server-side; Tier-4 IDB cache would amplify the effect)
 
 ## Cross-references
 

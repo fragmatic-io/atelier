@@ -1,17 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 The CIR Authors
 /**
- * Markdown — Phase 4b stub. Renders the source content verbatim inside a
- * `<pre>` so whitespace is preserved and there's no accidental HTML
- * injection. Intentionally has NO markdown parser dependency at this phase.
+ * Markdown — sanitized renderer.
  *
- * Phase 5 swap-in: we'll evaluate `react-markdown` (or `marked` + a custom
- * renderer) once the security model around DOMPurify, raw HTML pass-through,
- * and link target sanitization is decided. Until then, treating markdown as
- * preformatted text is safe and forward-compatible (consumers of this 4b
- * surface get the raw string; 4c demo can opt into a rich renderer).
+ * Uses `react-markdown` with `remark-gfm` (tables, task-lists, strikethrough,
+ * autolinks) and `rehype-sanitize` against the conservative default schema
+ * (`defaultSchema` from `hast-util-sanitize`). That schema:
+ *   - allows safe HTML tags (p, h1-h6, ul/ol/li, code, pre, table, etc.)
+ *   - strips `<script>`, event-handler attrs, and `javascript:` URLs
+ *   - permits `http`, `https`, `mailto`, and relative URLs only
+ *
+ * External links get `rel="noopener noreferrer"` and `target="_blank"` via
+ * a small `components` override. We do NOT allow raw HTML pass-through —
+ * react-markdown's default already strips it.
+ *
+ * Trade-off: this is intentionally conservative. If a host needs richer
+ * rendering (e.g. embedded MDX, syntax-highlighted code blocks), they can
+ * compose their own component and register it in their own catalog.
  */
 import type { ReactNode } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 import type { ComponentBinding } from '@cir/runtime';
 
 export interface MarkdownProps {
@@ -20,16 +30,29 @@ export interface MarkdownProps {
 }
 
 export function Markdown({ content, className }: MarkdownProps): ReactNode {
-  // PHASE-5-TODO: replace with react-markdown + DOMPurify once policy lands.
   return (
-    <pre
-      data-cir-component="Markdown"
-      data-cir-phase="4b-stub"
-      className={className}
-      style={{ whiteSpace: 'pre-wrap', margin: 0 }}
-    >
-      {content}
-    </pre>
+    <div data-cir-component="Markdown" className={className}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeSanitize]}
+        components={{
+          a: ({ href, children, ...rest }) => {
+            const external = typeof href === 'string' && /^https?:/i.test(href);
+            return (
+              <a
+                href={href}
+                {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                {...rest}
+              >
+                {children}
+              </a>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   );
 }
 
