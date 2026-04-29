@@ -72,6 +72,11 @@ export function todayManifest(): Manifest {
                   actions: ['task.complete', 'task.snooze'],
                   children: [],
                 },
+                // Required by `reversibility_surfaced` policy: every reversible
+                // action in this route needs an undo affordance somewhere in
+                // the layout. UndoBar covers all four (thread.archive,
+                // task.create_from_thread, task.complete, task.snooze).
+                { component: 'UndoBar', children: [] },
               ],
             },
           ],
@@ -111,6 +116,8 @@ export function threadManifest(id: string): Manifest {
               actions: ['thread.archive', 'task.create_from_thread'],
               children: [],
             },
+            // Same reversibility coverage as /today.
+            { component: 'UndoBar', children: [] },
           ],
         },
         refresh: {
