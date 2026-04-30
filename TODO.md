@@ -93,33 +93,101 @@ The framework today handles single-app, ≤200-capability registries with low-ca
 
 **Recommended order for "real-app scale":** S-6 (cheap, immediate) → S-1 → S-2 → S-5 → S-4 → S-3 → S-7.
 
-### Wave 11 — visual depth (path to Linear/Supabase-grade UI)
+### Wave 11 — visual depth (path to world-class web app UI)
 
-CIR today produces competent, on-brand professional UIs. Reaching the perceived quality of best-in-class web apps (Linear, Supabase) requires another ~3 waves of additive work — none of it re-architects, but each track adds a polish dimension.
+CIR today produces competent, on-brand professional UIs. Reaching the perceived quality of best-in-class web apps requires ~5 additive waves — Vis (visual system), Int (interaction), Cnt (content rendering), Coll (collaboration / real-time), and AI (inline AI surfaces). None of it re-architects; each track adds a polish dimension. The original Linear/Supabase parity scope was deliberately broadened into a **10-app survey** so the catalog covers the breadth of what users now expect from production web tools.
 
-- [ ] **Vis-1 — Typography depth.** Extend `BrandTokensSchema` with `letter_spacing` scale, `line_height` scale, OpenType feature settings (tabular numerals, ligatures, optical sizing). Tailwind config bridges to CSS. **1 wk.**
-- [ ] **Vis-2 — Dark mode as a real surface across all 56 components.** Today only `data-color-mode` is mirrored on `<html>`. Need every component to ship paired dark/light Tailwind class variants and pair-tested screenshots. **1.5 wk.**
-- [ ] **Vis-3 — Icon resolver + `<Icon>` component.** `iconography.allowed_sets` declares which packs are allowed; need a real `<Icon set="lucide" name="archive" />` resolver layer + integration so components like `<Button icon="archive">` work without authoring per-component icon props. **1 wk.**
+#### Reference apps surveyed
+
+These are the durable reference points for every item below. Each entry names the specific UX trait that earned its place in this list.
+
+- **Linear** — Cmd+K command palette with weighted-recency fuzzy match, sub-150ms optimistic mutations, "0.16x" motion duration scale, triage view's three-pane layout, dense issue list with single-line item + tag-pill row, undo toasts on every destructive action, keyboard-first nav (`g i` / `g a`), saved views with shareable URLs, in-app activity feed with diff-collapse, command-line-style filter syntax in the top bar.
+- **Supabase** — SQL editor with Monaco + saved snippets, table editor with inline-edit cells and column-resize, request-log tail with severity filter, project switcher in the top-left, function logs with structured JSON pretty-print, RLS policy designer with live-validate, side-drawer doc references on hover, dark-mode as a first-class surface (not a re-skin).
+- **Notion** — slash-command menu (`/`) for inline block creation across 50+ block types, drag-handle on every block (left gutter), block-level @-mention with hover-card preview, smart paste (URL → unfurl card, code → fenced block with detected lang), inline AI ("Ask AI", "Summarize") on selection, sync-block + database views, version history per page, multi-cursor selection within a doc.
+- **Figma** — live multiplayer cursors with name labels and color tokens per user, follow-mode that mirrors another user's viewport, 16ms-budget input loop, contextual right-panel that switches per selection class, properties panel with mixed-value indicators, comment pins anchored to canvas coordinates that survive layout changes, observe-mode with smooth-scroll catchup.
+- **Stripe Dashboard** — chronological events log with diff-style payload expansion, dense data tables with column show/hide + density toggle, drilldown breadcrumbs ("Charges › ch_xxx › Refund r_xxx"), inline JSON tree with copy-as-cURL, time-range picker that persists per page, in-context API docs pane, settings with global search, status / system-health bar in the chrome.
+- **Vercel** — real-time deploy log streaming with line-anchor URLs, build step accordion with per-step duration, env-var editor with masked-by-default + reveal-on-click, project switcher with team scope, deployment list with branch + commit chips, inline command output rendering (ANSI colors preserved), error groupings with stack traces folded by default.
+- **Raycast / Arc** — root command palette as the primary navigation surface, fuzzy-search across actions+files+tabs, two-pane preview-on-hover, Cmd+P "go to anything" distinct from Cmd+K "do anything", chord shortcuts (`g g`), action-aliases per user, sub-menu drilldown without leaving keyboard, AI chat inline with the launcher.
+- **Airtable / Tana** — saved view system (grid, kanban, calendar, gallery) per table with shareable URLs, field-type-aware cells (rating, attachment, formula, lookup), bulk-action floating bar with selection count and quick destructive ops, inline filter chips that compose, view-grouping with collapsible groups, hybrid doc+db nodes (Tana) where any node can be a row or a paragraph.
+- **Slack / Discord** — multi-pane layout (sidebar + thread + main + details), unread badges grouped by workspace/server with mention-vs-message distinction, presence dots with per-channel granularity, threaded replies anchored to a message, slash commands (`/remind`, `/giphy`), drag-and-drop file upload anywhere in the app, persistent unread state across reloads, scroll-to-unread-anchor on channel switch, code-fence with language detection in messages.
+- **Pitch / Tome / Gamma** — AI-assisted slide generation from a single prompt, per-slide regenerate / restyle, theme-coherent layout suggestions, smart-paste of links into rich blocks, presenter-view with timer, real-time co-editing with selection halos, inline image generation tied to slide content.
+
+#### Vis — visual system
+
+- [ ] **Vis-1 — Typography depth.** Extend `BrandTokensSchema` with `letter_spacing` scale, `line_height` scale, OpenType feature settings (tabular numerals, ligatures, optical sizing, fractions). Tailwind config bridges to CSS. Reference: Linear + Stripe both use tabular numerals across all numeric cells. **1 wk.**
+- [ ] **Vis-2 — Dark mode as a real surface across all 56 components.** Today only `data-color-mode` is mirrored on `<html>`. Need every component to ship paired dark/light Tailwind class variants, pair-tested screenshots, and dark-tuned shadows / borders (Supabase-style elevated surfaces don't reuse light-mode shadow tokens). **1.5 wk.**
+- [ ] **Vis-3 — Icon resolver + `<Icon>` component.** `iconography.allowed_sets` declares which packs are allowed; need a real `<Icon set="lucide" name="archive" />` resolver layer + integration so components like `<Button icon="archive">` work without authoring per-component icon props. Reference: Linear renders ~120 distinct icons across the app from a single set with consistent stroke-width. **1 wk.**
 - [ ] **Vis-4 — Variant pass for the remaining 32 components.** Wave 6 P-10 covered 24/56. The other 32 (inputs, charts, navigation primitives, niche specialised) need the same `variant` + `size` treatment for visual consistency. **2 wk.**
-- [ ] **Vis-5 — Custom illustration support.** `<EmptyState>` ships as text + button. Linear-grade empty states use mascots, custom artwork, situation-specific tone. Need an illustration registry + `<EmptyState illustration="inbox-zero">` integration. Asset work + render plumbing. **2 wk.**
+- [ ] **Vis-5 — Custom illustration support.** `<EmptyState>` ships as text + button. Linear/Notion-grade empty states use mascots, custom artwork, situation-specific tone. Need an illustration registry + `<EmptyState illustration="inbox-zero">` integration. Asset work + render plumbing. **2 wk.**
+- [ ] **Vis-6 — Density toggles per surface.** Stripe and Linear both ship a compact / cozy / comfortable density mode that re-scales row height, font size, and padding. New `density: 'compact'|'cozy'|'comfortable'` token plus a `density-aware` skill that propagates to `List`, `Table`, `Grid`, `DetailView`, `KPIRow`. **1 wk on top of Vis-1.**
+- [ ] **Vis-7 — Elevation / surface system.** Today shadow is one-shot. Need a 5-step elevation token scale (resting / hover / popover / modal / commandbar) with paired light-and-dark shadow recipes. Reference: Figma's right-panel uses elevation-2 vs the canvas elevation-0; modal is elevation-4. **3 d on top of Vis-2.**
+- [ ] **Vis-8 — Skeleton-as-shape, not as block.** `<Skeleton>` today is a single grey rectangle. Best-in-class apps (Linear, Stripe) ship per-component skeleton shapes that match the real layout (avatar circle + two-line stack, table-row with 5 column blocks). Each of the 8 specialized components gets a `Skeleton` variant. **1 wk.**
+- [ ] **Vis-9 — Status / system-health bar.** Vercel and Stripe persistently surface deploy / system status in the chrome. New `<StatusBar>` primitive that subscribes to a `system.status` capability and renders a coloured pill (operational / degraded / incident) with click-through. **3 d.**
+- [ ] **Vis-10 — Notification badge system.** Slack/Discord/Linear all ship grouped per-domain badges (workspace badge → channel badge → mention vs message distinction). New `notification` token group + `<Badge count grouping>` integration with the sidebar/nav. **1 wk.** Depends on Vis-9.
 
-### Wave 12 — interaction depth
+#### Int — interaction depth
 
-- [ ] **Int-1 — Motion layer extension** beyond Wave 7 P-7. Per-component entry/exit animations (modal slide-in, list stagger), data-update animations (row shimmer on update, badge pulse on increment), respect `motion.duration_scale` from BrandKit. **2 wk on top of P-7.**
-- [ ] **Int-2 — `<Tooltip>` primitive with proper timing.** 400ms delay, 8px offset, smart re-positioning, fade in 100ms. The `tooltip-tone` skill exists but no primitive backs it. **3 d.**
-- [ ] **Int-3 — Global keyboard registry + Cmd+K everywhere.** New `@cir/keyboard` package, `<CommandPalette>` integrates, every action gets a registered shortcut, hint chips render on first-use. **2 wk.**
-- [ ] **Int-4 — Optimistic UI wired by default.** `useOptimisticAction` exists; today it's opt-in. Make it the default for any reversible+low-stakes action (capability declares both flags). **3 d.**
+- [ ] **Int-1 — Motion layer extension** beyond Wave 7 P-7. Per-component entry/exit animations (modal slide-in, list stagger, drawer slide-from-edge), data-update animations (row shimmer on update, badge pulse on increment, count tick-up easing), respect `motion.duration_scale` from BrandKit. Linear's "0.16x" scale is the reference. **2 wk on top of P-7.**
+- [ ] **Int-2 — `<Tooltip>` primitive with proper timing.** 400ms initial delay, 100ms re-show delay (sticky window), 8px offset, smart re-positioning across viewport edges, fade in 100ms. The `tooltip-tone` skill exists but no primitive backs it. **3 d.**
+- [ ] **Int-3 — Global keyboard registry + Cmd+K command palette everywhere.** New `@cir/keyboard` package, `<CommandPalette>` integrates with capability registry (every capability becomes a discoverable action), per-user action recency weighting (Linear-style), hint chips render on first-use. **2 wk.**
+- [ ] **Int-4 — Optimistic UI wired by default.** `useOptimisticAction` exists; today it's opt-in. Make it the default for any capability that declares `reversible: true` + `low_stakes: true`. **3 d.**
 - [ ] **Int-5 — Onboarding microinteractions.** Product-tour highlight chips, completion progress, contextual "you're done" celebrations. New `<TourStep>` primitive + skill. **1.5 wk.**
+- [ ] **Int-6 — Quick-switcher (`Cmd+P`) distinct from command palette.** Raycast/Arc/Linear all separate "go to anything" (Cmd+P, fuzzy across resources) from "do anything" (Cmd+K, fuzzy across actions). New `<QuickSwitcher>` that resolves a capability-typed `quickswitch_index` per app. Depends on Int-3. **1 wk.**
+- [ ] **Int-7 — Chord shortcuts + per-user aliases.** Linear's `g i` / `g a` and Raycast's user-defined aliases. The `@cir/keyboard` registry needs a chord state machine + per-user alias overlay stored in the intent vault. **1 wk on top of Int-3.**
+- [ ] **Int-8 — Undo toast on every destructive action.** Linear ships an undo toast with a 5s window for archive/delete/move. New `withUndo()` middleware on `ActionDispatcher` + capability `undoable: true` flag + `<Toast variant="undo">`. **1 wk.**
+- [ ] **Int-9 — Bulk-action floating bar.** When multi-select on `List` / `Table` / `Grid` engages, a floating bar appears with selection count + bulk actions (archive, move, delete) + Esc to dismiss. Reference: Linear, Stripe events, Airtable. **1 wk.**
+- [ ] **Int-10 — Drag-and-drop file upload everywhere.** Notion/Slack/Discord let you drop a file anywhere in the chrome, with a viewport-edge halo as drop indicator. New `<DropZone>` host overlay + `file.upload` capability hook. **1 wk.**
+- [ ] **Int-11 — Preserved scroll + view state across nav.** Linear and Slack restore scroll position when you back-navigate; Slack remembers per-channel scroll across reloads. New `view-state` middleware that persists per-route scroll + selection + filter to `sessionStorage` (and optionally vault). **1 wk.**
+- [ ] **Int-12 — Settings search.** Stripe / Slack / Notion all ship a search box at the top of settings that fuzzy-matches into deep pages. The intent profile knows which scopes are settings; `<SettingsSearch>` builds an index per surface. **3 d.** Depends on Int-3.
+- [ ] **Int-13 — Hover-card / preview-on-hover.** Linear's `#issue` hover-cards, Notion's @-mention previews, Raycast's two-pane preview. New `<HoverCard>` primitive with 350ms open / 150ms close + capability-driven content slot. **3 d.**
+- [ ] **Int-14 — Image / media zoom + lightbox.** Notion, Slack, Discord all open images into a focused zoom view with arrow-key nav and download. `<Lightbox>` primitive triggered from any `<Image>` or `<Gallery>` item. **3 d.**
+- [ ] **Int-15 — Smart paste with link unfurl.** When a URL is pasted into a `RichText` / `Form` field with `paste_smart: true`, the host fetches an unfurl preview and renders a card. Notion + Slack reference. **1.5 wk.** Depends on Cnt-4.
 
-### Wave 13 — content depth
+#### Cnt — content rendering
 
-- [ ] **Cnt-1 — Code rendering at depth.** Syntax highlighting (Shiki or Starry-Night), fold, line references, inline comments. `<CodeView>` exists; today it's a `<pre>` with a class. **2 wk.**
-- [ ] **Cnt-2 — Diff rendering** (Linear/GitHub-style). `<DiffView>` exists; needs proper hunks, syntax-highlighted diff, side-by-side and unified modes. **1.5 wk.**
-- [ ] **Cnt-3 — Mention / @user / #issue / link auto-resolution.** Pluggable resolver protocol (per-app dictionary), inline rendering with hover-cards. **2 wk.**
-- [ ] **Cnt-4 — Embed system.** Link previews, video embeds, code embeds with detection + appropriate render. **2 wk.**
+- [ ] **Cnt-1 — Code rendering at depth.** Syntax highlighting (Shiki or Starry-Night), fold, line references, inline comments. `<CodeView>` today is a `<pre>` with a class. Reference: Vercel logs, Stripe API examples, Supabase SQL editor preview. **2 wk.**
+- [ ] **Cnt-2 — Diff rendering** (Linear/GitHub-style). `<DiffView>` exists; needs proper hunks, syntax-highlighted diff, side-by-side and unified modes, expand-to-context. **1.5 wk.**
+- [ ] **Cnt-3 — Mention / @user / #issue / link auto-resolution.** Pluggable resolver protocol (per-app dictionary), inline rendering with hover-cards. Reference: Notion @-mentions, Linear `#ENG-123` autolinks, Slack `<@user>`. **2 wk.** Depends on Int-13.
+- [ ] **Cnt-4 — Embed system.** Link previews, video embeds, code embeds, tweet/figma/loom embeds with detection + appropriate render. **2 wk.**
 - [ ] **Cnt-5 — Markdown at Linear quality.** Tighter spacing, properly themed, custom renderers per element type, integration with mentions/embeds above. **1 wk on top of Cnt-3 + Cnt-4.**
+- [ ] **Cnt-6 — Slash-command menu for block creation.** Notion's `/` menu — inline command palette scoped to "what kind of block do I want here". New `<BlockMenu>` primitive that subscribes to a `block_kinds` registry per surface (so a doc surface and a chat surface get different menus). **2 wk.**
+- [ ] **Cnt-7 — Block-based content editing.** Notion / Coda / Tana all build documents from typed blocks (paragraph, heading, callout, toggle, code, embed). New `<BlockEditor>` composing `RichText` + `Markdown` + the block menu. Likely larger than estimated; bounded scope = 8 baseline block types. **3 wk.** Depends on Cnt-6.
+- [ ] **Cnt-8 — Inline code-block with language detection.** Slack/Discord/Notion all detect language on triple-backtick paste. New `detectLanguage()` helper + `<CodeBlock>` variant of `CodeView`. **3 d.** Depends on Cnt-1.
+- [ ] **Cnt-9 — Activity feed with diff visualization.** Linear's activity feed renders typed events ("changed status", "added label") with collapse-by-default diffs. Stripe's events log renders structured payload diffs. New `<ActivityFeed>` primitive consuming a `activity.list` capability shape. **2 wk.** Depends on Cnt-2.
+- [ ] **Cnt-10 — Saved views / saved filters.** Linear's "Active issues", Airtable's grid/kanban/calendar views, Stripe's saved searches. New `view_definition` schema (filters + sort + grouping + density) saved per intent profile, with shareable URL serialization. **1.5 wk.**
+- [ ] **Cnt-11 — Form auto-save with version history.** Notion + Coda autosave every keystroke and expose a per-doc version history with restore. New `auto_save: true` form policy + `version.list` capability shape. **2 wk.**
 
-**Realistic budget for Linear/Supabase parity:** Waves 11+12+13 ≈ **3-6 months of focused work** on top of Waves 7-10. Each track is bounded and additive. Most of the perceived-quality gap closes by **adding more skills + brand-kit depth** rather than writing more TypeScript — but the visual-system work (variants, dark mode, icons, illustrations) requires real implementation.
+#### Coll — collaboration & real-time (new)
+
+Capabilities best-in-class apps ship that CIR has no track for today. Depends on a real-time transport (S-3 Streaming subscriptions in Wave 10).
+
+- [ ] **Coll-1 — Multiplayer presence indicators.** Figma's name-tagged cursors, Linear's "X is viewing this issue" pill. New `<Presence>` primitive backed by a `presence.subscribe` capability. **1.5 wk.** Depends on S-3.
+- [ ] **Coll-2 — Live cursors on canvas / list / doc surfaces.** Figma-style remote cursors with smooth interpolation + name label. **2 wk.** Depends on Coll-1.
+- [ ] **Coll-3 — Threaded comments anchored to content.** Notion / Figma / Linear all ship comments that anchor to a specific node (paragraph, layer, line). New `comment_anchor` schema + `<CommentThread>` primitive. **2.5 wk.** Depends on Cnt-3.
+- [ ] **Coll-4 — Real-time follow-mode / observe-mode.** Figma's "follow Vid" feature mirrors another user's viewport. Bounded scope: read-only follow on doc / canvas surfaces. **2 wk.** Depends on Coll-1.
+- [ ] **Coll-5 — Selection halos for collaborative selection.** When someone else has a row selected in a list or a layer in a canvas, render a coloured outline keyed to their presence color. **1 wk.** Depends on Coll-1.
+
+#### Nav — navigation & information architecture (new)
+
+These pull layout / navigation patterns out of "interaction" into a track of their own — they're enough work and have enough cross-cutting consequences that conflating them with Int hides cost.
+
+- [ ] **Nav-1 — Multi-pane layout primitive.** Slack (sidebar + main + thread), Discord (servers + channels + main + members), Linear's triage view (filters + list + detail). New `<MultiPane>` with persisted resize + collapse state. The existing `<Split>` is single-axis; this is layout-aware. **1.5 wk.**
+- [ ] **Nav-2 — Sidebar persistence & collapse memory.** Linear's sidebar collapses with `[`, remembers state per user. Slack remembers per-workspace. Persisted to vault when present, sessionStorage otherwise. **3 d.** Depends on Int-11.
+- [ ] **Nav-3 — Sticky / pinned content within scroll regions.** Slack pinned messages, Linear pinned issues at top of a list, Notion pinned blocks. New `pinned: true` flag on list items + sticky-render rule. **3 d.**
+- [ ] **Nav-4 — Drilldown breadcrumb with shareable URLs.** Stripe's "Charges › ch_xxx › Refund" breadcrumb that survives reload + share. Existing `<Breadcrumb>` is decorative; needs to wire to a route stack the host can serialize. **1 wk.**
+- [ ] **Nav-5 — Project / team / workspace switcher in chrome.** Vercel / Supabase / Linear all ship a top-left scope switcher that re-scopes the entire app. New `<ScopeSwitcher>` + `intent.scope_active` rule. **1 wk.**
+- [ ] **Nav-6 — Filter syntax in top bar.** Linear lets you type `assignee:me priority:high` in the top bar; Airtable has filter chips. New `<FilterBar>` upgrade with capability-typed parser + chip rendering. **2 wk.** (`<FilterBar>` exists today as a chip strip; this adds parse + autocomplete.)
+
+#### AI — inline AI surfaces (new)
+
+The Notion-AI / Tome / Gamma generation surface is its own track. CIR's compiler is already AI-native; what's missing is the **end-user-facing AI** that lives inside content surfaces.
+
+- [ ] **AI-1 — "Ask AI" on selection.** Notion's "Ask AI" + "Summarize" + "Improve writing" floating bar over selected text. New `<SelectionActionBar>` + capability-typed prompt registry per surface. **2 wk.** Depends on Cnt-7.
+- [ ] **AI-2 — Slash-command AI shortcuts in editors.** `/summarize` / `/translate` / `/brainstorm` inside the slash menu. **1 wk.** Depends on Cnt-6 + AI-1.
+- [ ] **AI-3 — AI-generated layouts (Tome / Gamma model).** Given a prompt, generate a multi-block doc / slide deck using the existing compiler — but with end-user-visible regenerate / restyle / expand affordances. Already adjacent to P-3 (refinement loop) but the surface is different: it's a creation flow, not a tweak. **2.5 wk.** Depends on AI-1 + P-3.
+- [ ] **AI-4 — Inline AI chat docked to surface.** Raycast-style chat that has read-context of the current capability bindings. **2 wk.**
+
+**Realistic budget for world-class web app parity:** Waves 11–15 ≈ **6–10 months of focused work** on top of Waves 7–10, depending on whether the Coll track ships (real-time transport is the gating dependency). The tracks are bounded and mostly additive: Vis + Int + Cnt close the perceived-quality gap on solo-user surfaces; Nav restructures layout for multi-pane apps; Coll opens collaborative surfaces (gated on S-3); AI overlays end-user generation on top of any surface. Most of the perceived-quality gap on solo surfaces still closes by **adding more skills + brand-kit depth** rather than writing more TypeScript — but Coll, Cnt-7 (block editor), AI-1, and the Nav layout primitives are real implementation work.
 
 ### Phase 7+ — multi-platform + marketing (kept on the roadmap; not on the personalised-web critical path)
 
