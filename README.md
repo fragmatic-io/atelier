@@ -110,17 +110,17 @@ Five public artifacts at the top, signed and versioned by the app. Private inten
 ```mermaid
 graph TB
   ColdReq[/"Browser GET /today"/] --> T4Miss{T4 miss?}
-  T4Miss -->|HIT| HotRender[Render from cache<br/>token_cost = 0]
-  T4Miss -->|MISS| T3Lookup[ManifestStore lookup<br/>via /api/cir/compile]
+  T4Miss -->|HIT| HotRender["Render from cache<br/>token_cost = 0"]
+  T4Miss -->|MISS| T3Lookup["ManifestStore lookup<br/>via /api/cir/compile"]
   T3Lookup --> T3Hit{T3 hit?}
-  T3Hit -->|HIT| Validate1[Re-validate against policies]
-  T3Hit -->|MISS| LLM[Compiler → Gemini<br/>system prompt cached + per-call context]
+  T3Hit -->|HIT| Validate1["Re-validate against policies"]
+  T3Hit -->|MISS| LLM["Compiler → Gemini<br/>system prompt cached + per-call context"]
   LLM --> Validate1
-  Validate1 -->|pass| StoreT3[Store in T3<br/>+ emit manifest.compiled]
-  StoreT3 --> StoreT4[Send to browser, store in T4]
-  StoreT4 --> Render[Render]
-  Validate1 -->|fail| Retry[Compiler retry with violation]
-  Retry -->|N retries fail| Error[ManifestValidationError → fallback to prior manifest]
+  Validate1 -->|pass| StoreT3["Store in T3<br/>+ emit manifest.compiled"]
+  StoreT3 --> StoreT4["Send to browser, store in T4"]
+  StoreT4 --> Render["Render"]
+  Validate1 -->|fail| Retry["Compiler retry with violation"]
+  Retry -->|N retries fail| Error["ManifestValidationError → fallback to prior manifest"]
 ```
 
 Cost: 1 LLM call on cold path (~5–20k tokens). Zero LLM calls on the hot path. Triggers (capability bumped, intent changed, component removed, user-requested recompile) are the only things that invalidate.
@@ -148,28 +148,28 @@ Cost: 1 LLM call on cold path (~5–20k tokens). Zero LLM calls on the hot path.
 graph TB
   subgraph Shipped["Shipped (verifiable in this commit)"]
     direction TB
-    S1[56 baseline components<br/>+ composition rules JSON sibling]
-    S2[7 baseline policies<br/>+ PolicyRegistry for app-defined]
-    S3[LLM compiler<br/>Gemini + Fallback + Composite]
-    S4[StreamingAuditSink<br/>+ IndexedDB cache + SSE transport]
-    S5[Public artifacts<br/>capabilities/ skills/ recipes/ policies/<br/>+ .well-known/cir.json]
-    S6[_review envelope<br/>+ validate-data --strict CI gate<br/>for OpenAPI imports]
-    S7[LLM-assisted onboarding<br/>compileIntentProfile + /onboarding/describe<br/>+ /onboarding/review human gate]
-    S8[8-subcommand cir CLI<br/>incl. cir inspect / compile / dev --tail]
-    S9[Nightly Gemini eval workflow<br/>auth-fail vs no-key distinction]
-    S10[984 tests across 136 files<br/>15 schema-validated artifact files]
+    S1["56 baseline components<br/>+ composition rules JSON sibling"]
+    S2["7 baseline policies<br/>+ PolicyRegistry for app-defined"]
+    S3["LLM compiler<br/>Gemini + Fallback + Composite"]
+    S4["StreamingAuditSink<br/>+ IndexedDB cache + SSE transport"]
+    S5["Public artifacts<br/>capabilities/ skills/ recipes/ policies/<br/>+ .well-known/cir.json"]
+    S6["_review envelope<br/>+ validate-data --strict CI gate<br/>for OpenAPI imports"]
+    S7["LLM-assisted onboarding<br/>compileIntentProfile + /onboarding/describe<br/>+ /onboarding/review human gate"]
+    S8["8-subcommand cir CLI<br/>incl. cir inspect / compile / dev --tail"]
+    S9["Nightly Gemini eval workflow<br/>auth-fail vs no-key distinction"]
+    S10["984 tests across 136 files<br/>15 schema-validated artifact files"]
   end
 
   subgraph Roadmap["Roadmap / not yet shipped"]
     direction TB
-    R1[Real intent vault backend<br/>(localStorage shim today)]
-    R2[Permission grant against a real vault<br/>(demo gestures at it)]
-    R3[Behavioral pattern detector implementations<br/>(interface only)]
-    R4[Audit sink server endpoint in the demo<br/>(cir dev --tail is a contract)]
-    R5[Marketplace / community recipes]
-    R6[Live-query subscriptions<br/>(SWR + optimistic UI cover the common cases)]
-    R7[Cross-app workflow compilation]
-    R8[Mobile + native render runtimes]
+    R1["Real intent vault backend<br/>(localStorage shim today)"]
+    R2["Permission grant against a real vault<br/>(demo gestures at it)"]
+    R3["Behavioral pattern detector implementations<br/>(interface only)"]
+    R4["Audit sink server endpoint in the demo<br/>(cir dev --tail is a contract)"]
+    R5["Marketplace / community recipes"]
+    R6["Live-query subscriptions<br/>(SWR + optimistic UI cover the common cases)"]
+    R7["Cross-app workflow compilation"]
+    R8["Mobile + native render runtimes"]
   end
 ```
 
