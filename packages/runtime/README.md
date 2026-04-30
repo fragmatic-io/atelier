@@ -23,6 +23,15 @@ manifests, manifests live in cache, cache invalidates on triggers.
   `verbal_required` confirmation, executes the registered handler, pushes a
   reversible action onto the bounded LRU undo stack, emits `action.executed`
   / `action.denied`.
+- **`optimisticDispatch()`** — auto-optimistic UI helper. When a capability
+  declares both `reversible: true` AND `low_stakes: true`, this helper
+  applies the host's predicted outcome to UI state synchronously, dispatches
+  in the background, and rolls back on failure. Emits
+  `action.optimistic_applied` / `action.optimistic_rolled_back` audit
+  events. When either flag is missing, it is a transparent passthrough to
+  `dispatch()` — the optimistic callbacks are never invoked. Audit events
+  on rollback redact known credential shapes (`Bearer`, `sk-ant-...`,
+  `key=...`) and never include the input payload.
 - **`InMemoryTriggerBus`** + `wireTriggerInvalidation()` — local trigger bus
   and the wiring that translates schema/policy/intent triggers into cache
   evictions per [`docs/caching.md`](../../docs/caching.md) §"What invalidates
@@ -77,6 +86,35 @@ const manifest = await resolver.resolve({ user_id, app_id, route: '/today' });
 const plan = buildRenderPlan(manifest, '/today', registry);
 // adapter renders `plan.root` recursively, wiring `node.actions` to dispatcher.
 ```
+
+### Optimistic dispatch
+
+Hosts that want Linear-grade snappiness for low-stakes actions wrap the
+dispatcher in `optimisticDispatch()`. The helper inspects the capability
+declaration; if `reversible && low_stakes` are both true it applies the
+predicted outcome synchronously and dispatches in the background. If the
+network call fails, it rolls back automatically and emits an
+`action.optimistic_rolled_back` audit event with a redacted reason.
+
+```ts
+import { optimisticDispatch } from '@cir/runtime';
+
+await optimisticDispatch(dispatcher, {
+  capability: capabilities['cart.add'],
+  input: { product_id: 42, quantity: 1 },
+  ctx: { user_id, app_id },
+  optimisticOutcome: (input) => ({ predicted_total: cart.size + input.quantity }),
+  onApply: (outcome) => setCartSize(outcome.predicted_total),
+  onRollback: (outcome, err) => {
+    setCartSize(outcome.predicted_total - 1);
+    showToast('error', err.message);
+  },
+});
+```
+
+For capabilities that lack either flag, `optimisticDispatch()` is a
+transparent passthrough to `dispatcher.dispatch()` — the optimistic
+callbacks are never invoked, so the same call site works for both modes.
 
 ## Background
 

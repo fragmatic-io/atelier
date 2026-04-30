@@ -148,6 +148,18 @@ export const CapabilitySchema = z.object({
   rate_limit: RateLimitString.optional(),
   reversible: z.boolean(),
   rollback: CapabilityId.optional(),
+  /**
+   * When `reversible: true && low_stakes: true`, the runtime applies the
+   * action's expected outcome to UI state immediately and rolls back on
+   * dispatch failure. Use for: archive, snooze, mark-read, like,
+   * save-for-later. NOT for: actions affecting other users, billable
+   * actions, anything irreversible from another user's perspective.
+   *
+   * Defaults to `false` when omitted. Backwards-compatible: pre-existing
+   * capabilities without this flag dispatch through the standard
+   * (non-optimistic) path.
+   */
+  low_stakes: z.boolean().optional(),
   _review: ReviewEnvelopeSchema.optional(),
 });
 

@@ -18,5 +18,6 @@
   "confirmation": "inline",
   "rate_limit": "60/min/user",
   "reversible": true,
-  "rollback": "dummyjson.cart.remove"
+  "rollback": "dummyjson.cart.remove",
+  "low_stakes": true
 }

@@ -58,6 +58,9 @@
     "rollback": {
       "$ref": "#/properties/id"
     },
+    "low_stakes": {
+      "type": "boolean"
+    },
     "_review": {
       "type": "object",
       "properties": {

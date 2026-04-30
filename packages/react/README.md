@@ -105,6 +105,47 @@ function App() {
 | `useDispatcher()`        | `(capabilityId, input) => Promise<ActionResult>` | Dispatch a capability with `ctx` auto-wired from identity + manifest. |
 | `useTrigger(type, fn)`   | `void`                                           | Subscribe to a trigger event. Auto-cleanup on unmount.                |
 | `useReactConfirmation()` | `{ confirm, Portal }`                            | Returns a `ConfirmationCallback` + a portal to render somewhere.      |
+| `useOptimisticAction()`  | `{ invoke, busy, toast }`                        | Optimistic-UI wrapper around an action. Auto-detects from capability. |
+
+## Optimistic UI — `useOptimisticAction()`
+
+`useOptimisticAction()` standardizes the apply-rollback-toast loop. Hosts
+pass the action callback plus the `Capability` declaration; the hook reads
+`capability.reversible && capability.low_stakes` and engages the optimistic
+path automatically. No opt-in flag required.
+
+```tsx
+import { useOptimisticAction, useDispatcher } from '@cir/react';
+import { CAPABILITIES } from './capabilities';
+
+function CartButton({ productId }: { productId: number }) {
+  const dispatch = useDispatcher();
+  const [count, setCount] = useState(0);
+
+  const { invoke, busy, toast } = useOptimisticAction<{ product_id: number }>({
+    action: (input) => dispatch('cart.add', input),
+    capability: CAPABILITIES['cart.add'], // reversible: true + low_stakes: true
+    applyOptimistic: () => setCount((n) => n + 1),
+    rollback: () => setCount((n) => n - 1),
+  });
+
+  return (
+    <>
+      <button disabled={busy} onClick={() => invoke({ product_id: productId })}>
+        Add to cart ({count})
+      </button>
+      {toast && <Toast variant={toast.kind}>{toast.message}</Toast>}
+    </>
+  );
+}
+```
+
+When `capability` is omitted, the hook keeps its pre-Wave-7a behavior
+(always optimistic) — existing components like `DecisionQueue` and
+`TaskQueue` keep working without changes. When the capability is supplied
+but lacks either flag, `applyOptimistic` and `rollback` are NOT invoked
+even on failure — the user sees the round-trip via the `busy` state and
+the failure via the toast.
 
 ## Confirmation portal
 

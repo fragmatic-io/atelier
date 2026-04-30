@@ -32,6 +32,8 @@
         "manifest.invalidated",
         "action.executed",
         "action.denied",
+        "action.optimistic_applied",
+        "action.optimistic_rolled_back",
         "intent.changed",
         "capability.changed",
         "skill.changed",

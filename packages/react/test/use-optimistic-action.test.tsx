@@ -6,11 +6,40 @@ import { describe, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';
 import { useEffect, useRef, type ReactElement } from 'react';
 import type { ActionResult } from '@cir/runtime';
+import type { Capability } from '@cir/schemas';
 import {
   useOptimisticAction,
   type UseOptimisticActionOptions,
   type UseOptimisticActionResult,
 } from '../src/hooks/use-optimistic-action.js';
+
+const lowStakesCapability: Capability = {
+  id: 'cart.add',
+  kind: 'action',
+  version: '0.1.0',
+  input: {},
+  output: {},
+  side_effects: ['mutates:cart_state'],
+  permissions: ['cart:write'],
+  confirmation: 'inline',
+  reversible: true,
+  rollback: 'cart.remove',
+  low_stakes: true,
+};
+
+const reversibleOnlyCapability: Capability = {
+  ...lowStakesCapability,
+  id: 'thread.archive',
+  reversible: true,
+  low_stakes: false,
+};
+
+const irreversibleCapability: Capability = {
+  ...lowStakesCapability,
+  id: 'mail.send',
+  reversible: false,
+  low_stakes: false,
+};
 
 interface HarnessProps<TInput> {
   opts: UseOptimisticActionOptions<TInput>;
@@ -221,5 +250,124 @@ describe('useOptimisticAction', () => {
     expect(applyOptimistic).not.toHaveBeenCalled();
     expect(rollback).not.toHaveBeenCalled();
     await flush();
+  });
+
+  it('autodetect: engages optimistic path when capability is reversible + low_stakes', async () => {
+    const calls: string[] = [];
+    const action = vi.fn((input: Input): Promise<ActionResult> => {
+      calls.push(`action:${input.id}`);
+      return Promise.resolve({ ok: true });
+    });
+    const applyOptimistic = vi.fn((input: Input) => {
+      calls.push(`apply:${input.id}`);
+    });
+    const rollback = vi.fn();
+
+    let api!: UseOptimisticActionResult<Input>;
+    render(
+      <Harness<Input>
+        opts={{ action, applyOptimistic, rollback, capability: lowStakesCapability }}
+        capture={(a) => {
+          api = a;
+        }}
+      />,
+    );
+
+    await act(async () => {
+      await api.invoke({ id: 'auto1' });
+    });
+
+    // Apply ran BEFORE the action.
+    expect(calls).toEqual(['apply:auto1', 'action:auto1']);
+    expect(rollback).not.toHaveBeenCalled();
+  });
+
+  it('autodetect: skips optimistic path when capability is reversible-only (no low_stakes)', async () => {
+    const action = vi.fn(
+      (_input: Input): Promise<ActionResult> => Promise.resolve({ ok: false, error: 'nope' }),
+    );
+    const applyOptimistic = vi.fn();
+    const rollback = vi.fn();
+
+    let api!: UseOptimisticActionResult<Input>;
+    render(
+      <Harness<Input>
+        opts={{ action, applyOptimistic, rollback, capability: reversibleOnlyCapability }}
+        capture={(a) => {
+          api = a;
+        }}
+      />,
+    );
+
+    await act(async () => {
+      await api.invoke({ id: 'auto2' });
+    });
+
+    // Pessimistic path: neither callback fires, but the toast still surfaces
+    // the error to the user.
+    expect(applyOptimistic).not.toHaveBeenCalled();
+    expect(rollback).not.toHaveBeenCalled();
+    expect(api.toast?.kind).toBe('error');
+    expect(api.toast?.message).toBe('nope');
+  });
+
+  it('autodetect: skips optimistic path entirely when capability is irreversible', async () => {
+    const action = vi.fn(
+      (_input: Input): Promise<ActionResult> => Promise.reject(new Error('fail')),
+    );
+    const applyOptimistic = vi.fn();
+    const rollback = vi.fn();
+
+    let api!: UseOptimisticActionResult<Input>;
+    render(
+      <Harness<Input>
+        opts={{ action, applyOptimistic, rollback, capability: irreversibleCapability }}
+        capture={(a) => {
+          api = a;
+        }}
+      />,
+    );
+
+    await act(async () => {
+      await api.invoke({ id: 'auto3' });
+    });
+
+    // Even on a thrown error, rollback must NOT run for irreversible
+    // capabilities — there is no optimistic state to revert.
+    expect(applyOptimistic).not.toHaveBeenCalled();
+    expect(rollback).not.toHaveBeenCalled();
+    expect(api.toast?.kind).toBe('error');
+  });
+
+  it('autodetect: legacy callers without capability keep optimistic semantics', async () => {
+    // Pre-Wave-7a callers passed only `action` + `applyOptimistic` + `rollback`.
+    // We must keep those callers working.
+    const calls: string[] = [];
+    const action = vi.fn((input: Input): Promise<ActionResult> => {
+      calls.push(`action:${input.id}`);
+      return Promise.resolve({ ok: false, error: 'legacy-fail' });
+    });
+    const applyOptimistic = vi.fn((input: Input) => {
+      calls.push(`apply:${input.id}`);
+    });
+    const rollback = vi.fn();
+
+    let api!: UseOptimisticActionResult<Input>;
+    render(
+      <Harness<Input>
+        opts={{ action, applyOptimistic, rollback }}
+        capture={(a) => {
+          api = a;
+        }}
+      />,
+    );
+
+    await act(async () => {
+      await api.invoke({ id: 'legacy' });
+    });
+
+    expect(calls).toEqual(['apply:legacy', 'action:legacy']);
+    expect(rollback).toHaveBeenCalledOnce();
+    expect(rollback).toHaveBeenCalledWith({ id: 'legacy' });
   });
 });

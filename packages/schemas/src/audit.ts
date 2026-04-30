@@ -29,6 +29,21 @@ export const AuditEventType = z.enum([
   'manifest.invalidated',
   'action.executed',
   'action.denied',
+  /**
+   * Emitted by `optimisticDispatch()` the moment the synthesized expected
+   * outcome is applied to UI state — BEFORE the network call returns. The
+   * trigger chain carries `action:<capability_id>` so dashboards can pair
+   * each apply with the eventual `action.executed` (or
+   * `action.optimistic_rolled_back` on failure).
+   */
+  'action.optimistic_applied',
+  /**
+   * Emitted by `optimisticDispatch()` when the underlying `dispatch()` fails
+   * after an optimistic apply. The trigger chain carries the redacted error
+   * message — never the input payload — so the audit log does not leak
+   * sensitive data through a failure path.
+   */
+  'action.optimistic_rolled_back',
   'intent.changed',
   'capability.changed',
   'skill.changed',

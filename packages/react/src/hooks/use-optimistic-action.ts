@@ -16,14 +16,35 @@
  *
  * The hook is intentionally schema-agnostic: callers parameterize over
  * `TInput` so they keep their own type for the action input.
+ *
+ * Wave 7a / Int-4 — capability autodetect:
+ * Hosts can now pass the action's `capability`. When the capability has
+ * BOTH `reversible: true` AND `low_stakes: true`, the hook engages the
+ * optimistic apply/rollback path automatically — the host does NOT need
+ * to set an opt-in flag. When either flag is missing, the hook falls
+ * through to a pessimistic path: `applyOptimistic` is NOT called and
+ * `rollback` is NOT called either, even if those callbacks were passed.
+ *
+ * Backwards compatibility: when no `capability` is supplied, the hook
+ * behaves exactly as before — `applyOptimistic` is always called, and
+ * `rollback` always runs on failure. Existing callers (DecisionQueue,
+ * TaskQueue) continue to work unchanged.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ActionResult } from '@cir/runtime';
+import type { Capability } from '@cir/schemas';
 
 export interface UseOptimisticActionOptions<TInput> {
   /** The action callback (typically wired by the render walker). */
   action: ((input: TInput) => Promise<ActionResult>) | undefined;
+  /**
+   * The action's capability declaration. When present and the capability
+   * has both `reversible: true` and `low_stakes: true`, the hook engages
+   * optimistic UI automatically. When absent (legacy callers), the hook
+   * always engages optimistic UI.
+   */
+  capability?: Capability;
   /** Apply the optimistic mutation locally. Called BEFORE the network call. */
   applyOptimistic?: (input: TInput) => void;
   /** Roll back the local mutation if the action fails. */
@@ -40,6 +61,18 @@ export interface UseOptimisticActionResult<TInput> {
 }
 
 const DEFAULT_TOAST_TIMEOUT_MS = 2000;
+
+/**
+ * Decide whether the hook should run in optimistic mode for a given
+ * capability. The autodetect rule mirrors the runtime's
+ * `optimisticDispatch()` — both flags must be true. When no capability is
+ * passed (legacy callers, hand-wired components), assume optimistic mode
+ * so existing components keep working.
+ */
+function isOptimistic(capability: Capability | undefined): boolean {
+  if (!capability) return true;
+  return capability.reversible === true && capability.low_stakes === true;
+}
 
 export function useOptimisticAction<TInput>(
   opts: UseOptimisticActionOptions<TInput>,
@@ -78,10 +111,16 @@ export function useOptimisticAction<TInput>(
 
   const invoke = useCallback(
     async (input: TInput): Promise<ActionResult | null> => {
-      const { action, applyOptimistic, rollback } = optsRef.current;
+      const { action, applyOptimistic, rollback, capability } = optsRef.current;
       if (!action) return null;
 
-      applyOptimistic?.(input);
+      // Autodetect: only engage the optimistic apply/rollback callbacks when
+      // the capability declares it (or when no capability is passed — legacy
+      // path). For pessimistic capabilities the network round-trip is the
+      // user-visible signal of the action landing.
+      const optimistic = isOptimistic(capability);
+
+      if (optimistic) applyOptimistic?.(input);
       setBusy(true);
       try {
         const result = await action(input);
@@ -89,11 +128,11 @@ export function useOptimisticAction<TInput>(
           showToast('success', 'Done');
           return result;
         }
-        rollback?.(input);
+        if (optimistic) rollback?.(input);
         showToast('error', result.error ?? 'Action failed');
         return result;
       } catch (err) {
-        rollback?.(input);
+        if (optimistic) rollback?.(input);
         const message = err instanceof Error ? err.message : 'Action failed';
         showToast('error', message);
         return { ok: false, error: message };

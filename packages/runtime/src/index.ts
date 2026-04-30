@@ -59,9 +59,11 @@ export {
 // -----------------------------------------------------------------------------
 export {
   ActionDispatcher,
+  optimisticDispatch,
   type ActionDispatcherOptions,
   type ActionExecutionContext,
   type ActionResult,
+  type OptimisticDispatchOptions,
 } from './actions/dispatcher.js';
 export {
   ALWAYS_CONFIRM,
@@ -71,7 +73,7 @@ export {
   type ConfirmationDecision,
   type ConfirmationRequest,
 } from './actions/confirm.js';
-export { UndoStack, type UndoEntry } from './actions/undo.js';
+export { UndoStack, type UndoEntry, type UndoExecutionContext } from './actions/undo.js';
 
 // -----------------------------------------------------------------------------
 // Triggers (subscription, in-memory bus, cache invalidation)
