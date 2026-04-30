@@ -141,6 +141,9 @@
   "StatCard": {
     "can_contain": "leaf"
   },
+  "StatusBar": {
+    "can_contain": "leaf"
+  },
   "Stepper": {
     "can_contain": "leaf"
   },
@@ -164,6 +167,11 @@
   },
   "Toggle": {
     "can_contain": "leaf"
+  },
+  "Tooltip": {
+    "can_contain": "*",
+    "max_children": 1,
+    "min_children": 1
   },
   "Tree": {
     "can_contain": "leaf"

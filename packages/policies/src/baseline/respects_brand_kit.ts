@@ -210,6 +210,22 @@ function buildDurationCheck(kit: BrandKit): ReadonlySet<number> | null {
   return new Set(Object.values(scale).map((n) => Math.round(n)));
 }
 
+/**
+ * Wave 7a (Vis-7): collect every CSS string in `elevation_scale` (5 levels
+ * × 2 modes = 10 strings) into a single allowed set the shadow check can
+ * test against. Returns `null` when the kit declares no elevation scale.
+ */
+function buildElevationShadowCheck(kit: BrandKit): ReadonlySet<string> | null {
+  const scale = kit.elevation_scale;
+  if (!scale) return null;
+  const out = new Set<string>();
+  for (const level of Object.values(scale)) {
+    out.add(level.light.trim());
+    out.add(level.dark.trim());
+  }
+  return out;
+}
+
 export const respectsBrandKit: NamedPolicy = {
   id: 'respects_brand_kit',
   description:
@@ -223,6 +239,7 @@ export const respectsBrandKit: NamedPolicy = {
 
     const radiusCheck = buildScaleCheck(kit.radius_scale, 'radius', 'radius_scale');
     const shadowCheck = buildScaleCheck(kit.shadow_scale, 'shadow', 'shadow_scale');
+    const elevationShadowAllowed = buildElevationShadowCheck(kit);
     const durationAllowed = buildDurationCheck(kit);
     const contrastMin = kit.accessibility?.contrast_minimum;
 
@@ -286,20 +303,30 @@ export const respectsBrandKit: NamedPolicy = {
           }
         }
 
+        // Wave 7a (Vis-7): inline `box-shadow` may match either the legacy
+        // `shadow_scale` OR the new `elevation_scale` (5 levels × 2 modes).
+        // When both are declared, either is accepted. When neither is
+        // declared, the check is skipped. We only emit a violation when at
+        // least one scale is declared AND the value is in none of them.
         if (
-          shadowCheck.allowed &&
+          (shadowCheck.allowed || elevationShadowAllowed) &&
           isShadowKey(propName) &&
           typeof value === 'string' &&
           !value.startsWith('token:')
         ) {
           const trimmed = value.trim();
-          if (!shadowCheck.allowed.has(trimmed)) {
+          const inShadow = shadowCheck.allowed?.has(trimmed) ?? false;
+          const inElevation = elevationShadowAllowed?.has(trimmed) ?? false;
+          if (!inShadow && !inElevation) {
+            const refs: string[] = [];
+            if (shadowCheck.allowed) refs.push('shadow_scale');
+            if (elevationShadowAllowed) refs.push('elevation_scale');
             violations.push({
               policy_id: 'respects_brand_kit',
               severity: 'error',
-              message: `Component "${node.component}" prop "${propName}" is not in the brand kit's shadow_scale.`,
+              message: `Component "${node.component}" prop "${propName}" is not in the brand kit's ${refs.join(' or ')}.`,
               path: propPath,
-              hint: 'Use a shadow value declared in shadow_scale or a token reference.',
+              hint: `Use a shadow value declared in ${refs.join(' or ')} (or a token reference).`,
             });
           }
         }

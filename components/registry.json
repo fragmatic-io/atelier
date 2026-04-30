@@ -413,6 +413,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "StatusBar": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@cir/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "StatusBarProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "Stepper": {
     "actions_supported": [],
     "data_sources": [],
@@ -482,6 +491,15 @@
     "design_tokens": "@cir/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ToggleProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "Tooltip": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@cir/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "TooltipProps",
     "responsive_targets": ["web"],
     "text_render": true
   },

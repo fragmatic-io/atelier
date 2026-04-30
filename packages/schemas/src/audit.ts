@@ -35,6 +35,19 @@ export const AuditEventType = z.enum([
   'component.changed',
   'policy.evaluated',
   'policy.violated',
+  /**
+   * Emitted on each successful compile that flowed through a `BudgetMeter`,
+   * carrying the after-state of the budget so dashboards can plot remaining
+   * tokens / calls. Payload (out-of-band): `{ tokens, remaining_tokens,
+   * remaining_calls }`.
+   */
+  'compile.budget_used',
+  /**
+   * Emitted when a `BudgetMeter` blocks a compile (whether the composite
+   * falls through to a fallback or surfaces the error to the caller).
+   * Payload (out-of-band): `{ budget, used, would_use }`.
+   */
+  'compile.budget_exceeded',
 ]);
 export type AuditEventType = z.infer<typeof AuditEventType>;
 

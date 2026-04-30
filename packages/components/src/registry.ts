@@ -67,12 +67,14 @@ import { StackBinding } from './components/Stack.js';
 import { StatCardBinding } from './components/StatCard.js';
 import { StepperBinding } from './components/Stepper.js';
 import { TableBinding } from './components/Table.js';
+import { StatusBarBinding } from './components/StatusBar.js';
 import { TabsBinding } from './components/Tabs.js';
 import { TextInputBinding } from './components/TextInput.js';
 import { TimeInputBinding } from './components/TimeInput.js';
 import { TimelineBinding } from './components/Timeline.js';
 import { ToastBinding } from './components/Toast.js';
 import { ToggleBinding } from './components/Toggle.js';
+import { TooltipBinding } from './components/Tooltip.js';
 import { TreeBinding } from './components/Tree.js';
 import { WizardBinding } from './components/Wizard.js';
 
@@ -123,6 +125,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Split: SplitBinding,
   Stack: StackBinding,
   StatCard: StatCardBinding,
+  StatusBar: StatusBarBinding,
   Stepper: StepperBinding,
   Table: TableBinding,
   Tabs: TabsBinding,
@@ -131,6 +134,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Timeline: TimelineBinding,
   Toast: ToastBinding,
   Toggle: ToggleBinding,
+  Tooltip: TooltipBinding,
   Tree: TreeBinding,
   Wizard: WizardBinding,
 });
@@ -293,6 +297,7 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Spinner: { can_contain: 'leaf' },
   DetailView: { can_contain: 'leaf' },
   StatCard: { can_contain: 'leaf' },
+  StatusBar: { can_contain: 'leaf' },
   Toast: { can_contain: 'leaf' },
   Progress: { can_contain: 'leaf' },
   Skeleton: { can_contain: 'leaf' },
@@ -361,4 +366,8 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Kanban: { can_contain: 'leaf' },
   Calendar: { can_contain: 'leaf' },
   ChatThread: { can_contain: 'leaf' },
+  // Wave 7a / track Int-2 — Tooltip wraps a single trigger element (any
+  // component) and renders its bubble via portal. Manifest-side this is a
+  // wildcard container with exactly one child.
+  Tooltip: { can_contain: '*', min_children: 1, max_children: 1 },
 });

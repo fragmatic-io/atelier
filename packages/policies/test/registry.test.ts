@@ -17,11 +17,11 @@ const dummy = (id: string, message = 'x'): NamedPolicy => ({
 });
 
 describe('PolicyRegistry', () => {
-  it('default registry contains all 6 baseline policies', () => {
+  it('default registry contains all baseline policies', () => {
     const registry = new PolicyRegistry();
     const ids = registry.all().map((p) => p.id);
     expect(ids).toEqual(BASELINE_POLICIES.map((p) => p.id));
-    expect(ids).toHaveLength(6);
+    expect(ids).toHaveLength(BASELINE_POLICIES.length);
     for (const id of ids) {
       expect(registry.has(id)).toBe(true);
       expect(registry.get(id)).toBeDefined();

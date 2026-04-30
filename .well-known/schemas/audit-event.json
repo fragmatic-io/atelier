@@ -37,7 +37,9 @@
         "skill.changed",
         "component.changed",
         "policy.evaluated",
-        "policy.violated"
+        "policy.violated",
+        "compile.budget_used",
+        "compile.budget_exceeded"
       ]
     },
     "actor": {

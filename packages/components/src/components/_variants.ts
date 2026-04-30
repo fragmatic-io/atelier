@@ -115,3 +115,33 @@ export const feedbackVariantClass = layoutVariantClass;
 // -----------------------------------------------------------------------------
 export type ContentVariant = LayoutVariant;
 export const contentVariantClass = layoutVariantClass;
+
+// -----------------------------------------------------------------------------
+// Tooltip variants — `default` (light surface, dark text) and `inverse`
+// (high-contrast, e.g. yellow-on-black for keyboard-shortcut hints).
+// -----------------------------------------------------------------------------
+export type TooltipVariant = 'default' | 'inverse';
+
+export const tooltipVariantClass: Readonly<Record<TooltipVariant, string>> = Object.freeze({
+  default: 'bg-gray-900 text-white text-sm rounded-md px-2 py-1',
+  inverse: 'bg-yellow-300 text-black text-sm rounded-md px-2 py-1',
+});
+
+// -----------------------------------------------------------------------------
+// StatusBar — operational / degraded / incident / maintenance pill, default
+// vs compact layout. Vis-9.
+// -----------------------------------------------------------------------------
+export type StatusBarStatus = 'operational' | 'degraded' | 'incident' | 'maintenance';
+export type StatusBarVariant = 'default' | 'compact';
+
+export const statusBarColorClass: Readonly<Record<StatusBarStatus, string>> = Object.freeze({
+  operational: 'bg-green-100 text-green-800 ring-1 ring-inset ring-green-200',
+  degraded: 'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-200',
+  incident: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200',
+  maintenance: 'bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-200',
+});
+
+export const statusBarVariantClass: Readonly<Record<StatusBarVariant, string>> = Object.freeze({
+  default: 'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm',
+  compact: 'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs',
+});

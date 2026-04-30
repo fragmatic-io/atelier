@@ -62,11 +62,13 @@ import { statCardTextRender } from './components/StatCard.js';
 import { stepperTextRender } from './components/Stepper.js';
 import { tableTextRender } from './components/Table.js';
 import { tabsTextRender } from './components/Tabs.js';
+import { statusBarTextRender } from './components/StatusBar.js';
 import { textInputTextRender } from './components/TextInput.js';
 import { timeInputTextRender } from './components/TimeInput.js';
 import { timelineTextRender } from './components/Timeline.js';
 import { toastTextRender } from './components/Toast.js';
 import { toggleTextRender } from './components/Toggle.js';
+import { tooltipTextRender } from './components/Tooltip.js';
 import { treeTextRender } from './components/Tree.js';
 import { wizardTextRender } from './components/Wizard.js';
 
@@ -120,6 +122,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Split: splitTextRender as TextRenderer,
   Stack: stackTextRender as TextRenderer,
   StatCard: statCardTextRender as TextRenderer,
+  StatusBar: statusBarTextRender as TextRenderer,
   Stepper: stepperTextRender as TextRenderer,
   Table: tableTextRender as TextRenderer,
   Tabs: tabsTextRender as TextRenderer,
@@ -128,6 +131,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Timeline: timelineTextRender as TextRenderer,
   Toast: toastTextRender as TextRenderer,
   Toggle: toggleTextRender as TextRenderer,
+  Tooltip: tooltipTextRender as TextRenderer,
   Tree: treeTextRender as TextRenderer,
   Wizard: wizardTextRender as TextRenderer,
 });

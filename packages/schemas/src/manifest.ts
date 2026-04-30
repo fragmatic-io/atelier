@@ -59,21 +59,34 @@ export type RouteRefresh = z.infer<typeof RouteRefreshSchema>;
  * `source` is the capability ID (or a logical data source name); `filter`,
  * `sort`, `group_by` are query-language strings the runtime evaluates against
  * the bound data source.
+ *
+ * `empty_state`, `loading_state`, `error_state` (Wave 7a / P-8) — slots that
+ * declare which `LayoutNode` to render when the bound data source is empty,
+ * loading, or errored. These are the manifest-level expression of the policy
+ * `empty_loading_error_handled`. Slots are full `LayoutNode`s so they can be
+ * arbitrary subtrees (a styled `EmptyState`, a `Stack` wrapping a `Spinner`,
+ * etc.). They appear on the binding (rather than as ad-hoc props) so the
+ * policy walker can locate them without component-specific knowledge.
  */
-export const ComponentDataBindingSchema = z.object({
-  source: z.string().min(1),
-  filter: z.string().optional(),
-  sort: z.string().optional(),
-  group_by: z.string().optional(),
-});
-export type ComponentDataBinding = z.infer<typeof ComponentDataBindingSchema>;
+export interface ComponentDataBinding {
+  source: string;
+  filter?: string | undefined;
+  sort?: string | undefined;
+  group_by?: string | undefined;
+  empty_state?: LayoutNode | undefined;
+  loading_state?: LayoutNode | undefined;
+  error_state?: LayoutNode | undefined;
+}
 
 /**
  * Recursive layout node. A node is one component instance with optional
  * data binding, action set, and child nodes.
  *
  * Recursion is expressed via `z.lazy()` because Zod cannot infer the type
- * for a self-referencing schema directly.
+ * for a self-referencing schema directly. `LayoutNodeSchema` and
+ * `ComponentDataBindingSchema` are mutually recursive — a binding's
+ * `empty_state` / `loading_state` / `error_state` slots are themselves
+ * `LayoutNode`s — so both schemas are wrapped in `z.lazy(...)`.
  */
 export interface LayoutNode {
   component: string; // ComponentId at runtime
@@ -83,6 +96,18 @@ export interface LayoutNode {
   /** Free-form prop bag. The component's `props_schema` is the type-level contract. */
   props?: Record<string, unknown> | undefined;
 }
+
+export const ComponentDataBindingSchema: z.ZodType<ComponentDataBinding> = z.lazy(() =>
+  z.object({
+    source: z.string().min(1),
+    filter: z.string().optional(),
+    sort: z.string().optional(),
+    group_by: z.string().optional(),
+    empty_state: LayoutNodeSchema.optional(),
+    loading_state: LayoutNodeSchema.optional(),
+    error_state: LayoutNodeSchema.optional(),
+  }),
+);
 
 export const LayoutNodeSchema: z.ZodType<LayoutNode> = z.lazy(() =>
   z.object({

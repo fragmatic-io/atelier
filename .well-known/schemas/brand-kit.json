@@ -132,6 +132,49 @@
     "shadow_scale": {
       "$ref": "#/properties/tokens/properties/colors"
     },
+    "elevation_scale": {
+      "type": "object",
+      "properties": {
+        "resting": {
+          "type": "object",
+          "properties": {
+            "light": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dark": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "light",
+            "dark"
+          ],
+          "additionalProperties": false
+        },
+        "hover": {
+          "$ref": "#/properties/elevation_scale/properties/resting"
+        },
+        "popover": {
+          "$ref": "#/properties/elevation_scale/properties/resting"
+        },
+        "modal": {
+          "$ref": "#/properties/elevation_scale/properties/resting"
+        },
+        "commandbar": {
+          "$ref": "#/properties/elevation_scale/properties/resting"
+        }
+      },
+      "required": [
+        "resting",
+        "hover",
+        "popover",
+        "modal",
+        "commandbar"
+      ],
+      "additionalProperties": false
+    },
     "motion": {
       "type": "object",
       "properties": {

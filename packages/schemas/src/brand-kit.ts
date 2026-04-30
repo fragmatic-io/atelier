@@ -117,6 +117,39 @@ export const BrandShadowScaleSchema = TokenScale;
 export type BrandShadowScale = z.infer<typeof BrandShadowScaleSchema>;
 
 /**
+ * Wave 7a (Vis-7): paired light/dark CSS box-shadow recipes for one
+ * elevation level. Both pairs must be authored — a kit that wants to opt
+ * out of dark mode can repeat the same string in `dark`.
+ */
+export const ElevationLevelSchema = z.object({
+  light: z.string().min(1),
+  dark: z.string().min(1),
+});
+export type ElevationLevel = z.infer<typeof ElevationLevelSchema>;
+
+/**
+ * Five-step elevation token scale. Each level pairs a light-mode and a
+ * dark-mode CSS `box-shadow` recipe. Inline `box-shadow` props on
+ * manifests must match one of the 10 strings exactly when this scale is
+ * declared (see `respects_brand_kit`).
+ *
+ *   - `resting`    flat surface (often `none`)
+ *   - `hover`      subtle lift on interactive elements
+ *   - `popover`    dropdowns, hovercards
+ *   - `modal`      modals, drawers
+ *   - `commandbar` top-of-stack: command palette, toasts
+ */
+export const ElevationScaleSchema = z.object({
+  resting: ElevationLevelSchema,
+  hover: ElevationLevelSchema,
+  popover: ElevationLevelSchema,
+  modal: ElevationLevelSchema,
+  commandbar: ElevationLevelSchema,
+});
+export type ElevationScale = z.infer<typeof ElevationScaleSchema>;
+export type ElevationKey = keyof ElevationScale;
+
+/**
  * Motion design tokens. Durations are integers in milliseconds; easing values
  * are CSS timing-function strings (`cubic-bezier(...)`, `ease-in`, etc.).
  */
@@ -169,6 +202,12 @@ export const BrandKitSchema = z.object({
   radius_scale: BrandRadiusScaleSchema.optional(),
   /** Optional named CSS shadow scale. See `BrandShadowScaleSchema`. */
   shadow_scale: BrandShadowScaleSchema.optional(),
+  /**
+   * Optional five-step elevation scale (resting / hover / popover / modal /
+   * commandbar) with paired light + dark CSS shadow recipes. Wave 7a (Vis-7):
+   * preferred over `shadow_scale` for new kits; both can coexist.
+   */
+  elevation_scale: ElevationScaleSchema.optional(),
   /** Optional motion tokens (durations + easing). See `BrandMotionSchema`. */
   motion: BrandMotionSchema.optional(),
   /** Optional iconography rules. See `BrandIconographySchema`. */

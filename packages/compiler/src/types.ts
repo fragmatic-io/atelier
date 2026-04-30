@@ -121,3 +121,21 @@ export class CompilerUnavailableError extends Error {
     this.name = 'CompilerUnavailableError';
   }
 }
+
+/**
+ * Raised when a wrapped compile is blocked by a `BudgetMeter` and the
+ * configured `on_exhausted` policy is `'fail'`. Distinct from
+ * `BudgetExceededError` (the resolver-level guard against per-user daily
+ * token spend in `ServerManifestResolver`); this one is raised at the
+ * compiler layer, before any LLM call, by the in-process meter.
+ */
+export class CompilerBudgetExhaustedError extends Error {
+  constructor(
+    message: string,
+    /** Why the meter blocked (e.g. `"token cap exhausted"`). */
+    readonly reason: string,
+  ) {
+    super(message);
+    this.name = 'CompilerBudgetExhaustedError';
+  }
+}

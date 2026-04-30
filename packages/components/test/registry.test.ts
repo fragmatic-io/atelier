@@ -56,6 +56,7 @@ const EXPECTED = [
   'Split',
   'Stack',
   'StatCard',
+  'StatusBar',
   'Stepper',
   'Table',
   'Tabs',
@@ -64,12 +65,13 @@ const EXPECTED = [
   'Timeline',
   'Toast',
   'Toggle',
+  'Tooltip',
   'Tree',
   'Wizard',
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 56 baseline components', () => {
+  it('contains exactly the 58 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -88,7 +90,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 56 ids', () => {
+  it('list() reports all 58 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 

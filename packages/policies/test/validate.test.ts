@@ -11,7 +11,7 @@ describe('validateManifest', () => {
     expect(result.violations).toEqual([]);
   });
 
-  it('exposes all 6 baseline policies in stable order', () => {
+  it('exposes all baseline policies in stable order', () => {
     expect(BASELINE_POLICIES.map((p) => p.id)).toEqual([
       'data_access_within_grant',
       'confirmation_required_for_destructive',
@@ -19,6 +19,7 @@ describe('validateManifest', () => {
       'rate_limited_actions_show_state',
       'reversibility_surfaced',
       'respects_brand_kit',
+      'empty_loading_error_handled',
     ]);
   });
 

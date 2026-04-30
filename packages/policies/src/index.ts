@@ -41,6 +41,7 @@ export {
   confirmationRequiredForDestructive,
   DESTRUCTIVE_SIDE_EFFECTS,
 } from './baseline/confirmation_required_for_destructive.js';
+export { emptyLoadingErrorHandled } from './baseline/empty_loading_error_handled.js';
 export { noPiiInQueryStrings } from './baseline/no_pii_in_query_strings.js';
 export { rateLimitedActionsShowState } from './baseline/rate_limited_actions_show_state.js';
 export { reversibilitySurfaced } from './baseline/reversibility_surfaced.js';

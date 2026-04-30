@@ -85,6 +85,9 @@ export type { DetailViewProps, DetailField } from './components/DetailView.js';
 export { StatCard, StatCardBinding } from './components/StatCard.js';
 export type { StatCardProps, StatCardDelta, StatTrend } from './components/StatCard.js';
 
+export { StatusBar, StatusBarBinding, statusBarTextRender } from './components/StatusBar.js';
+export type { StatusBarProps, StatusBarStatus, StatusBarVariant } from './components/StatusBar.js';
+
 export { Chart, ChartBinding } from './components/Chart.js';
 export type { ChartProps, ChartDatum } from './components/Chart.js';
 
@@ -179,6 +182,9 @@ export type { SpinnerProps } from './components/Spinner.js';
 
 export { Toast, ToastBinding } from './components/Toast.js';
 export type { ToastProps } from './components/Toast.js';
+
+export { Tooltip, TooltipBinding, computeTooltipPosition } from './components/Tooltip.js';
+export type { TooltipProps, TooltipSide } from './components/Tooltip.js';
 
 export { Progress, ProgressBinding } from './components/Progress.js';
 export type { ProgressProps } from './components/Progress.js';

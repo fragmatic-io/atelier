@@ -109,6 +109,15 @@
                   },
                   "group_by": {
                     "type": "string"
+                  },
+                  "empty_state": {
+                    "$ref": "#/properties/routes/items/properties/layout"
+                  },
+                  "loading_state": {
+                    "$ref": "#/properties/routes/items/properties/layout"
+                  },
+                  "error_state": {
+                    "$ref": "#/properties/routes/items/properties/layout"
                   }
                 },
                 "required": [

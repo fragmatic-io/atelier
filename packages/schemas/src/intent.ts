@@ -88,6 +88,41 @@ export const CrossAppWorkflowSchema = z.object({
 export type CrossAppWorkflow = z.infer<typeof CrossAppWorkflowSchema>;
 
 /**
+ * Per-user compile cost budget. Bound to the intent profile because budgets
+ * belong to the user (per ETHOS principle 3 — intent is the user's, and so
+ * are the limits on what can be spent on their behalf). An app cannot widen
+ * a user's budget; only the user can.
+ *
+ * `max_tokens_per_day` and `max_calls_per_hour` are independent: the meter
+ * blocks on whichever fires first. Both fields are optional — omit either
+ * to disable that axis. Day rollover is at 00:00:00 UTC; hour rollover on
+ * the hour. UTC keeps deployments comparable across regions; if you need
+ * a per-tenant local-time window that's a host-side concern (you'd build
+ * it on top of the meter, not inside it).
+ *
+ * `on_exhausted: 'fall_through'` is the sane default for a CompositeCompiler
+ * stack: when the LLM-backed compiler's budget is blown, fall through to a
+ * deterministic FallbackCompiler so the user still sees their app. Pick
+ * `'fail'` only if you'd rather surface the error than serve a stale or
+ * generic UI.
+ */
+export const CompileBudgetSchema = z.object({
+  /** Hard cap on tokens consumed by compile calls per UTC day. */
+  max_tokens_per_day: z.number().int().nonnegative().optional(),
+  /** Hard cap on compile invocations per UTC hour (rate limit). */
+  max_calls_per_hour: z.number().int().nonnegative().optional(),
+  /**
+   * What to do when the budget is exhausted.
+   * - `'fall_through'`: skip this compiler and try the next one in the
+   *   composite (preserves availability with a degraded result).
+   * - `'fail'`: throw `CompilerBudgetExhaustedError` immediately so the
+   *   caller can surface the error.
+   */
+  on_exhausted: z.enum(['fall_through', 'fail']).default('fall_through'),
+});
+export type CompileBudget = z.infer<typeof CompileBudgetSchema>;
+
+/**
  * Persistent intent profile — the user's "how I want software to behave" doc.
  */
 export const IntentProfileSchema = z.object({
@@ -104,6 +139,12 @@ export const IntentProfileSchema = z.object({
   /** User-defined vocabulary — names, aliases, time references. */
   vocabulary: z.record(z.string(), z.unknown()),
   cross_app_workflows: z.array(CrossAppWorkflowSchema).optional(),
+  /**
+   * Optional compile cost budget. When set, the host should wire a
+   * `BudgetMeter` (from `@cir/compiler`) into the `CompositeCompiler` so
+   * spend is enforced. Omitted means unlimited (i.e. no enforcement).
+   */
+  compile_budget: CompileBudgetSchema.optional(),
 });
 export type IntentProfile = z.infer<typeof IntentProfileSchema>;
 

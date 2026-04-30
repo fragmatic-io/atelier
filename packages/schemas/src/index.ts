@@ -71,6 +71,7 @@ export {
 export {
   AutomationTrustPreference,
   ColorModePreference,
+  CompileBudgetSchema,
   ConversationOverlaySchema,
   ConversationOverrideSchema,
   CrossAppWorkflowSchema,
@@ -80,6 +81,7 @@ export {
   IntentRuleSchema,
   ModalTolerancePreference,
   MotionPreference,
+  type CompileBudget,
   type ConversationOverlay,
   type ConversationOverride,
   type CrossAppWorkflow,
@@ -176,6 +178,8 @@ export {
   BrandMotionSchema,
   BrandIconographySchema,
   BrandAccessibilitySchema,
+  ElevationLevelSchema,
+  ElevationScaleSchema,
   type BrandKit,
   type BrandTokens,
   type BrandVariants,
@@ -186,6 +190,9 @@ export {
   type BrandMotion,
   type BrandIconography,
   type BrandAccessibility,
+  type ElevationLevel,
+  type ElevationScale,
+  type ElevationKey,
 } from './brand-kit.js';
 
 // -----------------------------------------------------------------------------
