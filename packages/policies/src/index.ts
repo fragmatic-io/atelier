@@ -71,3 +71,4 @@ export {
   type DetectedPattern,
   type ObservedAction,
 } from './behavioral/detector.js';
+export { SequenceDetector, type SequenceDetectorOptions } from './behavioral/sequence-detector.js';

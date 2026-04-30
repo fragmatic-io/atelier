@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 The CIR Authors
 /**
- * DetailView — semantic key-value list rendered as `<dl>` with `<dt>` /
- * `<dd>` pairs. The description-list element is the correct semantic
- * container for "label/value" data and is exposed as such to assistive
- * tech.
- *
- * `dense` is a presentational hint surfaced as `data-density` so the CSS
- * layer can tighten spacing. The component itself ships no styling.
+ * DetailView — semantic key-value list as <dl>. Variants (Wave 6 / P-10):
+ * bordered, elevated, ghost (default), tinted.
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, contentVariantClass, type ContentVariant } from './_variants.js';
+
+export type DetailViewVariant = ContentVariant;
 
 export interface DetailField {
   label: string;
@@ -20,15 +18,22 @@ export interface DetailField {
 export interface DetailViewProps {
   fields: readonly DetailField[];
   dense?: boolean;
+  variant?: DetailViewVariant;
   className?: string;
 }
 
-export function DetailView({ fields, dense, className }: DetailViewProps): ReactNode {
+export function DetailView({
+  fields,
+  dense,
+  variant = 'ghost',
+  className,
+}: DetailViewProps): ReactNode {
   return (
     <dl
       data-cir-component="DetailView"
       data-density={dense ? 'dense' : 'normal'}
-      className={className}
+      data-variant={variant}
+      className={cn(contentVariantClass[variant], className)}
     >
       {fields.map((f, i) => (
         <div key={`${String(i)}:${f.label}`} data-cir-part="detail-pair">
@@ -39,14 +44,8 @@ export function DetailView({ fields, dense, className }: DetailViewProps): React
     </dl>
   );
 }
-
 DetailView.displayName = 'DetailView';
-
 export function detailViewTextRender(props: DetailViewProps): string {
   return `[Detail: ${String(props.fields.length)} fields]`;
 }
-
-export const DetailViewBinding: ComponentBinding = {
-  id: 'DetailView',
-  factory: DetailView,
-};
+export const DetailViewBinding: ComponentBinding = { id: 'DetailView', factory: DetailView };

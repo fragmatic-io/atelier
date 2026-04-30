@@ -57,6 +57,51 @@ describe('buildPromptContext', () => {
     expect(cold.user).toContain('trigger: cold');
   });
 
+  it('emits a personalisation directives section when intent has global_preferences', () => {
+    const intent = fixtureIntent();
+    intent.global_preferences = {
+      density: 'compact',
+      color_mode: 'dark',
+      motion_preference: 'reduced',
+      automation_trust: 'strict',
+      modal_tolerance: 'low',
+    };
+    const ctx = buildPromptContext(fixtureCompileInput({ intent }));
+    expect(ctx.user).toContain('## Personalisation directives');
+    expect(ctx.user).toContain('Active preferences:');
+    expect(ctx.user).toContain('density=');
+    // Density rule for compact.
+    expect(ctx.user).toContain("density === 'compact'");
+    expect(ctx.user).toContain("props.density: 'compact'");
+    // Strict trust → promote inline confirmations to modal.
+    expect(ctx.user).toContain('promoted to');
+    expect(ctx.user).toContain("'modal'");
+    // Reduced motion rule.
+    expect(ctx.user).toContain("motion_preference === 'reduced'");
+    // Color mode rule.
+    expect(ctx.user).toContain("color_mode === 'dark'");
+    // Modal tolerance rule.
+    expect(ctx.user).toContain("modal_tolerance === 'low'");
+  });
+
+  it('omits the directives section when intent.global_preferences is empty', () => {
+    const intent = fixtureIntent();
+    intent.global_preferences = {};
+    const ctx = buildPromptContext(fixtureCompileInput({ intent }));
+    expect(ctx.user).not.toContain('## Personalisation directives');
+  });
+
+  it('passes through unknown preference keys as soft hints', () => {
+    const intent = fixtureIntent();
+    intent.global_preferences = {
+      density: 'comfortable',
+      primary_workflow: 'task_queue',
+    };
+    const ctx = buildPromptContext(fixtureCompileInput({ intent }));
+    expect(ctx.user).toContain('Additional user-declared preferences');
+    expect(ctx.user).toContain('primary_workflow');
+  });
+
   it('compresses skills to high-signal fields only — no markdown body', () => {
     const skill = fixtureSkill();
     const ctx = buildPromptContext(fixtureCompileInput({ skills: { 'email-triage': skill } }));

@@ -1,18 +1,17 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
 /**
- * StatCard — a single KPI tile: label, value, optional delta with a trend
- * arrow direction, optional helper text. Rendered as a `<section>` so it is
- * a landmark for screen readers when laid out in a grid (the `Grid of
- * StatCards = Dashboard` composition pattern from the catalog).
- *
- * Independently keyed from Card — composition rules treat a StatCard as a
- * leaf, not as a Card subclass. Pure (no hooks).
+ * StatCard — single KPI tile. Variants (Wave 6 / P-10): default, accent,
+ * muted. Sizes: sm, md (default), lg.
  */
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, statSizeClass, statVariantClass, type Size, type StatVariant } from './_variants.js';
+import { DEFAULT_DENSITY, DENSITY_PADDING_PX, type Density } from './density.js';
 
 export type StatTrend = 'up' | 'down' | 'flat';
+export type StatCardVariant = StatVariant;
+export type StatCardSize = Size;
 
 export interface StatCardDelta {
   value: string;
@@ -24,6 +23,10 @@ export interface StatCardProps {
   value: ReactNode;
   delta?: StatCardDelta;
   helperText?: string;
+  /** Personalisation density. Renderer fills from intent profile when unset. */
+  density?: Density;
+  variant?: StatCardVariant;
+  size?: StatCardSize;
   className?: string;
 }
 
@@ -33,9 +36,28 @@ const TREND_GLYPH: Readonly<Record<StatTrend, string>> = Object.freeze({
   flat: '→',
 });
 
-export function StatCard({ label, value, delta, helperText, className }: StatCardProps): ReactNode {
+export function StatCard({
+  label,
+  value,
+  delta,
+  helperText,
+  density = DEFAULT_DENSITY,
+  variant = 'default',
+  size = 'md',
+  className,
+}: StatCardProps): ReactNode {
+  const padPx = DENSITY_PADDING_PX[density];
+  const style: CSSProperties = { padding: `${String(padPx)}px` };
   return (
-    <section data-cir-component="StatCard" aria-label={label} className={className}>
+    <section
+      data-cir-component="StatCard"
+      data-density={density}
+      data-variant={variant}
+      data-size={size}
+      aria-label={label}
+      className={cn(statVariantClass[variant], statSizeClass[size], className)}
+      style={style}
+    >
       <p data-cir-part="stat-label">{label}</p>
       <p data-cir-part="stat-value">{value}</p>
       {delta !== undefined ? (
@@ -47,16 +69,10 @@ export function StatCard({ label, value, delta, helperText, className }: StatCar
     </section>
   );
 }
-
 StatCard.displayName = 'StatCard';
-
 export function statCardTextRender(props: StatCardProps): string {
   const v =
     typeof props.value === 'string' || typeof props.value === 'number' ? String(props.value) : '';
   return v !== '' ? `[Stat: ${props.label} = ${v}]` : `[Stat: ${props.label}]`;
 }
-
-export const StatCardBinding: ComponentBinding = {
-  id: 'StatCard',
-  factory: StatCard,
-};
+export const StatCardBinding: ComponentBinding = { id: 'StatCard', factory: StatCard };

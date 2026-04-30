@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 The CIR Authors
 /**
- * Progress — accessible progress indicator backed by HTML `<progress>`.
- * When `value` is provided (0-100), the element advertises a determinate
- * progress; omitting `value` produces an indeterminate `<progress>` (no
- * `value` / `max` attributes), which is the platform convention for
- * "working but unbounded".
- *
- * `label` is associated with the progress element via `aria-labelledby`
- * (or visually hidden when `srOnlyLabel` is true so the bar can sit alone
- * in the layout).
+ * Progress — accessible progress indicator. Variants (Wave 6 / P-10):
+ * bordered, elevated, ghost (default), tinted.
  */
 import { useId, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
+
+export type ProgressVariant = FeedbackVariant;
 
 export interface ProgressProps {
   value?: number;
   label?: string;
   srOnlyLabel?: boolean;
+  variant?: ProgressVariant;
   className?: string;
 }
 
@@ -37,6 +34,7 @@ export function Progress({
   value,
   label,
   srOnlyLabel = false,
+  variant = 'ghost',
   className,
 }: ProgressProps): ReactNode {
   const baseId = useId();
@@ -46,7 +44,8 @@ export function Progress({
     <div
       data-cir-component="Progress"
       data-mode={indeterminate ? 'indeterminate' : 'value'}
-      className={className}
+      data-variant={variant}
+      className={cn(feedbackVariantClass[variant], className)}
     >
       {label !== undefined ? (
         <span
@@ -65,15 +64,9 @@ export function Progress({
     </div>
   );
 }
-
 Progress.displayName = 'Progress';
-
 export function progressTextRender(props: ProgressProps): string {
   if (props.value === undefined) return '[Progress: indeterminate]';
   return `[Progress: ${String(props.value)}%]`;
 }
-
-export const ProgressBinding: ComponentBinding = {
-  id: 'Progress',
-  factory: Progress,
-};
+export const ProgressBinding: ComponentBinding = { id: 'Progress', factory: Progress };

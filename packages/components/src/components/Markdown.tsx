@@ -1,37 +1,31 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Markdown — sanitized renderer.
- *
- * Uses `react-markdown` with `remark-gfm` (tables, task-lists, strikethrough,
- * autolinks) and `rehype-sanitize` against the conservative default schema
- * (`defaultSchema` from `hast-util-sanitize`). That schema:
- *   - allows safe HTML tags (p, h1-h6, ul/ol/li, code, pre, table, etc.)
- *   - strips `<script>`, event-handler attrs, and `javascript:` URLs
- *   - permits `http`, `https`, `mailto`, and relative URLs only
- *
- * External links get `rel="noopener noreferrer"` and `target="_blank"` via
- * a small `components` override. We do NOT allow raw HTML pass-through —
- * react-markdown's default already strips it.
- *
- * Trade-off: this is intentionally conservative. If a host needs richer
- * rendering (e.g. embedded MDX, syntax-highlighted code blocks), they can
- * compose their own component and register it in their own catalog.
+ * Markdown — sanitized renderer. Variants (Wave 6 / P-10): bordered,
+ * elevated, ghost (default), tinted.
  */
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, contentVariantClass, type ContentVariant } from './_variants.js';
+
+export type MarkdownVariant = ContentVariant;
 
 export interface MarkdownProps {
   content: string;
+  variant?: MarkdownVariant;
   className?: string;
 }
 
-export function Markdown({ content, className }: MarkdownProps): ReactNode {
+export function Markdown({ content, variant = 'ghost', className }: MarkdownProps): ReactNode {
   return (
-    <div data-cir-component="Markdown" className={className}>
+    <div
+      data-cir-component="Markdown"
+      data-variant={variant}
+      className={cn(contentVariantClass[variant], className)}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSanitize]}
@@ -55,14 +49,8 @@ export function Markdown({ content, className }: MarkdownProps): ReactNode {
     </div>
   );
 }
-
 Markdown.displayName = 'Markdown';
-
 export function markdownTextRender(props: MarkdownProps): string {
   return props.content;
 }
-
-export const MarkdownBinding: ComponentBinding = {
-  id: 'Markdown',
-  factory: Markdown,
-};
+export const MarkdownBinding: ComponentBinding = { id: 'Markdown', factory: Markdown };

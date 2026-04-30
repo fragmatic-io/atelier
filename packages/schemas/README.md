@@ -67,6 +67,30 @@ ships with `@cir/policies`.
 
 `CompositionRulesSchema` validates the `components/composition-rules.json` sibling artifact (a `ComponentId -> CompositionRule` map). The script that emits `components/registry.json` from `@cir/components` also emits and re-validates this sibling — see [`../components/README.md`](../components/README.md) for how the two artifacts stay in sync.
 
+## BrandKit (Wave 6 / P-6)
+
+`BrandKitSchema` is the design-system contract. Beyond the baseline
+tokens + variants + voice trio, Wave 6 adds optional fields the compiler
+and `respects_brand_kit` policy lean on to drive a designed-feeling UI:
+
+| Field            | Shape                                                     | Purpose                                                                      |
+| ---------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `radius_scale`   | `Record<string, string>`                                  | Named radii (`{ sm: '4px', md: '8px' }`); inline `border-radius` must match. |
+| `shadow_scale`   | `Record<string, string>`                                  | Named CSS shadow strings; inline `box-shadow` must match.                    |
+| `motion`         | `{ duration_scale: Record<string, number>; easing? }`     | Animation durations (ms ints) + easing curves.                               |
+| `iconography`    | `{ allowed_sets: string[]; minimum_size: number }`        | Allowed icon-pack ids and minimum touch size (px).                           |
+| `voice.surfaces` | `Record<string, { tone: string; example? }>`              | Per-surface voice (`button`, `error`, `marketing`, …).                       |
+| `accessibility`  | `{ contrast_minimum: number; focus_ring_required: bool }` | WCAG-style contrast minimum + focus-ring requirement.                        |
+
+Every field is optional. Existing brand kits without them keep validating.
+The `respects_brand_kit` policy enforces each field only when the kit
+declares it AND the manifest carries an inline value the check is
+interested in (token references like `token:radius.md` are presumed
+audited at the kit level).
+
+A starter `BrandKit` JSON can be generated from a Figma Design Tokens
+export with `cir import figma <tokens.json>` — see `@cir/cli`.
+
 ## Golden tests
 
 `test/golden/` holds a frozen JSON Schema dump. `test/golden.test.ts`

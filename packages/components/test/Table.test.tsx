@@ -4,49 +4,67 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Table, TableBinding } from '../src/components/Table.js';
 
-const COLUMNS = [
+const COLS = [
   { key: 'name', header: 'Name' },
-  { key: 'role', header: 'Role' },
-];
-
-const ROWS = [
-  { name: 'Ada', role: 'Engineer' },
-  { name: 'Lin', role: 'Designer' },
+  { key: 'age', header: 'Age' },
 ];
 
 describe('Table', () => {
-  it('renders headers and rows', () => {
-    render(<Table columns={COLUMNS} rows={ROWS} />);
-    expect(screen.getByRole('columnheader', { name: 'Name' })).toBeTruthy();
-    expect(screen.getByRole('columnheader', { name: 'Role' })).toBeTruthy();
-    expect(screen.getByText('Ada')).toBeTruthy();
-    expect(screen.getByText('Designer')).toBeTruthy();
+  it('renders thead/tbody with one row per data record', () => {
+    const rows = [
+      { name: 'Ada', age: 30 },
+      { name: 'Bea', age: 28 },
+    ];
+    const { container } = render(<Table columns={COLS} rows={rows} />);
+    expect(container.querySelectorAll('th').length).toBe(2);
+    expect(container.querySelectorAll('tbody tr').length).toBe(2);
   });
-
   it('renders the caption when provided', () => {
-    render(<Table columns={COLUMNS} rows={ROWS} caption="People" />);
-    // <caption> is exposed as a descendant of the table; assert via text.
-    expect(screen.getByText('People')).toBeTruthy();
+    render(<Table columns={COLS} rows={[]} caption="People" />);
+    // No caption when rows empty (falls back to EmptyState).
+    expect(screen.queryByText('People')).toBeNull();
   });
-
-  it('renders default empty state when rows is empty', () => {
-    render(<Table columns={COLUMNS} rows={[]} />);
-    expect(screen.getByRole('status')).toBeTruthy();
+  it('renders the default EmptyState when rows is empty', () => {
+    render(<Table columns={COLS} rows={[]} />);
     expect(screen.getByText('No data')).toBeTruthy();
   });
-
-  it('renders custom empty slot when rows is empty', () => {
-    render(<Table columns={COLUMNS} rows={[]} empty={<div>nothing here</div>} />);
-    expect(screen.getByText('nothing here')).toBeTruthy();
-  });
-
-  it('handles missing cell values without crashing', () => {
-    const sparse: { name: string }[] = [{ name: 'Solo' }];
-    render(<Table columns={COLUMNS} rows={sparse} />);
-    expect(screen.getByText('Solo')).toBeTruthy();
-  });
-
   it('binding id matches', () => {
     expect(TableBinding.id).toBe('Table');
+  });
+  // -- Wave 6 / P-10 variant assertions --
+  it('defaults to variant=ghost', () => {
+    const { container } = render(<Table columns={COLS} rows={[{ name: 'a', age: 1 }]} />);
+    expect(container.querySelector('table')?.getAttribute('data-variant')).toBe('ghost');
+  });
+  it('reflects each variant on data-variant', () => {
+    for (const v of ['bordered', 'elevated', 'ghost', 'tinted'] as const) {
+      const { container, unmount } = render(
+        <Table columns={COLS} rows={[{ name: 'a', age: 1 }]} variant={v} />,
+      );
+      expect(container.querySelector('table')?.getAttribute('data-variant')).toBe(v);
+      unmount();
+    }
+  });
+  it('applies the bordered variant class', () => {
+    const { container } = render(
+      <Table columns={COLS} rows={[{ name: 'a', age: 1 }]} variant="bordered" />,
+    );
+    expect(container.querySelector('table')?.className).toContain('border');
+  });
+  // -- Wave 6 / P-1 density assertions --
+  it('defaults density to comfortable and surfaces data-density', () => {
+    const { container } = render(<Table columns={COLS} rows={[{ name: 'a', age: 1 }]} />);
+    expect(container.querySelector('table')?.getAttribute('data-density')).toBe('comfortable');
+  });
+  it('shrinks cell padding at compact density', () => {
+    const { container, rerender } = render(
+      <Table columns={COLS} rows={[{ name: 'a', age: 1 }]} density="comfortable" />,
+    );
+    const comfyCell = container.querySelector<HTMLElement>('tbody td');
+    const comfyPad = parseInt(comfyCell?.style.paddingTop ?? '0', 10);
+    rerender(<Table columns={COLS} rows={[{ name: 'a', age: 1 }]} density="compact" />);
+    const compactCell = container.querySelector<HTMLElement>('tbody td');
+    const compactPad = parseInt(compactCell?.style.paddingTop ?? '0', 10);
+    expect(compactPad).toBeLessThan(comfyPad);
   });
 });

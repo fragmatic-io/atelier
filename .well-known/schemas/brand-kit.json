@@ -98,12 +98,98 @@
           "items": {
             "type": "string"
           }
+        },
+        "surfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "tone": {
+                "type": "string",
+                "minLength": 1
+              },
+              "example": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tone"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [
         "tone",
         "do",
         "dont"
+      ],
+      "additionalProperties": false
+    },
+    "radius_scale": {
+      "$ref": "#/properties/tokens/properties/colors"
+    },
+    "shadow_scale": {
+      "$ref": "#/properties/tokens/properties/colors"
+    },
+    "motion": {
+      "type": "object",
+      "properties": {
+        "duration_scale": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "easing": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "duration_scale"
+      ],
+      "additionalProperties": false
+    },
+    "iconography": {
+      "type": "object",
+      "properties": {
+        "allowed_sets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "minimum_size": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "allowed_sets",
+        "minimum_size"
+      ],
+      "additionalProperties": false
+    },
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "contrast_minimum": {
+          "type": "number",
+          "minimum": 1
+        },
+        "focus_ring_required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "contrast_minimum",
+        "focus_ring_required"
       ],
       "additionalProperties": false
     }

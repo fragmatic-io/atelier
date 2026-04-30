@@ -550,6 +550,52 @@
       "properties": {
         "type": {
           "type": "string",
+          "const": "behavior.pattern_detected"
+        },
+        "user_id": {
+          "$ref": "#/anyOf/13/properties/user_id"
+        },
+        "app_id": {
+          "$ref": "#/anyOf/0/properties/app_id"
+        },
+        "pattern_id": {
+          "type": "string",
+          "pattern": "^seq_[a-z0-9]+$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capability_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/anyOf/0/properties/capability_id"
+          }
+        },
+        "occurrences": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "distinct_users": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "type",
+        "pattern_id",
+        "description",
+        "capability_ids",
+        "occurrences",
+        "distinct_users"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
           "const": "behavior.feature_unused"
         },
         "user_id": {

@@ -20,12 +20,14 @@ export {
   CapabilityId,
   ComponentId,
   ConfirmationLevel,
+  DEFAULT_TENANT_ID,
   EventId,
   IsoDateTimeString,
   ManifestId,
   RateLimitString,
   SemverString,
   SkillId,
+  TenantId,
   UserId,
 } from './common.js';
 
@@ -67,14 +69,21 @@ export {
 // Intent
 // -----------------------------------------------------------------------------
 export {
+  AutomationTrustPreference,
+  ColorModePreference,
   ConversationOverlaySchema,
   ConversationOverrideSchema,
   CrossAppWorkflowSchema,
+  DensityPreference,
+  GlobalPreferencesSchema,
   IntentProfileSchema,
   IntentRuleSchema,
+  ModalTolerancePreference,
+  MotionPreference,
   type ConversationOverlay,
   type ConversationOverride,
   type CrossAppWorkflow,
+  type GlobalPreferences,
   type IntentProfile,
   type IntentRule,
 } from './intent.js';
@@ -161,10 +170,22 @@ export {
   BrandTokensSchema,
   BrandVariantsSchema,
   BrandVoiceSchema,
+  BrandVoiceSurfaceSchema,
+  BrandRadiusScaleSchema,
+  BrandShadowScaleSchema,
+  BrandMotionSchema,
+  BrandIconographySchema,
+  BrandAccessibilitySchema,
   type BrandKit,
   type BrandTokens,
   type BrandVariants,
   type BrandVoice,
+  type BrandVoiceSurface,
+  type BrandRadiusScale,
+  type BrandShadowScale,
+  type BrandMotion,
+  type BrandIconography,
+  type BrandAccessibility,
 } from './brand-kit.js';
 
 // -----------------------------------------------------------------------------

@@ -11,6 +11,7 @@
  *   cir components-sync         Regenerate components/registry.json.
  *   cir validate                Run the validate chain.
  *   cir import openapi <spec>   Generate capabilities from an OpenAPI 3 spec.
+ *   cir import figma <tokens>   Generate a BrandKit from a Figma tokens JSON.
  *   cir inspect <id-or-path>    Pretty-print a manifest.
  *   cir compile <intent.json>   Offline compile producing a manifest.
  *   cir --help / --version
@@ -24,6 +25,7 @@ import { addCommand } from './commands/add.js';
 import { compileCommand } from './commands/compile.js';
 import { componentsSyncCommand } from './commands/components-sync.js';
 import { devCommand } from './commands/dev.js';
+import { importFigma } from './commands/import-figma.js';
 import { importOpenApi } from './commands/import-openapi.js';
 import { initCommand } from './commands/init.js';
 import { inspectCommand } from './commands/inspect.js';
@@ -74,8 +76,17 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
           return 1;
         }
       }
+      if (target === 'figma') {
+        try {
+          await importFigma(argv.slice(2));
+          return 0;
+        } catch (err) {
+          console.error(`cir import figma: ${(err as Error).message}`);
+          return 1;
+        }
+      }
       console.error(
-        `cir: unknown import target '${target ?? ''}'. Try 'cir import openapi <spec>'.`,
+        `cir: unknown import target '${target ?? ''}'. Try 'cir import openapi <spec>' or 'cir import figma <tokens.json>'.`,
       );
       return 1;
     }

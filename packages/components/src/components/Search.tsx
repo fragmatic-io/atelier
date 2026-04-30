@@ -3,17 +3,14 @@
 
 'use client';
 /**
- * Search — controlled search field rendered as `<form role="search">` with
- * a native `<input type="search">`. Submitting the form (Enter inside the
- * input) calls `onSubmit`. A clear button is rendered by default and resets
- * the value via `onChange('')`.
- *
- * The input is labelled by an associated `<label>` (visible) wired with a
- * stable `useId`. That keeps screen readers happy without forcing the host
- * to provide an id.
+ * Search — controlled search field. Variants (Wave 6 / P-10): default,
+ * embedded.
  */
 import { useId, type FormEvent, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, searchVariantClass, type SearchVariant } from './_variants.js';
+
+export type { SearchVariant } from './_variants.js';
 
 export interface SearchProps {
   value: string;
@@ -22,6 +19,7 @@ export interface SearchProps {
   placeholder?: string;
   clearable?: boolean;
   label?: string;
+  variant?: SearchVariant;
   className?: string;
 }
 
@@ -32,6 +30,7 @@ export function Search({
   placeholder,
   clearable = true,
   label = 'Search',
+  variant = 'default',
   className,
 }: SearchProps): ReactNode {
   const generatedId = useId();
@@ -41,7 +40,13 @@ export function Search({
     onSubmit?.(value);
   };
   return (
-    <form role="search" data-cir-component="Search" className={className} onSubmit={handleSubmit}>
+    <form
+      role="search"
+      data-cir-component="Search"
+      data-variant={variant}
+      className={cn(searchVariantClass[variant], className)}
+      onSubmit={handleSubmit}
+    >
       <label htmlFor={inputId} data-cir-part="search-label">
         {label}
       </label>
@@ -70,15 +75,9 @@ export function Search({
     </form>
   );
 }
-
 Search.displayName = 'Search';
-
 export function searchTextRender(props: SearchProps): string {
   const v = props.value !== '' ? props.value : '(empty)';
   return `[Search: ${v}]`;
 }
-
-export const SearchBinding: ComponentBinding = {
-  id: 'Search',
-  factory: Search,
-};
+export const SearchBinding: ComponentBinding = { id: 'Search', factory: Search };

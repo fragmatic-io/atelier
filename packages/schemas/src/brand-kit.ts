@@ -30,6 +30,24 @@
  * A BrandKit is published per-app as part of the public surface (alongside
  * capabilities, skills, components). It is signed and versioned just like
  * the rest of the public surface.
+ *
+ * Wave 6 (P-6) extensions: brand kits now describe more of the visual
+ * language so the compiler can drive a designed-feeling UI without
+ * resorting to inline values. New top-level optional fields:
+ *
+ *   - `radius_scale`     Named radii (e.g. `{ sm: '4px', md: '8px' }`).
+ *                        Inline `border-radius` props must reference one.
+ *   - `shadow_scale`     Named CSS shadow strings.
+ *   - `motion`           Animation duration scale (ms) and easing curves.
+ *   - `iconography`      Allowed icon set ids and a minimum touch size (px).
+ *   - `voice.surfaces`   Per-surface voice guidance keyed by surface name
+ *                        (`button`, `error`, `marketing`, …).
+ *   - `accessibility`    Contrast minimum + focus-ring required flag.
+ *
+ * All extensions are additive and optional. Existing brand kits without
+ * them keep validating; the `respects_brand_kit` policy only enforces the
+ * extensions when they are present in the kit AND the manifest carries
+ * the relevant inline value.
  */
 
 import { z } from 'zod';
@@ -58,12 +76,86 @@ export type BrandTokens = z.infer<typeof BrandTokensSchema>;
 export const BrandVariantsSchema = z.record(z.string(), z.array(z.string()).readonly());
 export type BrandVariants = z.infer<typeof BrandVariantsSchema>;
 
+/**
+ * Per-surface voice guidance. The key is a surface name (`button`, `error`,
+ * `marketing`, `empty_state`, …). The value is a tone string and an optional
+ * exemplar copy snippet the compiler can lean on.
+ */
+export const BrandVoiceSurfaceSchema = z.object({
+  tone: z.string().min(1),
+  example: z.string().optional(),
+});
+export type BrandVoiceSurface = z.infer<typeof BrandVoiceSurfaceSchema>;
+
 export const BrandVoiceSchema = z.object({
   tone: z.string(),
   do: z.array(z.string()),
   dont: z.array(z.string()),
+  /**
+   * Optional per-surface guidance. When present, the compiler can pick the
+   * surface tone for a layout node based on its semantic role (e.g.
+   * `Button` -> `surfaces.button.tone`).
+   */
+  surfaces: z.record(z.string(), BrandVoiceSurfaceSchema).optional(),
 });
 export type BrandVoice = z.infer<typeof BrandVoiceSchema>;
+
+/**
+ * Named radius scale (e.g. `{ xs: '2px', sm: '4px', md: '8px' }`). Values are
+ * CSS length strings. The `respects_brand_kit` policy rejects inline
+ * `border-radius` props whose value isn't in this map.
+ */
+export const BrandRadiusScaleSchema = TokenScale;
+export type BrandRadiusScale = z.infer<typeof BrandRadiusScaleSchema>;
+
+/**
+ * Named CSS box-shadow strings. Inline `box-shadow` props must match one of
+ * these values verbatim. Authors can encode the same shadow under multiple
+ * keys if a single visual ships under different names (e.g. `card`, `md`).
+ */
+export const BrandShadowScaleSchema = TokenScale;
+export type BrandShadowScale = z.infer<typeof BrandShadowScaleSchema>;
+
+/**
+ * Motion design tokens. Durations are integers in milliseconds; easing values
+ * are CSS timing-function strings (`cubic-bezier(...)`, `ease-in`, etc.).
+ */
+export const BrandMotionSchema = z.object({
+  duration_scale: z.record(z.string(), z.number().int().nonnegative()),
+  easing: z.record(z.string(), z.string()).optional(),
+});
+export type BrandMotion = z.infer<typeof BrandMotionSchema>;
+
+/**
+ * Iconography rules. `allowed_sets` lists icon-pack identifiers (`lucide`,
+ * `phosphor`, `heroicons`, …); the compiler must source icons from one of
+ * them. `minimum_size` is the smallest pixel dimension a rendered icon may
+ * use (defaults are advisory — the policy enforces only what's declared).
+ */
+export const BrandIconographySchema = z.object({
+  allowed_sets: z.array(z.string().min(1)).min(1),
+  // Use `.min(1)` rather than `.positive()`. `.positive()` would emit a
+  // draft-04-style `exclusiveMinimum: true` that the project's Ajv 2019-09
+  // pipeline rejects when validating data files (see
+  // `cli/index.ts` validateData). Practically equivalent for icon pixel
+  // sizes — the values are always integers, never fractional.
+  minimum_size: z.number().int().min(1),
+});
+export type BrandIconography = z.infer<typeof BrandIconographySchema>;
+
+/**
+ * Accessibility minimums. `contrast_minimum` is a WCAG-style ratio (4.5 for
+ * AA body text, 7 for AAA). `focus_ring_required` flags layouts that suppress
+ * the default focus outline without a replacement.
+ */
+export const BrandAccessibilitySchema = z.object({
+  // `.min(1)` because the smallest meaningful contrast ratio is 1 (identical
+  // colours). `.positive()` would emit a draft-04 `exclusiveMinimum: true`
+  // shape Ajv 2019-09 rejects.
+  contrast_minimum: z.number().min(1),
+  focus_ring_required: z.boolean(),
+});
+export type BrandAccessibility = z.infer<typeof BrandAccessibilitySchema>;
 
 export const BrandKitSchema = z.object({
   /** Stable id; published at /.well-known/brand-kit.json. */
@@ -73,5 +165,15 @@ export const BrandKitSchema = z.object({
   tokens: BrandTokensSchema,
   variants: BrandVariantsSchema,
   voice: BrandVoiceSchema,
+  /** Optional named radius scale. See `BrandRadiusScaleSchema`. */
+  radius_scale: BrandRadiusScaleSchema.optional(),
+  /** Optional named CSS shadow scale. See `BrandShadowScaleSchema`. */
+  shadow_scale: BrandShadowScaleSchema.optional(),
+  /** Optional motion tokens (durations + easing). See `BrandMotionSchema`. */
+  motion: BrandMotionSchema.optional(),
+  /** Optional iconography rules. See `BrandIconographySchema`. */
+  iconography: BrandIconographySchema.optional(),
+  /** Optional accessibility minimums. See `BrandAccessibilitySchema`. */
+  accessibility: BrandAccessibilitySchema.optional(),
 });
 export type BrandKit = z.infer<typeof BrandKitSchema>;

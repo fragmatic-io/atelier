@@ -15,6 +15,7 @@ Commands:
   components-sync         Regenerate components/registry.json from @cir/components.
   validate                Run the validate chain (typecheck, lint, schema validation).
   import openapi <spec>   Generate capabilities/ from an OpenAPI 3.x spec.
+  import figma <tokens>   Generate a BrandKit JSON from a Figma tokens export.
   inspect <id-or-path>    Pretty-print a manifest (file path or live id).
   compile <intent.json>   Offline compile producing a manifest.
 

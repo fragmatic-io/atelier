@@ -107,3 +107,24 @@ export const RateLimitString = z
     'Rate limit must match `<n>/<unit>/<scope>` (e.g. `100/min/user`)',
   );
 export type RateLimitString = z.infer<typeof RateLimitString>;
+
+/**
+ * Tenant identifier for multi-tenant deployments.
+ *
+ * Format: `t_` + 1–63 lowercase alphanumerics, underscores, or dashes.
+ * Optional everywhere — single-tenant apps omit it and downstream code
+ * treats `undefined` as the implicit `'default'` tenant. The presence of
+ * this field is what flips a deployment from "single-tenant by construction"
+ * to "tenant-isolated"; the cache layer, audit pipeline, dispatcher, and
+ * `tenant_isolation` policy all key on it.
+ *
+ * The constant `DEFAULT_TENANT_ID` is the sentinel used downstream when
+ * no tenant_id is set on an artifact.
+ */
+export const TenantId = z
+  .string()
+  .regex(/^t_[a-z0-9_-]{1,63}$/u, 'Tenant IDs must match /^t_[a-z0-9_-]{1,63}$/');
+export type TenantId = z.infer<typeof TenantId>;
+
+/** Sentinel used by tenant-aware caches/limiters when `tenant_id` is unset. */
+export const DEFAULT_TENANT_ID = 'default';

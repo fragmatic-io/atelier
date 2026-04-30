@@ -123,3 +123,9 @@ export {
   type AuditListener,
   type StreamingAuditSinkOptions,
 } from './audit/streaming.js';
+export {
+  BehavioralTap,
+  auditEventToObservedAction,
+  capabilityIdFromAuditEvent,
+  type BehavioralTapOptions,
+} from './audit/behavioral-tap.js';

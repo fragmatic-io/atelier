@@ -46,3 +46,33 @@ The signal pathway:
 5. Winners become default recipes (no engineering needed)
 6. Highly-used capabilities get first-class treatment (skill polish, faster paths, dedicated UI)
 7. New capabilities land for the things users keep wanting but cannot express
+
+---
+
+## Wave 6 V-4: the first real detector
+
+Step 3 above ("aggregated patterns surface") used to be hand-wavy. As of
+Wave 6 / track V-4, it lands behind a real seam:
+
+- `SequenceDetector` in `@cir/policies` keeps a per-user sliding window
+  of recent `ObservedAction`s, hashes sub-sequences, and only surfaces
+  candidates when at least two distinct users converge on the same chain
+  (cross-user dedup — a single user repeating a workflow is a habit, not
+  a graduation candidate).
+- `BehavioralTap` in `@cir/runtime` subscribes to a `StreamingAuditSink`
+  and forwards every `action.executed` event to the detector. Privacy
+  contract: only the audit `event_id` is used as the `args_fingerprint`,
+  raw inputs never enter the detector.
+- The demo's `/admin/patterns` route renders the snapshot and exposes a
+  "Promote to recipe" button that scaffolds a stub at
+  `recipes/_proposed/<pattern_id>.json` for human review.
+
+The "Promote to recipe" workflow is intentionally minimal — the stub
+still requires a human to convert it into a real recipe. Closing the loop
+end-to-end (auto-generate the manifest fragment, run the compile path on
+the proposed recipe, notify an owner) is V-6 territory.
+
+See `packages/policies/src/behavioral/sequence-detector.ts` for the
+algorithm and `evals/end-to-end/sequence-detector.eval.ts` for a
+deterministic 100-event replay that asserts the expected candidates
+surface.

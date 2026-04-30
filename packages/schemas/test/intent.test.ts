@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { ConversationOverlaySchema, IntentProfileSchema } from '../src/intent.ts';
+import {
+  ConversationOverlaySchema,
+  GlobalPreferencesSchema,
+  IntentProfileSchema,
+} from '../src/intent.ts';
 
 describe('IntentProfileSchema', () => {
   it('parses the full docs/artifacts.md §Intent profile example', () => {
@@ -12,8 +16,9 @@ describe('IntentProfileSchema', () => {
       global_preferences: {
         density: 'compact',
         color_mode: 'system',
+        motion_preference: 'reduced',
         modal_tolerance: 'low',
-        automation_trust: 'drafts_only',
+        automation_trust: 'strict',
         primary_workflow: 'task_queue',
         decision_separation: true,
       },
@@ -68,6 +73,40 @@ describe('IntentProfileSchema', () => {
       vocabulary: {},
     };
     const result = IntentProfileSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('GlobalPreferencesSchema', () => {
+  it('parses the canonical personalisation signals', () => {
+    const parsed = GlobalPreferencesSchema.parse({
+      density: 'compact',
+      color_mode: 'dark',
+      motion_preference: 'reduced',
+      automation_trust: 'strict',
+      modal_tolerance: 'low',
+    });
+    expect(parsed.density).toBe('compact');
+    expect(parsed.color_mode).toBe('dark');
+    expect(parsed.motion_preference).toBe('reduced');
+    expect(parsed.automation_trust).toBe('strict');
+    expect(parsed.modal_tolerance).toBe('low');
+  });
+
+  it('treats every well-known signal as optional', () => {
+    expect(() => GlobalPreferencesSchema.parse({})).not.toThrow();
+  });
+
+  it('passes through unknown keys (apps may store extra preferences)', () => {
+    const parsed = GlobalPreferencesSchema.parse({
+      density: 'comfortable',
+      primary_workflow: 'task_queue',
+    });
+    expect((parsed as Record<string, unknown>)['primary_workflow']).toBe('task_queue');
+  });
+
+  it('rejects an invalid enum value on a well-known key', () => {
+    const result = GlobalPreferencesSchema.safeParse({ density: 'huge' });
     expect(result.success).toBe(false);
   });
 });

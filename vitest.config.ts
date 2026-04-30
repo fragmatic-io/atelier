@@ -145,6 +145,18 @@ export default defineConfig({
           branches: 70,
           statements: 83,
         },
+        // @cir/data-resolvers (Wave 6 / track P-2): pure-function adapters
+        // (REST, OpenAPI, GraphQL, Mock, Composite) + a SWR cache wrapper +
+        // a small filter parser. Aggregate measured ~99/91/100/99. Branches
+        // are dragged a bit by `openapi.ts`'s `exactOptionalPropertyTypes`
+        // spread guards (each `x !== undefined ? { x } : {}` is two branches);
+        // ratchet branches to 80 so we lock that in without false positives.
+        'packages/data-resolvers/src/**/*.ts': {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
       },
       include: ['packages/**/src/**/*.{ts,tsx}'],
       exclude: [

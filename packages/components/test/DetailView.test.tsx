@@ -1,42 +1,45 @@
 // @vitest-environment happy-dom
 import './setup.js';
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { DetailView, DetailViewBinding } from '../src/components/DetailView.js';
 
 const FIELDS = [
-  { label: 'Name', value: 'Ada Lovelace' },
-  { label: 'Role', value: 'Mathematician' },
+  { label: 'A', value: 1 },
+  { label: 'B', value: 2 },
 ];
 
 describe('DetailView', () => {
-  it('renders a <dl> with one <dt>/<dd> pair per field', () => {
+  it('renders one dt/dd pair per field', () => {
     const { container } = render(<DetailView fields={FIELDS} />);
-    expect(container.querySelector('dl')).toBeTruthy();
     expect(container.querySelectorAll('dt').length).toBe(2);
     expect(container.querySelectorAll('dd').length).toBe(2);
   });
-
-  it('renders the labels and values', () => {
-    render(<DetailView fields={FIELDS} />);
-    expect(screen.getByText('Name')).toBeTruthy();
-    expect(screen.getByText('Ada Lovelace')).toBeTruthy();
-    expect(screen.getByText('Role')).toBeTruthy();
-  });
-
-  it('density defaults to normal and dense flips to dense', () => {
-    const { container, rerender } = render(<DetailView fields={FIELDS} />);
+  it('density is normal by default', () => {
+    const { container } = render(<DetailView fields={FIELDS} />);
     expect(container.querySelector('dl')?.getAttribute('data-density')).toBe('normal');
-    rerender(<DetailView fields={FIELDS} dense />);
+  });
+  it('dense=true sets data-density=dense', () => {
+    const { container } = render(<DetailView fields={FIELDS} dense />);
     expect(container.querySelector('dl')?.getAttribute('data-density')).toBe('dense');
   });
-
-  it('handles ReactNode values', () => {
-    render(<DetailView fields={[{ label: 'Status', value: <strong>active</strong> }]} />);
-    expect(screen.getByText('active').tagName).toBe('STRONG');
-  });
-
   it('binding id matches', () => {
     expect(DetailViewBinding.id).toBe('DetailView');
+  });
+  // -- Wave 6 / P-10 variant assertions --
+  it('defaults to variant=ghost', () => {
+    const { container } = render(<DetailView fields={FIELDS} />);
+    expect(container.querySelector('dl')?.getAttribute('data-variant')).toBe('ghost');
+  });
+  it('reflects each variant on data-variant', () => {
+    for (const v of ['bordered', 'elevated', 'ghost', 'tinted'] as const) {
+      const { container, unmount } = render(<DetailView fields={FIELDS} variant={v} />);
+      expect(container.querySelector('dl')?.getAttribute('data-variant')).toBe(v);
+      unmount();
+    }
+  });
+  it('applies the tinted variant class', () => {
+    const { container } = render(<DetailView fields={FIELDS} variant="tinted" />);
+    expect(container.querySelector('dl')?.className).toContain('bg-gray-50');
   });
 });

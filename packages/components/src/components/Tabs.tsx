@@ -3,31 +3,33 @@
 
 'use client';
 /**
- * Tabs — uncontrolled tabbed interface. Renders a `<div role="tablist">`
- * with `<button role="tab">` children plus a single `<div role="tabpanel">`
- * for the active tab. Arrow-Left / Arrow-Right cycle focus and selection;
- * Home / End jump to first / last (the conventional WAI-ARIA tabs pattern).
- *
- * Tabs is intentionally uncontrolled here — the active id is internal state
- * with an optional `defaultActiveId` seed. A controlled overload can land in
- * Phase 4c when a manifest layout needs to drive selection from above.
+ * Tabs — uncontrolled tabbed interface. Variants (Wave 6 / P-10): bordered,
+ * elevated, ghost (default), tinted.
  */
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
 export interface TabItem {
   id: string;
   label: string;
   content: ReactNode;
 }
+export type TabsVariant = LayoutVariant;
 
 export interface TabsProps {
   tabs: readonly TabItem[];
   defaultActiveId?: string;
+  variant?: TabsVariant;
   className?: string;
 }
 
-export function Tabs({ tabs, defaultActiveId, className }: TabsProps): ReactNode {
+export function Tabs({
+  tabs,
+  defaultActiveId,
+  variant = 'ghost',
+  className,
+}: TabsProps): ReactNode {
   const baseId = useId();
   const initial = defaultActiveId ?? tabs[0]?.id ?? '';
   const [activeId, setActiveId] = useState<string>(initial);
@@ -52,7 +54,11 @@ export function Tabs({ tabs, defaultActiveId, className }: TabsProps): ReactNode
   const active = tabs.find((t) => t.id === activeId);
 
   return (
-    <div data-cir-component="Tabs" className={className}>
+    <div
+      data-cir-component="Tabs"
+      data-variant={variant}
+      className={cn(layoutVariantClass[variant], className)}
+    >
       <div role="tablist" data-cir-part="tabs-list">
         {tabs.map((t) => {
           const tabBtnId = `${baseId}-tab-${t.id}`;
@@ -96,14 +102,8 @@ export function Tabs({ tabs, defaultActiveId, className }: TabsProps): ReactNode
     </div>
   );
 }
-
 Tabs.displayName = 'Tabs';
-
 export function tabsTextRender(props: TabsProps): string {
   return `[Tabs: ${String(props.tabs.length)} tabs]`;
 }
-
-export const TabsBinding: ComponentBinding = {
-  id: 'Tabs',
-  factory: Tabs,
-};
+export const TabsBinding: ComponentBinding = { id: 'Tabs', factory: Tabs };

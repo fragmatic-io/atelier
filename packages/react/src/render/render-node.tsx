@@ -37,6 +37,26 @@ import {
 import type { RenderNode as RenderNodeShape } from '@cir/runtime';
 import { DataResolverContext, type DataBinding } from '../data/data-resolver.js';
 import { useDispatcher } from '../hooks/use-dispatcher.js';
+import { useCir } from '../hooks/use-cir.js';
+
+/**
+ * Components in the catalog that accept a `density` personalisation prop.
+ * Kept in lock-step with the 8 layout components in `@cir/components` that
+ * actually wire density to spacing today (Stack, Container, Card, Grid, List,
+ * Table, StatCard, KPIRow). The walker only defaults the prop for these IDs
+ * to avoid attaching `density="..."` to a component whose props_schema does
+ * not declare it (which would surface a React unknown-prop warning).
+ */
+const DENSITY_AWARE_COMPONENTS = new Set<string>([
+  'Stack',
+  'Container',
+  'Card',
+  'Grid',
+  'List',
+  'Table',
+  'StatCard',
+  'KPIRow',
+]);
 
 const warned = new Set<string>();
 
@@ -102,6 +122,7 @@ export interface RenderNodeProps {
 
 export function RenderNode({ node }: RenderNodeProps): ReactElement {
   const dispatch = useDispatcher();
+  const services = useCir();
   const { data, loading, error } = useResolvedData(node.data);
 
   if (!node.binding) {
@@ -114,6 +135,21 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
 
   const Component = node.binding.factory as ComponentType<Record<string, unknown>>;
   const props: Record<string, unknown> = { ...(node.props ?? {}) };
+
+  // Personalisation defaulting: when the manifest omits a personalisation
+  // prop and the active intent profile carries the corresponding signal, the
+  // walker fills it in. The runtime stays "dumb" (it does not decide what to
+  // show) — it is only resolving a default value for an unset prop.
+  if (
+    DENSITY_AWARE_COMPONENTS.has(node.componentId) &&
+    props['density'] === undefined &&
+    services.intent !== undefined
+  ) {
+    const density = services.intent.global_preferences['density'];
+    if (density === 'compact' || density === 'comfortable' || density === 'spacious') {
+      props['density'] = density;
+    }
+  }
 
   if (node.data) {
     props['data'] = data;

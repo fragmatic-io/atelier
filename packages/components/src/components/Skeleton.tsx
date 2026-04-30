@@ -1,25 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 The CIR Authors
 /**
- * Skeleton — purely decorative loading placeholder. Rendered as a
- * `<span aria-hidden="true">` so screen readers ignore it (the assistive
- * announcement should come from a sibling Spinner / Progress / `aria-busy`
- * region, not from the visual placeholder itself).
- *
- * `width` / `height` accept CSS lengths (`'100%'`, `'1em'`, `'2rem'`) or
- * raw numbers (interpreted as pixels). `radius` maps to a small token set;
- * `'full'` produces a pill shape. No animation in 4b — the markup contract
- * here is what a 4c CSS pass will hang the shimmer keyframe on.
+ * Skeleton — decorative loading placeholder. Variants (Wave 6 / P-10):
+ * bordered, elevated, ghost, tinted (default).
  */
 import type { CSSProperties, ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
 
 export type SkeletonRadius = 'sm' | 'md' | 'full';
+export type SkeletonVariant = FeedbackVariant;
 
 export interface SkeletonProps {
   width?: string | number;
   height?: string | number;
   radius?: SkeletonRadius;
+  variant?: SkeletonVariant;
   className?: string;
 }
 
@@ -37,6 +33,7 @@ export function Skeleton({
   width = '100%',
   height = '1em',
   radius = 'sm',
+  variant = 'tinted',
   className,
 }: SkeletonProps): ReactNode {
   const style: CSSProperties = {
@@ -51,19 +48,14 @@ export function Skeleton({
       aria-hidden="true"
       data-cir-component="Skeleton"
       data-radius={radius}
-      className={className}
+      data-variant={variant}
+      className={cn(feedbackVariantClass[variant], className)}
       style={style}
     />
   );
 }
-
 Skeleton.displayName = 'Skeleton';
-
 export function skeletonTextRender(_props: SkeletonProps): string {
   return '[Skeleton]';
 }
-
-export const SkeletonBinding: ComponentBinding = {
-  id: 'Skeleton',
-  factory: Skeleton,
-};
+export const SkeletonBinding: ComponentBinding = { id: 'Skeleton', factory: Skeleton };

@@ -3,29 +3,25 @@
 
 'use client';
 /**
- * Accordion — disclosure group rendered with semantic `<details>` /
- * `<summary>`. Using the platform element gives keyboard activation
- * (Enter / Space), correct ARIA semantics, and `<summary>` focusability for
- * free.
- *
- * State is internal: `defaultOpen` seeds which items are open initially and
- * `multiple` toggles between accordion-style (one open at a time, default)
- * and disclosure-set (independent items). Items are kept controlled via
- * `open` so React owns the truth even when the user clicks the summary.
+ * Accordion — disclosure group via <details>/<summary>. Variants
+ * (Wave 6 / P-10): bordered (default), elevated, ghost, tinted.
  */
 import { useState, type ReactNode, type SyntheticEvent } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
 export interface AccordionItem {
   id: string;
   header: ReactNode;
   content: ReactNode;
 }
+export type AccordionVariant = LayoutVariant;
 
 export interface AccordionProps {
   items: readonly AccordionItem[];
   multiple?: boolean;
   defaultOpen?: readonly string[];
+  variant?: AccordionVariant;
   className?: string;
 }
 
@@ -33,10 +29,10 @@ export function Accordion({
   items,
   multiple = false,
   defaultOpen,
+  variant = 'bordered',
   className,
 }: AccordionProps): ReactNode {
   const [openSet, setOpenSet] = useState<ReadonlySet<string>>(() => new Set(defaultOpen ?? []));
-
   const onToggle = (id: string, event: SyntheticEvent<HTMLDetailsElement>): void => {
     const isOpen = event.currentTarget.open;
     setOpenSet((prev) => {
@@ -46,12 +42,12 @@ export function Accordion({
       return next;
     });
   };
-
   return (
     <div
       data-cir-component="Accordion"
       data-multiple={multiple ? 'true' : 'false'}
-      className={className}
+      data-variant={variant}
+      className={cn(layoutVariantClass[variant], className)}
     >
       {items.map((item) => {
         const open = openSet.has(item.id);
@@ -73,14 +69,8 @@ export function Accordion({
     </div>
   );
 }
-
 Accordion.displayName = 'Accordion';
-
 export function accordionTextRender(props: AccordionProps): string {
   return `[Accordion: ${String(props.items.length)} items]`;
 }
-
-export const AccordionBinding: ComponentBinding = {
-  id: 'Accordion',
-  factory: Accordion,
-};
+export const AccordionBinding: ComponentBinding = { id: 'Accordion', factory: Accordion };

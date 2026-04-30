@@ -3,27 +3,22 @@
 
 'use client';
 /**
- * Modal — controlled modal dialog backed by HTML `<dialog>`. Like
- * ConfirmDialog we lean on the platform for focus trap, the inert backdrop,
- * Escape-to-cancel, and ARIA semantics. Unlike ConfirmDialog, Modal is the
- * generic surface — the host owns the body content (via children) and any
- * action bar. We deliberately do NOT auto-focus a specific element; the
- * `<dialog>` element handles initial focus, and the host can grab it from
- * within `children` if a particular control should receive it.
- *
- * Backdrop click closes (a click on the dialog *element* rect that is
- * outside its content box). Escape closes via the native `cancel` event.
+ * Modal — controlled <dialog>. Variants (Wave 6 / P-10): bordered,
+ * elevated (default), ghost, tinted.
  */
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
 export type ModalSize = 'sm' | 'md' | 'lg';
+export type ModalVariant = LayoutVariant;
 
 export interface ModalProps {
   open: boolean;
   title: string;
   onClose: () => void;
   size?: ModalSize;
+  variant?: ModalVariant;
   className?: string;
   children?: ReactNode;
 }
@@ -39,12 +34,11 @@ export function Modal({
   title,
   onClose,
   size = 'md',
+  variant = 'elevated',
   className,
   children,
 }: ModalProps): ReactNode {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-
-  // Sync `open` with the dialog element's modal state.
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
@@ -63,8 +57,6 @@ export function Modal({
       else dlg.removeAttribute('open');
     }
   }, [open]);
-
-  // Mirror the native `cancel` (Escape) event onto onClose.
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
@@ -77,19 +69,16 @@ export function Modal({
       dlg.removeEventListener('cancel', handle);
     };
   }, [onClose]);
-
   return (
     <dialog
       ref={dialogRef}
       data-cir-component="Modal"
       data-size={size}
+      data-variant={variant}
       aria-labelledby="cir-modal-title"
-      className={className}
+      className={cn(layoutVariantClass[variant], className)}
       style={{ width: SIZE_PX[size], maxWidth: '100%' }}
       onClick={(e): void => {
-        // Backdrop click: the click hits the dialog element itself (not a
-        // descendant), which is the conventional way to detect an outside
-        // press on a native <dialog>.
         if (e.target === dialogRef.current) onClose();
       }}
     >
@@ -100,14 +89,8 @@ export function Modal({
     </dialog>
   );
 }
-
 Modal.displayName = 'Modal';
-
 export function modalTextRender(props: ModalProps): string {
   return `[Modal: ${props.title}]`;
 }
-
-export const ModalBinding: ComponentBinding = {
-  id: 'Modal',
-  factory: Modal,
-};
+export const ModalBinding: ComponentBinding = { id: 'Modal', factory: Modal };

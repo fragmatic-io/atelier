@@ -1,27 +1,39 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Button — minimally-styled action primitive. Variants are surfaced as
- * `data-variant` so a Phase 4c CSS layer can paint them; the only baked-in
- * styling is `cursor: pointer` + a small `padding` so the button is usable
- * before any CSS lands.
- *
- * Ref-forwarded for focus management (e.g. ConfirmDialog grabs the cancel
- * button on open).
+ * Button — action primitive. Variants (Wave 6 / P-10): primary (default),
+ * secondary, ghost, outline, destructive. Sizes: sm, md (default), lg.
  */
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import {
+  actionSizeClass,
+  actionVariantClass,
+  cn,
+  type ActionVariant,
+  type Size,
+} from './_variants.js';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'ghost';
+export type ButtonVariant = ActionVariant;
+export type ButtonSize = Size;
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   type?: 'button' | 'submit' | 'reset';
   children?: ReactNode;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', type = 'button', className, style, children, ...rest }: ButtonProps,
+  {
+    variant = 'primary',
+    size = 'md',
+    type = 'button',
+    className,
+    style,
+    children,
+    ...rest
+  }: ButtonProps,
   ref,
 ): ReactNode {
   return (
@@ -30,7 +42,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       data-cir-component="Button"
       data-variant={variant}
-      className={className}
+      data-size={size}
+      className={cn(actionVariantClass[variant], actionSizeClass[size], className)}
       style={{ cursor: 'pointer', padding: '8px 16px', ...style }}
       {...rest}
     >
@@ -46,8 +59,4 @@ export function buttonTextRender(props: ButtonProps): string {
       : '';
   return label !== '' ? `[Button: ${label}]` : '[Button]';
 }
-
-export const ButtonBinding: ComponentBinding = {
-  id: 'Button',
-  factory: Button,
-};
+export const ButtonBinding: ComponentBinding = { id: 'Button', factory: Button };

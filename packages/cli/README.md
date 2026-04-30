@@ -9,21 +9,22 @@ pnpm cir <command> [options]
 
 ## Commands
 
-| Command                         | What it does                                                                                          |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `cir init [dir]`                | Scaffold a new CIR app in `[dir]` (defaults to `.`). Writes `package.json`, `app/`, stub directories. |
-| `cir dev`                       | Start the dev server. Thin wrapper around `next dev`.                                                 |
-| `cir dev --tail`                | Spawn `next dev` AND tail audit events from `/api/cir/audit/stream` to stderr.                        |
-| `cir dev --tail-only`           | Skip the spawn, just tail the audit stream.                                                           |
-| `cir add <component>`           | Copy a baseline component from `@cir/components` source into `./components/`.                         |
-| `cir add --list`                | List every available baseline component.                                                              |
-| `cir components-sync [--check]` | Regenerate `components/registry.json` from the live `@cir/components` registry.                       |
-| `cir validate`                  | Run the host project's `pnpm validate` chain.                                                         |
-| `cir import openapi <spec>`     | Generate `capabilities/` from an OpenAPI 3.x spec (drafts with `_review` envelopes).                  |
-| `cir inspect <id-or-path>`      | Pretty-print a manifest from a file path or via `<server>/api/cir/manifest/<id>`.                     |
-| `cir compile <intent.json>`     | Offline compile producing a manifest. Mirrors the demo's server wiring.                               |
-| `cir --help`                    | Print top-level usage. `cir <cmd> --help` prints subcommand usage.                                    |
-| `cir --version`                 | Print the `@cir/cli` version.                                                                         |
+| Command                         | What it does                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `cir init [dir]`                | Scaffold a new CIR app in `[dir]` (defaults to `.`). Writes `package.json`, `app/`, stub directories.  |
+| `cir dev`                       | Start the dev server. Thin wrapper around `next dev`.                                                  |
+| `cir dev --tail`                | Spawn `next dev` AND tail audit events from `/api/cir/audit/stream` to stderr.                         |
+| `cir dev --tail-only`           | Skip the spawn, just tail the audit stream.                                                            |
+| `cir add <component>`           | Copy a baseline component from `@cir/components` source into `./components/`.                          |
+| `cir add --list`                | List every available baseline component.                                                               |
+| `cir components-sync [--check]` | Regenerate `components/registry.json` from the live `@cir/components` registry.                        |
+| `cir validate`                  | Run the host project's `pnpm validate` chain.                                                          |
+| `cir import openapi <spec>`     | Generate `capabilities/` from an OpenAPI 3.x spec (drafts with `_review` envelopes).                   |
+| `cir import figma <tokens>`     | Generate a `BrandKit` JSON from a W3C Design Tokens / Figma export. Stub — voice / variants stay TODO. |
+| `cir inspect <id-or-path>`      | Pretty-print a manifest from a file path or via `<server>/api/cir/manifest/<id>`.                      |
+| `cir compile <intent.json>`     | Offline compile producing a manifest. Mirrors the demo's server wiring.                                |
+| `cir --help`                    | Print top-level usage. `cir <cmd> --help` prints subcommand usage.                                     |
+| `cir --version`                 | Print the `@cir/cli` version.                                                                          |
 
 ## `cir inspect` — manifest pretty-printer
 
@@ -63,6 +64,34 @@ If `GEMINI_API_KEY` is set, the run goes through `GeminiCompiler` wrapped in a
 `CompositeCompiler` over `FallbackCompiler`. Without a key, the fallback alone
 runs and a one-line note hits stderr — the API key is **never** logged, even
 in error paths (defensive `AIza`-prefix redaction is applied to all messages).
+
+## `cir import figma` — Figma → BrandKit converter
+
+Turns a W3C Design Tokens JSON export (the format the Figma "Export Design
+Tokens" plugin emits) into a CIR `BrandKit` JSON. Tokens are routed by
+their dotted path:
+
+```
+color.primary           -> tokens.colors.primary
+spacing.md              -> tokens.spacing.md
+radius.sm               -> radius_scale.sm
+shadow.lg               -> shadow_scale.lg
+duration.fast           -> motion.duration_scale.fast (parsed to ms)
+easing.in_out           -> motion.easing.in_out
+typography.fontFamily   -> tokens.typography.font_stack
+typography.size.lg      -> tokens.typography.scale.lg
+typography.weight.bold  -> tokens.typography.weight.bold
+```
+
+```bash
+cir import figma tokens.json --out brand-kit.json --id myapp.brand --version 1.0.0
+```
+
+Tokens whose paths the importer doesn't recognise are listed as warnings on
+stderr — review them and either retag the input or hand-edit the output.
+The output is a STUB: `voice`, `variants`, `iconography`, and
+`accessibility` come back empty / TODO because Figma's design-tokens format
+carries no equivalent. Hand-fill those fields before publishing.
 
 ## `cir dev --tail` — terminal-side audit observability
 

@@ -143,6 +143,26 @@ export const BehaviorWorkaroundDetectedTrigger = z.object({
   proposed_capability: CapabilityId.optional(),
   proposed_recompile: z.array(z.string()).optional(),
 });
+
+/**
+ * `behavior.pattern_detected` — emitted by the runtime's behavioral pattern
+ * detector (see `@cir/policies/SequenceDetector`) when N users converge on
+ * the same action sequence often enough to merit promotion to a recipe.
+ * Distinct from `behavior.workaround_detected` (single user finding a hacky
+ * way around a missing feature) — patterns are POSITIVE signals worth
+ * promoting; workarounds are signals of MISSING features.
+ */
+export const BehaviorPatternDetectedTrigger = z.object({
+  type: z.literal('behavior.pattern_detected'),
+  /** Optional — pattern detection often aggregates across users. */
+  user_id: UserId.optional(),
+  app_id: AppId.optional(),
+  pattern_id: z.string().regex(/^seq_[a-z0-9]+$/),
+  description: z.string().min(1),
+  capability_ids: z.array(CapabilityId),
+  occurrences: z.number().int().nonnegative(),
+  distinct_users: z.number().int().nonnegative(),
+});
 export const BehaviorFeatureUnusedTrigger = z.object({
   type: z.literal('behavior.feature_unused'),
   user_id: UserId,
@@ -278,6 +298,7 @@ export const TriggerSchema = z.discriminatedUnion('type', [
   IntentVocabularyUpdatedTrigger,
   // behavioral
   BehaviorWorkaroundDetectedTrigger,
+  BehaviorPatternDetectedTrigger,
   BehaviorFeatureUnusedTrigger,
   BehaviorErrorPatternTrigger,
   // explicit

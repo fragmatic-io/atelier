@@ -32,6 +32,26 @@ import { CirErrorBoundary } from '../error-boundary.js';
 import { CurrentManifestContext } from '../context/manifest-context.js';
 import { RenderNode } from './render-node.js';
 
+/**
+ * One-shot effect: when an intent profile carries `color_mode`, mirror it
+ * onto `<html data-color-mode>`. Rather than per-component theme props, this
+ * gives a single defaulting site the host's stylesheet can key off (e.g.
+ * `html[data-color-mode='dark'] { ... }`). Hosts that want to ignore the
+ * preference can simply not provide an `intent` on the services bag.
+ */
+function useColorModeFromIntent(colorMode: string | undefined): void {
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    if (colorMode === 'light' || colorMode === 'dark' || colorMode === 'system') {
+      root.dataset['colorMode'] = colorMode;
+    }
+    // Intentionally NOT clearing on unmount: we don't want the route swap to
+    // momentarily flash an unset color mode. The next route that mounts will
+    // re-set it.
+  }, [colorMode]);
+}
+
 export interface CirRouteProps {
   path: string;
   /** Rendered while the manifest is loading. */
@@ -90,6 +110,12 @@ export function CirRoute(props: CirRouteProps): React.ReactElement {
   const errorFallback = props.errorFallback ?? defaultErrorFallback;
   const services = useCir();
   const { manifest, isLoading, error, refresh } = useManifest(path);
+
+  // Reflect the user's color_mode preference onto <html>. One defaulting site,
+  // not per-component, mirrors how `density` is per-component but `color_mode`
+  // is a global theme switch.
+  const colorModePref = services.intent?.global_preferences['color_mode'];
+  useColorModeFromIntent(typeof colorModePref === 'string' ? colorModePref : undefined);
 
   // Auto-refresh on triggers that would evict THIS route's manifest.
   useTrigger('*', (event) => {

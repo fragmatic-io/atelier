@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Spinner — accessible loading indicator. Rendered as `<output role="status"
- * aria-live="polite">` so the label is announced when it appears. The visual
- * is intentionally STATIC text in Phase 4b — there is no spinning glyph or
- * animation. A Phase 4c CSS pass will add the rotation keyframe and glyph;
- * the markup contract here is what the animation will hang off of.
- *
- * `srOnly` hides the label visually (clip-path technique) while keeping it
- * available to screen readers — useful when the spinner sits next to its
- * own label in the layout.
+ * Spinner — accessible loading indicator. Variants (Wave 6 / P-10):
+ * bordered, elevated, ghost (default), tinted.
  */
 import type { CSSProperties, ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
+
+export type SpinnerVariant = FeedbackVariant;
 
 export interface SpinnerProps {
   label?: string;
   srOnly?: boolean;
+  variant?: SpinnerVariant;
   className?: string;
 }
 
@@ -35,6 +32,7 @@ const SR_ONLY_STYLE: CSSProperties = {
 export function Spinner({
   label = 'Loading…',
   srOnly = false,
+  variant = 'ghost',
   className,
 }: SpinnerProps): ReactNode {
   return (
@@ -43,20 +41,15 @@ export function Spinner({
       aria-live="polite"
       data-cir-component="Spinner"
       data-cir-phase="4b-static"
-      className={className}
+      data-variant={variant}
+      className={cn(feedbackVariantClass[variant], className)}
     >
       <span style={srOnly ? SR_ONLY_STYLE : undefined}>{label}</span>
     </output>
   );
 }
-
 Spinner.displayName = 'Spinner';
-
 export function spinnerTextRender(props: SpinnerProps): string {
   return `[Spinner: ${props.label ?? 'Loading…'}]`;
 }
-
-export const SpinnerBinding: ComponentBinding = {
-  id: 'Spinner',
-  factory: Spinner,
-};
+export const SpinnerBinding: ComponentBinding = { id: 'Spinner', factory: Spinner };

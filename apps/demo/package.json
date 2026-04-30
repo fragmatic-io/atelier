@@ -15,6 +15,7 @@
   "dependencies": {
     "@cir/compiler": "workspace:*",
     "@cir/components": "workspace:*",
+    "@cir/data-resolvers": "workspace:*",
     "@cir/policies": "workspace:*",
     "@cir/react": "workspace:*",
     "@cir/runtime": "workspace:*",

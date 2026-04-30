@@ -19,6 +19,18 @@
  */
 
 // -----------------------------------------------------------------------------
+// Density (personalisation token shared across layout components)
+// -----------------------------------------------------------------------------
+export {
+  DEFAULT_DENSITY,
+  DENSITY_GAP_MULTIPLIER,
+  DENSITY_PADDING_PX,
+  DENSITY_ROW_PADDING_PX,
+  densityScaleGapPx,
+  type Density,
+} from './components/density.js';
+
+// -----------------------------------------------------------------------------
 // Layout
 // -----------------------------------------------------------------------------
 export { Stack, StackBinding, STACK_GAP_PX } from './components/Stack.js';
@@ -95,7 +107,7 @@ export type { MapProps, MapMarker } from './components/Map.js';
 // Input
 // -----------------------------------------------------------------------------
 export { Button, ButtonBinding } from './components/Button.js';
-export type { ButtonProps, ButtonVariant } from './components/Button.js';
+export type { ButtonProps, ButtonVariant, ButtonSize } from './components/Button.js';
 
 export { TextInput, TextInputBinding } from './components/TextInput.js';
 export type { TextInputProps } from './components/TextInput.js';
@@ -104,7 +116,7 @@ export { Select, SelectBinding } from './components/Select.js';
 export type { SelectProps, SelectOption } from './components/Select.js';
 
 export { Search, SearchBinding } from './components/Search.js';
-export type { SearchProps } from './components/Search.js';
+export type { SearchProps, SearchVariant } from './components/Search.js';
 
 export { NumberInput, NumberInputBinding } from './components/NumberInput.js';
 export type { NumberInputProps } from './components/NumberInput.js';

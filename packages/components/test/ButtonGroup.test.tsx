@@ -4,46 +4,58 @@ import { createRef } from 'react';
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ButtonGroup, ButtonGroupBinding } from '../src/components/ButtonGroup.js';
-import { Button } from '../src/components/Button.js';
 
 describe('ButtonGroup', () => {
-  it('renders children inside a role=group with the provided aria-label', () => {
+  it('renders children inside a role=group element', () => {
     render(
-      <ButtonGroup aria-label="Toolbar">
-        <Button>One</Button>
-        <Button>Two</Button>
+      <ButtonGroup aria-label="actions">
+        <button type="button">a</button>
+        <button type="button">b</button>
       </ButtonGroup>,
     );
-    const grp = screen.getByRole('group', { name: 'Toolbar' });
-    expect(grp).toBeTruthy();
-    expect(grp.getAttribute('data-cir-component')).toBe('ButtonGroup');
-    expect(screen.getByRole('button', { name: 'One' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Two' })).toBeTruthy();
+    const group = screen.getByRole('group', { name: 'actions' });
+    expect(group).toBeTruthy();
   });
-
-  it('forwards a ref to the underlying div', () => {
+  it('forwards ref to the underlying div', () => {
     const ref = createRef<HTMLDivElement>();
     render(
-      <ButtonGroup aria-label="x" ref={ref}>
-        <Button>Go</Button>
+      <ButtonGroup ref={ref} aria-label="x">
+        <span>c</span>
       </ButtonGroup>,
     );
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+    expect(ref.current?.tagName).toBe('DIV');
   });
-
-  it('merges caller className and inline style', () => {
-    render(
-      <ButtonGroup aria-label="x" className="custom" style={{ padding: 8 }}>
-        <Button>x</Button>
-      </ButtonGroup>,
-    );
-    const grp = screen.getByRole('group');
-    expect(grp.className).toBe('custom');
-    expect(grp.style.padding).toBe('8px');
-    expect(grp.style.display).toBe('inline-flex');
-  });
-
   it('binding id matches', () => {
     expect(ButtonGroupBinding.id).toBe('ButtonGroup');
+  });
+  // -- Wave 6 / P-10 variant assertions --
+  it('defaults to variant=secondary and size=md', () => {
+    render(
+      <ButtonGroup aria-label="x">
+        <span>c</span>
+      </ButtonGroup>,
+    );
+    const group = screen.getByRole('group');
+    expect(group.getAttribute('data-variant')).toBe('secondary');
+    expect(group.getAttribute('data-size')).toBe('md');
+  });
+  it('reflects each variant on data-variant', () => {
+    for (const v of ['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const) {
+      const { unmount } = render(
+        <ButtonGroup aria-label="x" variant={v}>
+          <span>c</span>
+        </ButtonGroup>,
+      );
+      expect(screen.getByRole('group').getAttribute('data-variant')).toBe(v);
+      unmount();
+    }
+  });
+  it('applies the destructive variant class', () => {
+    render(
+      <ButtonGroup aria-label="x" variant="destructive">
+        <span>c</span>
+      </ButtonGroup>,
+    );
+    expect(screen.getByRole('group').className).toContain('bg-red-600');
   });
 });

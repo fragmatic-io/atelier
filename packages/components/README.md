@@ -89,11 +89,40 @@ declarations). Every component exposes:
 
 - A stable `data-cir-component="<Name>"` attribute for selector hooks
 - Variant data attributes (`data-variant`, `data-severity`, `data-gap`,
-  `data-direction`, `data-columns`, `data-max-width`, `data-padding`)
+  `data-direction`, `data-columns`, `data-max-width`, `data-padding`,
+  `data-size`)
 - A `className` passthrough
 
 Hosts paint these via Tailwind or vanilla CSS. `apps/demo` ships a
 Tailwind 4 baseline.
+
+## Variants
+
+Wave 6 / P-10 added a small `variant` (and where applicable `size`) prop
+to 24 high-impact components. The variant maps to a hand-rolled Tailwind
+utility class string in `src/components/_variants.ts` so Tailwind hosts
+pick up styling for free; non-Tailwind hosts ignore the unknown classes
+and select on `data-variant=...`.
+
+| Category          | Components                                      | `variant` values                                                  | Default     |
+| ----------------- | ----------------------------------------------- | ----------------------------------------------------------------- | ----------- |
+| Layout containers | `Stack`, `Container`, `Grid`, `Tabs`            | `bordered` \| `elevated` \| `ghost` \| `tinted`                   | `ghost`     |
+| Layout containers | `Card`, `Accordion`                             | `bordered` \| `elevated` \| `ghost` \| `tinted`                   | `bordered`  |
+| Layout containers | `Modal`, `Drawer`                               | `bordered` \| `elevated` \| `ghost` \| `tinted`                   | `elevated`  |
+| Display           | `Alert`, `Toast`                                | `info` \| `success` \| `warning` \| `error` (= `severity`)        | `info`      |
+| Display           | `EmptyState`, `Markdown`, `Spinner`, `Progress` | `bordered` \| `elevated` \| `ghost` \| `tinted`                   | `ghost`     |
+| Display           | `Skeleton`                                      | `bordered` \| `elevated` \| `ghost` \| `tinted`                   | `tinted`    |
+| Stat / KPI        | `StatCard`, `KPIRow`                            | `default` \| `accent` \| `muted`                                  | `default`   |
+| Action            | `Button`                                        | `primary` \| `secondary` \| `ghost` \| `outline` \| `destructive` | `primary`   |
+| Action            | `ButtonGroup`, `ActionMenu`                     | `primary` \| `secondary` \| `ghost` \| `outline` \| `destructive` | `secondary` |
+| Search            | `Search`                                        | `default` \| `embedded`                                           | `default`   |
+| Specialized       | `List`, `Table`, `DetailView`                   | `bordered` \| `elevated` \| `ghost` \| `tinted`                   | `ghost`     |
+
+A `size` prop (`sm` \| `md` \| `lg`, default `md`) is available on
+`Button`, `ButtonGroup`, `ActionMenu`, `StatCard`, and `KPIRow`.
+
+The remaining 32 components (inputs, charts, niche primitives) get
+variants in a follow-up pass — see `TODO.md` Phase 7+.
 
 ## Tests
 

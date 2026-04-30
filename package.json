@@ -60,6 +60,7 @@
     "@cir/cli": "workspace:*",
     "@cir/compiler": "workspace:*",
     "@cir/components": "workspace:*",
+    "@cir/data-resolvers": "workspace:*",
     "@cir/demo": "workspace:*",
     "@cir/evals": "workspace:*",
     "@cir/policies": "workspace:*",

@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { AppId, EventId, IsoDateTimeString, ManifestId, UserId } from './common.js';
+import { AppId, EventId, IsoDateTimeString, ManifestId, TenantId, UserId } from './common.js';
 
 /**
  * The event-type enum.
@@ -54,6 +54,12 @@ export const AuditEventSchema = z.object({
   timestamp: IsoDateTimeString,
   user_id: UserId,
   app_id: AppId,
+  /**
+   * Optional tenant scope. When set, audit subscribers can filter by tenant
+   * (`StreamingAuditSink.subscribe(listener, { tenant_id })`) so a per-tenant
+   * dashboard never sees another tenant's events.
+   */
+  tenant_id: TenantId.optional(),
   type: AuditEventType,
   actor: z.enum(['user', 'agent', 'system']),
   before_state_hash: z.string(),

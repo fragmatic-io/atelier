@@ -41,10 +41,12 @@ import {
   useReactConfirmation,
   type DataBinding,
 } from '@cir/react';
+import { CompositeDataResolver, MockDataResolver, RestDataResolver } from '@cir/data-resolvers';
 import { validateManifest, BASELINE_POLICIES, composesAccordingTo } from '@cir/policies';
-import type { Manifest } from '@cir/schemas';
+import type { IntentProfile, Manifest } from '@cir/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
+import { loadIntentProfile } from './intent-store';
 import { DEMO_BINDINGS } from '@/components';
 
 type CirServices = Parameters<typeof CirRuntime>[0]['services'];
@@ -62,7 +64,15 @@ async function postAction(capabilityId: string, input: unknown): Promise<unknown
   return body.result;
 }
 
-const dataResolver = async (binding: DataBinding): Promise<unknown> => {
+/**
+ * The demo proxies most data through `/api/data/{capability}` — the server
+ * holds the demo's fake store. New capabilities introduced in Wave 6 P-2
+ * (`github.repo.list`, `dummyjson.product.list`, `dummyjson.product.search`)
+ * skip that proxy: GitHub data is fixture-only (mock), dummyjson is a real
+ * public API the demo can hit directly. We compose the two new resolvers
+ * with the legacy proxy so existing thread.* / task.* bindings keep working.
+ */
+const proxyDataResolver = async (binding: DataBinding): Promise<unknown> => {
   const params = new URLSearchParams();
   if (binding.filter) params.set('filter', binding.filter);
   if (binding.sort) params.set('sort', binding.sort);
@@ -75,6 +85,55 @@ const dataResolver = async (binding: DataBinding): Promise<unknown> => {
   }
   return res.json();
 };
+
+const githubRepoFixtures = [
+  {
+    id: 1,
+    name: 'cir',
+    full_name: 'fragmatic-io/cir',
+    private: false,
+    html_url: 'https://github.com/fragmatic-io/cir',
+    description: 'Capability · Intent · Render — production architecture for dynamic UI',
+    stargazers_count: 128,
+    open_issues_count: 6,
+    updated_at: '2026-04-30T12:00:00Z',
+  },
+  {
+    id: 2,
+    name: 'demo',
+    full_name: 'fragmatic-io/demo',
+    private: false,
+    html_url: 'https://github.com/fragmatic-io/demo',
+    description: 'CIR demo app',
+    stargazers_count: 12,
+    open_issues_count: 1,
+    updated_at: '2026-04-29T09:00:00Z',
+  },
+];
+
+const mockResolver = new MockDataResolver({
+  fixtures: { 'github.repo.list': { repos: githubRepoFixtures } },
+});
+
+const dummyjsonResolver = new RestDataResolver({
+  urlMap: {
+    'dummyjson.product.list': 'https://dummyjson.com/products',
+    'dummyjson.product.search': 'https://dummyjson.com/products/search',
+  },
+});
+
+const composite = new CompositeDataResolver(
+  [mockResolver.resolve, dummyjsonResolver.resolve, proxyDataResolver],
+  {
+    predicates: [
+      (b) => b.source === 'github.repo.list',
+      (b) => b.source.startsWith('dummyjson.'),
+      () => true,
+    ],
+  },
+);
+
+const dataResolver = composite.resolve;
 
 interface BuiltServices {
   services: CirServices;
@@ -150,6 +209,12 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
     audit,
   });
 
+  // Wave 6 / P-1: thread the persisted intent profile into the services bag
+  // so the renderer (`<RenderNode>` walker) can default personalisation props
+  // like `density` from `intent.global_preferences`. Falls back to undefined
+  // when no profile exists yet (first-time user); the renderer handles that.
+  const intent: IntentProfile | undefined = loadIntentProfile() ?? undefined;
+
   return {
     services: {
       resolver,
@@ -158,6 +223,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
       bus,
       audit,
       identity: { user_id: 'demo-user', app_id: 'cir.demo' },
+      intent,
     },
     audit,
   };

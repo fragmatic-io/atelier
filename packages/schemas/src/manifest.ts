@@ -24,6 +24,7 @@ import {
   ManifestId,
   SemverString,
   SkillId,
+  TenantId,
   UserId,
 } from './common.js';
 
@@ -121,6 +122,14 @@ export const ManifestSchema = z.object({
   manifest_id: ManifestId,
   user_id: UserId,
   app_id: AppId,
+  /**
+   * Optional tenant scope. When set, manifest cache and Tier-3 store key by
+   * `(tenant_id, manifest_id)` instead of `manifest_id` alone, preventing
+   * cross-tenant cache leaks. Single-tenant deployments leave this unset
+   * (treated as `'default'` downstream). See `docs/production-concerns.md`
+   * §"Multi-tenant safety".
+   */
+  tenant_id: TenantId.optional(),
   compiled_from: CompiledFromSchema,
   ttl: z.number().nullable().optional(),
   invalidates_on: z.array(z.string()),

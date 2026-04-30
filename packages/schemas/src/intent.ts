@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { IsoDateTimeString, UserId } from './common.js';
+import { IsoDateTimeString, TenantId, UserId } from './common.js';
 
 /**
  * One rule in the user's intent profile.
@@ -32,6 +32,51 @@ export const IntentRuleSchema = z.object({
 export type IntentRule = z.infer<typeof IntentRuleSchema>;
 
 /**
+ * Canonical enums for the well-known personalisation signals.
+ *
+ * `global_preferences` is a free-form `Record<string, unknown>` so apps can
+ * store any preference; these enums document the SHAPE that `@cir/components`,
+ * `@cir/compiler`, and `@cir/react` honour today. Values outside the enums are
+ * not rejected by `IntentProfileSchema` — the runtime/compiler simply falls
+ * back to the comfortable default. New keys may be added without a schema bump.
+ */
+export const DensityPreference = z.enum(['compact', 'comfortable', 'spacious']);
+export type DensityPreference = z.infer<typeof DensityPreference>;
+
+export const ColorModePreference = z.enum(['light', 'dark', 'system']);
+export type ColorModePreference = z.infer<typeof ColorModePreference>;
+
+export const MotionPreference = z.enum(['reduced', 'subtle', 'rich']);
+export type MotionPreference = z.infer<typeof MotionPreference>;
+
+export const AutomationTrustPreference = z.enum(['strict', 'cautious', 'permissive']);
+export type AutomationTrustPreference = z.infer<typeof AutomationTrustPreference>;
+
+export const ModalTolerancePreference = z.enum(['low', 'medium', 'high']);
+export type ModalTolerancePreference = z.infer<typeof ModalTolerancePreference>;
+
+/**
+ * Strongly-typed view of `IntentProfile.global_preferences`.
+ *
+ * The profile schema keeps the field as a free-form record (keys may be added
+ * by apps without a schema bump). This schema is the canonical contract the
+ * compiler, components, and React renderer agree on for the well-known keys.
+ * Use it via `GlobalPreferencesSchema.parse(...)` when you want a typed read
+ * of the preferences without rejecting unknown keys (passthrough is enabled).
+ */
+export const GlobalPreferencesSchema = z
+  .object({
+    density: DensityPreference,
+    color_mode: ColorModePreference,
+    motion_preference: MotionPreference,
+    automation_trust: AutomationTrustPreference,
+    modal_tolerance: ModalTolerancePreference,
+  })
+  .partial()
+  .passthrough();
+export type GlobalPreferences = z.infer<typeof GlobalPreferencesSchema>;
+
+/**
  * Cross-app workflow declaration. Lives in the user's vault, NOT the app's
  * registry — the user composes capabilities across apps for their own use.
  */
@@ -47,6 +92,8 @@ export type CrossAppWorkflow = z.infer<typeof CrossAppWorkflowSchema>;
  */
 export const IntentProfileSchema = z.object({
   user_id: UserId,
+  /** Optional tenant scope. See `Manifest.tenant_id` for the model. */
+  tenant_id: TenantId.optional(),
   profile_version: z.number().int().nonnegative(),
   updated_at: IsoDateTimeString,
   /** Free-form key/value preferences (`density`, `color_mode`, ...). */

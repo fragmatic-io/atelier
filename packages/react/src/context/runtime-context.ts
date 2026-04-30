@@ -24,6 +24,7 @@ import type {
   ManifestResolver,
   TriggerSubscription,
 } from '@cir/runtime';
+import type { IntentProfile } from '@cir/schemas';
 
 export interface CirRuntimeServices {
   resolver: ManifestResolver;
@@ -33,6 +34,17 @@ export interface CirRuntimeServices {
   audit?: AuditSink;
   /** Identity context — what user/app this provider serves. */
   identity: { user_id: string; app_id: string };
+  /**
+   * The active intent profile for this user. Optional — hosts that haven't
+   * wired the vault / onboarding yet leave it unset. When present, the
+   * `<RenderNode>` walker uses `intent.global_preferences` to default
+   * personalisation props (e.g. `density`) on layout components whose
+   * manifest entry omits them.
+   *
+   * Threaded as a service rather than its own context so a single
+   * `<CirRuntime>` provider remains the only place to wire personalisation.
+   */
+  intent?: IntentProfile;
 }
 
 /**

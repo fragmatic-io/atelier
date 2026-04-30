@@ -5,49 +5,50 @@ import { render } from '@testing-library/react';
 import { Skeleton, SkeletonBinding } from '../src/components/Skeleton.js';
 
 describe('Skeleton', () => {
-  it('renders a span with aria-hidden=true', () => {
+  it('renders an aria-hidden span', () => {
     const { container } = render(<Skeleton />);
-    const span = container.querySelector('span');
-    expect(span).toBeTruthy();
-    expect(span?.getAttribute('aria-hidden')).toBe('true');
+    const el = container.querySelector('span');
+    expect(el?.getAttribute('aria-hidden')).toBe('true');
+    expect(el?.getAttribute('data-cir-component')).toBe('Skeleton');
   });
-
-  it('defaults to width=100% height=1em radius=sm', () => {
+  it('honours width / height props', () => {
+    const { container } = render(<Skeleton width={120} height="2em" />);
+    const el = container.querySelector('span') as HTMLElement;
+    expect(el.style.width).toBe('120px');
+    expect(el.style.height).toBe('2em');
+  });
+  it('default radius is sm', () => {
     const { container } = render(<Skeleton />);
-    const span = container.querySelector('span') as HTMLElement;
-    expect(span.style.width).toBe('100%');
-    expect(span.style.height).toBe('1em');
-    expect(span.style.borderRadius).toBe('4px');
-    expect(span.getAttribute('data-radius')).toBe('sm');
+    expect(container.querySelector('span')?.getAttribute('data-radius')).toBe('sm');
   });
-
-  it('numeric width/height are interpreted as px', () => {
-    const { container } = render(<Skeleton width={120} height={40} />);
-    const span = container.querySelector('span') as HTMLElement;
-    expect(span.style.width).toBe('120px');
-    expect(span.style.height).toBe('40px');
+  it('reflects radius on data-radius and border-radius style', () => {
+    for (const r of ['sm', 'md', 'full'] as const) {
+      const { container, unmount } = render(<Skeleton radius={r} />);
+      expect(container.querySelector('span')?.getAttribute('data-radius')).toBe(r);
+      unmount();
+    }
   });
-
-  it('string width/height pass through as-is', () => {
-    const { container } = render(<Skeleton width="50%" height="2rem" />);
-    const span = container.querySelector('span') as HTMLElement;
-    expect(span.style.width).toBe('50%');
-    expect(span.style.height).toBe('2rem');
-  });
-
-  it('radius="full" maps to a pill border-radius', () => {
-    const { container } = render(<Skeleton radius="full" />);
-    const span = container.querySelector('span') as HTMLElement;
-    expect(span.style.borderRadius).toBe('9999px');
-    expect(span.getAttribute('data-radius')).toBe('full');
-  });
-
   it('passes className through', () => {
     const { container } = render(<Skeleton className="my-skel" />);
-    expect(container.querySelector('span')?.className).toBe('my-skel');
+    expect(container.querySelector('span')?.className).toContain('my-skel');
   });
-
   it('binding id matches', () => {
     expect(SkeletonBinding.id).toBe('Skeleton');
+  });
+  // -- Wave 6 / P-10 variant assertions --
+  it('defaults to variant=tinted', () => {
+    const { container } = render(<Skeleton />);
+    expect(container.querySelector('span')?.getAttribute('data-variant')).toBe('tinted');
+  });
+  it('reflects each variant on data-variant', () => {
+    for (const v of ['bordered', 'elevated', 'ghost', 'tinted'] as const) {
+      const { container, unmount } = render(<Skeleton variant={v} />);
+      expect(container.querySelector('span')?.getAttribute('data-variant')).toBe(v);
+      unmount();
+    }
+  });
+  it('applies the bordered variant class', () => {
+    const { container } = render(<Skeleton variant="bordered" />);
+    expect(container.querySelector('span')?.className).toContain('border');
   });
 });

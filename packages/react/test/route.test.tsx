@@ -2,7 +2,7 @@
 import './setup.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, waitFor } from '@testing-library/react';
-import type { Trigger } from '@cir/schemas';
+import type { IntentProfile, Trigger } from '@cir/schemas';
 import { MapComponentRegistry } from '@cir/runtime/testing';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import { CirRoute } from '../src/render/route.js';
@@ -254,6 +254,172 @@ describe('<CirRoute>', () => {
       expect(spy).not.toHaveBeenCalled();
     }
     spy.mockRestore();
+  });
+
+  it('defaults density on a density-aware component from the intent profile', async () => {
+    const registry = new MapComponentRegistry({
+      Card: {
+        id: 'Card',
+        factory: ({ density, children }: { density?: string; children?: React.ReactNode }) => (
+          <section data-testid="card" data-density={density ?? 'unset'}>
+            {children}
+          </section>
+        ),
+      },
+    });
+    const intent: IntentProfile = {
+      user_id: 'test-user',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: { density: 'compact' },
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+    };
+    const services = buildTestServices({
+      componentRegistry: registry,
+      manifestsByRoute: {
+        '/today': makeManifest({
+          routes: [
+            {
+              path: '/today',
+              title: 'Today',
+              layout: { component: 'Card', children: [] },
+            },
+          ],
+        }),
+      },
+    });
+    services.intent = intent;
+    const { findByTestId } = render(
+      <CirRuntime services={services}>
+        <CirRoute path="/today" />
+      </CirRuntime>,
+    );
+    const card = await findByTestId('card');
+    expect(card.getAttribute('data-density')).toBe('compact');
+  });
+
+  it('manifest density prop wins over the intent default', async () => {
+    const registry = new MapComponentRegistry({
+      Card: {
+        id: 'Card',
+        factory: ({ density, children }: { density?: string; children?: React.ReactNode }) => (
+          <section data-testid="card" data-density={density ?? 'unset'}>
+            {children}
+          </section>
+        ),
+      },
+    });
+    const intent: IntentProfile = {
+      user_id: 'test-user',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: { density: 'compact' },
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+    };
+    const services = buildTestServices({
+      componentRegistry: registry,
+      manifestsByRoute: {
+        '/today': makeManifest({
+          routes: [
+            {
+              path: '/today',
+              title: 'Today',
+              layout: {
+                component: 'Card',
+                props: { density: 'spacious' },
+                children: [],
+              },
+            },
+          ],
+        }),
+      },
+    });
+    services.intent = intent;
+    const { findByTestId } = render(
+      <CirRuntime services={services}>
+        <CirRoute path="/today" />
+      </CirRuntime>,
+    );
+    const card = await findByTestId('card');
+    expect(card.getAttribute('data-density')).toBe('spacious');
+  });
+
+  it('does not attach a density prop to non-density-aware components', async () => {
+    const registry = new MapComponentRegistry({
+      Greeting: {
+        id: 'Greeting',
+        factory: (props: { density?: string; message?: string }) => (
+          <div data-testid="greet" data-density={props.density ?? 'unset'}>
+            {props.message ?? ''}
+          </div>
+        ),
+      },
+    });
+    const intent: IntentProfile = {
+      user_id: 'test-user',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: { density: 'compact' },
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+    };
+    const services = buildTestServices({
+      componentRegistry: registry,
+      manifestsByRoute: {
+        '/today': makeManifest({
+          routes: [
+            {
+              path: '/today',
+              title: 'Today',
+              layout: {
+                component: 'Greeting',
+                props: { message: 'hi' },
+              },
+            },
+          ],
+        }),
+      },
+    });
+    services.intent = intent;
+    const { findByTestId } = render(
+      <CirRuntime services={services}>
+        <CirRoute path="/today" />
+      </CirRuntime>,
+    );
+    const greet = await findByTestId('greet');
+    // Greeting is NOT in DENSITY_AWARE_COMPONENTS so the walker leaves it alone.
+    expect(greet.getAttribute('data-density')).toBe('unset');
+  });
+
+  it('mirrors color_mode preference onto <html data-color-mode>', async () => {
+    const registry = buildRegistry();
+    const intent: IntentProfile = {
+      user_id: 'test-user',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: { color_mode: 'dark' },
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+    };
+    const services = buildTestServices({
+      componentRegistry: registry,
+      manifestsByRoute: { '/today': makeManifest() },
+    });
+    services.intent = intent;
+    render(
+      <CirRuntime services={services}>
+        <CirRoute path="/today" />
+      </CirRuntime>,
+    );
+    await waitFor(() => {
+      expect(document.documentElement.dataset['colorMode']).toBe('dark');
+    });
   });
 
   it('errorFallback fires for non-renderable routes (redirect-only)', async () => {

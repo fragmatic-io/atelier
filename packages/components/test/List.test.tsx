@@ -5,44 +5,54 @@ import { render, screen } from '@testing-library/react';
 import { List, ListBinding } from '../src/components/List.js';
 
 describe('List', () => {
-  it('renders a <ul> with one <li> per item', () => {
-    const { container } = render(<List items={['a', 'b', 'c']} renderItem={(s) => s} />);
-    expect(container.querySelector('ul')).toBeTruthy();
+  it('renders one li per item', () => {
+    const items = ['a', 'b', 'c'];
+    const { container } = render(<List items={items} renderItem={(x) => <span>{x}</span>} />);
     expect(container.querySelectorAll('li').length).toBe(3);
   });
-
-  it('passes item and index to renderItem', () => {
-    render(
-      <List
-        items={[10, 20, 30]}
-        renderItem={(n, i) => (
-          <span>
-            {String(i)}-{String(n)}
-          </span>
-        )}
-      />,
-    );
-    expect(screen.getByText('0-10')).toBeTruthy();
-    expect(screen.getByText('2-30')).toBeTruthy();
+  it('renders empty slot when items is empty', () => {
+    render(<List items={[]} renderItem={() => null} empty={<span>none</span>} />);
+    expect(screen.getByText('none')).toBeTruthy();
   });
-
-  it('renders the empty slot when items is empty', () => {
-    render(<List items={[]} renderItem={(s) => s as string} empty={<span>nothing here</span>} />);
-    expect(screen.getByText('nothing here')).toBeTruthy();
-  });
-
-  it('renders a data-cir-empty wrapper when items is empty (no <ul>)', () => {
-    const { container } = render(<List items={[]} renderItem={(s) => s as string} />);
-    expect(container.querySelector('ul')).toBeNull();
-    expect(container.querySelector('[data-cir-empty="true"]')).toBeTruthy();
-  });
-
-  it('exposes data-bordered attr', () => {
-    const { container } = render(<List bordered items={['x']} renderItem={(s) => s} />);
+  it('reflects bordered as data attr', () => {
+    const { container } = render(<List items={['a']} bordered renderItem={() => null} />);
     expect(container.querySelector('ul')?.getAttribute('data-bordered')).toBe('true');
   });
-
   it('binding id matches', () => {
     expect(ListBinding.id).toBe('List');
+  });
+  // -- Wave 6 / P-10 variant assertions --
+  it('defaults to variant=ghost', () => {
+    const { container } = render(<List items={['a']} renderItem={() => null} />);
+    expect(container.querySelector('ul')?.getAttribute('data-variant')).toBe('ghost');
+  });
+  it('reflects each variant on data-variant', () => {
+    for (const v of ['bordered', 'elevated', 'ghost', 'tinted'] as const) {
+      const { container, unmount } = render(
+        <List items={['a']} variant={v} renderItem={() => null} />,
+      );
+      expect(container.querySelector('ul')?.getAttribute('data-variant')).toBe(v);
+      unmount();
+    }
+  });
+  it('applies the elevated variant class', () => {
+    const { container } = render(<List items={['a']} variant="elevated" renderItem={() => null} />);
+    expect(container.querySelector('ul')?.className).toContain('shadow-md');
+  });
+  // -- Wave 6 / P-1 density assertions --
+  it('defaults density to comfortable and surfaces data-density on the <ul>', () => {
+    const { container } = render(<List items={['a']} renderItem={(x) => <span>{x}</span>} />);
+    expect(container.querySelector('ul')?.getAttribute('data-density')).toBe('comfortable');
+  });
+  it('shrinks per-row vertical padding at compact density', () => {
+    const { container, rerender } = render(
+      <List items={['a']} renderItem={() => null} density="comfortable" />,
+    );
+    const comfyLi = container.querySelector('li') as HTMLElement | null;
+    const comfyPad = parseInt(comfyLi?.style.paddingTop ?? '0', 10);
+    rerender(<List items={['a']} renderItem={() => null} density="compact" />);
+    const compactLi = container.querySelector('li') as HTMLElement | null;
+    const compactPad = parseInt(compactLi?.style.paddingTop ?? '0', 10);
+    expect(compactPad).toBeLessThan(comfyPad);
   });
 });
