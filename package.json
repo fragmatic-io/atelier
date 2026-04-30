@@ -48,6 +48,7 @@
     "fix:license-headers": "tsx scripts/check-license-headers.ts --fix",
     "components:sync": "tsx --tsconfig packages/components/tsconfig.json scripts/sync-component-registry.ts",
     "components:check": "tsx --tsconfig packages/components/tsconfig.json scripts/sync-component-registry.ts --check",
+    "cir": "tsx packages/cli/src/index.ts",
     "schemas:dump": "cir-schemas dump --out .well-known/schemas",
     "validate:data": "cir-schemas validate-data",
     "evals": "cir-evals run",
@@ -56,6 +57,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@cir/cli": "workspace:*",
     "@cir/components": "workspace:*",
     "@cir/demo": "workspace:*",
     "@cir/evals": "workspace:*",

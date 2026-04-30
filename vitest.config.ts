@@ -124,6 +124,16 @@ export default defineConfig({
           branches: 81,
           statements: 95,
         },
+        // @cir/cli (Wave 2 / track P2.5): scaffold for `cir init`, `cir add`,
+        // and shell-out wrappers for dev/validate/components-sync. Modest
+        // bars — most of the package is shell-out glue. Templates and
+        // shell-out wrappers are excluded from coverage.include below.
+        'packages/cli/src/**/*.ts': {
+          lines: 75,
+          functions: 75,
+          branches: 70,
+          statements: 75,
+        },
       },
       include: ['packages/**/src/**/*.{ts,tsx}'],
       exclude: [
@@ -132,7 +142,14 @@ export default defineConfig({
         '**/dist/**',
         '**/node_modules/**',
         '**/*.d.ts',
-        '**/cli/**',
+        // CLI subdirectories of the schemas/evals packages — those CLIs are
+        // tested via spawned subprocess specs (see packages/evals/test/cli.test.ts)
+        // rather than unit tests, so v8 reports 0% line coverage and would
+        // drag aggregates below their per-file ratchets. The standalone
+        // @cir/cli package (packages/cli/) is unit-tested directly and stays
+        // included.
+        'packages/schemas/src/cli/**',
+        'packages/evals/src/cli/**',
         // Re-export barrels and types-only modules carry no executable code;
         // v8 reports 0% which skews the aggregate below per-file thresholds.
         '**/index.ts',
@@ -150,6 +167,15 @@ export default defineConfig({
         // Brand-kit baseline policy is partially implemented — only the
         // detection scaffold is wired; rule evaluation lands in Phase 5b/c.
         'packages/policies/src/baseline/respects_brand_kit.ts',
+        // @cir/cli scaffold: inline templates are pure data (no executable
+        // logic worth measuring) and dev/validate/components-sync are
+        // shell-out wrappers that can't be unit-tested without spawning real
+        // pnpm/next/tsx subprocesses. Re-include in Wave 3+ if we add an
+        // integration suite.
+        'packages/cli/src/templates/**',
+        'packages/cli/src/commands/dev.ts',
+        'packages/cli/src/commands/validate.ts',
+        'packages/cli/src/commands/components-sync.ts',
       ],
     },
   },

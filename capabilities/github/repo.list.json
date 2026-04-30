@@ -1,0 +1,16 @@
+{
+  "id": "github.repo.list",
+  "kind": "data",
+  "version": "0.1.0",
+  "input": {
+    "username": "string"
+  },
+  "output": {
+    "repos": "array<{ id: number, name: string, full_name: string, private: boolean, html_url: string, description: string | null, stargazers_count: number, open_issues_count: number, updated_at: datetime }>"
+  },
+  "side_effects": ["reads:github_repos"],
+  "permissions": ["github:read"],
+  "confirmation": "none",
+  "rate_limit": "60/min/user",
+  "reversible": true
+}

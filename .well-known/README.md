@@ -4,18 +4,22 @@
 
 ## Files
 
-- `cir.json` — the discovery document. Served at `https://{app-host}/.well-known/cir.json` in production.
+- `cir.json` — the discovery document. Served at `https://{app-host}/.well-known/cir.json` in production. It enumerates every capability, skill, policy, and recipe this repo exposes, with relative URLs and versions, so a third-party compiler/agent can crawl the surface without reading code. Currently unschemaed (intentional — the shape is settling). Re-author this file whenever an artifact is added, removed, or version-bumped.
 - `schemas/` — generated JSON Schemas for Capability, Skill, Component, Manifest, Trigger, Intent, Audit, etc. Generated from `@cir/schemas` via `pnpm schemas:dump`. Re-run after any schema change. The golden test in `packages/schemas/test/golden.test.ts` guards against drift.
 
 Shape:
 
 ```json
 {
-  "version": "1.0.0",
-  "capabilities_url": "https://app.example.com/capabilities",
-  "skills_url": "https://app.example.com/skills",
-  "components_url": "https://app.example.com/components",
-  "signature": "..."
+  "version": "0.1.0",
+  "spec_url": "https://github.com/fragmatic-io/cir",
+  "schemas_dir": "/.well-known/schemas/",
+  "components_registry": "/components/registry.json",
+  "capabilities": [{ "id": "...", "version": "...", "url": "..." }],
+  "skills": [{ "name": "...", "version": "...", "url": "..." }],
+  "policies": [{ "id": "...", "url": "..." }],
+  "recipes": [{ "persona": "...", "url": "..." }],
+  "signature": null
 }
 ```
 

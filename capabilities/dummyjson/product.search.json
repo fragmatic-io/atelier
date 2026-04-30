@@ -1,0 +1,18 @@
+{
+  "id": "dummyjson.product.search",
+  "kind": "data",
+  "version": "0.1.0",
+  "input": {
+    "q": "string",
+    "limit": "number"
+  },
+  "output": {
+    "products": "array<{ id: number, title: string, description: string, price: number, rating: number, stock: number, brand: string, category: string, thumbnail: string }>",
+    "total": "number"
+  },
+  "side_effects": ["reads:dummyjson_catalog"],
+  "permissions": ["catalog:read"],
+  "confirmation": "none",
+  "rate_limit": "120/min/user",
+  "reversible": true
+}

@@ -1,0 +1,114 @@
+{
+  "manifest_id": "m_djshopper1",
+  "user_id": "dummyjson-shopper",
+  "app_id": "demo.dummyjson.cir",
+  "compiled_from": {
+    "capability_version": "0.1.0",
+    "skill_versions": {
+      "product-search": "0.1.0",
+      "cart-add": "0.1.0"
+    },
+    "component_catalog_version": "0.1.0",
+    "intent_profile_version": 0,
+    "compiler_model": "recipe-author",
+    "compiled_at": "2026-04-30T00:00:00Z"
+  },
+  "ttl": null,
+  "invalidates_on": [
+    "capability_schema_change:dummyjson.product.list:>=0.2.0",
+    "capability_schema_change:dummyjson.product.search:>=0.2.0",
+    "capability_schema_change:dummyjson.cart.add:>=0.2.0",
+    "skill.version_changed:product-search",
+    "skill.version_changed:cart-add",
+    "explicit_user_request:m_djshopper1"
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "redirect": "/browse"
+    },
+    {
+      "path": "/browse",
+      "title": "Browse",
+      "layout": {
+        "component": "Stack",
+        "children": [
+          {
+            "component": "NavBar",
+            "props": {
+              "title": "Shop",
+              "links": [
+                { "label": "Browse", "href": "/browse" },
+                { "label": "Cart", "href": "/cart" }
+              ]
+            }
+          },
+          {
+            "component": "Container",
+            "children": [
+              {
+                "component": "Search",
+                "props": {
+                  "placeholder": "Search products"
+                }
+              },
+              {
+                "component": "Grid",
+                "data": {
+                  "source": "dummyjson.product.list",
+                  "sort": "rating desc"
+                },
+                "actions": ["dummyjson.cart.add"]
+              },
+              {
+                "component": "EmptyState",
+                "props": {
+                  "title": "No products match",
+                  "body": "Try a different keyword or clear the search."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "refresh": {
+        "data": "on_focus + 600s_interval",
+        "structure": "never_unless_invalidated"
+      }
+    },
+    {
+      "path": "/search",
+      "title": "Search",
+      "layout": {
+        "component": "Stack",
+        "children": [
+          {
+            "component": "Search",
+            "props": {
+              "placeholder": "Search products",
+              "autofocus": true
+            }
+          },
+          {
+            "component": "List",
+            "data": {
+              "source": "dummyjson.product.search",
+              "sort": "rating desc"
+            },
+            "actions": ["dummyjson.cart.add"]
+          }
+        ]
+      },
+      "refresh": {
+        "data": "on_query_change",
+        "structure": "never_unless_invalidated"
+      }
+    }
+  ],
+  "policies_satisfied": [
+    "confirmation_required_for_destructive",
+    "rate_limited_actions_show_state",
+    "reversibility_surfaced",
+    "cart_modifications_rate_limited"
+  ]
+}

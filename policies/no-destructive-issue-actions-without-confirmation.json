@@ -1,0 +1,6 @@
+{
+  "id": "no_destructive_issue_actions_without_confirmation",
+  "description": "GitHub issue mutations (close, create) must declare a non-`none` confirmation level. Any manifest binding `github.issue.close` or `github.issue.create` without a confirmation affordance fails this rule. Mirrors the baseline `confirmation_required_for_destructive` policy in @cir/policies but is scoped to the GitHub capabilities shipped in this repo so app authors can extend it without touching the framework.",
+  "applies_to": "manifest",
+  "severity": "error"
+}

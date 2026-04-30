@@ -1,0 +1,76 @@
+{
+  "version": "0.1.0",
+  "spec_url": "https://github.com/fragmatic-io/cir",
+  "schemas_dir": "/.well-known/schemas/",
+  "components_registry": "/components/registry.json",
+  "capabilities": [
+    {
+      "id": "github.repo.list",
+      "version": "0.1.0",
+      "url": "/capabilities/github/repo.list.json"
+    },
+    {
+      "id": "github.issue.create",
+      "version": "0.1.0",
+      "url": "/capabilities/github/issue.create.json"
+    },
+    {
+      "id": "github.issue.close",
+      "version": "0.1.0",
+      "url": "/capabilities/github/issue.close.json"
+    },
+    {
+      "id": "dummyjson.product.list",
+      "version": "0.1.0",
+      "url": "/capabilities/dummyjson/product.list.json"
+    },
+    {
+      "id": "dummyjson.product.search",
+      "version": "0.1.0",
+      "url": "/capabilities/dummyjson/product.search.json"
+    },
+    {
+      "id": "dummyjson.cart.add",
+      "version": "0.1.0",
+      "url": "/capabilities/dummyjson/cart.add.json"
+    }
+  ],
+  "skills": [
+    {
+      "name": "github-issue-triage",
+      "version": "0.1.0",
+      "url": "/skills/github-issue-triage.skill.md"
+    },
+    {
+      "name": "product-search",
+      "version": "0.1.0",
+      "url": "/skills/product-search.skill.md"
+    },
+    {
+      "name": "cart-add",
+      "version": "0.1.0",
+      "url": "/skills/cart-add.skill.md"
+    }
+  ],
+  "policies": [
+    {
+      "id": "no_destructive_issue_actions_without_confirmation",
+      "url": "/policies/no-destructive-issue-actions-without-confirmation.json"
+    },
+    {
+      "id": "cart_modifications_rate_limited",
+      "url": "/policies/cart-modifications-rate-limited.json"
+    }
+  ],
+  "recipes": [
+    {
+      "persona": "github-reviewer",
+      "url": "/recipes/github-reviewer.json"
+    },
+    {
+      "persona": "dummyjson-shopper",
+      "url": "/recipes/dummyjson-shopper.json"
+    }
+  ],
+  "signature": null
+}

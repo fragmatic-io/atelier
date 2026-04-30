@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@cir/cli':
+        specifier: workspace:*
+        version: link:packages/cli
       '@cir/components':
         specifier: workspace:*
         version: link:packages/components
@@ -165,6 +168,25 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/cli:
+    dependencies:
+      '@cir/components':
+        specifier: workspace:*
+        version: link:../components
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)(lightningcss@1.32.0)
 
   packages/compiler:
     dependencies:
