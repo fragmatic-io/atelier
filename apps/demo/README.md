@@ -83,6 +83,12 @@ Once granted, `/settings/intent` shows the granted lenses with **Revoke this len
 
 > **This is a demo-only localStorage shim, not the production vault.** The shape stored under `cir.demo.intent` validates against `@cir/schemas`'s `IntentProfileSchema` so the swap to a real backend is a one-file change. Look for `TODO(vault):` markers in `apps/demo/lib/intent-store.ts`, `apps/demo/app/onboarding/page.tsx`, and `apps/demo/app/settings/intent/page.tsx` — those are the only places that touch the storage layer.
 
+### LLM-assisted onboarding
+
+Alongside the checkbox flow, the grant screen offers **"Or describe yourself in your own words →"**. That route (`/onboarding/describe`) takes a few sentences ("I review GitHub PRs in the morning, I shop online a lot, I prefer compact UIs and dark mode, I'm wary of automation"), POSTs them to `/api/cir/onboarding/compile`, and lands on `/onboarding/review` with a draft `IntentProfile` filled in. The user edits each field — lenses, rules, vocabulary, density / color mode / automation trust — and clicks **Save profile** to persist it via `saveIntentProfile()`.
+
+> **Privacy posture.** The description is sent to Gemini once and discarded server-side. The route handler (`app/api/cir/onboarding/compile/route.ts`) marks the request body as request-scoped only — it never persists, never logs, never echoes the description anywhere downstream. Only the structured profile flows further, and only after the human gate on `/onboarding/review`. When `GEMINI_API_KEY` is unset, the deterministic `FallbackIntentProfileCompiler` (keyword heuristics in `@cir/compiler`) returns a draft so the flow boots offline.
+
 ## What's still deferred
 
 - Stale-while-revalidate (refresh in background while serving cached)

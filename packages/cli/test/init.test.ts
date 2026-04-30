@@ -26,6 +26,13 @@ describe('runInit()', () => {
     }
   });
 
+  it('emits the DebugPanel import in app/layout.tsx with cir dev --tail hint', async () => {
+    await runInit({ dir: '.', cwd: tmp });
+    const layout = await readFile(join(tmp, 'app/layout.tsx'), 'utf8');
+    expect(layout).toContain("import { DebugPanel } from '@cir/react/debug';");
+    expect(layout).toContain('cir dev --tail');
+  });
+
   it('produces a parseable package.json with the dir name', async () => {
     const target = join(tmp, 'my-app');
     await runInit({ dir: 'my-app', cwd: tmp });

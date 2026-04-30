@@ -11,6 +11,31 @@ The **LLM-backed compile service.** The only LLM-touching component in the hot s
 - Run **diff mode** when a previous manifest exists — produce only the changes (saves 80%+ of tokens).
 - Select the model tier per workload: routine recompile (small/fast), cold compile (large), cross-app workflow (large + extended context), trigger classification (tiny).
 
+## `compileIntentProfile()` — LLM-assisted onboarding
+
+A second, simpler compile entry point: take a user's free-text self-description ("I review GitHub PRs in the morning, I'm wary of automation, I prefer compact UIs") and emit a draft `IntentProfile` for them to review. Used by the demo's `/onboarding/describe` route as an alternative to the checkbox grant flow.
+
+```ts
+import {
+  CompositeIntentProfileCompiler,
+  GeminiIntentProfileCompiler,
+  FallbackIntentProfileCompiler,
+} from '@cir/compiler';
+
+const compiler = new CompositeIntentProfileCompiler([
+  new GeminiIntentProfileCompiler({ apiKey: process.env.GEMINI_API_KEY! }),
+  new FallbackIntentProfileCompiler(),
+]);
+const result = await compiler.compileIntentProfile({
+  description: userText,
+  user_id,
+  capabilities: [], // optionally constrain referenced capability ids
+});
+// result.profile is an IntentProfile DRAFT — never auto-save; show it to the user first.
+```
+
+Three implementations ship: `GeminiIntentProfileCompiler` (LLM, retries once on validation failure), `FallbackIntentProfileCompiler` (deterministic keyword heuristics — runs offline), and `CompositeIntentProfileCompiler` (tries services in order, falls back on throw). The compiler returns a draft; the caller is responsible for the human-review step before persisting.
+
 ## Tier-3 manifest cache: choosing a `ManifestStore`
 
 The compiler service holds Tier-3 (server-side, cross-user) manifest cache state behind the `ManifestStore` interface. Two implementations ship:

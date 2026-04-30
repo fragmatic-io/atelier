@@ -133,6 +133,16 @@ export default function OnboardingPage(): React.JSX.Element {
                     Deny
                   </Button>
                 </>
+              ) : null}
+              {mode === 'choose' ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    router.push('/onboarding/describe');
+                  }}
+                >
+                  Or describe yourself in your own words →
+                </Button>
               ) : (
                 <>
                   <Button

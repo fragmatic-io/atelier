@@ -72,6 +72,11 @@ export default function Page() {
 export function layoutTemplate(): string {
   return `// SPDX-License-Identifier: MIT
 import type { ReactNode } from 'react';
+// <DebugPanel> surfaces a live audit stream + last-compiled-from info in dev.
+// It expects a \`sink\` prop wired to your StreamingAuditSink (typically the
+// same one passed to <CirRuntime>'s \`services.audit\`). For terminal-side
+// observability while you're hacking, run \`cir dev --tail\` in another shell.
+import { DebugPanel } from '@cir/react/debug';
 
 export const metadata = {
   title: 'CIR app',
@@ -79,6 +84,10 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  // Render <DebugPanel sink={...} defaultOpen /> inside your <CirRuntime>
+  // provider tree once you wire the sink. In dev only:
+  //   {process.env.NODE_ENV === 'development' ? <DebugPanel sink={sink} /> : null}
+  void DebugPanel;
   return (
     <html lang="en">
       <body>{children}</body>

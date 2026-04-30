@@ -19,6 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@cir/compiler": "workspace:*",
     "@cir/components": "workspace:*",
     "@cir/schemas": "workspace:*"
   },

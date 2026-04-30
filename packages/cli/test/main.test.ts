@@ -27,6 +27,8 @@ describe('main()', () => {
     expect(out).toContain('add');
     expect(out).toContain('components-sync');
     expect(out).toContain('validate');
+    expect(out).toContain('inspect');
+    expect(out).toContain('compile');
   });
 
   it('prints usage and exits 1 on no args', async () => {

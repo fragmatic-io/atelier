@@ -6,11 +6,13 @@
  * `cir` — unified CIR developer CLI.
  *
  *   cir init [dir]              Scaffold a new CIR app.
- *   cir dev                     Wrapper around `next dev`.
+ *   cir dev [--tail|--tail-only] Wrapper around `next dev`, optional audit tail.
  *   cir add <component>         Copy a baseline component into ./components/.
  *   cir components-sync         Regenerate components/registry.json.
  *   cir validate                Run the validate chain.
  *   cir import openapi <spec>   Generate capabilities from an OpenAPI 3 spec.
+ *   cir inspect <id-or-path>    Pretty-print a manifest.
+ *   cir compile <intent.json>   Offline compile producing a manifest.
  *   cir --help / --version
  *
  * Argv parsing is hand-rolled (no commander/yargs) to match the rest of the
@@ -19,10 +21,12 @@
  */
 
 import { addCommand } from './commands/add.js';
+import { compileCommand } from './commands/compile.js';
 import { componentsSyncCommand } from './commands/components-sync.js';
 import { devCommand } from './commands/dev.js';
 import { importOpenApi } from './commands/import-openapi.js';
 import { initCommand } from './commands/init.js';
+import { inspectCommand } from './commands/inspect.js';
 import { validateCommand } from './commands/validate.js';
 import { parseArgs } from './parse-args.js';
 import { TOP_LEVEL_USAGE } from './usage.js';
@@ -51,6 +55,10 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
       return componentsSyncCommand(positionals, flags);
     case 'validate':
       return validateCommand(positionals, flags);
+    case 'inspect':
+      return inspectCommand(positionals, flags);
+    case 'compile':
+      return compileCommand(positionals, flags);
     case 'import': {
       // `cir import openapi <spec> ...` — the importer parses its own flags,
       // so we slice off `import` and the target word and hand the rest over

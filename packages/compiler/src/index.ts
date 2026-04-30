@@ -39,6 +39,20 @@ export { GeminiCompiler, type GeminiCompilerOptions } from './gemini-compiler.js
 export { FallbackCompiler, type FallbackCompilerOptions } from './fallback-compiler.js';
 export { CompositeCompiler, type CompositeCompilerOptions } from './composite-compiler.js';
 
+// Intent profile compiler (onboarding)
+export {
+  CompositeIntentProfileCompiler,
+  FallbackIntentProfileCompiler,
+  GeminiIntentProfileCompiler,
+  type CompileIntentProfileInput,
+  type CompileIntentProfileResult,
+  type CompositeIntentProfileCompilerOptions,
+  type FallbackIntentProfileCompilerOptions,
+  type GeminiIntentProfileCompilerOptions,
+  type IntentProfileCompileOptions,
+  type IntentProfileCompilerService,
+} from './intent-profile-compiler.js';
+
 // Tier-3 cache
 export {
   MemoryManifestStore,
@@ -63,3 +77,10 @@ export {
 // Prompts (exported for tests / custom compilers / observability)
 export { COMPILER_SYSTEM_PROMPT, COMPILER_SYSTEM_PROMPT_VERSION } from './prompts/system.js';
 export { buildPromptContext, type BuiltPromptContext } from './prompts/builder.js';
+export {
+  buildIntentProfilePrompt,
+  INTENT_PROFILE_SYSTEM_PROMPT,
+  INTENT_PROFILE_SYSTEM_PROMPT_VERSION,
+  type IntentProfilePromptInput,
+  type IntentProfilePromptResult,
+} from './prompts/intent-profile-builder.js';

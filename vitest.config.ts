@@ -132,15 +132,18 @@ export default defineConfig({
           branches: 81,
           statements: 95,
         },
-        // @cir/cli (Wave 2 / track P2.5): scaffold for `cir init`, `cir add`,
-        // and shell-out wrappers for dev/validate/components-sync. Modest
-        // bars — most of the package is shell-out glue. Templates and
-        // shell-out wrappers are excluded from coverage.include below.
+        // @cir/cli (Wave 2 / track P2.5; Wave 4 P-CLI-2 added inspect,
+        // compile, and dev --tail): scaffold + shell-out wrappers + the
+        // unit-testable parsing/loading seams of the new commands.
+        // Templates and pure shell-out wrappers (dev.ts, validate.ts,
+        // components-sync.ts) are excluded from coverage.include below.
+        // Aggregate measured ~85/73/93/85; ratchet ~2 down so a small drop
+        // doesn't break CI but real regressions do.
         'packages/cli/src/**/*.ts': {
-          lines: 75,
-          functions: 75,
+          lines: 83,
+          functions: 90,
           branches: 70,
-          statements: 75,
+          statements: 83,
         },
       },
       include: ['packages/**/src/**/*.{ts,tsx}'],

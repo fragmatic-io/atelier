@@ -253,7 +253,7 @@ pnpm --filter @cir/demo dev
 
 Open DevTools → Console to watch audit events. Try:
 
-0. **First visit** → `/` redirects to `/onboarding`, the permission-grant screen for the lens slices this app needs (`lens.today`, `lens.thread`, `vocabulary.read`). Grant or customize → app proceeds; deny → dead-end stub. Visit `/settings/intent` to see granted lenses and revoke them. Demo-only `localStorage` profile under key `cir.demo.intent`; see `apps/demo/README.md` § "First-run onboarding".
+0. **First visit** → `/` redirects to `/onboarding`, the permission-grant screen for the lens slices this app needs (`lens.today`, `lens.thread`, `vocabulary.read`). Grant or customize → app proceeds; deny → dead-end stub. Visit `/settings/intent` to see granted lenses and revoke them. Demo-only `localStorage` profile under key `cir.demo.intent`; see `apps/demo/README.md` § "First-run onboarding". An optional **"Or describe yourself in your own words →"** path lands on `/onboarding/describe`, which calls `compileIntentProfile()` (Gemini, deterministic fallback) to seed a draft profile for the user to review before saving.
 1. **Click any thread** → navigates to `/thread/{id}` with sanitized markdown bodies (GFM tables, strikethrough)
 2. **Click Archive** → confirmation `<dialog>` opens (capability has `confirmation: 'modal'`)
 3. **Click ↶ Undo** (bottom right) → pops the dispatcher's undo stack and dispatches the rollback
@@ -360,6 +360,8 @@ pnpm --filter @cir/demo build   # Next.js production build
 pnpm --filter @cir/demo dev     # local dev server
 pnpm --filter @cir/demo e2e     # Playwright smoke tests (requires `e2e:install` first)
 ```
+
+**Dev tooling:** `pnpm cir inspect <manifest>` pretty-prints a manifest tree (file path or live id), `pnpm cir compile <intent.json>` runs the offline compiler against on-disk capabilities/components, and `pnpm cir dev --tail` streams audit events from the dev server's `/api/cir/audit/stream` SSE endpoint to your terminal. See [`packages/cli/README.md`](packages/cli/README.md).
 
 > **Note on `validate:data`:** until apps drop their own JSON artifacts under `capabilities/`, `skills/`, `recipes/`, and `policies/`, `cir-schemas validate-data` walks an almost-empty tree (only `components/registry.json` ships in this repo today). A near-zero file count is expected — not a failure.
 
