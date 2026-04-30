@@ -314,6 +314,52 @@ describe('HoverCard', () => {
     expect(hoverCardTextRender({ content: () => 'lazy' })).toBe('[HoverCard]');
   });
 
+  it('aria-label defaults to "Preview" when ariaLabel prop is omitted', () => {
+    // Regression for the Wave 7b default — every existing call site that
+    // never set `ariaLabel` continues to emit `aria-label="Preview"`.
+    render(
+      <HoverCard content="body">
+        <button type="button">trigger</button>
+      </HoverCard>,
+    );
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'trigger' }));
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    const card = document.querySelector('[data-cir-component="HoverCard"]');
+    expect(card?.getAttribute('aria-label')).toBe('Preview');
+  });
+
+  it('aria-label honours a custom ariaLabel prop', () => {
+    render(
+      <HoverCard content="body" ariaLabel="Issue #CIR-123 preview">
+        <button type="button">trigger</button>
+      </HoverCard>,
+    );
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'trigger' }));
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    const card = document.querySelector('[data-cir-component="HoverCard"]');
+    expect(card?.getAttribute('aria-label')).toBe('Issue #CIR-123 preview');
+  });
+
+  it('aria-label honours an explicit empty string (distinct from default)', () => {
+    // `ariaLabel=""` is a host signal that the card should surface no
+    // accessible name — distinct from the implicit default of "Preview".
+    render(
+      <HoverCard content="body" ariaLabel="">
+        <button type="button">trigger</button>
+      </HoverCard>,
+    );
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'trigger' }));
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    const card = document.querySelector('[data-cir-component="HoverCard"]');
+    expect(card?.getAttribute('aria-label')).toBe('');
+  });
+
   it('passes through a non-element child unchanged (no portal)', () => {
     // Mirrors Tooltip's null-safety contract: when the child is not a
     // valid React element we render it verbatim and skip the card

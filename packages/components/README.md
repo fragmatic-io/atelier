@@ -24,6 +24,10 @@ inline actions on a 320px-wide preview surface (350ms open delay /
 with the future Cnt-3 mention / issue auto-resolution work as the
 rendering surface for `#issue` and `@user` previews.
 
+| Prop        | Type     | Default     | Notes                                                                                                                                                                                    |
+| ----------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ariaLabel` | `string` | `'Preview'` | Override the rendered card's `aria-label`. Hosts wiring per-content previews should pass `"Issue #CIR-123 preview"` / `"Profile of Vid"`. Empty string is an explicit "no label" signal. |
+
 **56 components total** — the full baseline catalog enumerated in
 [`docs/component-catalog.md`](../../docs/component-catalog.md). The
 single source of truth for the bindings ships from
@@ -165,6 +169,72 @@ Hosts can target the new state via `[data-pinned="true"]`,
 `[data-cir-part="pinned-separator"]` selectors. React keys are derived
 from each item's source-array index so reconciliation stays stable when a
 single item flips pinned ↔ unpinned.
+
+## Selectable lists, tables, and grids (Wave 7b / Int-9 + Wave 7c / track A)
+
+`List`, `Table`, and `Grid` ship a built-in multi-select integration that
+auto-mounts the floating `<BulkActionBar>` (a portal-rendered, Linear-grade
+action bar) the moment one row is selected. Pass `selectable: true` plus
+`bulkActions` and the bar appears at bottom-center; users can also press
+**Esc** to clear the selection from anywhere.
+
+```tsx
+import { List, type BulkAction } from '@cir/components';
+
+const repos = [
+  { id: 'r1', name: 'cir' },
+  { id: 'r2', name: 'docs' },
+  { id: 'r3', name: 'demo' },
+];
+const actions: readonly BulkAction[] = [
+  { id: 'github.repo.archive', label: 'Archive' },
+  { id: 'github.repo.delete', label: 'Delete', variant: 'destructive' },
+];
+
+<List
+  items={repos}
+  renderItem={(r) => <span>{r.name}</span>}
+  selectable
+  idOf={(r) => r.id}
+  bulkActions={actions}
+  onBulkAction={(actionId) => dispatch(actionId /* ...selectedIds */)}
+/>;
+// As soon as one row is selected, the floating bar appears with
+// "1 selected · Archive · Delete · ×" — Esc or × clears.
+```
+
+The shared selection contract on all three components:
+
+| Prop                | Type                                  | Notes                                                                                                                                 |
+| ------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `selectable`        | `boolean`                             | Master switch. When `false` (default), the component renders identically to a Wave 7a build — no checkboxes, no bar.                  |
+| `idOf`              | `(item, i) => string`                 | Stable id extractor. Defaults to the row index (`String(i)`); `Grid` defaults to `item.id`.                                           |
+| `selectedIds`       | `ReadonlySet<string>`                 | Controlled mode. When supplied, the component reflects this set verbatim and never reads its own state.                               |
+| `onSelectionChange` | `(next: ReadonlySet<string>) => void` | Fires on every checkbox click / shift-click range. Hosts pass an immutable next-state.                                                |
+| `bulkActions`       | `readonly BulkAction[]`               | When supplied AND the selection is non-empty, `<BulkActionBar>` auto-mounts. Omit to render your own bar elsewhere.                   |
+| `onBulkAction`      | `(actionId: string) => void`          | Forwarded from a click on a bar button. The id is the action's `id` field — typically a capability id like `github.issue.bulk_close`. |
+
+Behaviour:
+
+- **Click** toggles a single row.
+- **Shift+Click** range-selects between the last clicked anchor and the new
+  row (the anchor is the last row clicked without Shift; persists across
+  renders until the user clears).
+- **Esc** clears the selection (the bar binds the listener for the
+  lifetime it is mounted, so the shortcut works everywhere).
+- The bar slides up over ~140ms and honours `prefers-reduced-motion: reduce`.
+- The `Table` header gets a **select-all** checkbox in the first column —
+  checked when every visible row is selected, **indeterminate** when only
+  some rows are. Clicking it toggles between "all" and "none".
+- **Pinned items (Nav-3) coexist** — pinned rows / list items get a
+  checkbox just like any other row, and `data-pinned="true"` +
+  `data-selected="true"` can both be true on the same node.
+
+Hosts that prefer to own selection state (e.g. to drive `Cmd/Ctrl+A`,
+or to share one selection across multiple lists) can wire the
+`useMultiSelect()` hook from [`@cir/react`](../react/README.md) and pipe
+its `selected` set straight into `selectedIds` — see the React README for
+a Linear-style sample.
 
 ## `<Sidebar>` collapse persistence (Wave 7b / Nav-2)
 

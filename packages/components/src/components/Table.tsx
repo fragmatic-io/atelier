@@ -16,9 +16,11 @@
  * Wave 7b / Int-9 — opt-in multi-select. When `selectable` is true, the
  * Table prepends a checkbox cell to each row and reflects `data-selected`
  * based on `selectedIds`. Click toggles, Shift+Click range-selects between
- * the last clicked anchor and the new row. With `bulkActions`, a floating
- * `<BulkActionBar>` auto-mounts at bottom-center while the selection is
- * non-empty.
+ * the last clicked anchor and the new row. The header gets a "select-all"
+ * checkbox in that same first column — checked when every visible row is
+ * selected, indeterminate when only some are. With `bulkActions`, a
+ * floating `<BulkActionBar>` auto-mounts at bottom-center while the
+ * selection is non-empty.
  */
 import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
@@ -183,9 +185,34 @@ export function Table({
     emitSelection(new Set<string>());
   };
 
+  // Select-all checkbox in the header — checked when every visible row is in
+  // the selection set, indeterminate when some-but-not-all are selected. The
+  // `ref` callback writes the indeterminate flag because it is not a React
+  // prop. Click toggles between "all rows" and "no rows".
+  const allSelected =
+    selectable && allIds.length > 0 && allIds.every((id) => effectiveSelected.has(id));
+  const someSelected = selectable && !allSelected && allIds.some((id) => effectiveSelected.has(id));
+  const handleSelectAll = (): void => {
+    if (allSelected) {
+      anchorRef.current = null;
+      emitSelection(new Set<string>());
+    } else {
+      anchorRef.current = null;
+      emitSelection(new Set<string>(allIds));
+    }
+  };
   const checkboxHeader = selectable ? (
     <th key="cir-select" scope="col" style={cellStyle} data-cir-part="table-select-header">
-      <span className="sr-only">Select</span>
+      <input
+        type="checkbox"
+        data-cir-part="table-select-all"
+        aria-label="Select all rows"
+        checked={allSelected}
+        ref={(node): void => {
+          if (node) node.indeterminate = someSelected;
+        }}
+        onChange={handleSelectAll}
+      />
     </th>
   ) : null;
   const checkboxCell = (id: string, idx: number, style: CSSProperties): ReactNode => {

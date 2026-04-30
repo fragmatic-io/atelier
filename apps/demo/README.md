@@ -89,6 +89,54 @@ Alongside the checkbox flow, the grant screen offers **"Or describe yourself in 
 
 > **Privacy posture.** The description is sent to Gemini once and discarded server-side. The route handler (`app/api/cir/onboarding/compile/route.ts`) marks the request body as request-scoped only — it never persists, never logs, never echoes the description anywhere downstream. Only the structured profile flows further, and only after the human gate on `/onboarding/review`. When `GEMINI_API_KEY` is unset, the deterministic `FallbackIntentProfileCompiler` (keyword heuristics in `@cir/compiler`) returns a draft so the flow boots offline.
 
+## Live audit stream
+
+The demo exposes the `/api/cir/audit/stream` SSE contract documented in
+[`packages/cli/README.md`](../../packages/cli/README.md) §`cir dev --tail`.
+Anything the server-side `StreamingAuditSink` emits — manifest compiles
+cascading through Gemini → fallback, manifests served from the cache, policy
+evaluations, action dispatches — flows live to any subscriber.
+
+```bash
+# 1) Run the demo (or use `cir dev --tail` which spawns it for you).
+pnpm --filter @cir/demo dev
+
+# 2) Watch the audit stream from the terminal.
+curl -N http://localhost:3000/api/cir/audit/stream
+
+# 3) Or use the CIR CLI's tailer (color-cued severity bands, auto-reconnect).
+pnpm cir dev --tail
+# → spawns `next dev` AND tails the audit stream
+pnpm cir dev --tail-only
+# → assumes the dev server is already running, just tails
+```
+
+Sample frame as written to the wire (one event per blank-line block):
+
+```
+event: manifest.served
+data: {"event_id":"evt_01...","timestamp":"2026-04-30T12:34:56.789Z","type":"manifest.served","actor":"system","manifest_id":"m_a7b3c9d1",...}
+
+event: heartbeat
+data: {}
+```
+
+Heartbeats fire every 15s so a stale TCP connection is detected. The endpoint
+also accepts two optional query filters:
+
+- `?type=action.executed,policy.violated` — comma-separated `AuditEventType`
+  values; only matching events flow through.
+- `?tenant_id=t_x` — narrow to events scoped to that tenant. The demo isn't
+  multi-tenant today so the filter is contract-ready: events without a
+  `tenant_id` are treated as global and pass any tenant filter, matching the
+  semantics every downstream host inherits when it adds tenancy.
+
+Implementation lives in `lib/audit-stream.ts` (testable helper) +
+`app/api/cir/audit/stream/route.ts` (Next.js adapter). The unit tests in
+`test/audit-stream.test.ts` exercise the SSE encoding, both filter modes,
+the heartbeat schedule, and the disconnect-cleanup path without needing
+to spin up Next.js.
+
 ## What's still deferred
 
 - Stale-while-revalidate (refresh in background while serving cached)

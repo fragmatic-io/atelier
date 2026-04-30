@@ -17,10 +17,12 @@
  *    thunk is invoked lazily, only when the card is about to open.
  *  - Renders via `createPortal` to `document.body`.
  *  - ESC closes. Click-outside closes.
- *  - ARIA: `role="dialog"`, `aria-label="Preview"` (overridable via
- *    `className`/host CSS — the prop carries the visible-name semantics
- *    and is overridable through the `aria-label` HTML attribute on the
- *    rendered card if the consumer needs a custom label).
+ *  - ARIA: `role="dialog"`, `aria-label="Preview"` by default. Hosts that
+ *    surface mention previews / issue cards / user cards should override
+ *    this with the `ariaLabel` prop to a meaningful per-content label
+ *    (e.g. `"Issue #CIR-123 preview"` or `"Profile of Vid"`). Empty
+ *    string is honoured as an explicit "no label" host signal — distinct
+ *    from the default.
  *  - Honours `prefers-reduced-motion: reduce` (skips the opacity fade).
  *  - Smart edge-flip positioning, hand-rolled the same way `Tooltip`
  *    flips: per-axis fit test, single-axis flip if the preferred side
@@ -74,6 +76,14 @@ export interface HoverCardProps {
   variant?: HoverCardVariant;
   /** Class string forwarded to the card. */
   className?: string;
+  /**
+   * Override the rendered card's `aria-label`. Defaults to `"Preview"`.
+   * Hosts that surface mention previews, issue cards, or user cards
+   * should pass a per-content label like `"Issue #CIR-123 preview"` or
+   * `"Profile of Vid"`. An empty string is honoured as an explicit "no
+   * label" host signal (distinct from the default).
+   */
+  ariaLabel?: string;
 }
 
 interface Position {
@@ -169,6 +179,7 @@ export function HoverCard({
   width = 320,
   variant = 'default',
   className,
+  ariaLabel,
 }: HoverCardProps): ReactNode {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -343,7 +354,7 @@ export function HoverCard({
             ref={cardRef}
             id={cardId}
             role="dialog"
-            aria-label="Preview"
+            aria-label={ariaLabel ?? 'Preview'}
             data-cir-component="HoverCard"
             data-side={position.side}
             data-variant={variant}

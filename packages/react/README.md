@@ -98,14 +98,15 @@ function App() {
 
 ## Hooks
 
-| Hook                     | Returns                                          | Use                                                                   |
-| ------------------------ | ------------------------------------------------ | --------------------------------------------------------------------- |
-| `useCir()`               | `CirRuntimeServices`                             | Bottom of the bag — every other hook depends on this.                 |
-| `useManifest(path)`      | `{ manifest, isLoading, error, refresh }`        | Resolve a manifest for a route. Re-fetches when path changes.         |
-| `useDispatcher()`        | `(capabilityId, input) => Promise<ActionResult>` | Dispatch a capability with `ctx` auto-wired from identity + manifest. |
-| `useTrigger(type, fn)`   | `void`                                           | Subscribe to a trigger event. Auto-cleanup on unmount.                |
-| `useReactConfirmation()` | `{ confirm, Portal }`                            | Returns a `ConfirmationCallback` + a portal to render somewhere.      |
-| `useOptimisticAction()`  | `{ invoke, busy, toast }`                        | Optimistic-UI wrapper around an action. Auto-detects from capability. |
+| Hook                     | Returns                                          | Use                                                                                      |
+| ------------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `useCir()`               | `CirRuntimeServices`                             | Bottom of the bag — every other hook depends on this.                                    |
+| `useManifest(path)`      | `{ manifest, isLoading, error, refresh }`        | Resolve a manifest for a route. Re-fetches when path changes.                            |
+| `useDispatcher()`        | `(capabilityId, input) => Promise<ActionResult>` | Dispatch a capability with `ctx` auto-wired from identity + manifest.                    |
+| `useTrigger(type, fn)`   | `void`                                           | Subscribe to a trigger event. Auto-cleanup on unmount.                                   |
+| `useReactConfirmation()` | `{ confirm, Portal }`                            | Returns a `ConfirmationCallback` + a portal to render somewhere.                         |
+| `useOptimisticAction()`  | `{ invoke, busy, toast }`                        | Optimistic-UI wrapper around an action. Auto-detects from capability.                    |
+| `useMultiSelect()`       | `{ selected, toggle, selectRange, ... }`         | Stateful multi-select for `<List>` / `<Table>` / `<Grid>`. Pairs with `<BulkActionBar>`. |
 
 ## Optimistic UI — `useOptimisticAction()`
 
@@ -146,6 +147,95 @@ When `capability` is omitted, the hook keeps its pre-Wave-7a behavior
 but lacks either flag, `applyOptimistic` and `rollback` are NOT invoked
 even on failure — the user sees the round-trip via the `busy` state and
 the failure via the toast.
+
+## Multi-select — `useMultiSelect()`
+
+`useMultiSelect()` owns a `Set<TId>` of selected row ids and exposes the
+canonical primitives a host needs to drive a Linear-style multi-select:
+`toggle`, `selectRange`, `selectAll`, `clear`, plus the read-only
+`selected` set and an `isSelected(id)` predicate. The hook pairs with
+the `<List>`, `<Table>`, and `<Grid>` `selectable` / `bulkActions`
+integration shipped from
+[`@cir/components`](../components/README.md#selectable-lists-tables-and-grids-wave-7b--int-9--wave-7c--track-a) —
+just pipe `selected` into the component's `selectedIds` prop.
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { useMultiSelect, useDispatcher } from '@cir/react';
+import { Table, type BulkAction } from '@cir/components';
+
+interface Issue {
+  id: string;
+  title: string;
+  state: 'open' | 'closed';
+}
+
+const ACTIONS: readonly BulkAction[] = [
+  { id: 'github.issue.bulk_close', label: 'Close', confirmation: 'modal' },
+  { id: 'github.issue.bulk_archive', label: 'Archive' },
+  {
+    id: 'github.issue.bulk_delete',
+    label: 'Delete',
+    variant: 'destructive',
+    confirmation: 'modal',
+  },
+];
+
+export function IssueTriage({ issues }: { issues: readonly Issue[] }) {
+  const dispatch = useDispatcher();
+  const ms = useMultiSelect<string>();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Wire Cmd/Ctrl+A → selectAll, Esc → clear at the document root for
+  // the lifetime of this view. `bind` reads `allIds` lazily so the
+  // selection always references the current row set.
+  useEffect(() => {
+    return ms.bind(() => issues.map((i) => i.id));
+  }, [ms, issues]);
+
+  return (
+    <div ref={rootRef}>
+      <Table
+        columns={[
+          { key: 'title', header: 'Title' },
+          { key: 'state', header: 'State' },
+        ]}
+        rows={issues.map((i) => ({ ...i }))}
+        selectable
+        idOf={(row, i) => (typeof row.id === 'string' ? row.id : String(i))}
+        selectedIds={ms.selected}
+        onSelectionChange={(next) => {
+          // Replace the whole set in one shot — the component already
+          // computed the next selection (toggle / shift-range).
+          ms.selectAll(Array.from(next));
+        }}
+        bulkActions={ACTIONS}
+        onBulkAction={async (actionId) => {
+          await dispatch(actionId, { ids: Array.from(ms.selected) });
+          ms.clear();
+        }}
+      />
+    </div>
+  );
+}
+```
+
+The hook's surface:
+
+| Member                          | Returns / Effect                                                                             |
+| ------------------------------- | -------------------------------------------------------------------------------------------- |
+| `selected: ReadonlySet<TId>`    | Read-only view of the current set.                                                           |
+| `isSelected(id)`                | `true` if `id` is in the set.                                                                |
+| `toggle(id)`                    | Add if absent, remove if present.                                                            |
+| `selectRange(from, to, allIds)` | Inclusive range select. `from`/`to` need not be adjacent.                                    |
+| `selectAll(allIds)`             | Replace the set with every id in `allIds`.                                                   |
+| `clear()`                       | Empty the set.                                                                               |
+| `bind(() => allIds)`            | Wire `Cmd/Ctrl+A` (selectAll) and `Esc` (clear) at the document. Returns a cleanup function. |
+
+The selection set is plain `Set<string>` (or your TId union — pass it as
+the type parameter for stronger row-id typing). Components from
+`@cir/components` accept this set verbatim via their `selectedIds`
+prop — no adapter glue required.
 
 ## Confirmation portal
 

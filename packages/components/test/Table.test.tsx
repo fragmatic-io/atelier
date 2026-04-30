@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 import './setup.js';
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { Table, TableBinding } from '../src/components/Table.js';
+import type { BulkAction } from '../src/components/BulkActionBar.js';
 
 const COLS = [
   { key: 'name', header: 'Name' },
@@ -141,6 +142,198 @@ describe('Table', () => {
       const { container } = render(<Table columns={COLS} rows={rows} />);
       expect(container.querySelector('table')?.getAttribute('data-has-pinned')).toBe('false');
       expect(container.querySelectorAll('tbody tr[data-pinned="true"]').length).toBe(0);
+    });
+  });
+  // -- Wave 7c / track A — selectable integration --
+  describe('selectable + bulk actions', () => {
+    const baseRows = [
+      { name: 'Ada', age: 30 },
+      { name: 'Bea', age: 28 },
+      { name: 'Cal', age: 22 },
+      { name: 'Dre', age: 41 },
+    ];
+    const idOf = (row: { name?: unknown }, i: number): string => {
+      return typeof row.name === 'string' ? row.name : String(i);
+    };
+    const actions: readonly BulkAction[] = [
+      { id: 'archive', label: 'Archive' },
+      { id: 'delete', label: 'Delete', variant: 'destructive' },
+    ];
+
+    it('prepends a checkbox cell to each row when selectable=true', () => {
+      const { container } = render(<Table columns={COLS} rows={baseRows} selectable idOf={idOf} />);
+      const cells = container.querySelectorAll('tbody td[data-cir-part="table-select-cell"]');
+      expect(cells.length).toBe(baseRows.length);
+      expect(container.querySelector('table')?.getAttribute('data-selectable')).toBe('true');
+    });
+
+    it('renders a select-all checkbox in the header', () => {
+      const { container } = render(<Table columns={COLS} rows={baseRows} selectable idOf={idOf} />);
+      const headerCheckbox = container.querySelector<HTMLInputElement>(
+        'thead input[data-cir-part="table-select-all"]',
+      );
+      expect(headerCheckbox).not.toBeNull();
+      expect(headerCheckbox?.checked).toBe(false);
+    });
+
+    it('clicking the header select-all selects every visible row', () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <Table
+          columns={COLS}
+          rows={baseRows}
+          selectable
+          idOf={idOf}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const header = container.querySelector<HTMLInputElement>(
+        'thead input[data-cir-part="table-select-all"]',
+      );
+      fireEvent.click(header!);
+      const next = onSelectionChange.mock.calls[0]?.[0] as ReadonlySet<string>;
+      expect(Array.from(next).sort()).toEqual(['Ada', 'Bea', 'Cal', 'Dre']);
+    });
+
+    it('select-all is indeterminate when only some rows are selected', () => {
+      const { container } = render(
+        <Table
+          columns={COLS}
+          rows={baseRows}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['Ada', 'Cal'])}
+        />,
+      );
+      const header = container.querySelector<HTMLInputElement>(
+        'thead input[data-cir-part="table-select-all"]',
+      );
+      expect(header?.checked).toBe(false);
+      expect(header?.indeterminate).toBe(true);
+    });
+
+    it('select-all is checked when every row is selected; clicking it clears', () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <Table
+          columns={COLS}
+          rows={baseRows}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['Ada', 'Bea', 'Cal', 'Dre'])}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const header = container.querySelector<HTMLInputElement>(
+        'thead input[data-cir-part="table-select-all"]',
+      );
+      expect(header?.checked).toBe(true);
+      expect(header?.indeterminate).toBe(false);
+      fireEvent.click(header!);
+      const next = onSelectionChange.mock.calls.at(-1)?.[0] as ReadonlySet<string>;
+      expect(next.size).toBe(0);
+    });
+
+    it('shift-click a row range-selects between the anchor and the new row', () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <Table
+          columns={COLS}
+          rows={baseRows}
+          selectable
+          idOf={idOf}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const checkboxes = container.querySelectorAll<HTMLInputElement>(
+        'tbody input[type="checkbox"]',
+      );
+      fireEvent.click(checkboxes[0]!);
+      fireEvent.click(checkboxes[2]!, { shiftKey: true });
+      const last = onSelectionChange.mock.calls.at(-1)?.[0] as ReadonlySet<string>;
+      expect(Array.from(last).sort()).toEqual(['Ada', 'Bea', 'Cal']);
+    });
+
+    it('reflects controlled selectedIds via data-selected on tr', () => {
+      const { container } = render(
+        <Table
+          columns={COLS}
+          rows={baseRows}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['Bea', 'Dre'])}
+        />,
+      );
+      const trs = container.querySelectorAll('tbody tr');
+      const states = Array.from(trs).map((tr) => tr.getAttribute('data-selected'));
+      expect(states).toEqual(['false', 'true', 'false', 'true']);
+    });
+
+    it('auto-mounts BulkActionBar with bulkActions + selection >= 1', () => {
+      render(
+        <Table
+          columns={COLS}
+          rows={baseRows}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['Ada', 'Bea'])}
+          bulkActions={actions}
+        />,
+      );
+      expect(document.querySelector('[data-cir-component="BulkActionBar"]')).not.toBeNull();
+      expect(screen.getByText('2 selected')).toBeTruthy();
+    });
+
+    it('clicking an action button forwards onBulkAction(id)', () => {
+      const onBulkAction = vi.fn();
+      render(
+        <Table
+          columns={COLS}
+          rows={baseRows}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['Ada'])}
+          bulkActions={actions}
+          onBulkAction={onBulkAction}
+        />,
+      );
+      const deleteBtn = document.querySelector<HTMLButtonElement>('[data-action-id="delete"]');
+      fireEvent.click(deleteBtn!);
+      expect(onBulkAction).toHaveBeenCalledWith('delete');
+    });
+
+    it('Esc on the bar clears the selection (uncontrolled)', () => {
+      const { container } = render(
+        <Table columns={COLS} rows={baseRows} selectable idOf={idOf} bulkActions={actions} />,
+      );
+      const checkboxes = container.querySelectorAll<HTMLInputElement>(
+        'tbody input[type="checkbox"]',
+      );
+      fireEvent.click(checkboxes[0]!);
+      expect(document.querySelector('[data-cir-component="BulkActionBar"]')).not.toBeNull();
+      fireEvent.keyDown(window, { key: 'Escape' });
+      expect(document.querySelector('[data-cir-component="BulkActionBar"]')).toBeNull();
+      const trs = container.querySelectorAll('tbody tr');
+      const states = Array.from(trs).map((tr) => tr.getAttribute('data-selected'));
+      expect(states.every((s) => s === 'false')).toBe(true);
+    });
+
+    it('non-selectable table renders identically (backwards compat)', () => {
+      const { container } = render(<Table columns={COLS} rows={baseRows} />);
+      expect(container.querySelectorAll('td[data-cir-part="table-select-cell"]').length).toBe(0);
+      expect(container.querySelectorAll('input[data-cir-part="table-select-all"]').length).toBe(0);
+      expect(container.querySelector('table')?.getAttribute('data-selectable')).toBe('false');
+    });
+
+    it('selectable + pinned rows coexist (pinned row gets a checkbox cell)', () => {
+      const rows = [
+        { name: 'Pin', age: 99, pinned: true },
+        { name: 'Mid', age: 50 },
+      ];
+      const { container } = render(<Table columns={COLS} rows={rows} selectable idOf={idOf} />);
+      const pinnedTr = container.querySelector('tbody tr[data-pinned="true"]');
+      expect(pinnedTr).not.toBeNull();
+      expect(pinnedTr?.querySelector('td[data-cir-part="table-select-cell"]')).not.toBeNull();
     });
   });
 });

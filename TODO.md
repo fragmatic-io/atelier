@@ -40,7 +40,7 @@ For the historical record of what _did_ land in each phase, see [`docs/build-pla
 
 ### Tooling + observability
 
-- [ ] **Audit endpoint in the demo.** `cir dev --tail` and the `@cir/react/debug` panel both speak the `/api/cir/audit/stream` SSE contract, but the demo doesn't yet expose the endpoint. Demos opt in by implementing the endpoint; spec is in [`packages/cli/README.md`](packages/cli/README.md) §"`cir dev --tail`". Until a demo wires it, the tail CLI is a contract-only surface.
+- [x] **Audit endpoint in the demo.** Landed in Wave 7c track B. `apps/demo/app/api/cir/audit/stream/route.ts` exposes the SSE contract; helper logic + unit tests live in `apps/demo/lib/audit-stream.ts` + `apps/demo/test/audit-stream.test.ts`. `cir dev --tail` and `<DebugPanel>` both connect against a running demo and see live `manifest.compiled` / `manifest.served` / `action.executed` / `policy.violated` events. Filters on `?tenant_id` and `?type=` are wired; multi-tenant demo data isn't seeded yet so the tenant filter is contract-ready rather than load-bearing.
 - [ ] **`@cir/react/debug` host-side experience.** The subpath export is wired and the panel renders; the end-to-end developer experience (drop into a fresh Next.js app, see live events) hasn't been smoke-tested outside the monorepo.
 - [ ] **`cir init` standalone-publish hardening.** Today `cir init` and `cir components-sync` assume the CIR monorepo layout. npm-installable templates and host-project pre-flight are roadmap.
 - [ ] **Vite support in `cir init`.** Hardcoded to Next.js 15 today.

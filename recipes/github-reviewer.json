@@ -84,6 +84,18 @@
           },
           {
             "component": "List",
+            "props": {
+              "selectable": true,
+              "bulkActions": [
+                { "id": "github.issue.create", "label": "New issue" },
+                {
+                  "id": "github.issue.close",
+                  "label": "Close",
+                  "confirmation": "modal",
+                  "variant": "destructive"
+                }
+              ]
+            },
             "data": {
               "source": "github.repo.list",
               "sort": "stargazers_count desc"

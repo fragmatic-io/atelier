@@ -1,8 +1,10 @@
 // @vitest-environment happy-dom
 import './setup.js';
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { List, ListBinding } from '../src/components/List.js';
+import type { BulkAction } from '../src/components/BulkActionBar.js';
 
 describe('List', () => {
   it('renders one li per item', () => {
@@ -152,6 +154,191 @@ describe('List', () => {
       expect(container.querySelector('li[data-pinned="true"]')?.getAttribute('aria-label')).toBe(
         'Pinned',
       );
+    });
+  });
+  // -- Wave 7c / track A — selectable integration --
+  describe('selectable + bulk actions', () => {
+    interface Row {
+      id: string;
+      label: string;
+    }
+    const rows: Row[] = [
+      { id: 'r1', label: 'One' },
+      { id: 'r2', label: 'Two' },
+      { id: 'r3', label: 'Three' },
+      { id: 'r4', label: 'Four' },
+    ];
+    const renderRow = (r: Row): ReactNode => <span>{r.label}</span>;
+    const idOf = (r: Row): string => r.id;
+    const actions: readonly BulkAction[] = [
+      { id: 'archive', label: 'Archive' },
+      { id: 'delete', label: 'Delete', variant: 'destructive' },
+    ];
+
+    it('renders a checkbox in every row when selectable=true', () => {
+      const { container } = render(
+        <List items={rows} renderItem={renderRow} selectable idOf={idOf} />,
+      );
+      const checkboxes = container.querySelectorAll<HTMLInputElement>(
+        'input[data-cir-part="list-checkbox"]',
+      );
+      expect(checkboxes.length).toBe(rows.length);
+      expect(container.querySelector('ul')?.getAttribute('data-selectable')).toBe('true');
+    });
+
+    it('click toggles selection and fires onSelectionChange', () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <List
+          items={rows}
+          renderItem={renderRow}
+          selectable
+          idOf={idOf}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const checkboxes = container.querySelectorAll<HTMLInputElement>(
+        'input[data-cir-part="list-checkbox"]',
+      );
+      fireEvent.click(checkboxes[1]!);
+      const next = onSelectionChange.mock.calls[0]?.[0] as ReadonlySet<string>;
+      expect(Array.from(next)).toEqual(['r2']);
+    });
+
+    it('shift-click range-selects between the anchor and the new row', () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <List
+          items={rows}
+          renderItem={renderRow}
+          selectable
+          idOf={idOf}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const checkboxes = container.querySelectorAll<HTMLInputElement>(
+        'input[data-cir-part="list-checkbox"]',
+      );
+      // First click anchors r1 (uncontrolled local fallback persists the
+      // anchor across renders even when the host doesn't reflect state back).
+      fireEvent.click(checkboxes[0]!);
+      // Shift-click on r3 → expect r1, r2, r3 all selected.
+      fireEvent.click(checkboxes[2]!, { shiftKey: true });
+      const last = onSelectionChange.mock.calls.at(-1)?.[0] as ReadonlySet<string>;
+      expect(Array.from(last).sort()).toEqual(['r1', 'r2', 'r3']);
+    });
+
+    it('reflects controlled selectedIds via data-selected', () => {
+      const selected = new Set<string>(['r2', 'r4']);
+      const { container } = render(
+        <List items={rows} renderItem={renderRow} selectable idOf={idOf} selectedIds={selected} />,
+      );
+      const lis = container.querySelectorAll('li[data-cir-part="list-item"]');
+      const states = Array.from(lis).map((li) => li.getAttribute('data-selected'));
+      expect(states).toEqual(['false', 'true', 'false', 'true']);
+    });
+
+    it('does not auto-mount BulkActionBar with empty selection', () => {
+      render(
+        <List items={rows} renderItem={renderRow} selectable idOf={idOf} bulkActions={actions} />,
+      );
+      expect(document.querySelector('[data-cir-component="BulkActionBar"]')).toBeNull();
+    });
+
+    it('auto-mounts BulkActionBar once selection >= 1 (controlled)', () => {
+      render(
+        <List
+          items={rows}
+          renderItem={renderRow}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['r1'])}
+          bulkActions={actions}
+        />,
+      );
+      const bar = document.querySelector('[data-cir-component="BulkActionBar"]');
+      expect(bar).not.toBeNull();
+      expect(screen.getByText('1 selected')).toBeTruthy();
+    });
+
+    it('clicking an action button forwards onBulkAction(id)', () => {
+      const onBulkAction = vi.fn();
+      render(
+        <List
+          items={rows}
+          renderItem={renderRow}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['r1', 'r2'])}
+          bulkActions={actions}
+          onBulkAction={onBulkAction}
+        />,
+      );
+      const archiveBtn = document.querySelector<HTMLButtonElement>('[data-action-id="archive"]');
+      fireEvent.click(archiveBtn!);
+      expect(onBulkAction).toHaveBeenCalledWith('archive');
+    });
+
+    it('Esc on the bar clears the selection (uncontrolled)', () => {
+      const { container } = render(
+        <List items={rows} renderItem={renderRow} selectable idOf={idOf} bulkActions={actions} />,
+      );
+      const checkboxes = container.querySelectorAll<HTMLInputElement>(
+        'input[data-cir-part="list-checkbox"]',
+      );
+      fireEvent.click(checkboxes[0]!);
+      // Bar mounts because the local fallback persists the selection.
+      expect(document.querySelector('[data-cir-component="BulkActionBar"]')).not.toBeNull();
+      fireEvent.keyDown(window, { key: 'Escape' });
+      // Bar unmounts because the local selection went back to empty.
+      expect(document.querySelector('[data-cir-component="BulkActionBar"]')).toBeNull();
+      // And no row carries data-selected="true" any more.
+      const lis = container.querySelectorAll('li[data-cir-part="list-item"]');
+      const states = Array.from(lis).map((li) => li.getAttribute('data-selected'));
+      expect(states.every((s) => s === 'false')).toBe(true);
+    });
+
+    it('omitted bulkActions never mounts the bar even with selection', () => {
+      render(
+        <List
+          items={rows}
+          renderItem={renderRow}
+          selectable
+          idOf={idOf}
+          selectedIds={new Set(['r1'])}
+        />,
+      );
+      expect(document.querySelector('[data-cir-component="BulkActionBar"]')).toBeNull();
+    });
+
+    it('non-selectable list renders identically (backwards compat)', () => {
+      const { container } = render(<List items={rows} renderItem={renderRow} />);
+      expect(container.querySelectorAll('input[data-cir-part="list-checkbox"]').length).toBe(0);
+      expect(container.querySelector('ul')?.getAttribute('data-selectable')).toBe('false');
+    });
+
+    it('selectable + pinned items coexist (pinned row also gets a checkbox)', () => {
+      interface PinRow {
+        id: string;
+        label: string;
+        pinned?: boolean;
+      }
+      const mixed: PinRow[] = [
+        { id: 'a', label: 'A' },
+        { id: 'b', label: 'B', pinned: true },
+        { id: 'c', label: 'C' },
+      ];
+      const { container } = render(
+        <List
+          items={mixed}
+          renderItem={(it) => <span>{it.label}</span>}
+          selectable
+          idOf={(it) => it.id}
+        />,
+      );
+      const pinnedLi = container.querySelector('li[data-pinned="true"]');
+      expect(pinnedLi).not.toBeNull();
+      expect(pinnedLi?.querySelector('input[data-cir-part="list-checkbox"]')).not.toBeNull();
     });
   });
 });
