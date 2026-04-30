@@ -12,7 +12,11 @@
 import type { ZodSchema } from 'zod';
 import { BrandKitSchema } from '../brand-kit.js';
 import { CapabilitySchema } from '../capability.js';
-import { ComponentDefinitionSchema, ComponentRegistrySchema } from '../component.js';
+import {
+  ComponentDefinitionSchema,
+  ComponentRegistrySchema,
+  CompositionRulesSchema,
+} from '../component.js';
 import { ConversationOverlaySchema, IntentProfileSchema } from '../intent.js';
 import { ManifestSchema, ThreadManifestSchema, TurnDeltaSchema } from '../manifest.js';
 import { PolicySchema } from '../policy.js';
@@ -37,6 +41,7 @@ export const SCHEMA_REGISTRY: readonly RegistryEntry[] = [
   { name: 'capability', schema: CapabilitySchema },
   { name: 'component-definition', schema: ComponentDefinitionSchema },
   { name: 'component-registry', schema: ComponentRegistrySchema },
+  { name: 'composition-rules', schema: CompositionRulesSchema },
   { name: 'conversation-overlay', schema: ConversationOverlaySchema },
   { name: 'intent-profile', schema: IntentProfileSchema },
   { name: 'manifest', schema: ManifestSchema },
@@ -54,18 +59,41 @@ export const SCHEMA_REGISTRY: readonly RegistryEntry[] = [
  * JSON files inside it should validate against. The CLI walks each directory
  * (if it exists) and validates every `*.json` it finds.
  *
+ * `fileOverrides` lets a directory carry sibling files validated against a
+ * different schema. The CLI matches by basename relative to `dir` (e.g.
+ * `'composition-rules.json'`); files not in `fileOverrides` fall through to
+ * the directory's default `schemaName`. Picked this filename-keyed shape
+ * over a glob/pattern engine because the only known multi-shape directory
+ * today is `components/` (`registry.json` + `composition-rules.json`) —
+ * adding pattern machinery would be premature and harder to reason about.
+ * (See `cli/index.ts` `validateData` for the lookup.)
+ *
  * Skill markdown files (`.md`) are handled by `MARKDOWN_DISPATCH` below via
  * `parseSkillMarkdown`. Rare `.json` files inside `skills/` are skipped.
  */
-export const PATH_DISPATCH: ReadonlyArray<{
+export interface PathDispatchEntry {
   /** Directory name (relative). */
   dir: string;
-  /** Registry entry name. */
+  /** Registry entry name applied to every JSON file in `dir` by default. */
   schemaName: string;
-}> = [
+  /**
+   * Per-file overrides keyed by basename relative to `dir` (e.g.
+   * `'composition-rules.json'`). Files in this map are validated against
+   * the named schema instead of `schemaName`.
+   */
+  fileOverrides?: Readonly<Record<string, string>>;
+}
+
+export const PATH_DISPATCH: ReadonlyArray<PathDispatchEntry> = [
   { dir: 'capabilities', schemaName: 'capability' },
   { dir: 'recipes', schemaName: 'manifest' },
-  { dir: 'components', schemaName: 'component-registry' },
+  {
+    dir: 'components',
+    schemaName: 'component-registry',
+    fileOverrides: {
+      'composition-rules.json': 'composition-rules',
+    },
+  },
   { dir: 'policies', schemaName: 'policy' },
 ];
 

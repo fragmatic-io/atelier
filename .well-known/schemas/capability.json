@@ -57,6 +57,37 @@
     },
     "rollback": {
       "$ref": "#/properties/id"
+    },
+    "_review": {
+      "type": "object",
+      "properties": {
+        "needs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "imported_from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "imported_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "importer_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "needs",
+        "imported_from",
+        "imported_at",
+        "importer_version"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [

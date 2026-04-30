@@ -5,6 +5,7 @@ import {
   ComponentDefinitionSchema,
   ComponentRegistrySchema,
   CompositionRuleSchema,
+  CompositionRulesSchema,
 } from '../src/component.ts';
 
 describe('ComponentDefinitionSchema', () => {
@@ -74,5 +75,37 @@ describe('CompositionRuleSchema', () => {
 
   it('rejects unknown can_contain shape', () => {
     expect(() => CompositionRuleSchema.parse({ can_contain: 'Stack' })).toThrow();
+  });
+
+  it("accepts the 'leaf' sentinel for components with no children", () => {
+    // Regression: the schema previously only accepted '*' or an array, but
+    // the `@cir/components` `COMPOSITION_RULES` use 'leaf' to mean "no
+    // children at all" (Markdown, Spinner, every input, …). The catalog
+    // sync would have been blocked from emitting these rules without this
+    // case. See `packages/schemas/src/component.ts` JSDoc on
+    // `CompositionRuleSchema.can_contain`.
+    expect(() => CompositionRuleSchema.parse({ can_contain: 'leaf' })).not.toThrow();
+    const parsed = CompositionRuleSchema.parse({ can_contain: 'leaf' });
+    expect(parsed.can_contain).toBe('leaf');
+  });
+});
+
+describe('CompositionRulesSchema', () => {
+  it('accepts a leaf-heavy bare-record map (Stack/Markdown/Card)', () => {
+    // Round-trip a representative slice of the @cir/components rules through
+    // the schema. The full-registry round-trip lives in
+    // `packages/components/test/registry.test.ts` to avoid a circular
+    // package dependency (`@cir/schemas` cannot depend on
+    // `@cir/components` since `@cir/components` depends on `@cir/schemas`).
+    const map = {
+      Stack: { can_contain: '*' as const, min_children: 1, max_children: 50 },
+      Markdown: { can_contain: 'leaf' as const },
+      Card: { can_contain: ['Stack', 'Grid', 'Markdown'] },
+    };
+    expect(() => CompositionRulesSchema.parse(map)).not.toThrow();
+    const parsed = CompositionRulesSchema.parse(map);
+    expect(parsed['Stack']?.can_contain).toBe('*');
+    expect(parsed['Markdown']?.can_contain).toBe('leaf');
+    expect(Array.isArray(parsed['Card']?.can_contain)).toBe(true);
   });
 });

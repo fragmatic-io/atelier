@@ -61,6 +61,11 @@ export type ComponentRegistry = z.infer<typeof ComponentRegistrySchema>;
  *
  * `can_contain`:
  *   - `'*'` means "any component" (e.g. `Stack`)
+ *   - `'leaf'` means "no children at all" — the component owns its own internal
+ *     markup or consumes its data via props (e.g. `Markdown`, `Spinner`,
+ *     `Table`, every input). Distinct from `'*'`: `'leaf'` is a hard "no
+ *     manifest children allowed" sentinel that mirrors
+ *     `@cir/components/src/registry.ts` `COMPOSITION_RULES`.
  *   - an array means "only these components" (e.g. `Form` only contains inputs)
  *
  * `props` describes ALLOWED VALUES for prop names — not types. e.g.
@@ -69,7 +74,7 @@ export type ComponentRegistry = z.infer<typeof ComponentRegistrySchema>;
  * enumeration the compiler picks from.
  */
 export const CompositionRuleSchema = z.object({
-  can_contain: z.union([z.literal('*'), z.array(ComponentId)]),
+  can_contain: z.union([z.literal('*'), z.literal('leaf'), z.array(ComponentId)]),
   min_children: z.number().int().nonnegative().optional(),
   max_children: z.number().int().nonnegative().optional(),
   props: z.record(z.string(), z.array(z.string())).optional(),

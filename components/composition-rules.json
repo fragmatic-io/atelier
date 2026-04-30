@@ -1,0 +1,174 @@
+{
+  "Accordion": {
+    "can_contain": "*"
+  },
+  "ActionMenu": {
+    "can_contain": "leaf"
+  },
+  "Alert": {
+    "can_contain": "leaf"
+  },
+  "Breadcrumb": {
+    "can_contain": "leaf"
+  },
+  "Button": {
+    "can_contain": "leaf"
+  },
+  "ButtonGroup": {
+    "can_contain": "*"
+  },
+  "Calendar": {
+    "can_contain": "leaf"
+  },
+  "Card": {
+    "can_contain": ["Stack", "Grid", "Markdown", "Table", "EmptyState"]
+  },
+  "Chart": {
+    "can_contain": "leaf"
+  },
+  "ChatThread": {
+    "can_contain": "leaf"
+  },
+  "CodeEditor": {
+    "can_contain": "leaf"
+  },
+  "CodeView": {
+    "can_contain": "leaf"
+  },
+  "CommandPalette": {
+    "can_contain": "leaf"
+  },
+  "ConfirmDialog": {
+    "can_contain": "leaf"
+  },
+  "Container": {
+    "can_contain": "*"
+  },
+  "DateInput": {
+    "can_contain": "leaf"
+  },
+  "DetailView": {
+    "can_contain": "leaf"
+  },
+  "DiffView": {
+    "can_contain": "leaf"
+  },
+  "Drawer": {
+    "can_contain": "*"
+  },
+  "EmptyState": {
+    "can_contain": "leaf"
+  },
+  "FileUpload": {
+    "can_contain": "leaf"
+  },
+  "FilterBar": {
+    "can_contain": "leaf"
+  },
+  "Form": {
+    "can_contain": "*"
+  },
+  "Gallery": {
+    "can_contain": "leaf"
+  },
+  "Grid": {
+    "can_contain": "*"
+  },
+  "KPIRow": {
+    "can_contain": "leaf"
+  },
+  "Kanban": {
+    "can_contain": "leaf"
+  },
+  "List": {
+    "can_contain": "*"
+  },
+  "Map": {
+    "can_contain": "leaf"
+  },
+  "Markdown": {
+    "can_contain": "leaf"
+  },
+  "Modal": {
+    "can_contain": "*"
+  },
+  "MultiSelect": {
+    "can_contain": "leaf"
+  },
+  "NavBar": {
+    "can_contain": "leaf"
+  },
+  "NumberInput": {
+    "can_contain": "leaf"
+  },
+  "Pagination": {
+    "can_contain": "leaf"
+  },
+  "Progress": {
+    "can_contain": "leaf"
+  },
+  "RichText": {
+    "can_contain": "leaf"
+  },
+  "Search": {
+    "can_contain": "leaf"
+  },
+  "Select": {
+    "can_contain": "leaf"
+  },
+  "Sidebar": {
+    "can_contain": "leaf"
+  },
+  "Skeleton": {
+    "can_contain": "leaf"
+  },
+  "Slider": {
+    "can_contain": "leaf"
+  },
+  "Spinner": {
+    "can_contain": "leaf"
+  },
+  "Split": {
+    "can_contain": "*",
+    "max_children": 2,
+    "min_children": 2
+  },
+  "Stack": {
+    "can_contain": "*",
+    "max_children": 50,
+    "min_children": 1
+  },
+  "StatCard": {
+    "can_contain": "leaf"
+  },
+  "Stepper": {
+    "can_contain": "leaf"
+  },
+  "Table": {
+    "can_contain": "leaf"
+  },
+  "Tabs": {
+    "can_contain": "*"
+  },
+  "TextInput": {
+    "can_contain": "leaf"
+  },
+  "TimeInput": {
+    "can_contain": "leaf"
+  },
+  "Timeline": {
+    "can_contain": "leaf"
+  },
+  "Toast": {
+    "can_contain": "leaf"
+  },
+  "Toggle": {
+    "can_contain": "leaf"
+  },
+  "Tree": {
+    "can_contain": "leaf"
+  },
+  "Wizard": {
+    "can_contain": "leaf"
+  }
+}

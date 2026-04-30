@@ -37,8 +37,10 @@ export {
   CapabilitySchema,
   KNOWN_SIDE_EFFECTS,
   Permission,
+  ReviewEnvelopeSchema,
   SideEffect,
   type Capability,
+  type ReviewEnvelope,
 } from './capability.js';
 
 // -----------------------------------------------------------------------------

@@ -146,6 +146,10 @@ and generated files) must start with an SPDX header:
 The check runs as part of `pnpm validate`. Run `pnpm fix:license-headers` to
 auto-insert the header into any file that lacks it.
 
+## CI / evals
+
+PR CI runs `pnpm validate` (license, typecheck, lint, format, data, tests). The end-to-end Gemini smoke (`evals/end-to-end/gemini-smoke.eval.ts`) skips on PR runs because the `GEMINI_API_KEY` secret is unavailable to forks. A nightly workflow (`.github/workflows/nightly-evals.yml`) runs the same eval against the real key — auth failures (revoked / expired key) surface as `auth_failed: true` and fail the job loudly rather than skipping silently.
+
 ## Forbidden patterns
 
 - Hardcoded UI in the runtime that bypasses manifests

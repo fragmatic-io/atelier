@@ -364,6 +364,8 @@ pnpm --filter @cir/demo e2e     # Playwright smoke tests (requires `e2e:install`
 > **Note on `validate:data`:** until apps drop their own JSON artifacts under `capabilities/`, `skills/`, `recipes/`, and `policies/`, `cir-schemas validate-data` walks an almost-empty tree (only `components/registry.json` ships in this repo today). A near-zero file count is expected — not a failure.
 
 > **End-to-end Gemini smoke:** `evals/end-to-end/gemini-smoke.eval.ts` runs when `GEMINI_API_KEY` is set; it skips otherwise. Filter with `pnpm exec cir-evals run --tag smoke`.
+>
+> **Nightly real-Gemini coverage** runs from [`.github/workflows/nightly-evals.yml`](.github/workflows/nightly-evals.yml) against the `GEMINI_API_KEY` repo secret. PR CI skips it (no key); the nightly catches drift — and if the key is revoked or invalid, the eval surfaces `auth_failed: true` and the workflow exits non-zero (silent skip is treated as a regression).
 
 Each phase ends with `pnpm validate` exiting 0 and the existing demo continuing to work.
 

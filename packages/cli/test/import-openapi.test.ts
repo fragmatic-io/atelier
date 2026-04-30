@@ -230,4 +230,236 @@ describe('cir import openapi', () => {
     const specPath = await writeSpec(workDir, swaggerSpec, 'swagger.json');
     await expect(importOpenApi([specPath, '--out', outDir])).rejects.toThrow(/2\.0|Swagger/);
   });
+
+  // ---------------------------------------------------------------------------
+  // Wave 4 P-Imp-4: _review envelope + PII detection + .review.md sidecars +
+  // --strict gate. The importer now writes every capability as a draft.
+  // ---------------------------------------------------------------------------
+
+  it('imported capability includes a _review envelope with the 5 baseline needs', async () => {
+    const specPath = await writeSpec(workDir, petstoreFixture());
+    await importOpenApi([specPath, '--out', outDir]);
+    const cap = await readCapability(join(outDir, 'pets', 'create.json'));
+    expect(cap._review).toBeDefined();
+    const review = cap._review;
+    if (!review) throw new Error('expected _review');
+    // The 5 baseline entries must all be present (PII matches may add more).
+    for (const needed of [
+      'side_effects',
+      'permissions',
+      'confirmation',
+      'reversible',
+      'rate_limit',
+    ]) {
+      expect(review.needs, `missing baseline need: ${needed}`).toContain(needed);
+    }
+    // The envelope metadata is fully populated.
+    expect(review.imported_from).toMatch(/^openapi:/);
+    expect(review.imported_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(review.importer_version.length).toBeGreaterThan(0);
+  });
+
+  it('detects PII property names and adds pii:input.* entries to _review.needs', async () => {
+    // POST /users with email, ssn, password should yield three PII needs.
+    const piiSpec = {
+      openapi: '3.0.4',
+      info: { title: 'pii', version: '1.0.0' },
+      components: {
+        schemas: {
+          User: {
+            type: 'object',
+            properties: {
+              email: { type: 'string' },
+              ssn: { type: 'string' },
+              password: { type: 'string' },
+              item_count: { type: 'integer' },
+            },
+          },
+        },
+      },
+      paths: {
+        '/users': {
+          post: {
+            operationId: 'createUser',
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/User' } },
+              },
+            },
+            responses: {
+              '201': {
+                description: 'created',
+                content: {
+                  'application/json': { schema: { $ref: '#/components/schemas/User' } },
+                },
+              },
+            },
+            security: [{ basic: ['users:write'] }],
+          },
+        },
+      },
+    };
+    const specPath = await writeSpec(workDir, piiSpec, 'pii.json');
+    await importOpenApi([specPath, '--out', outDir]);
+    const cap = await readCapability(join(outDir, 'users', 'create.json'));
+    expect(cap._review?.needs).toEqual(
+      expect.arrayContaining(['pii:input.email', 'pii:input.ssn', 'pii:input.password']),
+    );
+    // item_count must NOT match — it isn't on the wordlist.
+    expect(cap._review?.needs.some((n) => n.includes('item_count'))).toBe(false);
+  });
+
+  it('PII detector ignores non-PII property names like mail_template / total_amount', async () => {
+    const benignSpec = {
+      openapi: '3.0.4',
+      info: { title: 'benign', version: '1.0.0' },
+      paths: {
+        '/notifications': {
+          post: {
+            operationId: 'sendNotification',
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      mail_template: { type: 'string' },
+                      item_count: { type: 'integer' },
+                      total_amount: { type: 'number' },
+                    },
+                  },
+                },
+              },
+            },
+            responses: { '202': { description: 'queued' } },
+            security: [{ basic: ['notify:send'] }],
+          },
+        },
+      },
+    };
+    const specPath = await writeSpec(workDir, benignSpec, 'benign.json');
+    await importOpenApi([specPath, '--out', outDir]);
+    // operationId `sendNotification` is split to tokens ['send','notification'];
+    // `send` is not in the verb set, so the id stays in declaration order
+    // -> 'send.notification', and the file path is <resource>/<last-segment>.json
+    // = notifications/notification.json.
+    const cap = await readCapability(join(outDir, 'notifications', 'notification.json'));
+    // No `pii:` entries — only the 5 baseline.
+    const piiNeeds = cap._review?.needs.filter((n) => n.startsWith('pii:')) ?? [];
+    expect(piiNeeds).toEqual([]);
+  });
+
+  it('writes a .review.md sidecar next to every emitted JSON', async () => {
+    const specPath = await writeSpec(workDir, petstoreFixture());
+    await importOpenApi([specPath, '--out', outDir]);
+    for (const stem of ['pets/list', 'pets/create', 'pets/delete']) {
+      const md = join(outDir, `${stem}.review.md`);
+      expect(existsSync(md), `missing sidecar ${md}`).toBe(true);
+      const content = await readFile(md, 'utf8');
+      expect(content).toMatch(/Source:.*openapi:/);
+      expect(content).toMatch(/## Reviewer checklist/);
+      expect(content).toMatch(/- \[ \] side_effects/);
+      expect(content).toMatch(/How to clear this draft/);
+    }
+  });
+
+  it('--strict refuses to import when PII is detected (exit non-zero, no files written)', async () => {
+    const piiSpec = {
+      openapi: '3.0.4',
+      info: { title: 'pii', version: '1.0.0' },
+      paths: {
+        '/users': {
+          post: {
+            operationId: 'createUser',
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: { email: { type: 'string' } },
+                  },
+                },
+              },
+            },
+            responses: {
+              '201': {
+                description: 'created',
+                content: {
+                  'application/json': {
+                    schema: { type: 'object', properties: { id: { type: 'integer' } } },
+                  },
+                },
+              },
+            },
+            security: [{ basic: ['users:write'] }],
+          },
+        },
+      },
+    };
+    const specPath = await writeSpec(workDir, piiSpec, 'pii-strict.json');
+    await expect(importOpenApi([specPath, '--out', outDir, '--strict'])).rejects.toThrow(
+      /--strict refused/,
+    );
+    // No files written.
+    expect(existsSync(join(outDir, 'users', 'create.json'))).toBe(false);
+    expect(existsSync(join(outDir, 'users', 'create.review.md'))).toBe(false);
+  });
+
+  it('--strict refuses to import when a non-GET op has no security', async () => {
+    const noSecSpec = {
+      openapi: '3.0.4',
+      info: { title: 'nosec', version: '1.0.0' },
+      paths: {
+        '/widgets': {
+          post: {
+            operationId: 'createWidget',
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: { type: 'object', properties: { label: { type: 'string' } } },
+                },
+              },
+            },
+            responses: {
+              '201': {
+                description: 'created',
+                content: {
+                  'application/json': {
+                    schema: { type: 'object', properties: { id: { type: 'integer' } } },
+                  },
+                },
+              },
+            },
+            // NO security declared
+          },
+        },
+      },
+    };
+    const specPath = await writeSpec(workDir, noSecSpec, 'nosec.json');
+    await expect(importOpenApi([specPath, '--out', outDir, '--strict'])).rejects.toThrow(
+      /--strict refused/,
+    );
+    expect(existsSync(join(outDir, 'widgets', 'create.json'))).toBe(false);
+  });
+
+  it('matchesPii export is exhaustive on the wordlist boundary', async () => {
+    // Sanity sweep that camel/snake forms match and non-PII names do not.
+    const { matchesPii } = await import('../src/commands/import-openapi.ts');
+    expect(matchesPii('email')).toBe('email');
+    expect(matchesPii('userEmail')).toBe('email');
+    expect(matchesPii('email_address')).toBe('email');
+    expect(matchesPii('EmailAddress')).toBe('email');
+    expect(matchesPii('mail_template')).toBeNull();
+    expect(matchesPii('item_count')).toBeNull();
+    // `first_name` and `firstName` both match — the wordlist is scanned in
+    // declaration order, and `name` precedes `first_name`, so the first hit
+    // is `name`. We assert the match is non-null rather than the specific
+    // token so wordlist reorderings don't bounce this test.
+    expect(matchesPii('first_name')).not.toBeNull();
+    expect(matchesPii('firstName')).not.toBeNull();
+  });
 });

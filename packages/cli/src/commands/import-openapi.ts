@@ -3,19 +3,32 @@
 /**
  * `cir import openapi <spec>` — generate CIR capabilities from an OpenAPI 3.x spec.
  *
- * The OpenAPI importer reads an OpenAPI 3.x spec and emits one CIR
- * capability per operation under the chosen output directory. Output is
- * schema-validated; failures are skipped with a warning. The result is a
- * starting point — review side_effects, permissions, confirmation, and
- * rate_limit before committing.
+ * The OpenAPI importer reads an OpenAPI 3.x spec and emits one CIR capability
+ * per operation under the chosen output directory. Every imported capability
+ * is written as a DRAFT — it carries a `_review` envelope listing the
+ * heuristic decisions (side_effects, permissions, confirmation, reversible,
+ * rate_limit) that a human must audit, plus any property names that matched
+ * the PII wordlist. CI's `cir-schemas validate-data --strict` refuses to
+ * merge any capability with a non-empty `_review.needs` list.
+ *
+ * Alongside each `<resource>/<verb>.json` the importer also writes a
+ * `<resource>/<verb>.review.md` sidecar — a checklist a reviewer ticks off
+ * while clearing the draft. When the JSON is updated and the `_review` field
+ * removed, delete the sidecar.
  *
  * Usage:
  *
- *   cir import openapi <spec-url-or-path> [--out capabilities/] [--dry-run] [--force]
+ *   cir import openapi <spec-url-or-path> [--out capabilities/] [--dry-run] [--force] [--strict]
  *
  *   --out <dir>     Output directory (default: capabilities/).
  *   --dry-run       Print the planned files without writing any.
  *   --force         Overwrite existing files. Default skips with a warning.
+ *                   --force also overwrites the sibling `.review.md`.
+ *   --strict        Refuse to import on any of: missing `security` for non-GET
+ *                   operations, ANY PII match, or ambiguous side_effects
+ *                   (operation has no `responses`, unrecognized method).
+ *                   Use in regulated codepaths to block risky imports outright.
+ *                   Default behavior is to warn and write the draft.
  *
  * Mapping (OpenAPI operation -> CIR Capability):
  *
@@ -36,9 +49,13 @@
  *  - rate_limit    'x-rate-limit' extension if present, else '100/min/user'.
  *  - reversible    PUT -> true, DELETE/POST/PATCH -> false, GET -> true.
  *  - rollback      'x-rollback-operation' extension if present, else omitted.
+ *  - _review       always populated for imported capabilities — see
+ *                  `BASELINE_REVIEW_NEEDS` plus any PII matches. The runtime
+ *                  ignores this field; CI gates against non-empty `needs`.
  *
  * These are heuristics. Operators must hand-tune `side_effects`, `permissions`,
- * `confirmation`, and `rate_limit` before committing the generated files.
+ * `confirmation`, `reversible`, and `rate_limit` before committing the
+ * generated files. The `.review.md` sidecar lists what to audit.
  *
  * Agent F integration: wire from src/index.ts as:
  *   if (cmd === 'import' && argv[1] === 'openapi') return importOpenApi(argv.slice(2));
@@ -51,7 +68,101 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 
-import { CapabilitySchema, type Capability } from '@cir/schemas';
+import { CapabilitySchema, type Capability, type ReviewEnvelope } from '@cir/schemas';
+
+import { readCliVersion } from '../version.js';
+
+// -----------------------------------------------------------------------------
+// PII detector wordlist.
+//
+// Substring, case-insensitive matches against PROPERTY NAMES in input/output.
+// Word-boundary regex ensures `email` matches `userEmail` (camelCase) and
+// `email_address` (snake) but NOT `mail_template` (no `email` token boundary).
+//
+// Exported so future callers (e.g. Wave 4 P-CLI-2's `cir compile`) can reuse
+// the same wordlist without forking it. Keep the list short, obvious, and
+// conservative — false positives are easier to live with than false negatives.
+// -----------------------------------------------------------------------------
+
+export const PII_TOKENS = [
+  'email',
+  'phone',
+  'ssn',
+  'dob',
+  'date_of_birth',
+  'birth_date',
+  'address',
+  'street',
+  'zip',
+  'postal',
+  'card',
+  'cvv',
+  'card_number',
+  'pan',
+  'password',
+  'auth_token',
+  'api_key',
+  'secret',
+  'session_token',
+  'ip',
+  'ip_address',
+  'user_agent',
+  'name',
+  'first_name',
+  'last_name',
+  'full_name',
+  'gender',
+  'race',
+  'ethnicity',
+] as const;
+
+/**
+ * Always-on `_review.needs` entries for imported capabilities.
+ *
+ * Every imported capability ships with these — they reflect heuristic
+ * decisions the importer cannot validate. PII matches and other dynamic
+ * entries are appended.
+ */
+export const BASELINE_REVIEW_NEEDS = [
+  'side_effects',
+  'permissions',
+  'confirmation',
+  'reversible',
+  'rate_limit',
+] as const;
+
+/**
+ * Build the PII matcher regexes once. Each token is wrapped with `\b` word
+ * boundaries on either side. We also treat camelCase transitions as word
+ * boundaries by splitting candidate names before matching (see `matchesPii`).
+ */
+const PII_MATCHERS: ReadonlyArray<{ token: string; re: RegExp }> = PII_TOKENS.map((t) => ({
+  token: t,
+  // Underscores are word chars; we match on a NORMALIZED form (camel split to
+  // snake) so `email` boundary works against `userEmail` -> `user_email`.
+  re: new RegExp(`(?:^|_)${t}(?:$|_)`, 'i'),
+}));
+
+/** Convert `userEmailAddress` to `user_email_address` for boundary matching. */
+function normalizePropName(name: string): string {
+  return name
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+    .toLowerCase();
+}
+
+/**
+ * Returns the matched PII token if `name` matches the PII wordlist, else null.
+ * Match is on a normalized snake_case form so `userEmail`, `email_address`,
+ * and `EmailAddress` all match `email`, while `mail_template` does not.
+ */
+export function matchesPii(name: string): string | null {
+  const normalized = normalizePropName(name);
+  for (const { token, re } of PII_MATCHERS) {
+    if (re.test(normalized)) return token;
+  }
+  return null;
+}
 
 // -----------------------------------------------------------------------------
 // Minimal hand-rolled OpenAPI 3.x types — only the bits the importer needs.
@@ -137,6 +248,7 @@ interface ImportArgs {
   out: string;
   dryRun: boolean;
   force: boolean;
+  strict: boolean;
   help: boolean;
 }
 
@@ -145,6 +257,7 @@ function parseImportArgs(args: readonly string[]): ImportArgs {
   let out = 'capabilities';
   let dryRun = false;
   let force = false;
+  let strict = false;
   let help = false;
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
@@ -159,6 +272,10 @@ function parseImportArgs(args: readonly string[]): ImportArgs {
     }
     if (a === '--force') {
       force = true;
+      continue;
+    }
+    if (a === '--strict') {
+      strict = true;
       continue;
     }
     if (a === '--out') {
@@ -181,7 +298,7 @@ function parseImportArgs(args: readonly string[]): ImportArgs {
       spec = a;
     }
   }
-  return { spec, out, dryRun, force, help };
+  return { spec, out, dryRun, force, strict, help };
 }
 
 // -----------------------------------------------------------------------------
@@ -444,10 +561,78 @@ function gatherPermissions(operation: OpenApiOperation): string[] {
   return Array.from(out).sort();
 }
 
+/**
+ * Walk every property name on a schema (recursively flattening $refs and
+ * `allOf`/`oneOf`/`anyOf` shallowly) and yield each name once. Used by the
+ * PII detector and the heuristic reporter.
+ */
+function collectPropertyNames(
+  schema: OpenApiSchema | undefined,
+  spec: OpenApiSpec,
+  seen: Set<string>,
+  out: Set<string>,
+): void {
+  const s = flatten(schema, spec, seen);
+  if (!s) return;
+  if (s.properties) {
+    for (const [name, prop] of Object.entries(s.properties)) {
+      if (typeof name === 'string' && name.length > 0) out.add(name);
+      collectPropertyNames(prop, spec, new Set(seen), out);
+    }
+  }
+  if (s.items) collectPropertyNames(s.items, spec, new Set(seen), out);
+  for (const composer of [s.allOf, s.oneOf, s.anyOf]) {
+    if (Array.isArray(composer)) {
+      for (const sub of composer) collectPropertyNames(sub, spec, new Set(seen), out);
+    }
+  }
+}
+
+/**
+ * Detect PII properties on input + output schemas. Returns the matches with
+ * their location ("input" / "output") and the wordlist token that matched.
+ */
+interface PiiMatch {
+  location: 'input' | 'output';
+  property: string;
+  token: string;
+}
+
+function detectPii(inputProps: Iterable<string>, outputProps: Iterable<string>): PiiMatch[] {
+  const out: PiiMatch[] = [];
+  for (const p of inputProps) {
+    const t = matchesPii(p);
+    if (t) out.push({ location: 'input', property: p, token: t });
+  }
+  for (const p of outputProps) {
+    const t = matchesPii(p);
+    if (t) out.push({ location: 'output', property: p, token: t });
+  }
+  return out;
+}
+
 interface BuildResult {
   capability: Capability;
   /** Path relative to the output dir, e.g. `pet/list.json`. */
   relativePath: string;
+  /** PII matches found while walking the operation schemas. */
+  piiMatches: PiiMatch[];
+  /** Heuristic decisions made — used to render the .review.md sidecar. */
+  heuristics: HeuristicDecision[];
+  /** Whether the operation declared `security`. */
+  hasSecurity: boolean;
+  /** Whether the operation declared `responses`. */
+  hasResponses: boolean;
+  /** HTTP method (lowercase). */
+  method: string;
+  /** OpenAPI path string. */
+  path: string;
+}
+
+interface HeuristicDecision {
+  field: string;
+  value: string;
+  rationale: string;
 }
 
 function buildCapability(
@@ -456,6 +641,7 @@ function buildCapability(
   operation: OpenApiOperation,
   pathItem: OpenApiPathItem,
   spec: OpenApiSpec,
+  reviewBase: Omit<ReviewEnvelope, 'needs'>,
 ): BuildResult {
   const id = deriveId(method, path, operation.operationId);
   const resource = deriveResource(path);
@@ -477,6 +663,16 @@ function buildCapability(
   // Output: 2xx body.
   const respSchema = pickResponseSchema(operation.responses, spec, new Set());
   const output = respSchema ? renderObjectFields(respSchema, spec, new Set()) : {};
+
+  // PII walk: collect every property name on input + output (recursively
+  // through $refs/allOf/oneOf/anyOf) and run each through `matchesPii`.
+  const inputProps = new Set<string>();
+  const outputProps = new Set<string>();
+  for (const k of Object.keys(input)) inputProps.add(k);
+  for (const k of Object.keys(output)) outputProps.add(k);
+  if (bodySchema) collectPropertyNames(bodySchema, spec, new Set(), inputProps);
+  if (respSchema) collectPropertyNames(respSchema, spec, new Set(), outputProps);
+  const piiMatches = detectPii(inputProps, outputProps);
 
   // Confirmation: GET=none; PUT/PATCH/POST=inline; DELETE=modal.
   let confirmation: Capability['confirmation'];
@@ -513,12 +709,29 @@ function buildCapability(
 
   // Rate limit: vendor extension override or default.
   const rateExt = operation['x-rate-limit'];
-  const rate_limit =
-    typeof rateExt === 'string' && /^\d+\/(sec|min|hour|day)\/(user|org|global)$/u.test(rateExt)
-      ? rateExt
-      : '100/min/user';
+  const rateExtValid =
+    typeof rateExt === 'string' && /^\d+\/(sec|min|hour|day)\/(user|org|global)$/u.test(rateExt);
+  const rate_limit = rateExtValid ? rateExt : '100/min/user';
 
   const permissions = gatherPermissions(operation);
+
+  // ---------------------------------------------------------------------------
+  // Build the _review envelope.
+  //
+  // Always-required entries (BASELINE_REVIEW_NEEDS) flag the heuristic
+  // decisions a human must audit. Plus one entry per PII match.
+  // ---------------------------------------------------------------------------
+  const reviewNeeds: string[] = [...BASELINE_REVIEW_NEEDS];
+  for (const m of piiMatches) {
+    reviewNeeds.push(`pii:${m.location}.${m.property}`);
+  }
+
+  const review: ReviewEnvelope = {
+    needs: reviewNeeds,
+    imported_from: reviewBase.imported_from,
+    imported_at: reviewBase.imported_at,
+    importer_version: reviewBase.importer_version,
+  };
 
   const capability: Capability = {
     id,
@@ -531,6 +744,7 @@ function buildCapability(
     confirmation,
     rate_limit,
     reversible,
+    _review: review,
   };
 
   const rollbackExt = operation['x-rollback-operation'];
@@ -538,16 +752,146 @@ function buildCapability(
     capability.rollback = rollbackExt;
   }
 
+  // Heuristic record — fed to the .review.md sidecar renderer.
+  const heuristics: HeuristicDecision[] = [
+    {
+      field: 'side_effects',
+      value: JSON.stringify(sideEffects),
+      rationale:
+        method === 'get'
+          ? 'GET → empty list. Verify: any reads:* dependencies?'
+          : `non-GET → ['mutates:${resource}']. Verify: also notifies, bills, emails, sends?`,
+    },
+    {
+      field: 'permissions',
+      value: JSON.stringify(permissions),
+      rationale:
+        permissions.length === 0
+          ? 'Spec did not declare `security`. Almost certainly wrong — enumerate the real permissions.'
+          : 'Inferred from spec `security` scopes. Verify mapping is complete.',
+    },
+    {
+      field: 'confirmation',
+      value: confirmation,
+      rationale:
+        method === 'delete'
+          ? 'DELETE → modal. Sometimes wrong (e.g. DELETE on a draft).'
+          : method === 'get'
+            ? 'GET → none.'
+            : 'non-GET, non-DELETE → inline (soft confirm).',
+    },
+    {
+      field: 'reversible',
+      value: String(reversible),
+      rationale:
+        method === 'put'
+          ? 'PUT → true. Pure guess; verify the operation actually has an inverse.'
+          : method === 'get'
+            ? 'GET → true (no state change to reverse).'
+            : `${method.toUpperCase()} → false. Pure guess; if reversible, set true and add rollback.`,
+    },
+    {
+      field: 'rate_limit',
+      value: rate_limit,
+      rationale: rateExtValid
+        ? 'Read from `x-rate-limit` extension on the operation.'
+        : 'No `x-rate-limit` extension; fabricated default `100/min/user`. Set to a real value.',
+    },
+  ];
+
   // File path: <resource>/<verb>.json. Verb derived from id's last dot segment.
   const verb = id.includes('.') ? id.slice(id.lastIndexOf('.') + 1) : method;
   const fileResource = resource;
   const relativePath = join(fileResource, `${sanitizeFilename(verb)}.json`);
 
-  return { capability, relativePath };
+  return {
+    capability,
+    relativePath,
+    piiMatches,
+    heuristics,
+    hasSecurity: Array.isArray(operation.security) && operation.security.length > 0,
+    hasResponses: !!operation.responses && Object.keys(operation.responses).length > 0,
+    method,
+    path,
+  };
 }
 
 function sanitizeFilename(s: string): string {
   return s.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
+}
+
+/**
+ * Render the `.review.md` sidecar for a single imported capability.
+ *
+ * Lists the source spec, every heuristic decision (with rationale), every PII
+ * match, a checkbox list a reviewer ticks off, and a footer explaining how to
+ * clear the draft (delete `_review` from JSON + delete this `.review.md`).
+ */
+function renderReviewMarkdown(args: {
+  capability: Capability;
+  relativeJsonPath: string;
+  piiMatches: PiiMatch[];
+  heuristics: HeuristicDecision[];
+  method: string;
+  apiPath: string;
+  importedFrom: string;
+  importedAt: string;
+  importerVersion: string;
+}): string {
+  const lines: string[] = [];
+  lines.push(`# Review: \`${args.capability.id}\``);
+  lines.push('');
+  lines.push(`**Source:** \`${args.importedFrom}\``);
+  lines.push(`**Operation:** \`${args.method.toUpperCase()} ${args.apiPath}\``);
+  lines.push(`**Imported at:** ${args.importedAt}`);
+  lines.push(`**Importer version:** ${args.importerVersion}`);
+  lines.push(`**Capability JSON:** \`${args.relativeJsonPath}\``);
+  lines.push('');
+  lines.push('This capability was generated automatically from an OpenAPI spec. Every');
+  lines.push('heuristic decision below must be audited before this file can land on `main`.');
+  lines.push('CI (`cir-schemas validate-data --strict`) will refuse to merge it while');
+  lines.push('the `_review` field is still present.');
+  lines.push('');
+  lines.push('## Heuristic decisions');
+  lines.push('');
+  for (const h of args.heuristics) {
+    lines.push(`- **${h.field}**: \`${h.value}\` — ${h.rationale}`);
+  }
+  lines.push('');
+  lines.push('## PII matches');
+  lines.push('');
+  if (args.piiMatches.length === 0) {
+    lines.push('_No property names matched the PII wordlist._');
+  } else {
+    for (const m of args.piiMatches) {
+      lines.push(
+        `- \`${m.location}.${m.property}\` matched token \`${m.token}\` — confirm data-protection handling.`,
+      );
+    }
+  }
+  lines.push('');
+  lines.push('## Reviewer checklist');
+  lines.push('');
+  lines.push('- [ ] side_effects audited and complete');
+  lines.push(
+    `- [ ] permissions enumerated (currently: ${JSON.stringify(args.capability.permissions)})`,
+  );
+  lines.push('- [ ] confirmation level appropriate');
+  lines.push('- [ ] reversibility verified');
+  lines.push('- [ ] rate_limit set to a real value');
+  lines.push('- [ ] PII fields handled per data-protection policy');
+  lines.push('');
+  lines.push('## How to clear this draft');
+  lines.push('');
+  lines.push('When all checkboxes are ticked and the JSON is updated, remove the `_review`');
+  lines.push("field from the capability JSON and delete this `.review.md`. CI's");
+  lines.push('`validate-data --strict` will then accept the capability.');
+  lines.push('');
+  return lines.join('\n');
+}
+
+function reviewMarkdownPath(jsonRelative: string): string {
+  return jsonRelative.replace(/\.json$/, '.review.md');
 }
 
 // -----------------------------------------------------------------------------
@@ -561,6 +905,20 @@ interface PlannedFile {
   relativePath: string;
   contents: string;
   capability: Capability;
+  /** Sidecar `.review.md` content. */
+  reviewMarkdown: string;
+  /** Sidecar `.review.md` absolute path. */
+  reviewMarkdownAbsolute: string;
+  /** Sidecar `.review.md` relative path (relative to outDir). */
+  reviewMarkdownRelative: string;
+  /** PII matches discovered for this op. Used for --strict gating + warnings. */
+  piiMatches: PiiMatch[];
+  /** Whether the operation declared `security`. Used for --strict gating. */
+  hasSecurity: boolean;
+  /** Whether the operation declared `responses`. Used for --strict gating. */
+  hasResponses: boolean;
+  method: string;
+  apiPath: string;
 }
 
 interface ImportPlan {
@@ -568,7 +926,11 @@ interface ImportPlan {
   warnings: string[];
 }
 
-function planImport(spec: OpenApiSpec, outDir: string): ImportPlan {
+function planImport(
+  spec: OpenApiSpec,
+  outDir: string,
+  reviewBase: Omit<ReviewEnvelope, 'needs'>,
+): ImportPlan {
   const files: PlannedFile[] = [];
   const warnings: string[] = [];
   const usedRelativePaths = new Set<string>();
@@ -580,7 +942,7 @@ function planImport(spec: OpenApiSpec, outDir: string): ImportPlan {
       if (!op) continue;
       let built: BuildResult;
       try {
-        built = buildCapability(method, path, op, item, spec);
+        built = buildCapability(method, path, op, item, spec, reviewBase);
       } catch (err) {
         warnings.push(`skip ${method.toUpperCase()} ${path}: ${(err as Error).message}`);
         continue;
@@ -608,11 +970,33 @@ function planImport(spec: OpenApiSpec, outDir: string): ImportPlan {
         continue;
       }
 
+      const reviewMarkdown = renderReviewMarkdown({
+        capability: parsed.data,
+        relativeJsonPath: relativePath,
+        piiMatches: built.piiMatches,
+        heuristics: built.heuristics,
+        method,
+        apiPath: path,
+        importedFrom: reviewBase.imported_from,
+        importedAt: reviewBase.imported_at,
+        importerVersion: reviewBase.importer_version,
+      });
+
+      const reviewRel = reviewMarkdownPath(relativePath);
+
       files.push({
         absolutePath: resolve(outDir, relativePath),
         relativePath,
         contents: `${JSON.stringify(parsed.data, null, 2)}\n`,
         capability: parsed.data,
+        reviewMarkdown,
+        reviewMarkdownAbsolute: resolve(outDir, reviewRel),
+        reviewMarkdownRelative: reviewRel,
+        piiMatches: built.piiMatches,
+        hasSecurity: built.hasSecurity,
+        hasResponses: built.hasResponses,
+        method,
+        apiPath: path,
       });
     }
   }
@@ -652,25 +1036,33 @@ function detectOpenApiVersion(spec: OpenApiSpec): {
 // CLI entry point.
 // -----------------------------------------------------------------------------
 
-const USAGE = `usage: cir import openapi <spec> [--out <dir>] [--dry-run] [--force]
+const USAGE = `usage: cir import openapi <spec> [--out <dir>] [--dry-run] [--force] [--strict]
 
 Generate CIR capabilities from an OpenAPI 3.x spec. <spec> is a path or URL.
 
   --out <dir>     Output directory (default: capabilities/).
   --dry-run       Print the planned files without writing.
-  --force         Overwrite existing files (default: skip + warn).
+  --force         Overwrite existing files and their .review.md siblings.
+  --strict        Refuse to import on any of: missing 'security' for non-GET,
+                  any PII match, ambiguous side_effects (no responses, etc.).
 
-Generated capabilities are starting points. Review side_effects, permissions,
-confirmation, and rate_limit before committing.`;
+Each emitted JSON ships as a DRAFT with a '_review' envelope listing the
+heuristic decisions a human must audit. Alongside every JSON, a sibling
+'<basename>.review.md' is written with a checklist for the reviewer.
+
+CI's 'cir-schemas validate-data --strict' refuses to merge any capability
+whose '_review.needs' is non-empty. Clear it by auditing each item, fixing
+the JSON, dropping the '_review' field, and deleting the .review.md sidecar.`;
 
 /**
  * `cir import openapi` programmatic entry point.
  *
  * Args: positional `<spec>` (URL or filesystem path), then any of
- * `--out <dir>`, `--dry-run`, `--force`.
+ * `--out <dir>`, `--dry-run`, `--force`, `--strict`.
  *
- * Always returns; prints all output via console. Exits the process on
- * unrecoverable errors via thrown Error (callers may catch).
+ * Always returns; prints all output via console. Throws on unrecoverable
+ * errors (callers may catch). With `--strict`, throws on missing security /
+ * PII matches / ambiguous side_effects without writing any files.
  */
 export async function importOpenApi(args: string[]): Promise<void> {
   const parsed = parseImportArgs(args);
@@ -701,10 +1093,59 @@ export async function importOpenApi(args: string[]): Promise<void> {
     console.warn(`warn: ${detection.warn}`);
   }
 
-  const plan = planImport(spec, outDir);
+  // Build the import-time _review base (shared across every emitted file).
+  // `imported_from` uses an `openapi:` prefix so the runtime/CI can tell at a
+  // glance which importer produced the draft.
+  const importerVersion = readCliVersion();
+  const reviewBase: Omit<ReviewEnvelope, 'needs'> = {
+    imported_from: `openapi:${parsed.spec}`,
+    imported_at: new Date().toISOString(),
+    importer_version: importerVersion,
+  };
+
+  const plan = planImport(spec, outDir, reviewBase);
 
   for (const w of plan.warnings) {
     console.warn(`warn: ${w}`);
+  }
+
+  // Emit per-PII warnings on stderr. These mirror the `_review.needs` entries.
+  for (const f of plan.files) {
+    for (const m of f.piiMatches) {
+      console.warn(
+        `warn: PII match in ${f.relativePath}: ${m.location}.${m.property} (token=${m.token})`,
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // --strict gate: refuse the import outright on risky inputs.
+  // ---------------------------------------------------------------------------
+  if (parsed.strict) {
+    const strictFailures: string[] = [];
+    for (const f of plan.files) {
+      if (f.method !== 'get' && !f.hasSecurity) {
+        strictFailures.push(
+          `${f.relativePath}: ${f.method.toUpperCase()} ${f.apiPath} has no 'security' declaration`,
+        );
+      }
+      if (!f.hasResponses) {
+        strictFailures.push(
+          `${f.relativePath}: ${f.method.toUpperCase()} ${f.apiPath} has no 'responses' (ambiguous side_effects)`,
+        );
+      }
+      for (const m of f.piiMatches) {
+        strictFailures.push(
+          `${f.relativePath}: PII match ${m.location}.${m.property} (token=${m.token})`,
+        );
+      }
+    }
+    if (strictFailures.length > 0) {
+      for (const msg of strictFailures) console.error(`strict: ${msg}`);
+      throw new Error(
+        `--strict refused import: ${strictFailures.length} issue(s); no files written`,
+      );
+    }
   }
 
   let imported = 0;
@@ -716,6 +1157,7 @@ export async function importOpenApi(args: string[]): Promise<void> {
     );
     for (const f of plan.files) {
       console.log(`  ${f.relativePath}  (${f.capability.id})`);
+      console.log(`  ${f.reviewMarkdownRelative}  (review sidecar)`);
     }
   } else {
     for (const f of plan.files) {
@@ -726,6 +1168,9 @@ export async function importOpenApi(args: string[]): Promise<void> {
       }
       await mkdir(dirname(f.absolutePath), { recursive: true });
       await writeFile(f.absolutePath, f.contents, 'utf8');
+      // `.review.md` sidecar — same overwrite policy as the JSON.
+      await mkdir(dirname(f.reviewMarkdownAbsolute), { recursive: true });
+      await writeFile(f.reviewMarkdownAbsolute, f.reviewMarkdown, 'utf8');
       imported++;
     }
     console.log(
@@ -735,8 +1180,9 @@ export async function importOpenApi(args: string[]): Promise<void> {
   }
 
   console.error(
-    'NOTE: Generated capabilities are starting points. Review side_effects, ' +
-      'permissions, confirmation, and rate_limit before committing.',
+    `NOTE: ${imported} capabilit${imported === 1 ? 'y' : 'ies'} written as DRAFTS. ` +
+      'Review the .review.md sidecars, fix the JSON, drop the _review field, then ' +
+      '`pnpm validate:data --strict`. CI will refuse to merge unreviewed drafts.',
   );
 }
 

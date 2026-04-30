@@ -129,7 +129,7 @@
     "actions_supported": [],
     "data_sources": [],
     "design_tokens": "@cir/components/baseline@0.1.0",
-    "examples": [],
+    "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "ContainerProps",
     "responsive_targets": ["web"],
     "text_render": true
@@ -174,7 +174,7 @@
     "actions_supported": [],
     "data_sources": [],
     "design_tokens": "@cir/components/baseline@0.1.0",
-    "examples": [],
+    "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "EmptyStateProps",
     "responsive_targets": ["web"],
     "text_render": true
@@ -217,16 +217,16 @@
   },
   "Grid": {
     "actions_supported": [],
-    "data_sources": [],
+    "data_sources": ["dummyjson.product.list"],
     "design_tokens": "@cir/components/baseline@0.1.0",
-    "examples": [],
+    "examples": ["/recipes/dummyjson-shopper.json"],
     "props_schema": "GridProps",
     "responsive_targets": ["web"],
     "text_render": true
   },
   "KPIRow": {
     "actions_supported": [],
-    "data_sources": [],
+    "data_sources": ["dummyjson.product.list"],
     "design_tokens": "@cir/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "KPIRowProps",
@@ -244,9 +244,9 @@
   },
   "List": {
     "actions_supported": [],
-    "data_sources": [],
+    "data_sources": ["github.repo.list", "dummyjson.product.list", "dummyjson.product.search"],
     "design_tokens": "@cir/components/baseline@0.1.0",
-    "examples": [],
+    "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "ListProps",
     "responsive_targets": ["web"],
     "text_render": true
@@ -291,7 +291,7 @@
     "actions_supported": [],
     "data_sources": [],
     "design_tokens": "@cir/components/baseline@0.1.0",
-    "examples": [],
+    "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "NavBarProps",
     "responsive_targets": ["web"],
     "text_render": true
@@ -334,9 +334,9 @@
   },
   "Search": {
     "actions_supported": [],
-    "data_sources": [],
+    "data_sources": ["dummyjson.product.search"],
     "design_tokens": "@cir/components/baseline@0.1.0",
-    "examples": [],
+    "examples": ["/recipes/dummyjson-shopper.json"],
     "props_schema": "SearchProps",
     "responsive_targets": ["web"],
     "text_render": true
@@ -399,7 +399,7 @@
     "actions_supported": [],
     "data_sources": [],
     "design_tokens": "@cir/components/baseline@0.1.0",
-    "examples": [],
+    "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "StackProps",
     "responsive_targets": ["web"],
     "text_render": true
@@ -424,7 +424,7 @@
   },
   "Table": {
     "actions_supported": [],
-    "data_sources": [],
+    "data_sources": ["github.repo.list", "dummyjson.product.list"],
     "design_tokens": "@cir/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TableProps",

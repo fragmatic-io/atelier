@@ -233,6 +233,11 @@ export type { ChatThreadProps, ChatMessage, ChatRole } from './components/ChatTh
 // -----------------------------------------------------------------------------
 // Registry, composition rules, text renderers
 // -----------------------------------------------------------------------------
-export { ALL_COMPONENTS, COMPONENT_BINDINGS, COMPOSITION_RULES } from './registry.js';
-export type { CompositionRule } from './registry.js';
+export {
+  ALL_COMPONENTS,
+  COMPONENT_BINDINGS,
+  COMPONENT_METADATA,
+  COMPOSITION_RULES,
+} from './registry.js';
+export type { CompositionRule, ComponentBindingMetadata } from './registry.js';
 export { TEXT_RENDERERS, type TextRenderer } from './text-render.js';

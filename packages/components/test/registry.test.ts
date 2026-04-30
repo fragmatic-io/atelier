@@ -1,5 +1,13 @@
+import { resolve } from 'node:path';
+import fg from 'fast-glob';
 import { describe, expect, it } from 'vitest';
-import { ALL_COMPONENTS, COMPONENT_BINDINGS, COMPOSITION_RULES } from '../src/registry.js';
+import { CompositionRulesSchema } from '@cir/schemas';
+import {
+  ALL_COMPONENTS,
+  COMPONENT_BINDINGS,
+  COMPONENT_METADATA,
+  COMPOSITION_RULES,
+} from '../src/registry.js';
 
 const EXPECTED = [
   'Accordion',
@@ -189,5 +197,77 @@ describe('COMPOSITION_RULES', () => {
     expect(r.can_contain).toBe('*');
     expect(r.min_children).toBe(2);
     expect(r.max_children).toBe(2);
+  });
+
+  it('round-trips through @cir/schemas CompositionRulesSchema', () => {
+    // Wave 4 P-Reg-1: the schema previously rejected the 'leaf' sentinel,
+    // which blocked composition rules from shipping as JSON. This test
+    // gates against a regression — the entire `COMPOSITION_RULES` export
+    // must parse through `CompositionRulesSchema`.
+    const map: Record<string, unknown> = {};
+    for (const [id, rule] of Object.entries(COMPOSITION_RULES)) {
+      const raw = rule.can_contain;
+      const canContain: string[] | '*' | 'leaf' = typeof raw === 'string' ? raw : [...raw];
+      map[id] = {
+        can_contain: canContain,
+        ...(rule.min_children !== undefined ? { min_children: rule.min_children } : {}),
+        ...(rule.max_children !== undefined ? { max_children: rule.max_children } : {}),
+      };
+    }
+    expect(() => CompositionRulesSchema.parse(map)).not.toThrow();
+    const parsed = CompositionRulesSchema.parse(map);
+    expect(Object.keys(parsed).sort()).toEqual([...EXPECTED]);
+  });
+});
+
+describe('COMPONENT_METADATA', () => {
+  it('every entry keys a real component in the registry', () => {
+    for (const id of Object.keys(COMPONENT_METADATA)) {
+      expect(COMPONENT_BINDINGS[id], `metadata for unknown component ${id}`).toBeDefined();
+    }
+  });
+
+  it('every dataSources / actionsSupported entry references a shipped capability', async () => {
+    // Sanity gate: a typo'd capability id in the metadata silently makes the
+    // emitted `components/registry.json` claim a binding to a capability
+    // that does not exist. We crawl `capabilities/**/*.json` once and check
+    // every metadata id against the resulting set. Repo root is two levels
+    // up from this test file (`packages/components/test/`).
+    const repoRoot = resolve(import.meta.dirname, '../../..');
+    const capabilityFiles = await fg('capabilities/**/*.json', {
+      cwd: repoRoot,
+      absolute: true,
+    });
+    const capabilityIds = new Set<string>();
+    for (const path of capabilityFiles) {
+      const { readFile } = await import('node:fs/promises');
+      const raw = await readFile(path, 'utf8');
+      const parsed = JSON.parse(raw) as { id?: unknown };
+      if (typeof parsed.id === 'string') capabilityIds.add(parsed.id);
+    }
+    expect(capabilityIds.size).toBeGreaterThan(0);
+    for (const [componentId, meta] of Object.entries(COMPONENT_METADATA)) {
+      for (const id of meta.dataSources ?? []) {
+        expect(
+          capabilityIds.has(id),
+          `${componentId}.dataSources references unknown capability "${id}"`,
+        ).toBe(true);
+      }
+      for (const id of meta.actionsSupported ?? []) {
+        expect(
+          capabilityIds.has(id),
+          `${componentId}.actionsSupported references unknown capability "${id}"`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('List declares the shipped data-list capabilities and example recipes', () => {
+    // Acceptance criterion: `components/registry.json` $.List.examples is
+    // non-empty (proves the metadata pipeline works end-to-end).
+    const meta = COMPONENT_METADATA['List'];
+    expect(meta?.dataSources).toContain('github.repo.list');
+    expect(meta?.dataSources).toContain('dummyjson.product.list');
+    expect(meta?.examples?.length ?? 0).toBeGreaterThan(0);
   });
 });

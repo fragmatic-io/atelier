@@ -143,6 +143,116 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
 export const ALL_COMPONENTS = new MapComponentRegistry(COMPONENT_BINDINGS);
 
 /**
+ * Optional, code-side metadata for a component. Read by the sync script to
+ * project into `components/registry.json` (`data_sources`,
+ * `actions_supported`, `examples`). The runtime does not consume this — it
+ * lives next to the bindings purely so component authors have one file to
+ * update when they add a primitive.
+ *
+ * Be honest about emptiness: a component that has no defensible binding to a
+ * shipped capability should leave `dataSources` / `actionsSupported`
+ * undefined. Empty (or absent) beats fabrication; the sync script projects
+ * `undefined` as `[]`.
+ */
+export interface ComponentBindingMetadata {
+  /**
+   * Capability ids this component reads from. Empty (or omitted) for
+   * pure-display leaves and layout primitives. Only populate where the
+   * component is designed to bind to the named capability.
+   */
+  dataSources?: readonly string[];
+  /**
+   * Capability ids this component can dispatch as actions. Empty (or
+   * omitted) for pure-display. Only populate where the component is
+   * designed to dispatch the named capability.
+   */
+  actionsSupported?: readonly string[];
+  /**
+   * Paths to example JSON manifests demonstrating this component. These
+   * point at `recipes/*.json` artifacts the compiler can use as few-shot
+   * fodder. Paths are repo-rooted (e.g. `/recipes/github-reviewer.json`)
+   * so they round-trip through the published JSON without needing to be
+   * resolved relative to a specific directory.
+   */
+  examples?: readonly string[];
+}
+
+/**
+ * Per-component metadata projected to `components/registry.json` by
+ * `scripts/sync-component-registry.ts`. Keyed by the same id as
+ * `COMPONENT_BINDINGS`. Entries are intentionally sparse — every component
+ * that has no real, defensible capability binding (every leaf input,
+ * layout primitive, display-only component) is simply omitted, and the
+ * sync script falls through to empty arrays. Comments call out why each
+ * group is empty so future authors can extend without guessing.
+ */
+export const COMPONENT_METADATA: Readonly<Record<string, ComponentBindingMetadata>> = Object.freeze(
+  {
+    // -------------------------------------------------------------------------
+    // Display + layout primitives that surface lists of capability data.
+    //
+    // The two capabilities shipping today that emit list-shaped output are
+    // `github.repo.list` and `dummyjson.product.list` /
+    // `dummyjson.product.search`. Components that idiomatically render a
+    // list/grid/table of those records carry the binding so the compiler
+    // has a real, defensible link to follow. Action dispatch goes via the
+    // recipe `actions` array (not the component contract); we leave
+    // `actionsSupported` empty because no shipped component "owns" a
+    // specific action — `Button` / `ButtonGroup` / `ActionMenu` are
+    // generic dispatchers.
+    // -------------------------------------------------------------------------
+    List: {
+      dataSources: ['github.repo.list', 'dummyjson.product.list', 'dummyjson.product.search'],
+      examples: ['/recipes/github-reviewer.json', '/recipes/dummyjson-shopper.json'],
+    },
+    Table: {
+      dataSources: ['github.repo.list', 'dummyjson.product.list'],
+    },
+    Grid: {
+      dataSources: ['dummyjson.product.list'],
+      examples: ['/recipes/dummyjson-shopper.json'],
+    },
+    Search: {
+      // Search only binds to capabilities that accept a free-text query.
+      // `dummyjson.product.search` is the one shipped today.
+      dataSources: ['dummyjson.product.search'],
+      examples: ['/recipes/dummyjson-shopper.json'],
+    },
+    // KPIRow renders aggregate stats from a list-shaped capability; binding
+    // to the catalog list is the only honest link today.
+    KPIRow: {
+      dataSources: ['dummyjson.product.list'],
+    },
+    // -------------------------------------------------------------------------
+    // Layout containers — pure structural composition. They carry NO inherent
+    // capability binding; their children pick up data/actions. Examples are
+    // populated where the recipe demonstrably uses them as the outer shell.
+    // -------------------------------------------------------------------------
+    Stack: {
+      // Pure layout — no inherent data binding.
+      examples: ['/recipes/github-reviewer.json', '/recipes/dummyjson-shopper.json'],
+    },
+    Container: {
+      // Pure layout — no inherent data binding.
+      examples: ['/recipes/github-reviewer.json', '/recipes/dummyjson-shopper.json'],
+    },
+    NavBar: {
+      // Navigation primitive — `links` come from props, not a capability.
+      examples: ['/recipes/github-reviewer.json', '/recipes/dummyjson-shopper.json'],
+    },
+    EmptyState: {
+      // Display leaf — content is authored at compile time.
+      examples: ['/recipes/github-reviewer.json', '/recipes/dummyjson-shopper.json'],
+    },
+    // Every other component (Form, Wizard, ConfirmDialog, Button, ActionMenu,
+    // every input, every display leaf, every layout container not listed
+    // above) deliberately has no metadata: the sync script will project
+    // empty arrays for `data_sources`, `actions_supported`, and `examples`.
+    // That is the honest answer — we don't fabricate bindings.
+  },
+);
+
+/**
  * Composition rule for a component. `'*'` means "any component"; an array
  * means "only these"; `'leaf'` means "no children at all".
  */

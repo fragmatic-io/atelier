@@ -50,7 +50,27 @@ function Page() {
 Every component declares what it can contain via `COMPOSITION_RULES`. The
 compiler reads these to produce valid manifest layouts; the runtime can
 validate at render time. See `docs/component-catalog.md` §"Composition
-rules".
+rules". `COMPOSITION_RULES` ships out to `/components/composition-rules.json`
+via `pnpm components:sync` and is validated against
+`CompositionRulesSchema` from `@cir/schemas`.
+
+## Per-component metadata
+
+`COMPONENT_METADATA` (also exported from `./registry.js`) is an optional
+sidecar map that pairs a component id with the capability ids it idiomatically
+binds to and the recipes that demonstrate it. The fields are:
+
+| Field              | Meaning                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `dataSources`      | Capability ids this component reads from. Empty (or omitted) for pure-display leaves and layout. |
+| `actionsSupported` | Capability ids this component can dispatch. Empty (or omitted) for pure-display.                 |
+| `examples`         | Repo-rooted paths (`/recipes/...`) to manifest examples the compiler can use as few-shot fodder. |
+
+The sync script projects this into `data_sources`, `actions_supported`, and
+`examples` on each `ComponentDefinition` in `/components/registry.json`.
+Empty is HONEST: leave a field undefined when no capability in
+`/capabilities/` matches the component's role. Fabricated bindings are worse
+than empty ones.
 
 ## Text fallback
 

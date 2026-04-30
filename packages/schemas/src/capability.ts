@@ -86,6 +86,45 @@ export type Permission = z.infer<typeof Permission>;
 export const CapabilityIOSchema = z.record(z.unknown());
 
 /**
+ * Review envelope — draft metadata for capabilities produced by automated
+ * importers (e.g. `cir import openapi`).
+ *
+ * Convention: hand-authored capabilities OMIT `_review`. Imported capabilities
+ * always set it, with `needs` listing the heuristic decisions a human must
+ * audit before the JSON can land on `main`. CI gates against any capability
+ * with non-empty `_review.needs` via `cir-schemas validate-data --strict`.
+ *
+ * The runtime treats `_review` as opaque metadata and ignores it during
+ * dispatch. The underscore prefix is a visual marker that this is review
+ * scaffolding rather than a runtime field.
+ *
+ * To clear a draft: audit each entry, fix the JSON, then DELETE the `_review`
+ * field entirely. `validate-data --strict` will then accept it.
+ */
+export const ReviewEnvelopeSchema = z.object({
+  /**
+   * Outstanding review items. Common entries:
+   *  - `side_effects` / `permissions` / `confirmation` / `reversible` /
+   *    `rate_limit` — heuristic field decisions that need human audit.
+   *  - `pii:input.<property>` / `pii:output.<property>` — properties whose
+   *    name matched the importer's PII wordlist (e.g. `pii:input.email`).
+   *
+   * Empty array means "all items cleared" — but the convention is to drop
+   * the entire `_review` field once cleared, not leave it empty.
+   */
+  needs: z.array(z.string().min(1)),
+  /** Source spec reference, e.g. `openapi:/tmp/petstore.json` or `openapi:https://...`. */
+  imported_from: z.string().min(1),
+  /** ISO-8601 timestamp of import. */
+  imported_at: z.string().datetime({ offset: true }),
+  /** `@cir/cli` version that produced the import. */
+  importer_version: z.string().min(1),
+});
+
+/** Inferred TypeScript type for a Review envelope. */
+export type ReviewEnvelope = z.infer<typeof ReviewEnvelopeSchema>;
+
+/**
  * Capability — full schema.
  *
  * Notes on optionality:
@@ -94,6 +133,8 @@ export const CapabilityIOSchema = z.record(z.unknown());
  *   in production capabilities. The schema allows it to be absent so newly-
  *   authored capabilities can stage rollback work; the policy engine enforces
  *   the cross-field rule.
+ * - `_review` is optional; present only on imported drafts. CI's strict mode
+ *   refuses to merge capabilities with non-empty `_review.needs`.
  */
 export const CapabilitySchema = z.object({
   id: CapabilityId,
@@ -107,6 +148,7 @@ export const CapabilitySchema = z.object({
   rate_limit: RateLimitString.optional(),
   reversible: z.boolean(),
   rollback: CapabilityId.optional(),
+  _review: ReviewEnvelopeSchema.optional(),
 });
 
 /** Inferred TypeScript type for a Capability. */

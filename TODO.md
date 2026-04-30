@@ -45,6 +45,7 @@ Tracked work that intentionally did not land in earlier phases. Update as items 
 - [x] **`RedisManifestStore`** — Phase 5c.
 - [x] **MIT relicense (Apache-2.0 → MIT)** — Phase 5c.
 - [x] **Real eval cases** — 10 evals shipped in Phase 5c covering compiler / policy / runtime scenarios.
+- [x] **Nightly real-Gemini coverage** — `.github/workflows/nightly-evals.yml` runs `cir-evals run --tag smoke` against the `GEMINI_API_KEY` secret; auth-shaped errors surface as `auth_failed: true` (no silent skip on a revoked key). Done in Wave 4 P-CI-5.
 - [x] **56-component baseline complete** — batches 2–5 in Phase 5b/5d filled out the catalog from 13 to 56.
 - [x] **Per-package coverage ratchet** — tightened across `@cir/schemas`, `@cir/policies`, `@cir/evals`, `@cir/runtime`, `@cir/components`, `@cir/react`, `@cir/compiler` as each landed.
 - [x] **`StreamingAuditSink` / observability hooks** — landed alongside the compiler in Phase 5a.
