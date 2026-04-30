@@ -41,7 +41,10 @@
         "policy.evaluated",
         "policy.violated",
         "compile.budget_used",
-        "compile.budget_exceeded"
+        "compile.budget_exceeded",
+        "action.undoable_window_open",
+        "action.undone",
+        "action.undo_window_expired"
       ]
     },
     "actor": {

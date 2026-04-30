@@ -6,13 +6,12 @@
 /**
  * Settings panel: view and revoke the lenses this app currently holds.
  *
- * This is the user-facing side of the permission grant — the README
- * promises that "the user owns their intent vault" and this is the page
- * that gives them a knob.
- *
- * TODO(vault): in production, "Revoke this lens" would call the vault to
- *   tear down the scoped read token. Other open tabs would receive a
- *   trigger and recompile their manifests without that lens.
+ * Wave 7 / V-1: "Revoke this lens" calls `@cir/vault-client.revokeGrant()`
+ * (via `revokeLensAsync`) which tears down the scoped token and emits a
+ * `system.security_revocation` trigger; subscribed runtimes invalidate
+ * their cached manifests via the existing trigger bus. When the vault
+ * server is unreachable, the revoke falls through to localStorage with a
+ * console warning.
  */
 
 import { useEffect, useState } from 'react';
@@ -22,8 +21,8 @@ import {
   DEMO_LENS_SCOPES,
   grantedScopesFromProfile,
   loadIntentProfile,
-  revokeIntentProfile,
-  revokeLens,
+  revokeIntentProfileAsync,
+  revokeLensAsync,
   type DemoLensScopeId,
 } from '@/lib/intent-store';
 
@@ -56,15 +55,30 @@ export default function SettingsIntentPage(): React.JSX.Element {
   }, [router]);
 
   function onRevokeOne(scope: string): void {
-    revokeLens(scope);
-    const next = refresh();
-    setView(next);
-    if (!next) router.replace('/onboarding');
+    void revokeLensAsync(scope).then(
+      () => {
+        const next = refresh();
+        setView(next);
+        if (!next) router.replace('/onboarding');
+      },
+      (err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error('[cir-demo] revokeLensAsync failed', err);
+        const next = refresh();
+        setView(next);
+      },
+    );
   }
 
   function onRevokeAll(): void {
-    revokeIntentProfile();
-    router.replace('/onboarding');
+    void revokeIntentProfileAsync().then(
+      () => router.replace('/onboarding'),
+      (err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error('[cir-demo] revokeIntentProfileAsync failed', err);
+        router.replace('/onboarding');
+      },
+    );
   }
 
   if (!loaded) {

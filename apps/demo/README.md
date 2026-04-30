@@ -19,6 +19,11 @@ User actions go through the dispatcher, get gated by `confirmation: 'modal'`, an
 ```bash
 # from the repo root
 pnpm install
+
+# OPTIONAL: boot the local vault server (Wave 7 V-1 — see "Vault" below).
+# Without it, the demo falls back to localStorage with a console warning.
+pnpm cir vault dev --port 4001 &
+
 pnpm --filter @cir/demo dev
 # → http://localhost:3000/today
 ```
@@ -81,7 +86,7 @@ When you boot the demo with a clean browser profile, `/` lands on `/onboarding` 
 
 Once granted, `/settings/intent` shows the granted lenses with **Revoke this lens** per row and a **Revoke all and re-onboard** button at the bottom. Revoking the last lens (or revoking all) clears the storage slot and bounces back to `/onboarding`.
 
-> **This is a demo-only localStorage shim, not the production vault.** The shape stored under `cir.demo.intent` validates against `@cir/schemas`'s `IntentProfileSchema` so the swap to a real backend is a one-file change. Look for `TODO(vault):` markers in `apps/demo/lib/intent-store.ts`, `apps/demo/app/onboarding/page.tsx`, and `apps/demo/app/settings/intent/page.tsx` — those are the only places that touch the storage layer.
+> **Vault-backed with localStorage fallback.** Wave 7 / V-1 swapped this module to call `@cir/vault-client` (which talks to `@cir/vault-server` over the [wire-format spec](../../docs/vault-protocol.md)). When `pnpm cir vault dev` is running, profile reads / writes / revokes go through the vault and a `system.security_revocation` trigger cascades on revoke. When the vault is unreachable, the async helpers fall back to `localStorage` and log `console.error`. Hosts disable the fallback via `NEXT_PUBLIC_VAULT_FALLBACK=disabled`. See `apps/demo/lib/intent-store.ts`.
 
 ### LLM-assisted onboarding
 

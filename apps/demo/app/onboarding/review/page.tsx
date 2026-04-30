@@ -21,7 +21,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Button, Card, Container, Select, Stack, TextInput } from '@cir/components';
 import type { IntentProfile, IntentRule } from '@cir/schemas';
-import { saveIntentProfile } from '@/lib/intent-store';
+import { saveIntentProfileAsync } from '@/lib/intent-store';
 import { SESSION_DRAFT_KEY } from '../describe/page';
 
 interface DraftEnvelope {
@@ -133,19 +133,21 @@ export default function OnboardingReviewPage(): React.JSX.Element {
   function save(): void {
     if (!profile) return;
     setSaving(true);
-    try {
-      saveIntentProfile({
-        ...profile,
-        // Bump updated_at to reflect the user's edits, not the LLM's draft time.
-        updated_at: new Date().toISOString(),
-      });
-      window.sessionStorage.removeItem(SESSION_DRAFT_KEY);
-      router.push('/today');
-    } catch (err) {
-      setSaving(false);
-      // eslint-disable-next-line no-console
-      console.error('saveIntentProfile failed:', err);
-    }
+    void saveIntentProfileAsync({
+      ...profile,
+      // Bump updated_at to reflect the user's edits, not the LLM's draft time.
+      updated_at: new Date().toISOString(),
+    }).then(
+      () => {
+        window.sessionStorage.removeItem(SESSION_DRAFT_KEY);
+        router.push('/today');
+      },
+      (err: unknown) => {
+        setSaving(false);
+        // eslint-disable-next-line no-console
+        console.error('saveIntentProfileAsync failed:', err);
+      },
+    );
   }
 
   function startOver(): void {

@@ -7,10 +7,11 @@
  * First-run onboarding. Shows the user a permission-grant screen for the
  * lenses this app needs to render its routes.
  *
- * TODO(vault): in production, this would render scopes returned by the
- *   vault's permission-request flow, and "Grant" would call back into the
- *   vault to mint a scoped read token. Here we just persist a profile to
- *   localStorage to demonstrate the flow.
+ * Wave 7 / V-1: "Grant" now calls into `@cir/vault-client` to mint a
+ * scoped read token; the resulting profile is persisted in the vault, with
+ * a localStorage mirror for the sync route-gate path. When the vault
+ * server isn't reachable, we fall through to localStorage with a console
+ * warning (`saveIntentProfileAsync` handles that).
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -20,7 +21,7 @@ import {
   DEMO_LENS_SCOPES,
   buildDemoProfile,
   loadIntentProfile,
-  saveIntentProfile,
+  saveIntentProfileAsync,
 } from '@/lib/intent-store';
 
 type Mode = 'choose' | 'customize';
@@ -43,8 +44,18 @@ export default function OnboardingPage(): React.JSX.Element {
       router.push('/onboarding/denied');
       return;
     }
-    saveIntentProfile(buildDemoProfile(scopes));
-    router.push('/today');
+    // Fire-and-forget: the async save covers vault + localStorage; the
+    // navigation runs straight afterwards because the route gate reads the
+    // localStorage mirror synchronously. Vault errors are surfaced via
+    // console (and the user can retry from /settings/intent).
+    void saveIntentProfileAsync(buildDemoProfile(scopes)).then(
+      () => router.push('/today'),
+      (err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error('[cir-demo] saveIntentProfileAsync failed', err);
+        router.push('/today');
+      },
+    );
   }
 
   function toggle(id: string): void {

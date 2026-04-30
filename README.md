@@ -129,16 +129,40 @@ Cost: 1 LLM call on cold path (~5–20k tokens). Zero LLM calls on the hot path.
 
 ## Packages
 
-| Package           | One-liner                                                                                                                                                                                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@cir/schemas`    | Zod schemas + JSON Schema codegen for every CIR artifact (Capability, Skill, Component, Manifest, Trigger, Intent, Audit, BrandKit, Policy, CompositionRules). [README](packages/schemas/README.md).                                                                             |
-| `@cir/policies`   | 7 baseline pure-function validators + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` interface. [README](packages/policies/README.md).                                                                                                          |
-| `@cir/runtime`    | Framework-agnostic core: manifest cache (Memory + IndexedDB), fetcher, resolver, action dispatcher (modal + verbal-phrase confirm + LRU undo), trigger bus + SSE transport, render-plan builder, audit sinks (incl. `StreamingAuditSink`). [README](packages/runtime/README.md). |
-| `@cir/components` | 56 baseline React primitives (Layout, Display, Input, Navigation, Feedback, Action, Specialized) with composition rules + per-component metadata. [README](packages/components/README.md).                                                                                       |
-| `@cir/react`      | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirmation portal, SWR + optimistic UI, `@cir/react/debug` subpath for the floating audit panel. [README](packages/react/README.md).                                                                       |
-| `@cir/compiler`   | LLM-backed compile service: `GeminiCompiler` + `FallbackCompiler` + `CompositeCompiler`, `compileIntentProfile()` for LLM-assisted onboarding, `MemoryManifestStore` + `RedisManifestStore`, `ServerManifestResolver`. [README](packages/compiler/README.md).                    |
-| `@cir/evals`      | Eval harness, `defineEval()`, `cir-evals` CLI. End-to-end Gemini smoke + nightly workflow. [README](packages/evals/README.md).                                                                                                                                                   |
-| `@cir/cli`        | Unified developer CLI: `cir init / dev / add / components-sync / validate / import openapi / inspect / compile`, with `--tail` for terminal-side audit observability. [README](packages/cli/README.md).                                                                          |
+| Package             | One-liner                                                                                                                                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@cir/schemas`      | Zod schemas + JSON Schema codegen for every CIR artifact (Capability, Skill, Component, Manifest, Trigger, Intent, Audit, BrandKit, Policy, CompositionRules). [README](packages/schemas/README.md).                                                                             |
+| `@cir/policies`     | 7 baseline pure-function validators + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` interface. [README](packages/policies/README.md).                                                                                                          |
+| `@cir/runtime`      | Framework-agnostic core: manifest cache (Memory + IndexedDB), fetcher, resolver, action dispatcher (modal + verbal-phrase confirm + LRU undo), trigger bus + SSE transport, render-plan builder, audit sinks (incl. `StreamingAuditSink`). [README](packages/runtime/README.md). |
+| `@cir/components`   | 56 baseline React primitives (Layout, Display, Input, Navigation, Feedback, Action, Specialized) with composition rules + per-component metadata. [README](packages/components/README.md).                                                                                       |
+| `@cir/react`        | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirmation portal, SWR + optimistic UI, `@cir/react/debug` subpath for the floating audit panel. [README](packages/react/README.md).                                                                       |
+| `@cir/compiler`     | LLM-backed compile service: `GeminiCompiler` + `FallbackCompiler` + `CompositeCompiler`, `compileIntentProfile()` for LLM-assisted onboarding, `MemoryManifestStore` + `RedisManifestStore`, `ServerManifestResolver`. [README](packages/compiler/README.md).                    |
+| `@cir/evals`        | Eval harness, `defineEval()`, `cir-evals` CLI. End-to-end Gemini smoke + nightly workflow. [README](packages/evals/README.md).                                                                                                                                                   |
+| `@cir/cli`          | Unified developer CLI: `cir init / dev / add / components-sync / validate / import openapi / inspect / compile / vault dev`, with `--tail` for terminal-side audit observability. [README](packages/cli/README.md).                                                              |
+| `@cir/vault-server` | The reference intent vault server. `node:http` + ed25519 JWTs + JSON-file storage. Mints scoped tokens, enforces scope-based read/write filtering, emits `system.security_revocation` triggers. [README](packages/vault-server/README.md).                                       |
+| `@cir/vault-client` | Typed wire client for the vault. Local JWKS-cached signature verification, pluggable token storage (browser localStorage + in-memory + custom), typed errors for clean fall-through. [README](packages/vault-client/README.md).                                                  |
+
+---
+
+## Vault
+
+CIR's vault — the user-owned store apps request scoped read access to — ships in two packages:
+
+- **`@cir/vault-server`** — Reference vault server. `node:http` + ed25519 JWT signing + JSON-file storage by default. Run with `pnpm cir vault dev --port 4001`.
+- **`@cir/vault-client`** — Typed wire client. The demo's `apps/demo/lib/intent-store.ts` swapped from `localStorage` to this client (Wave 7 / track V-1). On vault unreachable, the demo falls back to `localStorage` with a console warning. Production hosts disable the fallback via `NEXT_PUBLIC_VAULT_FALLBACK=disabled`.
+
+The wire format — endpoints, scope grammar, JWT claims, key rotation, revocation propagation — lives in [`docs/vault-protocol.md`](docs/vault-protocol.md).
+
+```bash
+# 1. Boot the vault.
+pnpm cir vault dev --port 4001
+
+# 2. Run the demo. NEXT_PUBLIC_VAULT_URL points at the vault by default.
+pnpm --filter @cir/demo dev
+# → http://localhost:3000
+```
+
+The two packages plug into the existing trigger bus via `system.security_revocation`: when a user revokes a grant, every running runtime that subscribes to triggers invalidates the affected manifests. The bus is the host's choice (in-memory, SSE, Redis); the vault doesn't care.
 
 ---
 
@@ -162,8 +186,6 @@ graph TB
 
   subgraph Roadmap["Roadmap / not yet shipped"]
     direction TB
-    R1["Real intent vault backend<br/>(localStorage shim today)"]
-    R2["Permission grant against a real vault<br/>(demo gestures at it)"]
     R3["Behavioral pattern detector implementations<br/>(interface only)"]
     R4["Audit sink server endpoint in the demo<br/>(cir dev --tail is a contract)"]
     R5["Marketplace / community recipes"]

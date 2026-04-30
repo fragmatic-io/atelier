@@ -1,8 +1,8 @@
 {
-  "name": "@cir/cli",
+  "name": "@cir/vault-server",
   "version": "0.1.0",
-  "private": false,
-  "description": "CIR unified developer CLI — `cir init`, `cir dev`, `cir add`, `cir validate`",
+  "private": true,
+  "description": "CIR intent vault server — node:http + ed25519 JWTs + JSON-file storage. Mints scoped read tokens, enforces scope-based filtering, emits revocation triggers.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -10,19 +10,13 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "bin": {
-    "cir": "./src/index.ts"
-  },
   "scripts": {
     "build": "tsc -p .",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/compiler": "workspace:*",
-    "@cir/components": "workspace:*",
-    "@cir/schemas": "workspace:*",
-    "@cir/vault-server": "workspace:*"
+    "@cir/schemas": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
@@ -30,6 +24,6 @@
     "vitest": "^2.1.8"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

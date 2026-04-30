@@ -20,8 +20,8 @@ For the historical record of what _did_ land in each phase, see [`docs/build-pla
 
 ### Vault + permissioning
 
-- [ ] **Real intent vault backend.** The demo writes to `localStorage` under `cir.demo.intent`. The shape validates against `IntentProfileSchema`, so swap is a one-file change — but a real vault (cloud-hosted, self-hosted, or platform-held à la Solid / AT Protocol) hasn't shipped. Look for `TODO(vault):` markers in `apps/demo/lib/intent-store.ts` and the `/onboarding/*` routes.
-- [ ] **Real permission grant flow.** The demo's checkbox flow gestures at scope grants but writes the grant to localStorage, not a vault. A production grant flow needs the vault first.
+- [x] **Real intent vault backend.** Landed in Wave 7 / track V-1. `@cir/vault-server` (Node `node:http` + ed25519 JWTs + JSON-file storage) and `@cir/vault-client` (typed wire client with JWKS-cached local verification + pluggable token storage) ship in this commit. The wire-format spec is `docs/vault-protocol.md`. The demo's `apps/demo/lib/intent-store.ts` calls the client through async helpers (`loadIntentProfileAsync`, `saveIntentProfileAsync`, `revokeIntentProfileAsync`, `revokeLensAsync`); on vault unreachable it falls back to localStorage with a console warning (`NEXT_PUBLIC_VAULT_FALLBACK=disabled` to fail closed). Run `pnpm cir vault dev --port 4001` to boot the server. Roadmap: SQLite adapter (gated on Node 24's stable `node:sqlite`), multi-key JWKS rotation, encryption-at-rest.
+- [x] **Real permission grant flow.** Landed alongside V-1. The demo's onboarding "Grant" call now mints a scoped token via `VaultClient.requestGrant()`; revoking from `/settings/intent` calls `client.revokeGrant()` which cascades a `system.security_revocation` trigger so subscribed runtimes invalidate manifests compiled from the affected slice. Consent UI hardening (V-3 in Wave 8) is the next track.
 
 ### Compiler / runtime hardening
 
@@ -53,11 +53,11 @@ For the historical record of what _did_ land in each phase, see [`docs/build-pla
 - [ ] **Mobile + native render runtimes** (iOS SwiftUI, Android Compose). Manifests are JSON; the work is in registering native components against the schema.
 - [ ] **Additional demo apps.** `apps/demo-dummyjson` (lens-switching showcase) and `apps/demo-github` (real-mutations showcase) were scoped on the original plan; today the dummyjson + github capabilities ship in `capabilities/` but a dedicated demo app per domain has not.
 
-### Wave 7a follow-ups (3 tracks pending after 5/8 landed in commit `00a5bfc`)
+### Wave 7a follow-ups — all landed
 
-- [ ] **Int-4 — Optimistic UI default.** Auto-wire `useOptimisticAction` for any capability that declares `reversible: true && low_stakes: true`. Schema extension on `Capability` + dispatcher integration + React hook auto-detect. ~3 days. **Hit rate limit before landing in Wave 7a.**
-- [ ] **Int-13 — `<HoverCard>` primitive.** Distinct from Tooltip (Int-2 shipped). Rich content surfaces with 350ms open / 150ms close delay, capability-driven content slot, smart edge-flip, lazy `content: () => ...` form. ~3 days. **Hit rate limit before landing in Wave 7a.**
-- [ ] **Cnt-8 — `<CodeBlock>` component.** `packages/components/src/lib/detect-language.ts` shipped as a standalone helper in Wave 7a `00a5bfc`; the consuming `<CodeBlock>` component (`<pre><code>` + monospace + language label + copy button + optional line numbers) did not land. ~2 days. **Hit rate limit before landing in Wave 7a.**
+- [x] **Int-4 — Optimistic UI default.** Shipped in `5b882fe`. `useOptimisticAction` auto-wires for any capability with `reversible: true && low_stakes: true`.
+- [x] **Int-13 — `<HoverCard>` primitive.** Shipped in `e4f7d31` (Wave 7c). Distinct from Tooltip; rich content surfaces with 350ms open / 150ms close delay, smart edge-flip, lazy `content: () => ...` form.
+- [x] **Cnt-8 — `<CodeBlock>` component.** Shipped in `73cd9c5`. `<pre><code>` + monospace + language label + copy button + optional line numbers built on top of the `detect-language` helper from Wave 7a `00a5bfc`.
 
 ### Component-variants follow-up (P-10 second pass)
 
@@ -72,7 +72,7 @@ The framework today produces functional UIs. The roadmap below is what's needed 
 
 ### Wave 7 — depends on Wave 6 (in flight)
 
-- [ ] **V-1** — Real intent vault backend (`@cir/vault-server` + `@cir/vault-client`). Depends on V-2. 2–3 wk.
+- [x] **V-1** — Real intent vault backend (`@cir/vault-server` + `@cir/vault-client`). Shipped in this commit. See `docs/vault-protocol.md` for the wire-format spec and the two package READMEs for the API surface.
 - [ ] **P-3** — Refinement loop (right-click any component → describe tweak → diff-compile → manifest update + new scoped intent rule). Depends on P-1. 1.5 wk.
 - [ ] **P-4** — Engagement signals back into compiler (component.viewed / dismissed / bounced + per-user aggregator). 1 wk.
 - [ ] **P-7** — Motion / view-transitions / animation layer (foundation for Wave 12 Int-1). 1.5 wk.

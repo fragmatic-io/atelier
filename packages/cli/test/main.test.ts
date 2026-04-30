@@ -29,6 +29,7 @@ describe('main()', () => {
     expect(out).toContain('validate');
     expect(out).toContain('inspect');
     expect(out).toContain('compile');
+    expect(out).toContain('vault');
   });
 
   it('prints usage and exits 1 on no args', async () => {

@@ -18,6 +18,7 @@ Commands:
   import figma <tokens>   Generate a BrandKit JSON from a Figma tokens export.
   inspect <id-or-path>    Pretty-print a manifest (file path or live id).
   compile <intent.json>   Offline compile producing a manifest.
+  vault dev               Boot a local intent vault server (ed25519 JWTs).
 
 Options:
   --help, -h              Show this message.
@@ -89,3 +90,21 @@ Offline compile producing a manifest. Mirrors the demo's server wiring.
   --json=false             Compact JSON output (default is pretty).
 
 Without GEMINI_API_KEY the FallbackCompiler runs (heuristics, no LLM).`;
+
+export const VAULT_DEV_USAGE = `usage: cir vault dev [--port 4001] [--db <path>] [--issuer <url>]
+
+Boot a local CIR intent vault server (see @cir/vault-server). Uses
+node:http; persists profiles + grants to a JSON file; signs tokens with
+ed25519.
+
+  --port <n>         Port to bind. Default 4001.
+  --db <path>        Storage file. Default ./.cir-vault.json (cwd-relative).
+  --issuer <url>     Issuer claim placed in minted tokens. Default
+                     http://localhost:<port>.
+
+Set VAULT_SIGNING_KEY_PEM to a PKCS#8 ed25519 PEM to persist the signing
+key across restarts. Without it, an ephemeral pair is generated and the
+PEM is printed to stderr — every restart invalidates outstanding tokens.
+
+JWKS lives at /.well-known/jwks.json; protocol spec at
+docs/vault-protocol.md.`;

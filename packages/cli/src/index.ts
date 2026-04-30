@@ -30,6 +30,7 @@ import { importOpenApi } from './commands/import-openapi.js';
 import { initCommand } from './commands/init.js';
 import { inspectCommand } from './commands/inspect.js';
 import { validateCommand } from './commands/validate.js';
+import { vaultCommand } from './commands/vault.js';
 import { parseArgs } from './parse-args.js';
 import { TOP_LEVEL_USAGE } from './usage.js';
 import { readCliVersion } from './version.js';
@@ -61,6 +62,8 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
       return inspectCommand(positionals, flags);
     case 'compile':
       return compileCommand(positionals, flags);
+    case 'vault':
+      return vaultCommand(positionals, flags);
     case 'import': {
       // `cir import openapi <spec> ...` — the importer parses its own flags,
       // so we slice off `import` and the target word and hand the rest over

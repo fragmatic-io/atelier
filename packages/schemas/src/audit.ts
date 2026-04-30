@@ -63,6 +63,21 @@ export const AuditEventType = z.enum([
    * Payload (out-of-band): `{ budget, used, would_use }`.
    */
   'compile.budget_exceeded',
+  /**
+   * Emitted by the `ActionDispatcher` when a capability with `undo_window_ms`
+   * is dispatched and the LRU undo slot opens. Pairs with the eventual
+   * `action.undone` (if the user clicked Undo) or `action.undo_window_expired`
+   * (if the window closed without undo). See `Capability.undo_window_ms`.
+   */
+  'action.undoable_window_open',
+  /**
+   * Emitted when the user actually invokes Undo within the open window.
+   */
+  'action.undone',
+  /**
+   * Emitted when an undoable action's window elapses without an undo call.
+   */
+  'action.undo_window_expired',
 ]);
 export type AuditEventType = z.infer<typeof AuditEventType>;
 
