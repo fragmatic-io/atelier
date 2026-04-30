@@ -141,6 +141,17 @@ export const tooltipVariantClass: Readonly<Record<TooltipVariant, string>> = Obj
 });
 
 // -----------------------------------------------------------------------------
+// HoverCard variants — `default` (rich preview surface, light) and
+// `compact` (smaller padding for dense list rows). Wave 7b / Int-13.
+// -----------------------------------------------------------------------------
+export type HoverCardVariant = 'default' | 'compact';
+
+export const hoverCardVariantClass: Readonly<Record<HoverCardVariant, string>> = Object.freeze({
+  default: 'bg-white text-gray-900 rounded-lg shadow-lg ring-1 ring-gray-200 p-4',
+  compact: 'bg-white text-gray-900 rounded-md shadow-md ring-1 ring-gray-200 p-2',
+});
+
+// -----------------------------------------------------------------------------
 // StatusBar — operational / degraded / incident / maintenance pill, default
 // vs compact layout. Vis-9.
 // -----------------------------------------------------------------------------
@@ -157,4 +168,46 @@ export const statusBarColorClass: Readonly<Record<StatusBarStatus, string>> = Ob
 export const statusBarVariantClass: Readonly<Record<StatusBarVariant, string>> = Object.freeze({
   default: 'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm',
   compact: 'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs',
+});
+
+// -----------------------------------------------------------------------------
+// BulkActionBar — floating bar at bottom-center while a multi-select is
+// active. Wave 7b / Int-9.
+// -----------------------------------------------------------------------------
+export type BulkActionBarVariant = 'default';
+
+export const bulkActionBarVariantClass: Readonly<Record<BulkActionBarVariant, string>> =
+  Object.freeze({
+    default:
+      'fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-full shadow-2xl px-4 py-2 flex items-center gap-3 z-50',
+  });
+
+// -----------------------------------------------------------------------------
+// Pinned-item separator (List, Table — Wave 7b / Nav-3). The thin divider
+// rendered between the pinned block and the unpinned block. `default` is the
+// standard 1-px gray-300 line; `subtle` is a lighter gray-200 with smaller
+// vertical margin for dense / compact layouts.
+// -----------------------------------------------------------------------------
+export type PinnedSeparatorVariant = 'default' | 'subtle';
+export const pinnedSeparatorClass: Readonly<Record<PinnedSeparatorVariant, string>> = Object.freeze(
+  {
+    default: 'border-b border-gray-300 my-2',
+    subtle: 'border-b border-gray-200 my-1',
+  },
+);
+
+// -----------------------------------------------------------------------------
+// Icon sizes — Wave 7b (Vis-3). Five-step px scale used by `<Icon>` consumers
+// (Button leading icons, Alert severity icons, EmptyState illustrations) so
+// every surface picks a size from one table. The raw `<Icon size={…}>` prop
+// still accepts arbitrary pixel numbers; this map is the canonical scale.
+// -----------------------------------------------------------------------------
+export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+export const iconSizePx: Readonly<Record<IconSize, number>> = Object.freeze({
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 20,
+  xl: 24,
 });

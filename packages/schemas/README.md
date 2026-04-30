@@ -91,6 +91,30 @@ audited at the kit level).
 A starter `BrandKit` JSON can be generated from a Figma Design Tokens
 export with `cir import figma <tokens.json>` — see `@cir/cli`.
 
+## Information hierarchy (Wave 7b / P-9)
+
+Two optional fields drive the compiler's information-hierarchy reasoner:
+
+- `Capability.salience_default` — a free-form expression the compiler
+  evaluates against the capability's data shape to derive a default
+  per-item salience score (0–1). Examples: `"urgency * recency"`,
+  `"unread_count + priority * 0.5"`, `"due_date - now"`. The compiler
+  uses this to decide which list/table items get top-of-fold emphasis
+  when no host-supplied sort overrides it.
+- `IntentProfile.priority_rules` — an array of
+  `{ domain, signal, weight? }` entries the user owns. Each rule
+  modifies a named signal's contribution (multiplier in `[0, 1]`,
+  default 1.0) within the matching domain. Signals are drawn from a
+  small enum: `urgency`, `recency`, `unread`, `assigned_to_me`,
+  `starred`, `due_date`. The compiler combines rules with the
+  capability's `salience_default` before sorting.
+
+Both fields are optional. Capabilities and intent profiles authored
+before Wave 7b continue to validate without changes; the compiler
+falls back to source order when neither is declared. The companion
+skill is `skills/information-hierarchy.skill.md` and the companion
+policy is `composes_hierarchy_for_long_lists` in `@cir/policies`.
+
 ## Golden tests
 
 `test/golden/` holds a frozen JSON Schema dump. `test/golden.test.ts`

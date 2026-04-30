@@ -11,6 +11,9 @@
   "Breadcrumb": {
     "can_contain": "leaf"
   },
+  "BulkActionBar": {
+    "can_contain": "leaf"
+  },
   "Button": {
     "can_contain": "leaf"
   },
@@ -76,6 +79,14 @@
   },
   "Grid": {
     "can_contain": "*"
+  },
+  "HoverCard": {
+    "can_contain": "*",
+    "max_children": 1,
+    "min_children": 1
+  },
+  "Icon": {
+    "can_contain": "leaf"
   },
   "KPIRow": {
     "can_contain": "leaf"

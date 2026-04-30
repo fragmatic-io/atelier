@@ -49,6 +49,12 @@ export {
   type UseOptimisticActionResult,
 } from './hooks/use-optimistic-action.js';
 export { useReactConfirmation, type UseReactConfirmation } from './confirm/use-confirmation.js';
+export { useMultiSelect, type UseMultiSelectResult } from './hooks/use-multi-select.js';
+export {
+  useUndoableDispatch,
+  type UseUndoableDispatchResult,
+  type UndoToastState,
+} from './hooks/use-undoable-dispatch.js';
 
 // -----------------------------------------------------------------------------
 // Data resolver protocol

@@ -68,4 +68,58 @@ describe('CapabilitySchema', () => {
     expect(KNOWN_SIDE_EFFECTS).toContain('delete');
     expect(KNOWN_SIDE_EFFECTS).toContain('modify_permissions');
   });
+
+  it('accepts an optional salience_default expression on a data capability', () => {
+    const cap = {
+      id: 'thread.list',
+      kind: 'data',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['reads:thread_state'],
+      permissions: ['thread:read'],
+      confirmation: 'none',
+      reversible: true,
+      salience_default: 'urgency * recency + assigned_to_me * 2',
+    };
+    const parsed = CapabilitySchema.parse(cap);
+    expect(parsed.salience_default).toBe('urgency * recency + assigned_to_me * 2');
+  });
+
+  it('treats salience_default as optional — capabilities without it still validate', () => {
+    const cap = {
+      id: 'thread.list',
+      kind: 'data',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['reads:thread_state'],
+      permissions: ['thread:read'],
+      confirmation: 'none',
+      reversible: true,
+    };
+    const parsed = CapabilitySchema.parse(cap);
+    expect(parsed.salience_default).toBeUndefined();
+  });
+
+  it('rejects salience_default when set to a non-string value', () => {
+    const bad = {
+      id: 'thread.list',
+      kind: 'data',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: [],
+      permissions: ['thread:read'],
+      confirmation: 'none',
+      reversible: true,
+      salience_default: 42,
+    };
+    const result = CapabilitySchema.safeParse(bad);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.join('.') === 'salience_default');
+      expect(issue).toBeDefined();
+    }
+  });
 });

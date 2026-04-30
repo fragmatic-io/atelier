@@ -18,5 +18,7 @@
   "confirmation": "inline",
   "rate_limit": "30/min/user",
   "reversible": true,
-  "rollback": "github.issue.reopen"
+  "rollback": "github.issue.reopen",
+  "undoable": true,
+  "undo_window_ms": 5000
 }

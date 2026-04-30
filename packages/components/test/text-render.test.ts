@@ -57,6 +57,7 @@ describe('TEXT_RENDERERS', () => {
         items: [{ id: '1', src: 'a.png', alt: 'A' }],
       },
       Grid: { columns: 3 },
+      Icon: { set: 'lucide', name: 'archive' },
       KPIRow: {
         stats: [{ id: 's1', label: 'Users', value: 1234 }],
       },
@@ -103,8 +104,16 @@ describe('TEXT_RENDERERS', () => {
       Toast: { message: 'Saved', open: true, onClose: () => undefined },
       Toggle: { label: 'Notifications', checked: true, onChange: () => undefined },
       Tooltip: { content: 'Help text', children: { type: 'span', props: {}, key: null } },
+      HoverCard: { content: 'Preview text', children: { type: 'span', props: {}, key: null } },
       StatusBar: { status: 'operational', message: 'All systems green' },
       CodeBlock: { code: 'const x = 1;', language: 'typescript' },
+      BulkActionBar: {
+        selectionCount: 3,
+        actions: [{ id: 'github.issue.bulk_archive', label: 'Archive' }],
+        onAction: () => undefined,
+        onClear: () => undefined,
+      },
+      Icon: { set: 'lucide', name: 'archive' },
       Wizard: {
         steps: [
           { id: 'a', title: 'A', content: 'a' },

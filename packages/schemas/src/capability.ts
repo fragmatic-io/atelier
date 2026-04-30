@@ -160,6 +160,35 @@ export const CapabilitySchema = z.object({
    * (non-optimistic) path.
    */
   low_stakes: z.boolean().optional(),
+  /**
+   * A free-form expression the compiler evaluates against the capability's
+   * data shape to derive a default salience score (0–1) per item. Examples:
+   * `"urgency * recency"`, `"unread_count + priority * 0.5"`,
+   * `"due_date - now"` (more-overdue = higher). The compiler uses this to
+   * sort/feature items in lists when no host-supplied sort overrides it.
+   *
+   * The expression is opaque to the schema — it is interpreted by the
+   * compiler's hierarchy reasoner alongside the user's
+   * `IntentProfile.priority_rules` overrides. Capabilities without a
+   * `salience_default` continue to validate; the compiler simply falls back
+   * to source order.
+   */
+  salience_default: z.string().optional(),
+  /**
+   * When `undoable: true`, the dispatcher returns an undo handle valid for
+   * `undo_window_ms`. The runtime emits `action.undoable_window_open` on
+   * dispatch and `action.undone` if undo fires within the window. Use for:
+   * archive, delete, move, send-to-trash. NOT for: send-email or anything
+   * with side effects visible to other users immediately. The flag is only
+   * honoured when `reversible: true` and a `rollback` is declared — a
+   * declaration without those is treated defensively (no token minted).
+   */
+  undoable: z.boolean().optional(),
+  /** Undo window in ms. Defaults to 5000 when `undoable: true` is set. */
+  // `.min(1)` rather than `.positive()` to avoid Ajv 2019 / draft-04
+  // `exclusiveMinimum: true` shape rejection (see brand-kit.ts for the
+  // same workaround).
+  undo_window_ms: z.number().int().min(1).optional(),
   _review: ReviewEnvelopeSchema.optional(),
 });
 

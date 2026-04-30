@@ -17,6 +17,7 @@ import { accordionTextRender } from './components/Accordion.js';
 import { actionMenuTextRender } from './components/ActionMenu.js';
 import { alertTextRender } from './components/Alert.js';
 import { breadcrumbTextRender } from './components/Breadcrumb.js';
+import { bulkActionBarTextRender } from './components/BulkActionBar.js';
 import { buttonTextRender } from './components/Button.js';
 import { buttonGroupTextRender } from './components/ButtonGroup.js';
 import { calendarTextRender } from './components/Calendar.js';
@@ -39,6 +40,8 @@ import { filterBarTextRender } from './components/FilterBar.js';
 import { formTextRender } from './components/Form.js';
 import { galleryTextRender } from './components/Gallery.js';
 import { gridTextRender } from './components/Grid.js';
+import { hoverCardTextRender } from './components/HoverCard.js';
+import { iconTextRender } from './components/Icon.js';
 import { kpiRowTextRender } from './components/KPIRow.js';
 import { kanbanTextRender } from './components/Kanban.js';
 import { listTextRender } from './components/List.js';
@@ -81,6 +84,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   ActionMenu: actionMenuTextRender as TextRenderer,
   Alert: alertTextRender as TextRenderer,
   Breadcrumb: breadcrumbTextRender as TextRenderer,
+  BulkActionBar: bulkActionBarTextRender as TextRenderer,
   Button: buttonTextRender as TextRenderer,
   ButtonGroup: buttonGroupTextRender as TextRenderer,
   Calendar: calendarTextRender as TextRenderer,
@@ -103,6 +107,8 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Form: formTextRender as TextRenderer,
   Gallery: galleryTextRender as TextRenderer,
   Grid: gridTextRender as TextRenderer,
+  HoverCard: hoverCardTextRender as TextRenderer,
+  Icon: iconTextRender as TextRenderer,
   KPIRow: kpiRowTextRender as TextRenderer,
   Kanban: kanbanTextRender as TextRenderer,
   List: listTextRender as TextRenderer,

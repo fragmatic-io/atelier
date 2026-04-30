@@ -15,6 +15,7 @@
  *   - Echoing the previous manifest verbatim if we're in diff mode
  */
 
+import type { Capability, IntentProfile, PriorityRule } from '@cir/schemas';
 import type { CompileInput } from '../types.js';
 
 export interface BuiltPromptContext {
@@ -110,6 +111,20 @@ export function buildPromptContext(input: CompileInput): BuiltPromptContext {
       for (const line of directives) lines.push(line);
       lines.push('');
     }
+  }
+
+  // Hierarchy directives — surface salience defaults declared on capabilities
+  // alongside the user's `priority_rules` overrides, plus the cap-N=7 rule the
+  // compiler should apply to long lists / tables / grids. Emit only when there
+  // is something actionable: at least one capability with `salience_default`
+  // OR an intent with non-empty `priority_rules`. The directive is the same
+  // regardless — the compiler still needs to know the threshold even if no
+  // signals are declared.
+  const hierarchy = buildHierarchyDirectives(input.capabilities, input.intent);
+  if (hierarchy.length > 0) {
+    lines.push(`## Hierarchy directives (information hierarchy in long lists)`);
+    for (const line of hierarchy) lines.push(line);
+    lines.push('');
   }
 
   // Diff mode — include previous manifest verbatim.
@@ -227,6 +242,61 @@ function buildPersonalisationDirectives(
         .join(', ')}.`,
     );
   }
+
+  return out;
+}
+
+/**
+ * Build the "Hierarchy directives" section from capabilities that carry a
+ * `salience_default` plus the user's `priority_rules`.
+ *
+ * The output is intentionally compact (a handful of lines) so the section
+ * stays cheap in the per-call payload. The cap-N=7 rule is repeated whenever
+ * any salience or priority signal is present; that's the load-bearing
+ * directive — it tells the LLM to apply emphasis treatment to the top 1–3
+ * items of any long list/table/grid binding.
+ *
+ * Returns `[]` when there is nothing to communicate (no salience defaults
+ * AND no priority rules) — the section is omitted entirely in that case.
+ */
+function buildHierarchyDirectives(
+  capabilities: Readonly<Record<string, Capability>>,
+  intent: IntentProfile | undefined,
+): readonly string[] {
+  const out: string[] = [];
+  const salience: Array<{ id: string; expr: string }> = [];
+  for (const [id, cap] of Object.entries(capabilities)) {
+    const expr = cap.salience_default;
+    if (typeof expr === 'string' && expr.length > 0) {
+      salience.push({ id, expr });
+    }
+  }
+
+  const rules: readonly PriorityRule[] = intent?.priority_rules ?? [];
+  if (salience.length === 0 && rules.length === 0) return out;
+
+  if (salience.length > 0) {
+    out.push(`- Capabilities declaring a default salience expression:`);
+    for (const { id, expr } of salience) {
+      out.push(`  - \`${id}\` → \`${expr}\``);
+    }
+  } else {
+    out.push(
+      `- No capability declares a \`salience_default\` — fall back to source order, but still apply the emphasis rule below.`,
+    );
+  }
+
+  if (rules.length > 0) {
+    out.push(`- User-declared \`priority_rules\` (multiply the matching signal by \`weight\`):`);
+    for (const rule of rules) {
+      const w = rule.weight ?? 1.0;
+      out.push(`  - domain=\`${rule.domain}\` signal=\`${rule.signal}\` weight=${String(w)}`);
+    }
+  }
+
+  out.push(
+    "- Emphasis rule: when a `<List>` / `<Table>` / `<Grid>` binding has more than 7 items, the top 1–3 must be visually emphasised (larger text, bolder weight, or a left-border accent). The rest fade to default treatment. Use intent's `priority_rules` to weight the capability's `salience_default` expression and pick the top items.",
+  );
 
   return out;
 }

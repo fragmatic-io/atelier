@@ -56,7 +56,14 @@
                 "component": "Grid",
                 "data": {
                   "source": "dummyjson.product.list",
-                  "sort": "rating desc"
+                  "sort": "rating desc",
+                  "loading_state": {
+                    "component": "Skeleton",
+                    "props": {
+                      "shape": "card",
+                      "count": 6
+                    }
+                  }
                 },
                 "actions": ["dummyjson.cart.add"]
               },

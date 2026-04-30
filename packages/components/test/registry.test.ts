@@ -14,6 +14,7 @@ const EXPECTED = [
   'ActionMenu',
   'Alert',
   'Breadcrumb',
+  'BulkActionBar',
   'Button',
   'ButtonGroup',
   'Calendar',
@@ -36,6 +37,8 @@ const EXPECTED = [
   'Form',
   'Gallery',
   'Grid',
+  'HoverCard',
+  'Icon',
   'KPIRow',
   'Kanban',
   'List',
@@ -72,7 +75,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 59 baseline components', () => {
+  it('contains exactly the 61 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -91,7 +94,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 59 ids', () => {
+  it('list() reports all 61 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -190,6 +193,8 @@ describe('COMPOSITION_RULES', () => {
       'Kanban',
       'Calendar',
       'ChatThread',
+      // Wave 7b / Vis-3 — Icon is a leaf; SVG sourced from IconResolver.
+      'Icon',
     ] as const) {
       expect(COMPOSITION_RULES[leaf]?.can_contain).toBe('leaf');
     }

@@ -102,6 +102,57 @@ describe('buildPromptContext', () => {
     expect(ctx.user).toContain('primary_workflow');
   });
 
+  it('emits a hierarchy directives section when a capability has salience_default and intent has priority_rules', () => {
+    const intent = fixtureIntent();
+    intent.priority_rules = [
+      { domain: 'github', signal: 'urgency', weight: 0.5 },
+      { domain: '*', signal: 'starred' },
+    ];
+    const ctx = buildPromptContext(
+      fixtureCompileInput({
+        intent,
+        capabilities: {
+          'github.issue.list': {
+            id: 'github.issue.list',
+            kind: 'data',
+            version: '1.0.0',
+            input: {},
+            output: {},
+            side_effects: ['reads:github_issues'],
+            permissions: ['github:read'],
+            confirmation: 'none',
+            reversible: true,
+            salience_default: 'urgency * recency + assigned_to_me * 2',
+          } as never,
+        },
+      }),
+    );
+    expect(ctx.user).toContain('## Hierarchy directives');
+    expect(ctx.user).toContain('github.issue.list');
+    expect(ctx.user).toContain('urgency * recency + assigned_to_me * 2');
+    // priority_rules are listed verbatim with the user's weight.
+    expect(ctx.user).toContain('domain=`github`');
+    expect(ctx.user).toContain('signal=`urgency`');
+    expect(ctx.user).toContain('weight=0.5');
+    // The cap-N=7 rule is the load-bearing instruction the LLM must read.
+    expect(ctx.user).toContain('more than 7 items');
+    expect(ctx.user).toContain('top 1');
+  });
+
+  it('omits the hierarchy directives section when no capability has salience_default and no priority_rules are set', () => {
+    const ctx = buildPromptContext(fixtureCompileInput());
+    expect(ctx.user).not.toContain('## Hierarchy directives');
+  });
+
+  it('emits the hierarchy section for priority_rules alone, even without salience_default', () => {
+    const intent = fixtureIntent();
+    intent.priority_rules = [{ domain: 'email', signal: 'unread', weight: 1 }];
+    const ctx = buildPromptContext(fixtureCompileInput({ intent }));
+    expect(ctx.user).toContain('## Hierarchy directives');
+    expect(ctx.user).toContain('No capability declares a `salience_default`');
+    expect(ctx.user).toContain('signal=`unread`');
+  });
+
   it('compresses skills to high-signal fields only — no markdown body', () => {
     const skill = fixtureSkill();
     const ctx = buildPromptContext(fixtureCompileInput({ skills: { 'email-triage': skill } }));

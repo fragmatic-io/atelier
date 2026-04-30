@@ -27,6 +27,19 @@ When you add a capability, you also add its skill (see [`../AGENTS.md`](../AGENT
 
 Skill markdown is parsed by `parseSkillMarkdown` (from `@cir/policies`) which validates the YAML frontmatter against `SkillSchema` (from `@cir/schemas`). `pnpm validate:fast` calls `cir-schemas validate-data` which walks every `*.skill.md` in this directory.
 
+## Cross-cutting micro-skills
+
+A handful of skills don't pair with a single capability — they encode
+patterns the compiler reaches for across many surfaces:
+
+- `empty-state-prose` — domain-aware empty states with a CTA when one
+  exists.
+- `information-hierarchy` — cap N=7 above the fold, top 1–3 emphasised
+  per layout family. Pairs with `Capability.salience_default` and
+  `IntentProfile.priority_rules` (Wave 7b / P-9).
+- `loading-state-grace` — when to show a Spinner vs. Skeleton vs. nothing.
+- `motion-respect-reduced` — honour `motion_preference: 'reduced'` everywhere.
+
 ## What ships in this repo
 
 - `cart-add.skill.md` — paired with the DummyJSON cart capability.

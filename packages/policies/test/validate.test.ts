@@ -20,6 +20,7 @@ describe('validateManifest', () => {
       'reversibility_surfaced',
       'respects_brand_kit',
       'empty_loading_error_handled',
+      'composes_hierarchy_for_long_lists',
     ]);
   });
 

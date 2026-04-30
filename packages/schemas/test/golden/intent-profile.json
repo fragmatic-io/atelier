@@ -112,6 +112,39 @@
         }
       },
       "additionalProperties": false
+    },
+    "priority_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "minLength": 1
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "urgency",
+              "recency",
+              "unread",
+              "assigned_to_me",
+              "starred",
+              "due_date"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "domain",
+          "signal"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

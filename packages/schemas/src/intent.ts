@@ -123,6 +123,31 @@ export const CompileBudgetSchema = z.object({
 export type CompileBudget = z.infer<typeof CompileBudgetSchema>;
 
 /**
+ * One priority-weighting rule. The compiler combines these with each
+ * capability's `salience_default` expression to weight items in long lists
+ * (lists/tables/grids) so the most important items receive emphasis treatment.
+ *
+ * Shape:
+ * - `domain`: the capability's domain (e.g. `'github'`, `'email'`) or `'*'`
+ *   for any domain.
+ * - `signal`: the signal name the user is weighting. Aligned with the
+ *   well-known set the hierarchy reasoner understands.
+ * - `weight`: 0–1 multiplier applied to the signal's contribution. Defaults
+ *   to 1.0 when omitted (i.e. honour the capability's expression as-is).
+ *
+ * Example: a user who says "urgency × 0.5 in github" stores
+ * `{ domain: 'github', signal: 'urgency', weight: 0.5 }`. The compiler then
+ * derives a per-item score from the GitHub capability's `salience_default`
+ * with the urgency contribution halved relative to other signals.
+ */
+export const PriorityRuleSchema = z.object({
+  domain: z.string().min(1),
+  signal: z.enum(['urgency', 'recency', 'unread', 'assigned_to_me', 'starred', 'due_date']),
+  weight: z.number().min(0).max(1).optional(),
+});
+export type PriorityRule = z.infer<typeof PriorityRuleSchema>;
+
+/**
  * Persistent intent profile — the user's "how I want software to behave" doc.
  */
 export const IntentProfileSchema = z.object({
@@ -145,6 +170,14 @@ export const IntentProfileSchema = z.object({
    * spend is enforced. Omitted means unlimited (i.e. no enforcement).
    */
   compile_budget: CompileBudgetSchema.optional(),
+  /**
+   * Optional information-hierarchy weighting. Each rule modifies the
+   * weight a signal contributes to a capability's `salience_default`
+   * expression in the matching domain. The compiler's hierarchy reasoner
+   * uses these to decide which list/table items get top-of-fold emphasis.
+   * Omitted means "honour every capability's defaults".
+   */
+  priority_rules: z.array(PriorityRuleSchema).optional(),
 });
 export type IntentProfile = z.infer<typeof IntentProfileSchema>;
 

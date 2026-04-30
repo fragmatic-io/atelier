@@ -8,6 +8,7 @@
  */
 
 import type { NamedPolicy, PolicyContext, PolicyResult, PolicyViolation } from './result.js';
+import { composesHierarchyForLongLists } from './baseline/composes_hierarchy_for_long_lists.js';
 import { dataAccessWithinGrant } from './baseline/data_access_within_grant.js';
 import { confirmationRequiredForDestructive } from './baseline/confirmation_required_for_destructive.js';
 import { emptyLoadingErrorHandled } from './baseline/empty_loading_error_handled.js';
@@ -30,6 +31,7 @@ export const BASELINE_POLICIES: readonly NamedPolicy[] = [
   reversibilitySurfaced,
   respectsBrandKit,
   emptyLoadingErrorHandled,
+  composesHierarchyForLongLists,
 ];
 
 export interface ValidateOptions {

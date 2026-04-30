@@ -1,34 +1,97 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
+
+'use client';
 /**
  * Table — semantic <table>. Variants (Wave 6 / P-10): bordered, elevated,
  * ghost (default), tinted.
+ *
+ * Wave 7b / Nav-3 — sticky pinned rows. A row record with `pinned: true`
+ * floats above unpinned rows, sticks to the top of the scroll container via
+ * `position: sticky`, and gets a small Unicode pin glyph in the first cell.
+ * A faint separator <tr> divides the pinned block from the unpinned tail
+ * (toggle via `showPinnedSeparator`). React keys are derived from the row's
+ * index in the SOURCE array so reconciliation is stable across pin/unpin.
+ *
+ * Wave 7b / Int-9 — opt-in multi-select. When `selectable` is true, the
+ * Table prepends a checkbox cell to each row and reflects `data-selected`
+ * based on `selectedIds`. Click toggles, Shift+Click range-selects between
+ * the last clicked anchor and the new row. With `bulkActions`, a floating
+ * `<BulkActionBar>` auto-mounts at bottom-center while the selection is
+ * non-empty.
  */
-import type { CSSProperties, ReactNode } from 'react';
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
 import { EmptyState } from './EmptyState.js';
-import { cn, contentVariantClass, type ContentVariant } from './_variants.js';
+import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
+import {
+  cn,
+  contentVariantClass,
+  pinnedSeparatorClass,
+  type ContentVariant,
+  type PinnedSeparatorVariant,
+} from './_variants.js';
 import { DEFAULT_DENSITY, DENSITY_ROW_PADDING_PX, type Density } from './density.js';
 
 export type TableVariant = ContentVariant;
+
+/** Unicode pushpin used as the default pinned-row indicator. */
+const PIN_GLYPH = '\u{1F4CC}';
+const PINNED_KEY = 'pinned';
 
 export interface TableColumn {
   key: string;
   header: string;
 }
 
+export type TableRowSpec = Record<string, ReactNode> & {
+  /**
+   * Wave 7b / Nav-3. When true, this row floats to the top of the rendered
+   * table (above unpinned rows, in source order) and sticks during scroll.
+   */
+  pinned?: boolean;
+};
+
 export interface TableProps {
   columns: readonly TableColumn[];
-  rows: readonly Record<string, ReactNode>[];
+  rows: readonly TableRowSpec[];
   empty?: ReactNode;
   caption?: string;
   /** Personalisation density. Renderer fills from intent profile when unset. */
   density?: Density;
   variant?: TableVariant;
   className?: string;
+  /**
+   * Render a faint divider row between the pinned block and the unpinned
+   * tail. Defaults to `true`.
+   */
+  showPinnedSeparator?: boolean;
+  /** Visual variant of the pinned-block separator. */
+  pinnedSeparatorVariant?: PinnedSeparatorVariant;
+  /** Override the `aria-label` applied to every pinned `<tr>`. */
+  pinAriaLabel?: (row: TableRowSpec) => string;
+  /**
+   * Wave 7b / Int-9 — opt-in multi-select. When true, every row gets a
+   * leading checkbox cell.
+   */
+  selectable?: boolean;
+  /** Stable id extractor used to key rows into `selectedIds`. Defaults to the row index as a string. */
+  idOf?: (row: TableRowSpec, index: number) => string;
+  /** Read-only set of currently-selected ids. Only consulted when `selectable` is true. */
+  selectedIds?: ReadonlySet<string>;
+  /** Called whenever the selection set changes. Hosts pass an immutable next-state. */
+  onSelectionChange?: (next: ReadonlySet<string>) => void;
+  /** Bulk actions surfaced via `<BulkActionBar>` when one or more rows are selected. */
+  bulkActions?: readonly BulkAction[];
+  /** Click handler for a bulk action. Receives the action's id (= capability id). */
+  onBulkAction?: (actionId: string) => void;
 }
 
 const DEFAULT_EMPTY = <EmptyState title="No data" />;
+
+function isPinnedRow(row: TableRowSpec): boolean {
+  return row[PINNED_KEY] === true;
+}
 
 export function Table({
   columns,
@@ -38,7 +101,18 @@ export function Table({
   density = DEFAULT_DENSITY,
   variant = 'ghost',
   className,
+  showPinnedSeparator = true,
+  pinnedSeparatorVariant = 'default',
+  pinAriaLabel,
+  selectable = false,
+  idOf,
+  selectedIds,
+  onSelectionChange,
+  bulkActions,
+  onBulkAction,
 }: TableProps): ReactNode {
+  const anchorRef = useRef<string | null>(null);
+  const [localSelected, setLocalSelected] = useState<ReadonlySet<string>>(() => new Set<string>());
   if (rows.length === 0) {
     return (
       <div
@@ -57,16 +131,95 @@ export function Table({
     paddingTop: `${String(cellPad)}px`,
     paddingBottom: `${String(cellPad)}px`,
   };
-  return (
+  // Sticky <tr> styling. Inline so non-Tailwind hosts get the behaviour with
+  // no CSS-config surgery. `position: sticky` on a `<tr>` is well-supported
+  // in modern engines once the cells also carry `position: sticky`.
+  const pinnedCellStyle: CSSProperties = {
+    ...cellStyle,
+    position: 'sticky',
+    top: 0,
+    zIndex: 10,
+    background: 'inherit',
+  };
+  const indexed = rows.map((row, i) => ({ row, i }));
+  const pinnedRows = indexed.filter(({ row }) => isPinnedRow(row));
+  const unpinnedRows = indexed.filter(({ row }) => !isPinnedRow(row));
+  const hasPinned = pinnedRows.length > 0;
+
+  // Selection wiring (mirrors List).
+  const idResolver = idOf ?? ((_row: TableRowSpec, index: number): string => String(index));
+  const effectiveSelected = selectedIds ?? localSelected;
+  const allIds = rows.map((row, i) => idResolver(row, i));
+  const emitSelection = (next: ReadonlySet<string>): void => {
+    if (onSelectionChange) onSelectionChange(next);
+    else setLocalSelected(next);
+  };
+  const handleToggle = (id: string, e: React.MouseEvent | React.ChangeEvent): void => {
+    const isShiftClick =
+      'shiftKey' in (e as unknown as { shiftKey?: boolean }) &&
+      (e as unknown as { shiftKey?: boolean }).shiftKey === true;
+    const next = new Set<string>(effectiveSelected);
+    if (isShiftClick && anchorRef.current && anchorRef.current !== id) {
+      const fromIdx = allIds.indexOf(anchorRef.current);
+      const toIdx = allIds.indexOf(id);
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const lo = Math.min(fromIdx, toIdx);
+        const hi = Math.max(fromIdx, toIdx);
+        for (let k = lo; k <= hi; k++) {
+          const cur = allIds[k];
+          if (cur !== undefined) next.add(cur);
+        }
+        emitSelection(next);
+        return;
+      }
+    }
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    anchorRef.current = id;
+    emitSelection(next);
+  };
+  const handleClear = (): void => {
+    anchorRef.current = null;
+    emitSelection(new Set<string>());
+  };
+
+  const checkboxHeader = selectable ? (
+    <th key="cir-select" scope="col" style={cellStyle} data-cir-part="table-select-header">
+      <span className="sr-only">Select</span>
+    </th>
+  ) : null;
+  const checkboxCell = (id: string, idx: number, style: CSSProperties): ReactNode => {
+    const checked = effectiveSelected.has(id);
+    return (
+      <td key="cir-select" style={style} data-cir-part="table-select-cell">
+        <input
+          type="checkbox"
+          aria-label={`Select row ${String(idx + 1)}`}
+          checked={checked}
+          onClick={(e): void => {
+            handleToggle(id, e);
+          }}
+          onChange={(): void => {
+            /* handled via onClick to access shiftKey */
+          }}
+        />
+      </td>
+    );
+  };
+
+  const table = (
     <table
       data-cir-component="Table"
       data-density={density}
       data-variant={variant}
+      data-has-pinned={hasPinned ? 'true' : 'false'}
+      data-selectable={selectable ? 'true' : 'false'}
       className={cn(contentVariantClass[variant], className)}
     >
       {caption !== undefined ? <caption>{caption}</caption> : null}
       <thead>
         <tr>
+          {checkboxHeader}
           {columns.map((c) => (
             <th key={c.key} scope="col" style={cellStyle}>
               {c.header}
@@ -75,17 +228,76 @@ export function Table({
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, i) => (
-          <tr key={i}>
-            {columns.map((c) => (
-              <td key={c.key} style={cellStyle}>
-                {row[c.key] ?? ''}
-              </td>
-            ))}
+        {pinnedRows.map(({ row, i }) => {
+          const ariaLabel = pinAriaLabel ? pinAriaLabel(row) : 'Pinned';
+          const id = idResolver(row, i);
+          const checked = selectable && effectiveSelected.has(id);
+          return (
+            <tr
+              key={i}
+              data-pinned="true"
+              data-selected={selectable ? (checked ? 'true' : 'false') : undefined}
+              aria-label={ariaLabel}
+            >
+              {selectable ? checkboxCell(id, i, pinnedCellStyle) : null}
+              {columns.map((c, ci) => (
+                <td key={c.key} style={pinnedCellStyle}>
+                  {ci === 0 ? (
+                    <span data-pin-indicator="true" aria-hidden="true">
+                      {PIN_GLYPH}{' '}
+                    </span>
+                  ) : null}
+                  {row[c.key] ?? ''}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
+        {hasPinned && showPinnedSeparator ? (
+          <tr key="cir-pinned-separator" aria-hidden="true" data-cir-part="pinned-separator">
+            <td
+              colSpan={columns.length + (selectable ? 1 : 0)}
+              className={pinnedSeparatorClass[pinnedSeparatorVariant]}
+              style={{ padding: 0, height: 0 }}
+            />
           </tr>
-        ))}
+        ) : null}
+        {unpinnedRows.map(({ row, i }) => {
+          const id = idResolver(row, i);
+          const checked = selectable && effectiveSelected.has(id);
+          return (
+            <tr key={i} data-selected={selectable ? (checked ? 'true' : 'false') : undefined}>
+              {selectable ? checkboxCell(id, i, cellStyle) : null}
+              {columns.map((c) => (
+                <td key={c.key} style={cellStyle}>
+                  {row[c.key] ?? ''}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
       </tbody>
     </table>
+  );
+
+  const showBar =
+    selectable &&
+    bulkActions !== undefined &&
+    bulkActions.length > 0 &&
+    effectiveSelected.size >= 1;
+  if (!showBar) return table;
+  return (
+    <>
+      {table}
+      <BulkActionBar
+        selectionCount={effectiveSelected.size}
+        actions={bulkActions}
+        onAction={(id): void => {
+          if (onBulkAction) onBulkAction(id);
+        }}
+        onClear={handleClear}
+      />
+    </>
   );
 }
 Table.displayName = 'Table';

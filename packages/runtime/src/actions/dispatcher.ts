@@ -40,7 +40,69 @@ export interface ActionResult {
   error?: string;
   audit_id?: string;
   side_effects?: string[];
+  /**
+   * Present only when the dispatched capability declared `undoable: true`
+   * and dispatch succeeded. Hosts pass this token to
+   * `dispatcher.undoFromToken(token)` within `expires_at` to reverse the
+   * action. After the window closes the token is invalidated and any call
+   * with it throws `UndoExpiredError`.
+   */
+  undo_token?: string;
+  /** ISO 8601 timestamp at which `undo_token` expires. */
+  undo_expires_at?: string;
+  /** Capability-declared (or default-5000) window in milliseconds. */
+  undo_window_ms?: number;
 }
+
+/**
+ * Outcome of a successful `undoFromToken()` call. Mirrors `ActionResult` for
+ * the rolled-back dispatch but adds the original event id for correlation.
+ */
+export interface UndoResult extends ActionResult {
+  /** The undo token that was redeemed. */
+  undo_token: string;
+  /** Audit id of the original (now-undone) `action.executed` event. */
+  original_event_id: string;
+}
+
+/**
+ * Default window (in milliseconds) when an undoable capability omits
+ * `undo_window_ms`. Mirrors Linear's 5-second toast window — long enough for
+ * a reasonable undo, short enough that the action effectively commits.
+ */
+export const DEFAULT_UNDO_WINDOW_MS = 5000;
+
+/**
+ * Thrown by `undoFromToken()` when the token is unknown or its window has
+ * already expired. Hosts catch this to render a "Undo expired" or "already
+ * undone" affordance.
+ */
+export class UndoExpiredError extends Error {
+  constructor(
+    public readonly undo_token: string,
+    message = `undo window expired (token=${undo_token})`,
+  ) {
+    super(message);
+    this.name = 'UndoExpiredError';
+  }
+}
+
+/**
+ * Test-only injection seam for the expiry timer. Mirrors the shape of
+ * `setTimeout` / `clearTimeout` so callers can swap a fake scheduler in
+ * tests without globally replacing timers. Defaults to global `setTimeout`.
+ */
+export interface UndoTimer {
+  setTimeout: (handler: () => void, ms: number) => unknown;
+  clearTimeout: (handle: unknown) => void;
+}
+
+const DEFAULT_TIMER: UndoTimer = {
+  setTimeout: (handler, ms) => globalThis.setTimeout(handler, ms),
+  clearTimeout: (handle) => {
+    globalThis.clearTimeout(handle as ReturnType<typeof globalThis.setTimeout>);
+  },
+};
 
 export interface ActionDispatcherOptions {
   /** Capabilities the dispatcher knows about, keyed by `capability.id`. */
@@ -52,6 +114,25 @@ export interface ActionDispatcherOptions {
   undoStackSize?: number;
   /** Override `Date.now` for tests. */
   clock?: Clock;
+  /** Override `Date.now()` (epoch ms) for undo-window math. Default `Date.now`. */
+  nowMs?: () => number;
+  /** Override the expiry timer (`setTimeout` / `clearTimeout`). */
+  timer?: UndoTimer;
+  /** Override the undo-token generator. Default: `crypto.randomUUID()`. */
+  generateUndoToken?: () => string;
+}
+
+/**
+ * Internal record for an open undo window. Holds the bookkeeping needed by
+ * `undoFromToken()` and the expiry-fired audit emission.
+ */
+interface OpenUndoToken {
+  capability_id: string;
+  expires_at: string;
+  expires_at_ms: number;
+  original_event_id: string;
+  entry: UndoEntry;
+  timerHandle: unknown;
 }
 
 function lastSegment(capabilityId: string): string {
@@ -66,6 +147,22 @@ function nextAuditId(): `evt_${string}` {
   return `evt_${Date.now().toString(36)}${auditSeq.toString(36)}${rand}`;
 }
 
+function defaultUndoTokenGenerator(): string {
+  // `crypto.randomUUID()` is available on Node 19+ and all modern browsers.
+  // Falls back to a manually-shaped v4 hex string only if the platform is
+  // missing it (very unlikely in supported runtimes — kept for defensive
+  // posture against test environments that strip globalThis.crypto).
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  if (c?.randomUUID) return c.randomUUID();
+  // Fallback: 16 bytes of Math.random hex — NOT cryptographically secure, but
+  // collision-free enough for in-process token bookkeeping. Real deployments
+  // never hit this path.
+  const hex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join(
+    '',
+  );
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
 export class ActionDispatcher {
   readonly #capabilities: Record<string, Capability>;
   readonly #registry: ActionRegistry;
@@ -73,6 +170,10 @@ export class ActionDispatcher {
   readonly #audit: AuditSink;
   readonly #undoStack: UndoStack;
   readonly #clock: Clock;
+  readonly #nowMs: () => number;
+  readonly #timer: UndoTimer;
+  readonly #generateUndoToken: () => string;
+  readonly #openTokens = new Map<string, OpenUndoToken>();
 
   constructor(opts: ActionDispatcherOptions) {
     this.#capabilities = opts.capabilities;
@@ -81,6 +182,9 @@ export class ActionDispatcher {
     this.#audit = opts.audit ?? NoopAuditSink;
     this.#undoStack = new UndoStack(opts.undoStackSize ?? 50);
     this.#clock = opts.clock ?? isoNow;
+    this.#nowMs = opts.nowMs ?? (() => Date.now());
+    this.#timer = opts.timer ?? DEFAULT_TIMER;
+    this.#generateUndoToken = opts.generateUndoToken ?? defaultUndoTokenGenerator;
   }
 
   async dispatch(
@@ -129,8 +233,9 @@ export class ActionDispatcher {
       return this.#deny(ctx, capabilityId, `handler threw: ${message}`, capability);
     }
 
+    let undoEntry: UndoEntry | undefined;
     if (capability.reversible && capability.rollback) {
-      const entry: UndoEntry = {
+      undoEntry = {
         rollback_capability_id: capability.rollback,
         rollback_input: input,
         original_capability_id: capabilityId,
@@ -141,10 +246,43 @@ export class ActionDispatcher {
         ctx: { ...ctx },
         pushed_at: this.#clock(),
       };
-      this.#undoStack.push(entry);
+      this.#undoStack.push(undoEntry);
     }
 
     const audit_id = await this.#emitExecuted(ctx, capability, result);
+
+    // Open an undo window if the capability declares `undoable: true` AND
+    // it is reversible with a rollback target. The two flags pair: the
+    // toast affordance (`undoable`) is the user-visible promise; the undo
+    // entry is the mechanism that fulfils it.
+    if (capability.undoable === true && undoEntry) {
+      const windowMs = capability.undo_window_ms ?? DEFAULT_UNDO_WINDOW_MS;
+      const token = this.#generateUndoToken();
+      const expiresAtMs = this.#nowMs() + windowMs;
+      const expiresAt = new Date(expiresAtMs).toISOString();
+      const timerHandle = this.#timer.setTimeout(() => {
+        this.#expireToken(token);
+      }, windowMs);
+      this.#openTokens.set(token, {
+        capability_id: capability.id,
+        expires_at: expiresAt,
+        expires_at_ms: expiresAtMs,
+        original_event_id: audit_id,
+        entry: undoEntry,
+        timerHandle,
+      });
+      await this.#emitUndoableWindowOpen(ctx, capability, token, expiresAt);
+      return {
+        ok: true,
+        result,
+        audit_id,
+        side_effects: [...capability.side_effects],
+        undo_token: token,
+        undo_expires_at: expiresAt,
+        undo_window_ms: windowMs,
+      };
+    }
+
     return {
       ok: true,
       result,
@@ -183,6 +321,70 @@ export class ActionDispatcher {
   /** Test-only inspection helper. */
   undoStackSize(): number {
     return this.#undoStack.size();
+  }
+
+  /**
+   * Reverse a dispatch identified by the undo token returned from
+   * `dispatch()`. Throws `UndoExpiredError` if the token is unknown or its
+   * window has already closed. Returns an `UndoResult` mirroring the
+   * rollback dispatch with the original event id for correlation.
+   *
+   * The expiry timer is cancelled here so we do not race with
+   * `action.undo_window_expired`. Concurrent `undoFromToken()` calls for
+   * the same token are guarded by an immediate delete: the second caller
+   * sees a missing token and throws.
+   */
+  async undoFromToken(undo_token: string): Promise<UndoResult> {
+    const open = this.#openTokens.get(undo_token);
+    if (!open) {
+      throw new UndoExpiredError(undo_token);
+    }
+    // Atomic check-and-take. If a second caller raced us, they'll see the
+    // missing token after this point.
+    this.#openTokens.delete(undo_token);
+    this.#timer.clearTimeout(open.timerHandle);
+    // Optional: also pop the entry off the undo stack if it's the top of
+    // stack. We don't strictly need this — calling `undo()` after a
+    // successful `undoFromToken()` would just reach into the stack — but
+    // it keeps `canUndo()` honest. Use a snapshot scan to find the entry.
+    this.#removeFromUndoStack(open.entry);
+
+    const result = await this.#dispatchWithoutUndoTracking(
+      open.entry.rollback_capability_id,
+      open.entry.rollback_input,
+      open.entry.ctx,
+    );
+    await this.#emitUndone(open.entry.ctx, open.capability_id, undo_token, open.original_event_id);
+    return {
+      ...result,
+      undo_token,
+      original_event_id: open.original_event_id,
+    };
+  }
+
+  /**
+   * Test-only — number of open (non-expired, non-redeemed) undo tokens.
+   * Used by tests to verify expiry / redemption clean up state.
+   */
+  openUndoTokenCount(): number {
+    return this.#openTokens.size;
+  }
+
+  /**
+   * Test-only — inspect the metadata for an open token without redeeming it.
+   * Returns `undefined` if the token is unknown or has already been
+   * redeemed / expired.
+   */
+  peekUndoToken(
+    undo_token: string,
+  ): { capability_id: string; expires_at: string; original_event_id: string } | undefined {
+    const open = this.#openTokens.get(undo_token);
+    if (!open) return undefined;
+    return {
+      capability_id: open.capability_id,
+      expires_at: open.expires_at,
+      original_event_id: open.original_event_id,
+    };
   }
 
   async #dispatchWithoutUndoTracking(
@@ -278,6 +480,131 @@ export class ActionDispatcher {
       await this.#audit.emit(event);
     } catch {
       // Audit is best-effort.
+    }
+  }
+
+  /**
+   * Emit `action.undoable_window_open` and remember bookkeeping for
+   * `undoFromToken()`. Trigger chain carries the capability id and the
+   * undo token (so dashboards can pair this event with the eventual
+   * `action.undone` / `action.undo_window_expired`). The action input is
+   * NEVER included in the audit payload.
+   */
+  async #emitUndoableWindowOpen(
+    ctx: ActionExecutionContext,
+    capability: Capability,
+    undo_token: string,
+    expires_at: string,
+  ): Promise<string> {
+    const event_id = nextAuditId();
+    const event: AuditEvent = {
+      event_id,
+      timestamp: this.#clock(),
+      user_id: ctx.user_id || 'unknown',
+      app_id: ctx.app_id || 'unknown',
+      type: 'action.undoable_window_open',
+      actor: 'user',
+      before_state_hash: '',
+      after_state_hash: '',
+      trigger_chain: [
+        `action:${capability.id}`,
+        `undo_token:${undo_token}`,
+        `expires_at:${expires_at}`,
+      ],
+      token_cost: 0,
+      policy_evaluations: [],
+      ...(ctx.manifest_id ? { manifest_id: ctx.manifest_id } : {}),
+    };
+    await this.#emit(event);
+    return event_id;
+  }
+
+  /**
+   * Emit `action.undone` after a successful `undoFromToken()` redemption.
+   * The trigger chain links to the original event so an audit reader can
+   * stitch the apply / undo pair without mining payload fields.
+   */
+  async #emitUndone(
+    ctx: ActionExecutionContext,
+    capability_id: string,
+    undo_token: string,
+    original_event_id: string,
+  ): Promise<string> {
+    const event_id = nextAuditId();
+    const event: AuditEvent = {
+      event_id,
+      timestamp: this.#clock(),
+      user_id: ctx.user_id || 'unknown',
+      app_id: ctx.app_id || 'unknown',
+      type: 'action.undone',
+      actor: 'user',
+      before_state_hash: '',
+      after_state_hash: '',
+      trigger_chain: [
+        `action:${capability_id}`,
+        `undo_token:${undo_token}`,
+        `original_event_id:${original_event_id}`,
+      ],
+      token_cost: 0,
+      policy_evaluations: [],
+      ...(ctx.manifest_id ? { manifest_id: ctx.manifest_id } : {}),
+    };
+    await this.#emit(event);
+    return event_id;
+  }
+
+  /**
+   * Emit `action.undo_window_expired` when the timer fires without an
+   * `undoFromToken()` call. Cleans the token out of the open-tokens map.
+   */
+  async #emitUndoExpired(
+    ctx: ActionExecutionContext,
+    capability_id: string,
+    undo_token: string,
+  ): Promise<string> {
+    const event_id = nextAuditId();
+    const event: AuditEvent = {
+      event_id,
+      timestamp: this.#clock(),
+      user_id: ctx.user_id || 'unknown',
+      app_id: ctx.app_id || 'unknown',
+      type: 'action.undo_window_expired',
+      actor: 'system',
+      before_state_hash: '',
+      after_state_hash: '',
+      trigger_chain: [`action:${capability_id}`, `undo_token:${undo_token}`],
+      token_cost: 0,
+      policy_evaluations: [],
+      ...(ctx.manifest_id ? { manifest_id: ctx.manifest_id } : {}),
+    };
+    await this.#emit(event);
+    return event_id;
+  }
+
+  /**
+   * Timer callback: invalidate the token, emit the expiry audit event.
+   * Idempotent — safe if the token was already redeemed (but in practice
+   * `undoFromToken()` cancels the timer first to avoid the race).
+   */
+  #expireToken(undo_token: string): void {
+    const open = this.#openTokens.get(undo_token);
+    if (!open) return;
+    this.#openTokens.delete(undo_token);
+    void this.#emitUndoExpired(open.entry.ctx, open.capability_id, undo_token);
+  }
+
+  /**
+   * Best-effort: drop the matching entry from the bounded undo stack so
+   * that `canUndo()` reflects the post-undo reality. We can't index by
+   * reference inside `UndoStack`, so we rebuild from a snapshot. Ok at
+   * the bounded sizes we use (default 50).
+   */
+  #removeFromUndoStack(target: UndoEntry): void {
+    const all = this.#undoStack.snapshot();
+    if (!all.includes(target)) return;
+    this.#undoStack.clear();
+    for (const e of all) {
+      if (e !== target) this.#undoStack.push(e);
     }
   }
 

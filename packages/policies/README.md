@@ -12,14 +12,15 @@ See [`docs/architecture.md` §"Policy engine"][arch] for the design.
 
 ## Baseline policies
 
-| ID                                      | Severity | Applies to | Description                                                                                                                                             |
-| --------------------------------------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data_access_within_grant`              | error    | data       | Every component data binding only projects fields the user has granted to this app.                                                                     |
-| `confirmation_required_for_destructive` | error    | action     | Every destructive action (`send`, `delete`, `pay`, ...) is gated by a `ConfirmDialog` or a `confirmation: modal` prop.                                  |
-| `no_pii_in_query_strings`               | error    | manifest   | No route path embeds a PII field as a placeholder (`/u/:email`) or literal segment.                                                                     |
-| `rate_limited_actions_show_state`       | warn     | manifest   | Layouts that dispatch rate-limited actions surface the remaining quota (sibling/ancestor binds a `*.quota` data source).                                |
-| `reversibility_surfaced`                | error    | manifest   | Reversible actions surface an undo affordance in the same route. Destructive non-reversible actions emit a warn for review.                             |
-| `respects_brand_kit`                    | error    | manifest   | Variant + raw-value enforcement; Wave 6 also gates inline `border-radius`, `box-shadow`, `transition-duration`, and warns on low-contrast colour pairs. |
+| ID                                      | Severity | Applies to | Description                                                                                                                                                                                    |
+| --------------------------------------- | -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data_access_within_grant`              | error    | data       | Every component data binding only projects fields the user has granted to this app.                                                                                                            |
+| `confirmation_required_for_destructive` | error    | action     | Every destructive action (`send`, `delete`, `pay`, ...) is gated by a `ConfirmDialog` or a `confirmation: modal` prop.                                                                         |
+| `no_pii_in_query_strings`               | error    | manifest   | No route path embeds a PII field as a placeholder (`/u/:email`) or literal segment.                                                                                                            |
+| `rate_limited_actions_show_state`       | warn     | manifest   | Layouts that dispatch rate-limited actions surface the remaining quota (sibling/ancestor binds a `*.quota` data source).                                                                       |
+| `reversibility_surfaced`                | error    | manifest   | Reversible actions surface an undo affordance in the same route. Destructive non-reversible actions emit a warn for review.                                                                    |
+| `respects_brand_kit`                    | error    | manifest   | Variant + raw-value enforcement; Wave 6 also gates inline `border-radius`, `box-shadow`, `transition-duration`, and warns on low-contrast colour pairs.                                        |
+| `composes_hierarchy_for_long_lists`     | warn     | manifest   | Long-cardinality `List`/`Table`/`Grid` bindings whose capability declares `salience_default` must declare hierarchy treatment (compact density, `emphasizeTopN`, or a `KPIRow` summary above). |
 
 Plus one factory policy (composed into the baseline by passing a rules map):
 

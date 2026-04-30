@@ -35,6 +35,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "BulkActionBar": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@cir/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "BulkActionBarProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "Button": {
     "actions_supported": [],
     "data_sources": [],
@@ -230,6 +239,24 @@
     "design_tokens": "@cir/components/baseline@0.1.0",
     "examples": ["/recipes/dummyjson-shopper.json"],
     "props_schema": "GridProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "HoverCard": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@cir/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "HoverCardProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "Icon": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@cir/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "IconProps",
     "responsive_targets": ["web"],
     "text_render": true
   },

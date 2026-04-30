@@ -75,6 +75,71 @@ describe('IntentProfileSchema', () => {
     const result = IntentProfileSchema.safeParse(bad);
     expect(result.success).toBe(false);
   });
+
+  it('accepts a profile with priority_rules entries (well-known signals)', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      priority_rules: [
+        { domain: 'github', signal: 'urgency', weight: 0.5 },
+        { domain: '*', signal: 'starred' },
+        { domain: 'email', signal: 'unread', weight: 1 },
+      ],
+    };
+    const parsed = IntentProfileSchema.parse(profile);
+    expect(parsed.priority_rules).toHaveLength(3);
+    expect(parsed.priority_rules?.[0]?.weight).toBe(0.5);
+    expect(parsed.priority_rules?.[1]?.weight).toBeUndefined();
+  });
+
+  it('treats priority_rules as optional (existing profiles still validate)', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+    };
+    const parsed = IntentProfileSchema.parse(profile);
+    expect(parsed.priority_rules).toBeUndefined();
+  });
+
+  it('rejects a priority_rule with an unknown signal', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      priority_rules: [{ domain: 'github', signal: 'mood', weight: 0.5 }],
+    };
+    const result = IntentProfileSchema.safeParse(profile);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a priority_rule with a weight outside the 0–1 range', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-04-29T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      priority_rules: [{ domain: 'github', signal: 'urgency', weight: 1.5 }],
+    };
+    const result = IntentProfileSchema.safeParse(profile);
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('GlobalPreferencesSchema', () => {

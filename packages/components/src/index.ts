@@ -71,7 +71,7 @@ export { Markdown, MarkdownBinding } from './components/Markdown.js';
 export type { MarkdownProps } from './components/Markdown.js';
 
 export { Table, TableBinding } from './components/Table.js';
-export type { TableProps, TableColumn } from './components/Table.js';
+export type { TableProps, TableColumn, TableRowSpec } from './components/Table.js';
 
 export { EmptyState, EmptyStateBinding } from './components/EmptyState.js';
 export type { EmptyStateProps } from './components/EmptyState.js';
@@ -189,11 +189,19 @@ export type { ToastProps } from './components/Toast.js';
 export { Tooltip, TooltipBinding, computeTooltipPosition } from './components/Tooltip.js';
 export type { TooltipProps, TooltipSide } from './components/Tooltip.js';
 
+export {
+  HoverCard,
+  HoverCardBinding,
+  hoverCardTextRender,
+  computeHoverCardPosition,
+} from './components/HoverCard.js';
+export type { HoverCardProps, HoverCardSide } from './components/HoverCard.js';
+
 export { Progress, ProgressBinding } from './components/Progress.js';
 export type { ProgressProps } from './components/Progress.js';
 
 export { Skeleton, SkeletonBinding } from './components/Skeleton.js';
-export type { SkeletonProps, SkeletonRadius } from './components/Skeleton.js';
+export type { SkeletonProps, SkeletonRadius, SkeletonShape } from './components/Skeleton.js';
 
 // -----------------------------------------------------------------------------
 // Action
@@ -210,6 +218,13 @@ export type {
   ActionMenuItem,
   ActionMenuPlacement,
 } from './components/ActionMenu.js';
+
+export {
+  BulkActionBar,
+  BulkActionBarBinding,
+  bulkActionBarTextRender,
+} from './components/BulkActionBar.js';
+export type { BulkActionBarProps, BulkAction } from './components/BulkActionBar.js';
 
 // -----------------------------------------------------------------------------
 // Specialized
@@ -250,6 +265,32 @@ export type { KanbanProps, KanbanColumn, KanbanCard } from './components/Kanban.
 
 export { ChatThread, ChatThreadBinding } from './components/ChatThread.js';
 export type { ChatThreadProps, ChatMessage, ChatRole } from './components/ChatThread.js';
+
+// -----------------------------------------------------------------------------
+// Icons (Wave 7b / Vis-3) — `<Icon>` plus the host-pluggable resolver
+// protocol. CIR ships zero icon packs; hosts implement `IconResolver` and
+// wire it via `<IconResolverProvider>`.
+// -----------------------------------------------------------------------------
+export {
+  Icon,
+  IconBinding,
+  iconTextRender,
+  ICON_DEFAULT_SIZE,
+  ICON_DEFAULT_STROKE_WIDTH,
+} from './components/Icon.js';
+export type { IconProps } from './components/Icon.js';
+
+export { IconResolverContext, IconResolverProvider, useIconResolver } from './icons/context.js';
+export type { IconResolverProviderProps } from './icons/context.js';
+
+export { IconBrandContext, IconBrandProvider, useIconBrand } from './icons/brand-context.js';
+export type { IconBrandConfig, IconBrandProviderProps } from './icons/brand-context.js';
+
+export { LiteralIconResolver, MapIconResolver, NoopIconResolver } from './icons/resolver.js';
+export type { IconResolver } from './icons/resolver.js';
+
+export type { IconSize } from './components/_variants.js';
+export { iconSizePx } from './components/_variants.js';
 
 // -----------------------------------------------------------------------------
 // Registry, composition rules, text renderers

@@ -23,6 +23,7 @@ import { AccordionBinding } from './components/Accordion.js';
 import { ActionMenuBinding } from './components/ActionMenu.js';
 import { AlertBinding } from './components/Alert.js';
 import { BreadcrumbBinding } from './components/Breadcrumb.js';
+import { BulkActionBarBinding } from './components/BulkActionBar.js';
 import { ButtonBinding } from './components/Button.js';
 import { ButtonGroupBinding } from './components/ButtonGroup.js';
 import { CalendarBinding } from './components/Calendar.js';
@@ -44,6 +45,8 @@ import { FilterBarBinding } from './components/FilterBar.js';
 import { FormBinding } from './components/Form.js';
 import { GalleryBinding } from './components/Gallery.js';
 import { GridBinding } from './components/Grid.js';
+import { HoverCardBinding } from './components/HoverCard.js';
+import { IconBinding } from './components/Icon.js';
 import { KPIRowBinding } from './components/KPIRow.js';
 import { KanbanBinding } from './components/Kanban.js';
 import { ListBinding } from './components/List.js';
@@ -84,6 +87,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   ActionMenu: ActionMenuBinding,
   Alert: AlertBinding,
   Breadcrumb: BreadcrumbBinding,
+  BulkActionBar: BulkActionBarBinding,
   Button: ButtonBinding,
   ButtonGroup: ButtonGroupBinding,
   Calendar: CalendarBinding,
@@ -106,6 +110,8 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Form: FormBinding,
   Gallery: GalleryBinding,
   Grid: GridBinding,
+  HoverCard: HoverCardBinding,
+  Icon: IconBinding,
   KPIRow: KPIRowBinding,
   Kanban: KanbanBinding,
   List: ListBinding,
@@ -373,4 +379,18 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   // component) and renders its bubble via portal. Manifest-side this is a
   // wildcard container with exactly one child.
   Tooltip: { can_contain: '*', min_children: 1, max_children: 1 },
+  // Wave 7b / track Int-13 — HoverCard wraps a single trigger element
+  // (any component) and renders a rich preview surface via portal. Like
+  // Tooltip, manifest-side this is a wildcard container with exactly
+  // one child; the card body is supplied via the `content` prop (or a
+  // thunk for lazy resolution), not as a manifest child.
+  HoverCard: { can_contain: '*', min_children: 1, max_children: 1 },
+  // Wave 7b / track Vis-3 — Icon is a pure leaf. The SVG markup is sourced
+  // from the host's `IconResolver`; no manifest-level children.
+  Icon: { can_contain: 'leaf' },
+  // Wave 7b / track Int-9 — BulkActionBar is a self-contained floating
+  // surface. The bar's count + buttons + close are rendered from the
+  // `selectionCount` / `actions` props, so the manifest does not embed
+  // children inside it.
+  BulkActionBar: { can_contain: 'leaf' },
 });

@@ -81,6 +81,7 @@ export {
   IntentRuleSchema,
   ModalTolerancePreference,
   MotionPreference,
+  PriorityRuleSchema,
   type CompileBudget,
   type ConversationOverlay,
   type ConversationOverride,
@@ -88,6 +89,7 @@ export {
   type GlobalPreferences,
   type IntentProfile,
   type IntentRule,
+  type PriorityRule,
 } from './intent.js';
 
 // -----------------------------------------------------------------------------

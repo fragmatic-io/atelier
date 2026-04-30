@@ -61,6 +61,16 @@
     "low_stakes": {
       "type": "boolean"
     },
+    "salience_default": {
+      "type": "string"
+    },
+    "undoable": {
+      "type": "boolean"
+    },
+    "undo_window_ms": {
+      "type": "integer",
+      "minimum": 1
+    },
     "_review": {
       "type": "object",
       "properties": {

@@ -13,9 +13,16 @@ that fit the runtime's `ComponentBinding`. Hosts paint them via
 | Display     | 12    | `Markdown`, `Table`, `List`, `DetailView`, `StatCard`, `Chart`, `Timeline`, `Tree`, `CodeView`, `DiffView`, `Map`, `EmptyState`                     |
 | Input       | 12    | `TextInput`, `NumberInput`, `DateInput`, `TimeInput`, `Select`, `MultiSelect`, `Toggle`, `Slider`, `FileUpload`, `RichText`, `CodeEditor`, `Search` |
 | Navigation  | 6     | `NavBar`, `Sidebar`, `Breadcrumb`, `Pagination`, `Stepper`, `CommandPalette`                                                                        |
-| Feedback    | 6     | `Alert`, `Toast`, `Spinner`, `Progress`, `Skeleton`, `EmptyState` (also counted under Display)                                                      |
+| Feedback    | 8     | `Alert`, `Toast`, `Spinner`, `Progress`, `Skeleton`, `Tooltip`, `HoverCard`, `EmptyState` (also counted under Display)                              |
 | Action      | 4     | `Button`, `ButtonGroup`, `ActionMenu`, `ConfirmDialog`                                                                                              |
 | Specialized | 8     | `Form`, `Wizard`, `FilterBar`, `KPIRow`, `Gallery`, `Kanban`, `Calendar`, `ChatThread`                                                              |
+
+`<HoverCard>` is the rich-content sibling of `<Tooltip>` — distinct from
+short hint strings, hover-cards surface metadata, images, stats, or
+inline actions on a 320px-wide preview surface (350ms open delay /
+150ms close delay; hovering the card itself keeps it open). It pairs
+with the future Cnt-3 mention / issue auto-resolution work as the
+rendering surface for `#issue` and `@user` previews.
 
 **56 components total** — the full baseline catalog enumerated in
 [`docs/component-catalog.md`](../../docs/component-catalog.md). The
@@ -123,6 +130,220 @@ A `size` prop (`sm` \| `md` \| `lg`, default `md`) is available on
 
 The remaining 32 components (inputs, charts, niche primitives) get
 variants in a follow-up pass — see `TODO.md` Phase 7+.
+
+## Pinned items (List, Table — Wave 7b / Nav-3)
+
+`List` and `Table` honour an optional `pinned: true` flag on each item /
+row. Pinned items float to the top of the rendered list (in source order,
+above unpinned siblings), get a Unicode pushpin (`📌`) indicator, and
+stick to the top of the parent scroll container via inline
+`position: sticky; top: 0; z-index: 10` (no Tailwind config required).
+Items without `pinned` render exactly as before.
+
+```tsx
+<List
+  items={[
+    { id: 'a', label: 'Alpha' },
+    { id: 'b', label: 'Bravo', pinned: true },
+    { id: 'c', label: 'Charlie' },
+  ]}
+  renderItem={(it) => <span>{it.label}</span>}
+/>
+// Render order: Bravo (pinned, sticky) → separator → Alpha → Charlie.
+```
+
+Both components accept:
+
+| Prop                     | Default     | Notes                                                          |
+| ------------------------ | ----------- | -------------------------------------------------------------- |
+| `showPinnedSeparator`    | `true`      | Faint divider drawn between pinned and unpinned blocks.        |
+| `pinnedSeparatorVariant` | `'default'` | `'default'` (gray-300) or `'subtle'` (gray-200, smaller `my`). |
+| `pinAriaLabel(item)`     | `'Pinned'`  | Override for non-English / contextual labels.                  |
+
+Hosts can target the new state via `[data-pinned="true"]`,
+`[data-has-pinned="true"]`, `[data-pin-indicator="true"]`, and
+`[data-cir-part="pinned-separator"]` selectors. React keys are derived
+from each item's source-array index so reconciliation stays stable when a
+single item flips pinned ↔ unpinned.
+
+## `<Sidebar>` collapse persistence (Wave 7b / Nav-2)
+
+`<Sidebar>` is opt-in collapsible. The default render path (no extra
+props) is unchanged — call sites that only set `defaultCollapsed`
+behave exactly as in Wave 4b. Set `collapsible` to enable Linear-style
+toggle memory:
+
+| Prop               | Type                   | Default | Notes                                                                                                                               |
+| ------------------ | ---------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `collapsible`      | `boolean`              | `false` | Master switch. When `false`, all rows below are inert.                                                                              |
+| `collapsed`        | `boolean`              | —       | Controlled mode. Wins over `persistKey` storage; the component never writes to storage in controlled mode.                          |
+| `defaultCollapsed` | `boolean`              | `false` | Initial state for uncontrolled mode and the fallback when persisted storage is missing or corrupt.                                  |
+| `onCollapseChange` | `(c: boolean) => void` | —       | Fires after every change (button click, keyboard shortcut, controlled prop swap).                                                   |
+| `persistKey`       | `string`               | —       | When set with `collapsible: true`, the collapse boolean is read on mount and written on every change to `localStorage[persistKey]`. |
+| `toggleShortcut`   | `string \| false`      | `'['`   | Document-level keyboard shortcut. Single key, no modifiers. Pass `false` to disable. Suppressed inside form controls.               |
+
+Storage shape: each `persistKey` holds the literal string `'1'`
+(collapsed) or `'0'` (expanded). Anything else falls through to
+`defaultCollapsed`. The helpers live at
+[`src/lib/persisted-state.ts`](./src/lib/persisted-state.ts)
+(`readPersistedBool` / `writePersistedBool`) and are SSR-safe — every
+call wraps `window` access in `try/catch` so quota errors, disabled
+storage, and SSR all degrade silently.
+
+```tsx
+<Sidebar
+  items={items}
+  collapsible
+  defaultCollapsed={false}
+  persistKey="cir.demo.sidebar"
+  onCollapseChange={(c) => analytics.track('sidebar_toggled', { collapsed: c })}
+/>
+```
+
+ARIA: when `collapsible` is on, the `<aside>` carries
+`aria-label="Sidebar (collapsible)"` (override via the existing
+`aria-label` prop) and the toggle button's `aria-expanded` mirrors the
+state. Collapsed state slides the inline width from 240px down to 48px
+with a 200ms `width` transition; the transition is skipped when
+`prefers-reduced-motion: reduce` is set, and
+`data-cir-reduced-motion="true"` is exposed for stylesheet hooks.
+
+## `<Skeleton>` shape catalog (Wave 7b / Vis-8)
+
+`<Skeleton>` ships a `shape` prop that matches the placeholder to the
+real layout. The default `'rect'` shape is unchanged from Wave 6 — a
+single grey rectangle whose `width` / `height` / `radius` props still
+work exactly as before, so every existing `<Skeleton />` call site keeps
+its current rendering.
+
+| `shape`               | Composition                                      | Layout sketch                                              |
+| --------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| `rect` (default)      | Single grey rectangle (legacy behaviour)         | `[██████████]`                                             |
+| `circle`              | One circular block (sized by `width` / `height`) | `(●)`                                                      |
+| `text-line`           | One rect, 60–95% width (stable per render)       | `[████████░░]`                                             |
+| `avatar-with-2-lines` | Avatar circle + name line + meta line            | `(●) ████████░░` <br/> ` ░░░██████░░░░`                    |
+| `card`                | Title + media + 2 body lines                     | `[████░░░░]` <br/> `[██████████]` <br/> `[████████░░]`     |
+| `table-row`           | `columns` cells in a row, `count` rows tall      | `[██] [█] [████] [██]`                                     |
+| `kpi-tile`            | Small label + big number block                   | `[███░░░░░]` <br/> `[██████░░]`                            |
+| `detail-view`         | Hero block + 3 stat tiles + 3 body lines         | `[██████████]` <br/> `[██] [██] [██]` <br/> `[████████░░]` |
+| `gallery-tile`        | Image placeholder + caption line                 | `[██████████]` <br/> `[████░░░░░░]`                        |
+| `timeline-event`      | Dot + date + description                         | `(●) [███░░] [████████░░]`                                 |
+| `text-paragraph`      | `count` staggered text lines                     | `[████████░░]` <br/> `[██████░░░░]` <br/> `[████████░░]`   |
+
+Two extra props apply to the tiling shapes:
+
+| Prop      | Applies to                    | Default | Notes                                       |
+| --------- | ----------------------------- | ------- | ------------------------------------------- |
+| `count`   | `table-row`, `text-paragraph` | `1`     | Number of repeated rows. Clamped to `>= 1`. |
+| `columns` | `table-row`                   | `4`     | Cells per row.                              |
+
+Every shape ships with the existing `animate-pulse` shimmer (a Tailwind
+utility class — no new keyframes). Hosts that honour
+`prefers-reduced-motion: reduce` get a still placeholder automatically;
+the component drops the `animate-pulse` class on its root when the media
+query matches. The composition rule remains
+`Skeleton: { can_contain: 'leaf' }` — every shape is layout-only, so
+authors keep wiring `<Skeleton shape="…" />` into a `loading_state` slot
+without touching the registry.
+
+```tsx
+// List loading_state — best-in-class match for an avatar + name layout
+<Skeleton shape="avatar-with-2-lines" count={5} />
+
+// Table loading_state — 3 rows of 5 columns
+<Skeleton shape="table-row" columns={5} count={3} />
+```
+
+## Icons (Wave 7b / Vis-3)
+
+`@cir/components` ships **zero icon packs**. The `<Icon>` primitive is a
+thin wrapper that asks a host-supplied `IconResolver` for the SVG markup
+of a `(set, name)` pair, then injects it. Three reference resolvers ship
+with the package: `MapIconResolver`, `LiteralIconResolver`, and
+`NoopIconResolver` (the default — returns `null` for every lookup).
+
+### Why a protocol, not a dep
+
+CIR runs in many hosts; each picks its own pack (Lucide, Phosphor,
+Heroicons, an in-house set). Bundling a pack here would either pin every
+host to one choice or leak hundreds of KB of icon SVGs into the runtime.
+The resolver lets each host bring exactly the icons it cares about.
+
+### Plugging in a pack
+
+```tsx
+import {
+  IconResolverProvider,
+  LiteralIconResolver,
+  Button,
+  Alert,
+  EmptyState,
+} from '@cir/components';
+
+// 1. Load / build your pack — anything that yields SVG strings keyed by
+//    name. The example below uses literal markup; in production you'd
+//    typically pull from `lucide-react`'s `iconNodes` or similar.
+const lucide = {
+  archive:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d="M21 8H3"/><path d="M3 8v13h18V8"/></svg>',
+  trash:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none"><polyline points="3 6 5 6 21 6"/></svg>',
+  inbox:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/></svg>',
+};
+
+// 2. Wrap your tree once at the root.
+const resolver = new LiteralIconResolver({ lucide });
+
+export function App({ children }: { children: React.ReactNode }) {
+  return <IconResolverProvider resolver={resolver}>{children}</IconResolverProvider>;
+}
+```
+
+For larger packs, `MapIconResolver` accepts a flat
+`ReadonlyMap<string, string>` keyed `${set}:${name}` — the format most
+build-time codegen emits naturally.
+
+### Using `<Icon>` directly or via integrated components
+
+```tsx
+// Direct use — pass `(set, name)` plus optional sizing / a11y.
+<Icon set="lucide" name="archive" size={20} ariaLabel="Archive item" />;
+
+// Integrated — Button / Alert / EmptyState accept an `icon` prop.
+<Button icon={{ set: 'lucide', name: 'archive' }}>Archive</Button>;
+
+<Alert severity="warning" icon={{ set: 'lucide', name: 'alert-triangle' }} title="Heads up">
+  Your draft will expire in 5 minutes.
+</Alert>;
+
+<EmptyState
+  title="Inbox zero"
+  description="No new messages."
+  icon={{ set: 'lucide', name: 'inbox' }}
+/>;
+```
+
+If the resolver returns `null` for `(set, name)`, `<Icon>` renders a
+layout-stable empty span (`data-icon-missing="true"`) sized to the
+icon's target dimensions, so missing icons never collapse the layout.
+
+### Brand-kit clamping
+
+Wrap the tree in `<IconBrandProvider config={{ minimumSize: 16 }}>` to
+honour `BrandIconographySchema.minimum_size`; `<Icon>` clamps `size` up
+to the floor automatically.
+
+### Why `dangerouslySetInnerHTML` is OK here
+
+The resolver is the host's contract. Hosts choose what SVGs they expose,
+so the strings are trusted by construction. Never wire an
+`IconResolver` whose source is untrusted (e.g. user-typed SVG markup)
+without sanitising upstream.
+
+The remaining 56 components do not (yet) take an `icon` prop — Wave 11+
+adds icons surface-by-surface. The three integrations above are the
+high-impact starter set.
 
 ## Tests
 

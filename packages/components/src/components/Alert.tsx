@@ -3,10 +3,16 @@
 /**
  * Alert — inline announcement. `variant` is canonical; `severity` is a
  * legacy alias. Wave 6 / P-10: variants info (default), success, warning, error.
+ *
+ * Wave 7b (Vis-3): optional `icon` prop renders a leading severity icon
+ * (e.g. `info-circle`, `alert-triangle`). Resolved via the host's
+ * `IconResolver`; decorative (aria-hidden) since severity is already
+ * conveyed by the `role` and the title/body text.
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
-import { cn, displayVariantClass, type DisplayVariant } from './_variants.js';
+import { cn, displayVariantClass, iconSizePx, type DisplayVariant } from './_variants.js';
+import { Icon } from './Icon.js';
 
 export type AlertSeverity = 'info' | 'success' | 'warning' | 'error';
 export type AlertVariant = DisplayVariant;
@@ -15,11 +21,20 @@ export interface AlertProps {
   severity?: AlertSeverity;
   variant?: AlertVariant;
   title?: string;
+  /** Optional leading icon. Decorative; severity is already conveyed by role + text. */
+  icon?: { set: string; name: string };
   className?: string;
   children?: ReactNode;
 }
 
-export function Alert({ severity, variant, title, className, children }: AlertProps): ReactNode {
+export function Alert({
+  severity,
+  variant,
+  title,
+  icon,
+  className,
+  children,
+}: AlertProps): ReactNode {
   const v: AlertVariant = variant ?? severity ?? 'info';
   const role = v === 'error' || v === 'warning' ? 'alert' : 'status';
   return (
@@ -30,6 +45,11 @@ export function Alert({ severity, variant, title, className, children }: AlertPr
       data-variant={v}
       className={cn(displayVariantClass[v], className)}
     >
+      {icon !== undefined ? (
+        <span data-cir-part="alert-icon" style={{ marginRight: 8 }}>
+          <Icon set={icon.set} name={icon.name} size={iconSizePx.md} />
+        </span>
+      ) : null}
       {title !== undefined ? <strong data-cir-part="alert-title">{title}</strong> : null}
       {children !== undefined ? <div data-cir-part="alert-body">{children}</div> : null}
     </div>

@@ -55,4 +55,103 @@ describe('List', () => {
     const compactPad = parseInt(compactLi?.style.paddingTop ?? '0', 10);
     expect(compactPad).toBeLessThan(comfyPad);
   });
+  // -- Wave 7b / Nav-3 — pinned items --
+  describe('pinned items', () => {
+    interface Item {
+      id: string;
+      label: string;
+      pinned?: boolean;
+    }
+    const renderRow = (x: Item) => <span data-testid={x.id}>{x.label}</span>;
+    it('renders pinned items before unpinned regardless of source order', () => {
+      const items: Item[] = [
+        { id: 'a', label: 'Alpha' },
+        { id: 'b', label: 'Bravo', pinned: true },
+        { id: 'c', label: 'Charlie' },
+      ];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      const labels = Array.from(container.querySelectorAll('li [data-testid]')).map(
+        (n) => n.textContent ?? '',
+      );
+      expect(labels).toEqual(['Bravo', 'Alpha', 'Charlie']);
+    });
+    it('stacks multiple pinned items in their source order', () => {
+      const items: Item[] = [
+        { id: 'a', label: 'Alpha', pinned: true },
+        { id: 'b', label: 'Bravo' },
+        { id: 'c', label: 'Charlie', pinned: true },
+      ];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      const pinnedRowText = Array.from(container.querySelectorAll('li[data-pinned="true"]')).map(
+        (li) => li.querySelector('[data-testid]')?.textContent ?? '',
+      );
+      expect(pinnedRowText).toEqual(['Alpha', 'Charlie']);
+    });
+    it('does not change rendering when no pinned items present', () => {
+      const items: Item[] = [
+        { id: 'a', label: 'A' },
+        { id: 'b', label: 'B' },
+      ];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      expect(container.querySelectorAll('li[data-pinned="true"]').length).toBe(0);
+      expect(container.querySelector('[data-cir-part="pinned-separator"]')).toBeNull();
+      expect(container.querySelector('ul')?.getAttribute('data-has-pinned')).toBe('false');
+    });
+    it('marks pinned <li> with data-pinned="true"', () => {
+      const items: Item[] = [{ id: 'a', label: 'Alpha', pinned: true }];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      expect(container.querySelector('li[data-pinned="true"]')).not.toBeNull();
+    });
+    it('renders a pin indicator inside each pinned item', () => {
+      const items: Item[] = [{ id: 'a', label: 'Alpha', pinned: true }];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      const indicator = container.querySelector(
+        'li[data-pinned="true"] [data-pin-indicator="true"]',
+      );
+      expect(indicator).not.toBeNull();
+      expect(indicator?.textContent ?? '').toContain('\u{1F4CC}');
+    });
+    it('renders a separator when pinned items exist (default)', () => {
+      const items: Item[] = [
+        { id: 'a', label: 'A', pinned: true },
+        { id: 'b', label: 'B' },
+      ];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      expect(container.querySelector('[data-cir-part="pinned-separator"]')).not.toBeNull();
+    });
+    it('omits the separator when showPinnedSeparator={false}', () => {
+      const items: Item[] = [
+        { id: 'a', label: 'A', pinned: true },
+        { id: 'b', label: 'B' },
+      ];
+      const { container } = render(
+        <List items={items} renderItem={renderRow} showPinnedSeparator={false} />,
+      );
+      expect(container.querySelector('[data-cir-part="pinned-separator"]')).toBeNull();
+    });
+    it('applies sticky CSS to pinned items', () => {
+      const items: Item[] = [{ id: 'a', label: 'A', pinned: true }];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      const li = container.querySelector<HTMLElement>('li[data-pinned="true"]');
+      expect(li?.style.position).toBe('sticky');
+      expect(li?.style.top).toBe('0px');
+      expect(li?.style.zIndex).toBe('10');
+    });
+    it('uses pinAriaLabel callback for the aria-label on pinned items', () => {
+      const items: Item[] = [{ id: 'a', label: 'Alpha', pinned: true }];
+      const { container } = render(
+        <List items={items} renderItem={renderRow} pinAriaLabel={(it) => `Pinned: ${it.label}`} />,
+      );
+      expect(container.querySelector('li[data-pinned="true"]')?.getAttribute('aria-label')).toBe(
+        'Pinned: Alpha',
+      );
+    });
+    it('defaults pinned aria-label to "Pinned"', () => {
+      const items: Item[] = [{ id: 'a', label: 'Alpha', pinned: true }];
+      const { container } = render(<List items={items} renderItem={renderRow} />);
+      expect(container.querySelector('li[data-pinned="true"]')?.getAttribute('aria-label')).toBe(
+        'Pinned',
+      );
+    });
+  });
 });

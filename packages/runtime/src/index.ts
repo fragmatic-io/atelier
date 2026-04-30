@@ -59,11 +59,15 @@ export {
 // -----------------------------------------------------------------------------
 export {
   ActionDispatcher,
+  DEFAULT_UNDO_WINDOW_MS,
   optimisticDispatch,
+  UndoExpiredError,
   type ActionDispatcherOptions,
   type ActionExecutionContext,
   type ActionResult,
   type OptimisticDispatchOptions,
+  type UndoResult,
+  type UndoTimer,
 } from './actions/dispatcher.js';
 export {
   ALWAYS_CONFIRM,
