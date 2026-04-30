@@ -8,7 +8,7 @@
 evals/
 ├── capability/{name}.eval.ts       # input validation, side-effect checks, permission enforcement
 ├── skill/{name}.eval.ts            # given a scenario, does the skill emit the expected capability sequence?
-├── component/{name}.eval.ts        # render, a11y, breakpoint, interaction tests (Phase 5c)
+├── component/{name}.eval.ts        # render, a11y, breakpoint, interaction tests
 ├── manifest/{scenario}.eval.ts     # compile + policy-check + structural assertions
 └── end-to-end/{flow}.eval.ts       # intent → manifest → render → action → audit
 ```
@@ -58,24 +58,13 @@ export default defineEval({
 });
 ```
 
-## Status
+## What ships in this repo
 
-Phase 3 shipped the [`@cir/evals`](../packages/evals/README.md) harness, the
-`cir-evals` CLI, and one sanity case (`example.eval.ts`). Phase 5b lands
-the first round of real cases against the demo:
+The [`@cir/evals`](../packages/evals/README.md) harness + `cir-evals` CLI, plus a starter set of real cases against the demo:
 
-- **capability/** — four evals pin side effects, reversibility, rollback
-  ids, and the snooze input shape on the demo's `CAPABILITIES` record.
-- **manifest/** — three evals validate the `/today` manifest's routes
-  against `RouteSchema`, run the full `BASELINE_POLICIES` + composition
-  rules over it, and assert every component id maps to a registered
-  binding.
-- **skill/** — two evals exercise `parseSkillMarkdown` on synthetic
-  `.skill.md` sources (no real `skills/*.md` ship yet) and check that
-  every `capabilities_used` entry resolves against the demo capability
-  set.
-- **end-to-end/** — one eval drives `ActionDispatcher` end-to-end for
-  `thread.archive`: confirmation gate, handler call, undo push, audit
-  emission.
+- **capability/** — pin side effects, reversibility, rollback ids, and the snooze input shape on the demo's `CAPABILITIES` record.
+- **manifest/** — validate the `/today` manifest's routes against `RouteSchema`, run `BASELINE_POLICIES` + composition rules over it, and assert every component id maps to a registered binding.
+- **skill/** — exercise `parseSkillMarkdown` on synthetic `.skill.md` sources and check that every `capabilities_used` entry resolves against the demo capability set.
+- **end-to-end/** — drive `ActionDispatcher` end-to-end for `thread.archive` (confirmation gate, handler call, undo push, audit emission). The Gemini smoke (`end-to-end/gemini-smoke.eval.ts`) runs in CI nightly against the real key, distinguishing auth failure from missing key.
 
-The 100+ scenario set called for in [`../docs/build-plan.md`](../docs/build-plan.md) continues to grow in Phase 5c. The harness is **not** wired into `pnpm validate` yet — that gate flips on once the suite is load-bearing.
+The 100+ scenario set called for in [`../docs/build-plan.md`](../docs/build-plan.md) continues to grow. The harness is **not** wired into `pnpm validate` yet — that gate flips on once the suite is load-bearing. The nightly Gemini job at `.github/workflows/nightly-evals.yml` is the current external CI surface for evals.

@@ -1,4 +1,18 @@
-# Phased Build Plan
+# Phased Build Plan (Historical)
+
+> **Note.** This is the original phasing plan, kept for narrative — _here is how a team would sequence CIR from scratch_. The framework in this repo has shipped through Phase 5d (renamed to Wave 1–4 partway through). For what is actually live today, see the root [`README.md`](../README.md) §"What's shipped" and [`packages/README.md`](../packages/README.md). Use this file to understand the _shape_ of a CIR build, not as a TODO list.
+
+What landed where (mapping):
+
+- **Phase 0–1** — schemas, baseline component catalog, eval harness, runtime → shipped as `@cir/schemas`, `@cir/components` (56 primitives), `@cir/evals`, `@cir/runtime`.
+- **Phase 2 — customization** — intent vault contract, customize flow, trigger bus, policy engine (7 baseline), audit log → shipped as `@cir/policies`, `IntentProfileSchema`, `InMemoryTriggerBus` + `SseTriggerTransport`, `AuditEventSchema`. The vault itself is referenced by ID; demo ships a localStorage shim.
+- **Phase 3 — production hardening** — eval suite, observability, multi-tier cache → shipped as `MemoryManifestCache` + `IndexedDBManifestCache` (Tier 4/5), `MemoryManifestStore` + `RedisManifestStore` (Tier 3), `StreamingAuditSink`, nightly Gemini eval workflow.
+- **Phase 4 — expansion** — second domain, cross-app, adapters → partial. The OpenAPI importer (`cir import openapi`) brings external services in as drafts; cross-app workflow compilation is roadmap.
+- **Phase 5 — platform** — marketplace, mobile, OS integration → roadmap.
+
+The original sequencing follows.
+
+---
 
 A startup or team building CIR from scratch should sequence it like this. Each phase is a self-contained deliverable.
 

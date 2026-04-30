@@ -67,6 +67,14 @@ const summary = await runEvals(
 process.exit(summary.failed === 0 ? 0 : 1);
 ```
 
+## Smoke evals + nightly Gemini
+
+The repo ships an end-to-end Gemini smoke (`evals/end-to-end/gemini-smoke.eval.ts`) tagged `smoke`. It runs when `GEMINI_API_KEY` is set; otherwise it skips. PR CI never has the secret and skips silently. The nightly workflow at `.github/workflows/nightly-evals.yml` runs the same eval against the real key, and crucially distinguishes auth failures (revoked / invalid key) from a missing key — auth failures surface as `auth_failed: true` and fail the job loudly. A silent skip on a revoked key would be a regression, not a pass.
+
+```sh
+pnpm exec cir-evals run --tag smoke   # local smoke run; requires GEMINI_API_KEY
+```
+
 ## Status
 
-Phase 3 ships the harness. Phase 5 lands the 100+ scenarios called out in [`docs/build-plan.md`](../../docs/build-plan.md).
+Harness shipped, plus capability / manifest / skill / end-to-end scenario coverage against the demo (see [`../../evals/README.md`](../../evals/README.md)). The 100+ scenario set from [`docs/build-plan.md`](../../docs/build-plan.md) continues to grow; the harness is not yet a `pnpm validate` gate, but does run in CI via the nightly Gemini job.

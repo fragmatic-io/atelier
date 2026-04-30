@@ -3,8 +3,8 @@
 Pure-function validators that the CIR compiler runs against a generated
 manifest before serving it. Each policy is deterministic, fast, and
 side-effect free — no LLM calls, no network. The package also declares
-the `BehavioralPatternDetector` contract that the Phase 4 runtime
-implements to plug detection into the trigger bus.
+the `BehavioralPatternDetector` contract that the runtime implements to
+plug detection into the trigger bus.
 
 See [`docs/architecture.md` §"Policy engine"][arch] for the design.
 
@@ -63,12 +63,14 @@ You can replace or extend the policy set by passing
 
 ## Behavioral pattern detector
 
-`BehavioralPatternDetector` is the Phase 4 plug-point: the runtime feeds
+`BehavioralPatternDetector` is the runtime plug-point: the runtime feeds
 observed actions in via `observe()` and surfaces detected workaround
 patterns via `snapshot()`. Patterns become triggers (`toTrigger()`) and
 flow into the bus, which the manifest store invalidates from. This
 package only declares the interface and ships a `NoopBehavioralDetector`
 reference implementation. The runtime owns the actual heuristics — see
-[`docs/triggers.md` §"Behavioral triggers"][triggers].
+[`docs/triggers.md` §"Behavioral triggers"][triggers]. No detector
+implementation has shipped yet; the contract is in place so a host can
+plug one in without changing the trigger bus.
 
 [triggers]: ../../docs/triggers.md

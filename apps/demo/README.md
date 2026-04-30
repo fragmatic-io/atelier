@@ -38,7 +38,7 @@ Open the browser DevTools console to see the audit events the `ConsoleAuditSink`
 | Pages               | `app/today/page.tsx`                                            | Just `<CirRoute path="/today" />`                               |
 | Styling             | `app/globals.css`                                               | Tailwind 4 + `data-cir-component` selectors                     |
 
-> **Note on `validate:data`:** the workspace's `cir-schemas validate-data` walks `capabilities/`, `skills/`, `recipes/`, `policies/`, and `components/` at the repo root. Most of those are still empty in this repo, so a near-zero file count is expected — not a failure.
+> **Note on `validate:data`:** the workspace's `cir-schemas validate-data` walks `capabilities/`, `skills/`, `recipes/`, `policies/`, and `components/` at the repo root. The repo ships ~15 reference artifacts; expect that count to grow as more domains land. Use `--strict` to also fail on `_review` envelope drafts.
 
 ## How to swap in a real compiler
 
@@ -55,7 +55,7 @@ See `docs/architecture.md` §"Compiler service in detail" for the full prompt st
 
 Tailwind 4 is CSS-first (no `tailwind.config.js`). Next.js 15 is the current LTS. React Server Components route the boundary correctly because every CIR file that needs hooks ships a `'use client'` directive. See `packages/react/README.md` §"Next.js / React Server Components".
 
-## Phase 4d additions
+## Sanitized markdown, SSE invalidation, Playwright
 
 - **`/thread/[id]` route** + `ThreadView` component — renders an email thread with messages through the sanitized `Markdown` (GFM tables, strikethrough, autolinks; raw HTML stripped; `javascript:` URLs dropped; external links get `rel=noopener noreferrer`).
 - **SSE trigger transport** — the runtime's `SseTriggerTransport` connects to `/api/triggers/stream` on mount; published triggers flow into the local bus and trigger cache invalidation. Try it:

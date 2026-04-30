@@ -154,6 +154,24 @@ their empty state.
 - [`@cir/runtime`](../runtime/README.md) — the framework-agnostic core this
   package adapts.
 
+## Debug panel — `@cir/react/debug`
+
+Optional dev-only surface that subscribes to a `StreamingAuditSink` (from
+`@cir/runtime`) and renders a floating, filterable event log. Imported
+from a separate subpath so a production bundle can tree-shake it:
+
+```tsx
+import { DebugPanel } from '@cir/react/debug';
+// keep the import behind a NODE_ENV check or a feature flag in your host
+{
+  process.env.NODE_ENV !== 'production' && <DebugPanel sink={auditSink} />;
+}
+```
+
+The same sink can be tailed from a terminal via `cir dev --tail` against
+the demo's `/api/cir/audit/stream` SSE endpoint — both observers share
+one backlog buffer and one event stream.
+
 ## Testing
 
 `@cir/react/testing` exports `renderWithCir(ui, options)` and

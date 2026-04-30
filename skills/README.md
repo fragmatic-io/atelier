@@ -23,9 +23,17 @@ When you add a capability, you also add its skill (see [`../AGENTS.md`](../AGENT
 3. Add eval cases at `/evals/skills/{name}.eval.json` covering at least the happy path, one negative case, and one known failure mode.
 4. Bump the skill version on any behavioral change. Emit `skill.version_changed` so the trigger bus invalidates affected manifests.
 
-## Status
+## Validation pipeline
 
-Empty in Phase 1; populated starting in **Phase 2 (schemas)** and grown alongside capabilities during the **Phase 5 hello-CIR loop**. Phase 1 of the build plan calls for 5 baseline skills (triage, summarize, draft, schedule, archive).
+Skill markdown is parsed by `parseSkillMarkdown` (from `@cir/policies`) which validates the YAML frontmatter against `SkillSchema` (from `@cir/schemas`). `pnpm validate:fast` calls `cir-schemas validate-data` which walks every `*.skill.md` in this directory.
+
+## What ships in this repo
+
+- `cart-add.skill.md` — paired with the DummyJSON cart capability.
+- `github-issue-triage.skill.md` — paired with the GitHub issue-domain capabilities.
+- `product-search.skill.md` — paired with DummyJSON product list/search.
+
+These are reference imports, not a complete catalog. New skills land alongside the capabilities they teach.
 
 ## Token-budget reminder
 

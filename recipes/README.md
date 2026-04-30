@@ -11,7 +11,7 @@
 
 ## Background
 
-See [`../docs/build-plan.md`](../docs/build-plan.md) — Phase 1 ships two recipes (e.g. "inbox view" and "task queue view") plus a "switch lens" UI. Recipes are how CIR avoids the cold-start problem: a new user doesn't compile from zero, they fork a persona.
+Recipes are how CIR avoids the cold-start problem: a new user doesn't compile from zero, they fork a persona.
 
 For the conceptual role of recipes inside the broader artifact model, see [`../docs/artifacts.md`](../docs/artifacts.md).
 
@@ -27,6 +27,9 @@ For the conceptual role of recipes inside the broader artifact model, see [`../d
 
 Recipes are also where **graduated user customizations land**: when many users describe a similar interface tweak, the team promotes that pattern into a new recipe (or an option on an existing one). See [`../docs/graduation.md`](../docs/graduation.md) for the rules and the threshold logic.
 
-## Status
+## What ships in this repo
 
-Empty in Phase 1; populated starting in **Phase 5 (hello-CIR loop)**. The Phase 1 build plan calls for the first two recipes ("inbox view", "task queue view") in the email domain. A marketplace for community recipes is planned for Phase 5 of the build plan.
+- `dummyjson-shopper.json` — a shopping-persona recipe over the DummyJSON capabilities.
+- `github-reviewer.json` — a code-review-persona recipe over the GitHub capabilities.
+
+A marketplace for community recipes is on the roadmap (see the root [`README.md`](../README.md) §"What's shipped"). Today, recipes ship in-tree and are reviewed alongside the capabilities they reference.

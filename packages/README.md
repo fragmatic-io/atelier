@@ -12,8 +12,8 @@ The **pnpm workspace root.** All publishable packages live here, one per directo
 | `@cir/runtime`    | shipped | The framework-agnostic render SDK: manifest cache/fetcher/resolver, action dispatcher (confirm — including `verbal_required` voice-phrase match — + LRU undo), trigger bus + invalidation wiring, component/action registries, `buildRenderPlan`, audit sink. |
 | `@cir/components` | shipped | Runtime implementations of the 56-component baseline catalog                                                                                                                                                                                                  |
 | `@cir/react`      | shipped | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirm portal, stale-while-revalidate + optimistic UI primitives                                                                                                                         |
-| `@cir/compiler`   | shipped | LLM-backed compile service: Gemini integration, `ManifestStore` (Memory + Redis), `FallbackCompiler`                                                                                                                                                          |
-| `@cir/cli`        | planned | Developer CLI: scaffold capabilities, run evals, publish registries                                                                                                                                                                                           |
+| `@cir/compiler`   | shipped | LLM-backed compile service: `GeminiCompiler` + `FallbackCompiler` + `CompositeCompiler`, `compileIntentProfile()` for LLM-assisted onboarding, `ManifestStore` (Memory + Redis), `ServerManifestResolver`, `StreamingAuditSink`                               |
+| `@cir/cli`        | shipped | Unified developer CLI (`cir init / dev / add / components-sync / validate / import openapi / inspect / compile`), with `--tail` for terminal-side audit observability                                                                                         |
 
 ## Conventions
 
@@ -25,4 +25,4 @@ The **pnpm workspace root.** All publishable packages live here, one per directo
 
 ## Background
 
-See [`../docs/architecture.md`](../docs/architecture.md) for the service decomposition each package implements, and [`../docs/build-plan.md`](../docs/build-plan.md) for when each one is expected to land.
+See [`../docs/architecture.md`](../docs/architecture.md) for the service decomposition each package implements. The phased build history (how the framework actually came together) lives in [`../docs/build-plan.md`](../docs/build-plan.md).

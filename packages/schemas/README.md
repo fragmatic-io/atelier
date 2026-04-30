@@ -48,12 +48,24 @@ pnpm exec cir-schemas dump --out .well-known/schemas
 # Validate every JSON file under capabilities/, recipes/, components/,
 # policies/ against the appropriate schema
 pnpm exec cir-schemas validate-data
+
+# Strict mode — fail on `_review` envelope drafts (e.g. capabilities
+# imported from an OpenAPI spec that haven't been hand-reviewed yet)
+pnpm exec cir-schemas validate-data --strict
 ```
 
 The CLI lives in `src/cli/`. Path-based dispatch for `validate-data` is
 configured in `src/cli/registry.ts` (`PATH_DISPATCH`). Skill markdown files
 are NOT validated by this command — they need a frontmatter parser, which
-ships with `@cir/policies` (Phase 3).
+ships with `@cir/policies`.
+
+### Draft-safety: the `_review` envelope
+
+`CapabilitySchema` accepts an optional `_review` envelope: `{ status: 'draft' | 'reviewed', generated_from?, notes? }`. The OpenAPI importer (`pnpm cir import openapi`) stamps generated capabilities with `_review.status = 'draft'` so a CI gate can refuse them until a human signs off. `validate-data --strict` fails on every draft; PRs adding new capabilities run the strict path in CI.
+
+### Composition rules
+
+`CompositionRulesSchema` validates the `components/composition-rules.json` sibling artifact (a `ComponentId -> CompositionRule` map). The script that emits `components/registry.json` from `@cir/components` also emits and re-validates this sibling — see [`../components/README.md`](../components/README.md) for how the two artifacts stay in sync.
 
 ## Golden tests
 

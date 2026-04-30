@@ -28,12 +28,16 @@ manifests, manifests live in cache, cache invalidates on triggers.
   evictions per [`docs/caching.md`](../../docs/caching.md) §"What invalidates
   what". Real network transports (WebSocket / SSE) are per-deployment.
 - **Component / action registries** — interfaces + Map-backed defaults. The
-  component registry's `factory` is opaque; the framework adapter (Phase 4b)
-  decides what shape it carries.
+  component registry's `factory` is opaque; the framework adapter
+  (`@cir/react`) decides what shape it carries.
 - **`buildRenderPlan(manifest, route, registry)`** — pure transform from a
   `Manifest` route into a framework-agnostic `RenderPlan` node tree.
 - **`AuditSink`** — pluggable destination for `AuditEvent`s.
-  `NoopAuditSink` for prod default; `ConsoleAuditSink` for dev.
+  `NoopAuditSink` for prod default; `ConsoleAuditSink` for dev;
+  `StreamingAuditSink` is a ring-buffered fan-out sink that backs
+  `<DebugPanel>`, the demo's `/api/cir/audit/stream` SSE endpoint, and
+  `cir dev --tail` — subscribers get every emitted event, plus a
+  bounded backlog on attach.
 
 ## How an adapter consumes this (sketch)
 
