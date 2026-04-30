@@ -1,23 +1,27 @@
 # @cir/components
 
-Phase 4b baseline React component library for CIR. Unstyled, semantic
-primitives that fit the runtime's `ComponentBinding`. A Phase 4c demo
-package will layer Tailwind/CSS on top via `data-cir-component=...`
-selectors and `data-variant=...` attributes.
+Baseline React component library for CIR. Unstyled, semantic primitives
+that fit the runtime's `ComponentBinding`. Hosts paint them via
+`data-cir-component=...` selectors and `data-variant=...` attributes
+(see `apps/demo/app/globals.css` for an example Tailwind 4 pass).
 
-## What ships in 4b
+## What ships
 
-| Group    | Components                           |
-| -------- | ------------------------------------ |
-| Layout   | `Stack`, `Card`, `Container`, `Grid` |
-| Display  | `Markdown`, `Table`, `EmptyState`    |
-| Input    | `Button`, `TextInput`, `Select`      |
-| Feedback | `Alert`, `Spinner`                   |
-| Action   | `ConfirmDialog`                      |
+| Group       | Count | Components                                                                                                                                          |
+| ----------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Layout      | 8     | `Stack`, `Container`, `Grid`, `Card`, `Tabs`, `Accordion`, `Modal`, `Drawer`, `Split`                                                               |
+| Display     | 12    | `Markdown`, `Table`, `List`, `DetailView`, `StatCard`, `Chart`, `Timeline`, `Tree`, `CodeView`, `DiffView`, `Map`, `EmptyState`                     |
+| Input       | 12    | `TextInput`, `NumberInput`, `DateInput`, `TimeInput`, `Select`, `MultiSelect`, `Toggle`, `Slider`, `FileUpload`, `RichText`, `CodeEditor`, `Search` |
+| Navigation  | 6     | `NavBar`, `Sidebar`, `Breadcrumb`, `Pagination`, `Stepper`, `CommandPalette`                                                                        |
+| Feedback    | 6     | `Alert`, `Toast`, `Spinner`, `Progress`, `Skeleton`, `EmptyState` (also counted under Display)                                                      |
+| Action      | 4     | `Button`, `ButtonGroup`, `ActionMenu`, `ConfirmDialog`                                                                                              |
+| Specialized | 8     | `Form`, `Wizard`, `FilterBar`, `KPIRow`, `Gallery`, `Kanban`, `Calendar`, `ChatThread`                                                              |
 
-13 components. The full 50-primitive baseline is enumerated in
-[`docs/component-catalog.md`](../../docs/component-catalog.md); this
-package implements the starter subset.
+**56 components total** — the full baseline catalog enumerated in
+[`docs/component-catalog.md`](../../docs/component-catalog.md). The
+single source of truth for the bindings ships from
+[`src/registry.ts`](./src/registry.ts) (`COMPONENT_BINDINGS` /
+`ALL_COMPONENTS`).
 
 ## Usage
 
@@ -68,19 +72,8 @@ declarations). Every component exposes:
   `data-direction`, `data-columns`, `data-max-width`, `data-padding`)
 - A `className` passthrough
 
-A Phase 4c demo package will paint these via Tailwind or vanilla CSS.
-
-## Phase-4b stubs
-
-Two components are intentionally minimal until later phases:
-
-- **`Markdown`** renders content verbatim inside `<pre>`. No parser
-  dependency at this phase. Phase 5 will swap in a sanitized renderer
-  (`react-markdown` + DOMPurify or equivalent) once the security model
-  for raw HTML pass-through and link sanitization is decided.
-- **`Spinner`** is static text — no spin animation. The markup contract
-  (`<output role="status" aria-live="polite">`) is in place; a Phase 4c
-  CSS pass adds the keyframes.
+Hosts paint these via Tailwind or vanilla CSS. `apps/demo` ships a
+Tailwind 4 baseline.
 
 ## Tests
 

@@ -19,6 +19,22 @@ See [`docs/architecture.md` §"Policy engine"][arch] for the design.
 | `no_pii_in_query_strings`               | error    | manifest   | No route path embeds a PII field as a placeholder (`/u/:email`) or literal segment.                                         |
 | `rate_limited_actions_show_state`       | warn     | manifest   | Layouts that dispatch rate-limited actions surface the remaining quota (sibling/ancestor binds a `*.quota` data source).    |
 | `reversibility_surfaced`                | error    | manifest   | Reversible actions surface an undo affordance in the same route. Destructive non-reversible actions emit a warn for review. |
+| `respects_brand_kit`                    | error    | manifest   | Every component variant referenced by the manifest is allowed by the active `BrandKit`'s per-component variant whitelist.   |
+
+Plus one factory policy (composed into the baseline by passing a rules map):
+
+| Factory                                                      | Severity | Applies to | Description                                                                                              |
+| ------------------------------------------------------------ | -------- | ---------- | -------------------------------------------------------------------------------------------------------- |
+| `composesAccordingTo(rules)` → `composes_according_to_rules` | error    | manifest   | Component children obey the catalog's composition rules (`can_contain`, `min_children`, `max_children`). |
+
+App-supplied custom policies plug in via `PolicyRegistry`:
+
+```ts
+import { BASELINE_POLICIES, PolicyRegistry, validateManifest } from '@cir/policies';
+
+const registry = new PolicyRegistry([...BASELINE_POLICIES, myCustomPolicy]);
+const result = validateManifest({ manifest, ..., policies: registry.list() });
+```
 
 ## Usage
 

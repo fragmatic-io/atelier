@@ -273,6 +273,84 @@ describe('ActionDispatcher', () => {
     expect(events[0]?.manifest_id).toBe('m_8f3a2b1c');
   });
 
+  it('undo replays the original execution context to the rollback handler', async () => {
+    const registry = new MapActionRegistry();
+    registry.register('thread.archive', () => Promise.resolve({ archived_at: 'x' }));
+    const seen: { input: unknown; ctx: unknown }[] = [];
+    registry.register('thread.unarchive', (input, recvCtx) => {
+      seen.push({ input, ctx: recvCtx });
+      return Promise.resolve({ unarchived: true });
+    });
+    const dispatcher = new ActionDispatcher({
+      capabilities: fixtureCapabilities(),
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+    const originalCtx = {
+      user_id: 'vid',
+      app_id: 'mail.example',
+      manifest_id: 'm_abc',
+    };
+    await dispatcher.dispatch('thread.archive', { thread_id: 't1' }, originalCtx);
+    const undone = await dispatcher.undo();
+    expect(undone?.ok).toBe(true);
+    expect(seen).toHaveLength(1);
+    const replayedCtx = seen[0]?.ctx as {
+      user_id: string;
+      app_id: string;
+      manifest_id?: string;
+    };
+    expect(replayedCtx.user_id).toBe('vid');
+    expect(replayedCtx.app_id).toBe('mail.example');
+    expect(replayedCtx.manifest_id).toBe('m_abc');
+  });
+
+  it('undo emits action.executed audit with original manifest_id', async () => {
+    const registry = new MapActionRegistry();
+    registry.register('thread.archive', () => Promise.resolve({}));
+    registry.register('thread.unarchive', () => Promise.resolve({}));
+    const { sink, events } = captureSink();
+    const dispatcher = new ActionDispatcher({
+      capabilities: fixtureCapabilities(),
+      registry,
+      confirm: ALWAYS_CONFIRM,
+      audit: sink,
+    });
+    const originalCtx = {
+      user_id: 'vid',
+      app_id: 'mail.example',
+      manifest_id: 'm_abc',
+    };
+    await dispatcher.dispatch('thread.archive', { thread_id: 't1' }, originalCtx);
+    await dispatcher.undo();
+    const executed = events.filter((e) => e.type === 'action.executed');
+    expect(executed).toHaveLength(2);
+    expect(executed[1]?.manifest_id).toBe('m_abc');
+    expect(executed[1]?.user_id).toBe('vid');
+    expect(executed[1]?.app_id).toBe('mail.example');
+    expect(executed[1]?.trigger_chain).toEqual(['action:thread.unarchive']);
+  });
+
+  it('undo input is recorded with original args', async () => {
+    const registry = new MapActionRegistry();
+    registry.register('thread.archive', () => Promise.resolve({}));
+    const seenInputs: unknown[] = [];
+    registry.register('thread.unarchive', (input) => {
+      seenInputs.push(input);
+      return Promise.resolve({});
+    });
+    const dispatcher = new ActionDispatcher({
+      capabilities: fixtureCapabilities(),
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+    const args = { thread_id: 't1', tag: 'inbox' };
+    await dispatcher.dispatch('thread.archive', args, ctx);
+    await dispatcher.undo();
+    expect(seenInputs).toHaveLength(1);
+    expect(seenInputs[0]).toEqual(args);
+  });
+
   it('emits action.executed without manifest_id when omitted', async () => {
     const registry = new MapActionRegistry();
     registry.register('thread.archive', () => Promise.resolve({}));

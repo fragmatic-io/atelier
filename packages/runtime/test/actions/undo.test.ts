@@ -7,6 +7,7 @@ function entry(label: string): UndoEntry {
     rollback_input: { id: label },
     original_capability_id: label,
     original_input: { id: label },
+    ctx: { user_id: 'test-user', app_id: 'test-app' },
     pushed_at: '2026-04-29T12:00:00Z',
   };
 }

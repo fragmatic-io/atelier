@@ -10,7 +10,7 @@ The full framework, broken into chapters. For the ten principles that govern eve
 4. [caching.md](caching.md) — the five-tier cache and the trigger → invalidation matrix
 5. [triggers.md](triggers.md) — schema, intent, behavioral, explicit, system triggers
 6. [token-economics.md](token-economics.md) — cost model and the ten optimization levers
-7. [component-catalog.md](component-catalog.md) — the 50-primitive baseline
+7. [component-catalog.md](component-catalog.md) — the 56-component baseline
 8. [deployment-paths.md](deployment-paths.md) — inside-out, outside-in, hybrid, native
 9. [production-concerns.md](production-concerns.md) — security, observability, evals, versioning, compliance
 10. [coverage-strategy.md](coverage-strategy.md) — the 90% argument

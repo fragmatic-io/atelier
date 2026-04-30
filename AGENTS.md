@@ -29,12 +29,14 @@ CIR artifact directories (these define the framework surface):
 
 Implementation packages (under the pnpm workspace at `/packages/`):
 
-- `/packages/schemas/` — `@cir/schemas`: Zod schemas + generated JSON Schemas (Phase 2)
-- `/packages/policies/` — `@cir/policies`: pure-function manifest validators + `BehavioralPatternDetector` contract (Phase 3)
-- `/packages/evals/` — `@cir/evals`: eval harness, `defineEval()` helper, and `cir-evals` CLI (Phase 3)
-- `/packages/runtime/` — `@cir/runtime`: the render SDK. Framework-agnostic core (manifest cache/fetcher/resolver, action dispatcher, trigger bus, registries, render-plan derivation, audit sink) landed in Phase 4a. Framework adapters and component implementations land in Phase 4b.
-- `/packages/compiler/` — `@cir/compiler`: the LLM-backed compile service (stub in Phase 2; source Phase 5)
-- `/packages/components/`, `/packages/cli/` — later phases per `packages/README.md`
+- `/packages/schemas/` — `@cir/schemas`: Zod schemas + generated JSON Schemas (BrandKit included)
+- `/packages/policies/` — `@cir/policies`: pure-function manifest validators (7 baseline) + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` contract
+- `/packages/evals/` — `@cir/evals`: eval harness, `defineEval()` helper, and `cir-evals` CLI
+- `/packages/runtime/` — `@cir/runtime`: the framework-agnostic render SDK (manifest cache/fetcher/resolver, action dispatcher with `verbal_required` confirmation, trigger bus + SSE transport, registries, render-plan derivation, audit sink)
+- `/packages/components/` — `@cir/components`: 56-component baseline catalog
+- `/packages/react/` — `@cir/react`: React adapter (`<CirRuntime>`, `<CirRoute>`, hooks, confirm portal, SWR + optimistic UI)
+- `/packages/compiler/` — `@cir/compiler`: the LLM-backed compile service (Gemini, `MemoryManifestStore` / `RedisManifestStore`, `FallbackCompiler`)
+- `/packages/cli/` — later phase per `packages/README.md`
 - `/scripts/` — repo-level harness scripts (e.g. `sanity.test.ts`); not for product code
 
 The user's intent vault is NOT in this repo. It is referenced by ID only.

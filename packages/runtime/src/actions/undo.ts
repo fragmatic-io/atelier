@@ -16,6 +16,17 @@
 
 const DEFAULT_MAX_SIZE = 50;
 
+/**
+ * Identity carried alongside the undo entry. Mirrors `ActionExecutionContext`
+ * but lives here to avoid a circular import with `dispatcher.ts`. The
+ * dispatcher's `ActionExecutionContext` is structurally compatible.
+ */
+export interface UndoExecutionContext {
+  manifest_id?: string;
+  user_id: string;
+  app_id: string;
+}
+
 export interface UndoEntry {
   /** Capability ID to dispatch on undo (the rollback capability). */
   rollback_capability_id: string;
@@ -24,6 +35,14 @@ export interface UndoEntry {
   /** Original capability + input, kept for audit/debugging. */
   original_capability_id: string;
   original_input: unknown;
+  /**
+   * The ORIGINAL execution context supplied when the forward action was
+   * dispatched. The rollback dispatch must replay this context so audit
+   * events carry the original `user_id`, `app_id`, and `manifest_id`, and
+   * any policy checks see the right scope. ETHOS principle 8: reversibility
+   * is a primitive — broken audit on undo violates the contract.
+   */
+  ctx: UndoExecutionContext;
   /** ISO 8601 timestamp the entry was pushed. */
   pushed_at: string;
 }

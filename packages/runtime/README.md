@@ -1,8 +1,8 @@
 # @cir/runtime
 
-The **framework-agnostic core** of CIR's render runtime. Phase 4a. Adapters
+The **framework-agnostic core** of CIR's render runtime. Adapters
 (React, native, voice) bind to this core; component implementations live in
-`@cir/components`. Both land in Phase 4b.
+`@cir/components`. The shipped React adapter is `@cir/react`.
 
 The runtime is the only client-side surface a host app embeds. It is
 deliberately "dumb" (ETHOS principle 7) — it binds data, dispatches actions,
@@ -85,18 +85,18 @@ const plan = buildRenderPlan(manifest, '/today', registry);
 
 ## Status / what's deferred
 
-Phase 4a ships the framework-agnostic core. **Out of scope here:**
+The framework-agnostic core ships here. **Out of scope here (lives in
+adjacent packages):**
 
-- React (or any UI framework) adapter — Phase 4b.
-- Component implementations (Stack, Card, Button, ...) — Phase 4b in
-  `@cir/components`.
+- React adapter — `@cir/react` (`<CirRuntime>`, `<CirRoute>`, hooks,
+  `<ConfirmPortal>`, stale-while-revalidate + optimistic UI helpers).
+- Component implementations (Stack, Card, Button, ...) — `@cir/components`.
+- LLM-backed compile service — `@cir/compiler`.
 - Real WebSocket / SSE / long-poll transport for the trigger bus — per
-  deployment, Phase 4c.
-- Byte-size accounting for IndexedDB cache (50MB soft / 200MB hard caps from
-  [`docs/caching.md`](../../docs/caching.md)). Phase 4a uses count-based LRU
-  (`maxEntries`, default 200) — Phase 4c will add bytes.
-- Stale-while-revalidate, optimistic UI, live-query subscriptions — Phase
-  4b/4c.
+  deployment. `SseTriggerTransport` ships here; the Next.js demo wires it
+  to `/api/triggers/stream`.
+
+Live-query subscriptions remain on the future-work list.
 
 ## Testing helpers
 

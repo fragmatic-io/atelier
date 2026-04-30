@@ -1,6 +1,6 @@
 # components/
 
-The **UI primitive registry** plus runtime implementations. The catalog is what gives CIR coverage: a small, well-designed set of ~50 primitives covers 90% of web app patterns. The compiler picks from this catalog; the runtime renders it. Free-form HTML generation is explicitly out of scope.
+The **UI primitive registry** plus runtime implementations. The catalog is what gives CIR coverage: a small, well-designed set of ~56 primitives covers 90% of web app patterns. The compiler picks from this catalog; the runtime renders it. Free-form HTML generation is explicitly out of scope.
 
 ## Files
 
@@ -11,7 +11,7 @@ The **UI primitive registry** plus runtime implementations. The catalog is what 
 
 ## Background
 
-See [`../docs/component-catalog.md`](../docs/component-catalog.md) for the **50-primitive baseline** (Layout, Display, Input, Navigation, Feedback, Action, Specialized) and the composition rules that turn primitives into pages.
+See [`../docs/component-catalog.md`](../docs/component-catalog.md) for the **56-component baseline** (Layout, Display, Input, Navigation, Feedback, Action, Specialized) and the composition rules that turn primitives into pages. The shipped React bindings live in [`@cir/components`](../packages/components/README.md).
 
 ## Adding a component
 
@@ -29,4 +29,4 @@ Components are **append-only by default** (Hard Rule 3). Removing a component br
 
 ## Status
 
-Empty in Phase 1; populated starting in **Phase 2 (schemas)** and grown through **Phase 5 (hello-CIR loop)**. Phase 1 of the build plan calls for 15 components (ThreadView, TaskQueue, etc.) covering the email vertical slice.
+Catalog populated. The 56-component baseline ships in [`@cir/components`](../packages/components/README.md); per-app domain extensions (e.g. `ThreadView`, `TaskQueue`, `DecisionQueue` in `apps/demo`) live in their respective apps.

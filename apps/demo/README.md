@@ -38,14 +38,16 @@ Open the browser DevTools console to see the audit events the `ConsoleAuditSink`
 | Pages               | `app/today/page.tsx`                                            | Just `<CirRoute path="/today" />`                               |
 | Styling             | `app/globals.css`                                               | Tailwind 4 + `data-cir-component` selectors                     |
 
-## How to swap in a real compiler (Phase 5)
+> **Note on `validate:data`:** the workspace's `cir-schemas validate-data` walks `capabilities/`, `skills/`, `recipes/`, `policies/`, and `components/` at the repo root. Most of those are still empty in this repo, so a near-zero file count is expected — not a failure.
 
-The fake compiler in `app/api/manifest/[...slug]/route.ts` is a single switch on route name. Replace it with:
+## How to swap in a real compiler
 
-1. Anthropic API: call `claude.messages.create()` with the cached system prompt + capability/skill context, validate against `@cir/schemas` ManifestSchema, return JSON. **Needs `ANTHROPIC_API_KEY`.**
-2. **Claude Code CLI** subprocess: `spawn('claude', ['-p', prompt])`, parse JSON from stdout. Uses your Pro/Max subscription instead of API credits.
-3. **Codex CLI** subprocess: similar pattern with `codex`.
-4. Any other model executor that meets `(context) → Manifest`.
+The fake compiler in `app/api/manifest/[...slug]/route.ts` is a single switch on route name. Replace it with `@cir/compiler`'s `GeminiCompiler` (set `GEMINI_API_KEY`) wrapped in a `CompositeCompiler` with a `FallbackCompiler` so the demo still boots without a key. Or drop in any other model executor that meets `(context) → Manifest`:
+
+1. **`@cir/compiler` `GeminiCompiler`** — Gemini integration with cached system prompt and `@cir/schemas` response-schema validation. Use `MemoryManifestStore` for dev, `RedisManifestStore` for multi-instance prod.
+2. Anthropic API: call `claude.messages.create()` with the cached system prompt + capability/skill context, validate against `@cir/schemas` `ManifestSchema`, return JSON. **Needs `ANTHROPIC_API_KEY`.**
+3. **Claude Code CLI** subprocess: `spawn('claude', ['-p', prompt])`, parse JSON from stdout. Uses your Pro/Max subscription instead of API credits.
+4. **Codex CLI** subprocess: similar pattern with `codex`.
 
 See `docs/architecture.md` §"Compiler service in detail" for the full prompt structure and the diff-mode contract.
 

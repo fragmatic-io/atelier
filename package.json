@@ -46,11 +46,13 @@
     "format:check": "prettier --check .",
     "check:license-headers": "tsx scripts/check-license-headers.ts",
     "fix:license-headers": "tsx scripts/check-license-headers.ts --fix",
+    "components:sync": "tsx --tsconfig packages/components/tsconfig.json scripts/sync-component-registry.ts",
+    "components:check": "tsx --tsconfig packages/components/tsconfig.json scripts/sync-component-registry.ts --check",
     "schemas:dump": "cir-schemas dump --out .well-known/schemas",
     "validate:data": "cir-schemas validate-data",
     "evals": "cir-evals run",
-    "validate:fast": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm validate:data",
-    "validate": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm validate:data && pnpm test",
+    "validate:fast": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm validate:data",
+    "validate": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm validate:data && pnpm test",
     "prepare": "husky"
   },
   "devDependencies": {

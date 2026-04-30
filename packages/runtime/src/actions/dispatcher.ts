@@ -135,6 +135,10 @@ export class ActionDispatcher {
         rollback_input: input,
         original_capability_id: capabilityId,
         original_input: input,
+        // Preserve the caller's full execution context so the rollback's
+        // audit event and policy checks replay with the original identity
+        // (user_id, app_id) and manifest_id. Spread to defensively copy.
+        ctx: { ...ctx },
         pushed_at: this.#clock(),
       };
       this.#undoStack.push(entry);
@@ -160,12 +164,15 @@ export class ActionDispatcher {
   async undo(): Promise<ActionResult | null> {
     const entry = this.#undoStack.pop();
     if (!entry) return null;
+    // Replay the ORIGINAL execution context that was supplied when the
+    // forward action was dispatched. This keeps audit trails consistent
+    // (same user_id, app_id, manifest_id) and lets policy checks scope
+    // correctly. ETHOS principle 8: reversibility is a primitive, not
+    // a feature — synthesizing empty identity here is a correctness bug.
     return this.#dispatchWithoutUndoTracking(
       entry.rollback_capability_id,
       entry.rollback_input,
-      // We don't have an exec ctx for the undo path; reuse what we have on the entry.
-      // The host can override by calling dispatch() directly if it wants.
-      { user_id: '', app_id: '' },
+      entry.ctx,
     );
   }
 

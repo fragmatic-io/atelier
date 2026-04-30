@@ -1,6 +1,6 @@
 # @cir/react
 
-The React adapter for [`@cir/runtime`](../runtime/README.md). Phase 4b.
+The React adapter for [`@cir/runtime`](../runtime/README.md).
 
 This package is the bridge between CIR's framework-agnostic runtime core and
 React. It provides:
