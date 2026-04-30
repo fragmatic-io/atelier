@@ -102,6 +102,9 @@ describe('TEXT_RENDERERS', () => {
       TimeInput: { label: 'Time' },
       Toast: { message: 'Saved', open: true, onClose: () => undefined },
       Toggle: { label: 'Notifications', checked: true, onChange: () => undefined },
+      Tooltip: { content: 'Help text', children: { type: 'span', props: {}, key: null } },
+      StatusBar: { status: 'operational', message: 'All systems green' },
+      CodeBlock: { code: 'const x = 1;', language: 'typescript' },
       Wizard: {
         steps: [
           { id: 'a', title: 'A', content: 'a' },

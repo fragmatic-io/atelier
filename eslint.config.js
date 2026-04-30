@@ -18,6 +18,7 @@ export default tseslint.config(
       'node_modules/**',
       'dist/**',
       'coverage/**',
+      '.claude/worktrees/**',
       '**/*.d.ts',
       'pnpm-lock.yaml',
       '.husky/_/**',

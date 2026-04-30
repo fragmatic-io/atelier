@@ -19,3 +19,6 @@ packages/schemas/test/golden
 
 # Next.js build output
 apps/*/.next
+
+# Agent worktree checkouts
+.claude/worktrees

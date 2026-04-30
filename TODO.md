@@ -53,6 +53,12 @@ For the historical record of what _did_ land in each phase, see [`docs/build-pla
 - [ ] **Mobile + native render runtimes** (iOS SwiftUI, Android Compose). Manifests are JSON; the work is in registering native components against the schema.
 - [ ] **Additional demo apps.** `apps/demo-dummyjson` (lens-switching showcase) and `apps/demo-github` (real-mutations showcase) were scoped on the original plan; today the dummyjson + github capabilities ship in `capabilities/` but a dedicated demo app per domain has not.
 
+### Wave 7a follow-ups (3 tracks pending after 5/8 landed in commit `00a5bfc`)
+
+- [ ] **Int-4 — Optimistic UI default.** Auto-wire `useOptimisticAction` for any capability that declares `reversible: true && low_stakes: true`. Schema extension on `Capability` + dispatcher integration + React hook auto-detect. ~3 days. **Hit rate limit before landing in Wave 7a.**
+- [ ] **Int-13 — `<HoverCard>` primitive.** Distinct from Tooltip (Int-2 shipped). Rich content surfaces with 350ms open / 150ms close delay, capability-driven content slot, smart edge-flip, lazy `content: () => ...` form. ~3 days. **Hit rate limit before landing in Wave 7a.**
+- [ ] **Cnt-8 — `<CodeBlock>` component.** `packages/components/src/lib/detect-language.ts` shipped as a standalone helper in Wave 7a `00a5bfc`; the consuming `<CodeBlock>` component (`<pre><code>` + monospace + language label + copy button + optional line numbers) did not land. ~2 days. **Hit rate limit before landing in Wave 7a.**
+
 ### Component-variants follow-up (P-10 second pass)
 
 - [ ] **Variants for the remaining 32 components.** Wave 6 / P-10 first pass landed `variant` (and `size` where applicable) on the 24 most-impactful primitives — layout containers, display leaves, action triggers, and the four specialized components (`List`, `Table`, `KPIRow`, `DetailView`). The remaining 32 (inputs, charts, navigation, command-palette, etc.) still need variant tables. Pick up by extending `packages/components/src/components/_variants.ts` with new tables, propagating `data-variant` + `className`, and adding ~3 tests per component. (Tracked also as Vis-4 in Wave 11.)

@@ -155,8 +155,12 @@ export class CompositeCompiler implements CompilerService {
             compiler_id: compiler.id,
             reason: decision.reason ?? 'budget exhausted',
             would_use: {
-              tokens_max: budget.max_tokens_per_day,
-              calls_max: budget.max_calls_per_hour,
+              ...(budget.max_tokens_per_day !== undefined
+                ? { tokens_max: budget.max_tokens_per_day }
+                : {}),
+              ...(budget.max_calls_per_hour !== undefined
+                ? { calls_max: budget.max_calls_per_hour }
+                : {}),
             },
           });
           if (budget.on_exhausted === 'fail') {

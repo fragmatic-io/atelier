@@ -67,3 +67,6 @@ apps/*/playwright/.cache/
 *.pid
 *.seed
 *.pid.lock
+
+# Claude Code agent worktrees (per-agent isolated checkouts; auto-cleaned)
+.claude/worktrees/

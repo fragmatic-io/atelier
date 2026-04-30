@@ -100,6 +100,9 @@ export type { TreeProps, TreeNode } from './components/Tree.js';
 export { CodeView, CodeViewBinding } from './components/CodeView.js';
 export type { CodeViewProps } from './components/CodeView.js';
 
+export { CodeBlock, CodeBlockBinding, codeBlockTextRender } from './components/CodeBlock.js';
+export type { CodeBlockProps, CodeBlockVariant } from './components/CodeBlock.js';
+
 export { DiffView, DiffViewBinding } from './components/DiffView.js';
 export type { DiffViewProps, DiffHunk, DiffKind } from './components/DiffView.js';
 

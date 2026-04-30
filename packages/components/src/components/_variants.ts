@@ -102,6 +102,19 @@ export const searchVariantClass: Readonly<Record<SearchVariant, string>> = Objec
 });
 
 // -----------------------------------------------------------------------------
+// CodeBlock variants — `default` is a standalone block (rounded card with
+// padding and a top margin), `embedded` is a tighter inline-block flavour
+// suitable for embedding within prose / chat messages.
+// -----------------------------------------------------------------------------
+export type CodeBlockVariant = 'default' | 'embedded';
+
+export const codeBlockVariantClass: Readonly<Record<CodeBlockVariant, string>> = Object.freeze({
+  default: 'bg-gray-50 text-gray-900 rounded-md p-3 my-2 text-sm font-mono overflow-x-auto',
+  embedded:
+    'bg-gray-100 text-gray-900 rounded p-2 text-xs font-mono inline-block max-w-full overflow-x-auto',
+});
+
+// -----------------------------------------------------------------------------
 // Spinner / Progress / Skeleton — these are also display leaves but with the
 // layout-style variant set (no severity), since "info" / "success" don't apply
 // to a loading indicator. Re-export `LayoutVariant` for clarity.

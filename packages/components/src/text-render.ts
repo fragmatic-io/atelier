@@ -23,6 +23,7 @@ import { calendarTextRender } from './components/Calendar.js';
 import { cardTextRender } from './components/Card.js';
 import { chartTextRender } from './components/Chart.js';
 import { chatThreadTextRender } from './components/ChatThread.js';
+import { codeBlockTextRender } from './components/CodeBlock.js';
 import { codeEditorTextRender } from './components/CodeEditor.js';
 import { codeViewTextRender } from './components/CodeView.js';
 import { commandPaletteTextRender } from './components/CommandPalette.js';
@@ -86,6 +87,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Card: cardTextRender as TextRenderer,
   Chart: chartTextRender as TextRenderer,
   ChatThread: chatThreadTextRender as TextRenderer,
+  CodeBlock: codeBlockTextRender as TextRenderer,
   CodeEditor: codeEditorTextRender as TextRenderer,
   CodeView: codeViewTextRender as TextRenderer,
   CommandPalette: commandPaletteTextRender as TextRenderer,

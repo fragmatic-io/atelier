@@ -67,6 +67,7 @@ import { StackBinding } from './components/Stack.js';
 import { StatCardBinding } from './components/StatCard.js';
 import { StepperBinding } from './components/Stepper.js';
 import { TableBinding } from './components/Table.js';
+import { CodeBlockBinding } from './components/CodeBlock.js';
 import { StatusBarBinding } from './components/StatusBar.js';
 import { TabsBinding } from './components/Tabs.js';
 import { TextInputBinding } from './components/TextInput.js';
@@ -89,6 +90,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Card: CardBinding,
   Chart: ChartBinding,
   ChatThread: ChatThreadBinding,
+  CodeBlock: CodeBlockBinding,
   CodeEditor: CodeEditorBinding,
   CodeView: CodeViewBinding,
   CommandPalette: CommandPaletteBinding,
@@ -353,6 +355,7 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Chart: { can_contain: 'leaf' },
   Timeline: { can_contain: 'leaf' },
   Tree: { can_contain: 'leaf' },
+  CodeBlock: { can_contain: 'leaf' },
   CodeView: { can_contain: 'leaf' },
   DiffView: { can_contain: 'leaf' },
   Map: { can_contain: 'leaf' },

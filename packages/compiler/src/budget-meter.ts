@@ -113,18 +113,18 @@ export class BudgetMeter {
         allowed: false,
         reason: 'token cap exhausted',
         remaining_tokens: 0,
-        remaining_calls:
-          typeof maxCalls === 'number' ? Math.max(0, maxCalls - this.#callsThisHour) : undefined,
+        ...(typeof maxCalls === 'number'
+          ? { remaining_calls: Math.max(0, maxCalls - this.#callsThisHour) }
+          : {}),
       };
     }
     if (typeof maxCalls === 'number' && this.#callsThisHour >= maxCalls) {
       return {
         allowed: false,
         reason: 'call rate exceeded',
-        remaining_tokens:
-          typeof maxTokens === 'number'
-            ? Math.max(0, maxTokens - this.#tokensUsedToday)
-            : undefined,
+        ...(typeof maxTokens === 'number'
+          ? { remaining_tokens: Math.max(0, maxTokens - this.#tokensUsedToday) }
+          : {}),
         remaining_calls: 0,
       };
     }
@@ -132,10 +132,12 @@ export class BudgetMeter {
     this.#callsThisHour += 1;
     return {
       allowed: true,
-      remaining_tokens:
-        typeof maxTokens === 'number' ? Math.max(0, maxTokens - this.#tokensUsedToday) : undefined,
-      remaining_calls:
-        typeof maxCalls === 'number' ? Math.max(0, maxCalls - this.#callsThisHour) : undefined,
+      ...(typeof maxTokens === 'number'
+        ? { remaining_tokens: Math.max(0, maxTokens - this.#tokensUsedToday) }
+        : {}),
+      ...(typeof maxCalls === 'number'
+        ? { remaining_calls: Math.max(0, maxCalls - this.#callsThisHour) }
+        : {}),
     };
   }
 

@@ -39,6 +39,7 @@ export default defineConfig({
       '**/coverage/**',
       '**/.husky/**',
       '**/.git/**',
+      '**/.claude/worktrees/**',
       // apps/* is product code (Next.js demo, etc.); we don't unit-test
       // page components here. The Playwright suite under `apps/demo/e2e/`
       // covers route flows. The `apps/demo/test/` slot is allowed (and

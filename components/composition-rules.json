@@ -29,6 +29,9 @@
   "ChatThread": {
     "can_contain": "leaf"
   },
+  "CodeBlock": {
+    "can_contain": "leaf"
+  },
   "CodeEditor": {
     "can_contain": "leaf"
   },

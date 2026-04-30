@@ -20,6 +20,7 @@ const EXPECTED = [
   'Card',
   'Chart',
   'ChatThread',
+  'CodeBlock',
   'CodeEditor',
   'CodeView',
   'CommandPalette',
@@ -71,7 +72,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 58 baseline components', () => {
+  it('contains exactly the 59 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -90,7 +91,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 58 ids', () => {
+  it('list() reports all 59 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
