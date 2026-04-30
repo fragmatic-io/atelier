@@ -7,22 +7,21 @@
  * First-run onboarding. Shows the user a permission-grant screen for the
  * lenses this app needs to render its routes.
  *
- * Wave 7 / V-1: "Grant" now calls into `@cir/vault-client` to mint a
- * scoped read token; the resulting profile is persisted in the vault, with
- * a localStorage mirror for the sync route-gate path. When the vault
- * server isn't reachable, we fall through to localStorage with a console
- * warning (`saveIntentProfileAsync` handles that).
+ * Wave 8 / V-3: "Grant" no longer writes directly to localStorage. The
+ * demo hands off to the vault's consent screen at
+ * `${NEXT_PUBLIC_VAULT_URL}/vault/consent` — that's the only page allowed
+ * to mint a token. On approve, the vault redirects back to
+ * `/onboarding/grant-callback?token=...`; on deny, with `?error=denied`.
+ *
+ * Wave 7 / V-1: same module wired the async vault helpers; this is the
+ * UX-facing layer that completes the loop.
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Button, Card, Container, Stack } from '@cir/components';
-import {
-  DEMO_LENS_SCOPES,
-  buildDemoProfile,
-  loadIntentProfile,
-  saveIntentProfileAsync,
-} from '@/lib/intent-store';
+import { DEMO_LENS_SCOPES, loadIntentProfile } from '@/lib/intent-store';
+import { requestGrant } from '@/lib/intent-grant';
 
 type Mode = 'choose' | 'customize';
 
@@ -44,18 +43,20 @@ export default function OnboardingPage(): React.JSX.Element {
       router.push('/onboarding/denied');
       return;
     }
-    // Fire-and-forget: the async save covers vault + localStorage; the
-    // navigation runs straight afterwards because the route gate reads the
-    // localStorage mirror synchronously. Vault errors are surfaced via
-    // console (and the user can retry from /settings/intent).
-    void saveIntentProfileAsync(buildDemoProfile(scopes)).then(
-      () => router.push('/today'),
-      (err: unknown) => {
-        // eslint-disable-next-line no-console
-        console.error('[cir-demo] saveIntentProfileAsync failed', err);
-        router.push('/today');
-      },
-    );
+    // Hand off to the vault's consent screen. requestGrant() stashes the
+    // intended target ('/today') in sessionStorage and redirects the
+    // browser. The grant-callback page completes the dance.
+    try {
+      requestGrant({
+        scopes,
+        intended: '/today',
+        purpose: 'CIR demo onboarding',
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[cir-demo] requestGrant failed', err);
+      router.push('/onboarding/denied');
+    }
   }
 
   function toggle(id: string): void {
@@ -72,9 +73,9 @@ export default function OnboardingPage(): React.JSX.Element {
               profile. You own this data; you can grant, deny, or grant temporarily and revoke later
               from <code>/settings/intent</code>.
             </p>
-            <Alert severity="info" title="Demo only">
-              This demo stores the granted profile in your browser&apos;s localStorage, not a real
-              vault. See the README for the production model.
+            <Alert severity="info" title="You will be redirected to your vault">
+              Clicking grant takes you to the vault&apos;s consent screen. The vault — not this app
+              — mints the scoped token. You can deny there too.
             </Alert>
             <Stack direction="vertical" gap="sm">
               {DEMO_LENS_SCOPES.map((scope) => {

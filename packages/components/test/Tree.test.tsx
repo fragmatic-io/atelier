@@ -85,4 +85,18 @@ describe('Tree', () => {
   it('binding id matches', () => {
     expect(TreeBinding.id).toBe('Tree');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default', () => {
+    const { container } = render(<Tree nodes={NODES} />);
+    const root = container.querySelector('[data-cir-component="Tree"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+    expect(root?.className).toContain('text-sm');
+  });
+  it('reflects variant=condensed class', () => {
+    const { container } = render(<Tree nodes={NODES} variant="condensed" />);
+    const root = container.querySelector('[data-cir-component="Tree"]');
+    expect(root?.getAttribute('data-variant')).toBe('condensed');
+    expect(root?.className).toContain('text-xs');
+  });
 });

@@ -53,4 +53,17 @@ describe('runInit()', () => {
     await runInit({ dir: '.', cwd: tmp });
     await expect(runInit({ dir: '.', cwd: tmp, strict: true })).rejects.toThrow(/strict mode/);
   });
+
+  it('emits a Tailwind config wired for CIR dark-mode mirroring (Vis-2)', async () => {
+    await runInit({ dir: '.', cwd: tmp });
+    const tw = await readFile(join(tmp, 'tailwind.config.mjs'), 'utf8');
+    // The selector form covers the runtime's <html data-color-mode="dark">
+    // mirror (`useColorModeFromIntent`) and the legacy class="dark" toggle.
+    expect(tw).toContain('darkMode');
+    expect(tw).toContain('[data-color-mode="dark"]');
+    expect(tw).toContain('class');
+    // Tailwind needs to scan the @cir/components dist output to pick up the
+    // utility classes we ship from `_variants.ts`.
+    expect(tw).toContain('@cir/components');
+  });
 });

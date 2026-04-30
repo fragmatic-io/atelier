@@ -12,6 +12,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, timelineVariantClass, type TimelineVariant } from './_variants.js';
 
 export type TimelineStatus = 'past' | 'current' | 'future';
 
@@ -26,11 +27,16 @@ export interface TimelineEntry {
 export interface TimelineProps {
   entries: readonly TimelineEntry[];
   className?: string;
+  variant?: TimelineVariant;
 }
 
-export function Timeline({ entries, className }: TimelineProps): ReactNode {
+export function Timeline({ entries, className, variant = 'default' }: TimelineProps): ReactNode {
   return (
-    <ol data-cir-component="Timeline" className={className}>
+    <ol
+      data-cir-component="Timeline"
+      data-variant={variant}
+      className={cn(timelineVariantClass[variant], className)}
+    >
       {entries.map((entry) => (
         <li
           key={entry.id}

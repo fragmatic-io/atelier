@@ -15,6 +15,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
 import { Button } from './Button.js';
+import { cn, formVariantClass, type FormVariant } from './_variants.js';
 
 export interface FormProps {
   onSubmit: (formData: FormData) => void | Promise<void>;
@@ -23,6 +24,7 @@ export interface FormProps {
   cancelLabel?: string;
   className?: string;
   children?: ReactNode;
+  variant?: FormVariant;
 }
 
 export function Form({
@@ -32,6 +34,7 @@ export function Form({
   cancelLabel = 'Cancel',
   className,
   children,
+  variant = 'default',
 }: FormProps): ReactNode {
   const [busy, setBusy] = useState(false);
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
@@ -46,7 +49,12 @@ export function Form({
     }
   };
   return (
-    <form data-cir-component="Form" className={className} onSubmit={handleSubmit}>
+    <form
+      data-cir-component="Form"
+      data-variant={variant}
+      className={cn(formVariantClass[variant], className)}
+      onSubmit={handleSubmit}
+    >
       {children}
       <div data-cir-part="form-actions">
         {onCancel !== undefined ? (

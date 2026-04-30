@@ -23,6 +23,7 @@ import {
   pageTemplate,
   placeholderTemplate,
   readmeTemplate,
+  tailwindConfigTemplate,
   tsconfigTemplate,
 } from '../templates/index.js';
 import { INIT_USAGE } from '../usage.js';
@@ -51,6 +52,7 @@ export const INIT_FILES = Object.freeze([
   'package.json',
   'tsconfig.json',
   'next.config.mjs',
+  'tailwind.config.mjs',
   'README.md',
   '.gitignore',
   'app/page.tsx',
@@ -91,6 +93,7 @@ export async function runInit(options: InitOptions = {}): Promise<InitResult> {
   await write('package.json', packageJsonTemplate(ctx));
   await write('tsconfig.json', tsconfigTemplate());
   await write('next.config.mjs', nextConfigTemplate());
+  await write('tailwind.config.mjs', tailwindConfigTemplate());
   await write('README.md', readmeTemplate(ctx));
   await write('.gitignore', gitignoreTemplate());
   await write('app/page.tsx', pageTemplate(ctx));

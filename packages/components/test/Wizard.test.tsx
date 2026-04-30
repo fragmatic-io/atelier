@@ -70,4 +70,28 @@ describe('Wizard', () => {
   it('binding id matches', () => {
     expect(WizardBinding.id).toBe('Wizard');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(
+      <Wizard steps={STEPS} currentId="s1" onStepChange={() => undefined} />,
+    );
+    const root = container.querySelector('[data-cir-component="Wizard"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=sidebar layout class', () => {
+    const { container } = render(
+      <Wizard steps={STEPS} currentId="s1" onStepChange={() => undefined} variant="sidebar" />,
+    );
+    const root = container.querySelector('[data-cir-component="Wizard"]');
+    expect(root?.getAttribute('data-variant')).toBe('sidebar');
+    expect(root?.className).toContain('grid');
+  });
+  it('reflects variant=inline layout class', () => {
+    const { container } = render(
+      <Wizard steps={STEPS} currentId="s1" onStepChange={() => undefined} variant="inline" />,
+    );
+    const root = container.querySelector('[data-cir-component="Wizard"]');
+    expect(root?.className).toContain('gap-2');
+  });
 });

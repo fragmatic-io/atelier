@@ -75,8 +75,10 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-const DESTRUCTIVE_BUTTON_CLASS = 'bg-red-600 text-white hover:bg-red-700 rounded-md px-3 py-1.5';
-const DEFAULT_BUTTON_CLASS = 'bg-white/10 text-white hover:bg-white/20 rounded-md px-3 py-1.5';
+const DESTRUCTIVE_BUTTON_CLASS =
+  'bg-red-600 text-white hover:bg-red-700 rounded-md px-3 py-1.5 dark:bg-red-500 dark:hover:bg-red-400';
+const DEFAULT_BUTTON_CLASS =
+  'bg-white/10 text-white hover:bg-white/20 rounded-md px-3 py-1.5 dark:bg-black/10 dark:text-gray-900 dark:hover:bg-black/20';
 
 export function BulkActionBar({
   selectionCount,
@@ -177,7 +179,7 @@ export function BulkActionBar({
         type="button"
         data-cir-part="bulk-close"
         aria-label="Clear selection"
-        className="bg-transparent text-white/70 hover:text-white rounded-md px-2"
+        className="bg-transparent text-white/70 hover:text-white rounded-md px-2 dark:text-gray-900/70 dark:hover:text-gray-900"
         onClick={onClear}
       >
         ×

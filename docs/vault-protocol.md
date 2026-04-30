@@ -12,9 +12,39 @@ This document is the wire-level specification a third-party vault would need to 
 
 The four endpoints below carry the entire grant/read/write/revoke lifecycle. JWKS is the fifth, public, key-distribution surface.
 
-### `POST /vault/grants` — mint a token
+### `GET /vault/consent` — render the consent screen
 
-Mint a new grant. In production this lands behind the vault's user-facing consent screen; in dev / programmatic flows the request comes straight from the client.
+The user-facing consent dance (Wave 8 / V-3). Hosts redirect the browser here to ask the user — _on the vault, not on the host_ — to approve a scoped grant. On approve the vault mints a token + redirects back; on deny it redirects back with `?error=denied`.
+
+```
+GET /vault/consent
+  ?app_id=cir.demo
+  &scopes=lens.today,lens.thread,vocabulary.read
+  &redirect=https%3A%2F%2Fhost.example%2Fonboarding%2Fgrant-callback
+  &purpose=Email%20triage%20demo
+```
+
+Query parameters:
+
+| field      | required | semantics                                                                                                                                       |
+| ---------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app_id`   | yes      | The requesting app's id. Whitelisted to `[A-Za-z0-9._-]+` so HTML / control chars never reach the renderer.                                     |
+| `scopes`   | yes      | Comma-separated scope ids. Each must match `^[a-z][a-z0-9_.-]*$`.                                                                               |
+| `redirect` | yes      | Fully-qualified callback URL the vault redirects to. Must be `http(s)`. The vault appends `?token=<jwt>` on approve or `?error=denied` on deny. |
+| `purpose`  | no       | Free-form string surfaced on the consent screen.                                                                                                |
+| `user_id`  | no       | Override the user id. Defaults to `'demo-user'` in the reference vault.                                                                         |
+
+Response: server-rendered HTML. The page sets a `cir_vault_consent_nonce` cookie (HttpOnly, SameSite=Lax, Path=/vault/consent) carrying a CSRF nonce; the same nonce is embedded as a hidden form field. Approve POSTs both back; the server requires they match _and_ the HMAC is valid against the vault's signing key. Without the nonce, an attacker could forge an Approve POST from a malicious page.
+
+Approve target: `POST /vault/consent/approve` (form-urlencoded). On success: `302` to `<redirect>?token=<jwt>`.
+
+Deny target: `POST /vault/consent/deny` (form-urlencoded). On success: `302` to `<redirect>?error=denied`.
+
+Why server-rendered HTML: the vault is not a frontend app. Adding a CSS pipeline / bundler to the vault doubles the dep surface for a one-page form. Hand-rolled `<form>` + `<button>` works across every browser and survives JS-disabled trust modes.
+
+### `POST /vault/grants` — mint a token (programmatic)
+
+Programmatic grant minting, bypasses the consent screen. Production deployments wrap this with their own auth or restrict access to admin tooling. The reference vault leaves it open so the eval harness can drive grants without browser plumbing.
 
 ```
 POST /vault/grants

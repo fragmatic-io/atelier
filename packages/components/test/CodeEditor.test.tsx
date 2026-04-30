@@ -83,4 +83,26 @@ describe('CodeEditor', () => {
   it('binding id matches', () => {
     expect(CodeEditorBinding.id).toBe('CodeEditor');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<CodeEditor value="" onChange={() => undefined} label="Code" />);
+    const root = container.querySelector('[data-cir-component="CodeEditor"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded on data-variant', () => {
+    const { container } = render(
+      <CodeEditor value="" onChange={() => undefined} label="Code" variant="embedded" />,
+    );
+    const root = container.querySelector('[data-cir-component="CodeEditor"]');
+    expect(root?.getAttribute('data-variant')).toBe('embedded');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(
+      <CodeEditor value="" onChange={() => undefined} label="Code" variant="minimal" />,
+    );
+    const root = container.querySelector('[data-cir-component="CodeEditor"]');
+    expect(root?.className).toContain('border-b');
+  });
 });

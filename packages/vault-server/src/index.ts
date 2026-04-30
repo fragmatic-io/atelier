@@ -38,6 +38,20 @@ export {
 } from './scopes.js';
 
 export {
+  CONSENT_NONCE_COOKIE,
+  deriveCsrfSecret,
+  escapeHtml,
+  handleConsentRequest,
+  mintNonce,
+  parseConsentParams,
+  parseFormBody,
+  readCookie,
+  renderConsentPage,
+  verifyNonce,
+  type ConsentRequestParams,
+} from './consent.js';
+
+export {
   b64uDecode,
   b64uEncode,
   buildJwks,

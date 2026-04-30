@@ -12,6 +12,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, stepperVariantClass, type StepperVariant } from './_variants.js';
 
 export type StepperStatus = 'pending' | 'active' | 'done' | 'error';
 export type StepperOrientation = 'horizontal' | 'vertical';
@@ -27,6 +28,12 @@ export interface StepperProps {
   orientation?: StepperOrientation;
   className?: string;
   'aria-label'?: string;
+  /**
+   * Vis-4 visual variant. Defaults to mirror `orientation` — a `vertical`
+   * orientation maps to `'vertical'` and `horizontal` to `'horizontal'`.
+   * Pass `'numbered'` for a tighter, connector-less display.
+   */
+  variant?: StepperVariant;
 }
 
 export function Stepper({
@@ -34,13 +41,16 @@ export function Stepper({
   orientation = 'horizontal',
   className,
   'aria-label': ariaLabel = 'Progress',
+  variant,
 }: StepperProps): ReactNode {
+  const effectiveVariant: StepperVariant = variant ?? orientation;
   return (
     <ol
       data-cir-component="Stepper"
       data-orientation={orientation}
+      data-variant={effectiveVariant}
       aria-label={ariaLabel}
-      className={className}
+      className={cn(stepperVariantClass[effectiveVariant], className)}
       style={{
         display: 'flex',
         flexDirection: orientation === 'vertical' ? 'column' : 'row',

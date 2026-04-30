@@ -131,6 +131,35 @@ export default nextConfig;
 `;
 }
 
+/**
+ * Tailwind config (Vis-2). Pairs with `<CirRoute>`'s
+ * `useColorModeFromIntent`, which mirrors the user's
+ * `intent.global_preferences.color_mode` onto `<html data-color-mode>`.
+ * The `class` strategy in the array is the bridge for hosts that toggle
+ * `class="dark"` on `<html>` directly; the
+ * `[data-color-mode="dark"]` selector is what `<CirRoute>` writes.
+ */
+export function tailwindConfigTemplate(): string {
+  return `// SPDX-License-Identifier: MIT
+/** @type {import('tailwindcss').Config} */
+const config = {
+  // CIR mirrors the user's intent profile color_mode onto
+  // <html data-color-mode>. The 'class' fallback covers hosts that toggle
+  // class="dark" themselves; either selector enables Tailwind's dark: utilities.
+  darkMode: ['class', '[data-color-mode="dark"]'],
+  content: [
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './node_modules/@cir/components/dist/**/*.js',
+  ],
+  theme: { extend: {} },
+  plugins: [],
+};
+
+export default config;
+`;
+}
+
 export function gitignoreTemplate(): string {
   return `node_modules
 .next

@@ -71,4 +71,27 @@ describe('TextInput', () => {
   it('binding id matches', () => {
     expect(TextInputBinding.id).toBe('TextInput');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<TextInput label="x" defaultValue="" />);
+    const root = container.querySelector('[data-cir-component="TextInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded and variant=minimal on data-variant', () => {
+    for (const variant of ['embedded', 'minimal'] as const) {
+      const { container, unmount } = render(
+        <TextInput label="x" variant={variant} defaultValue="" />,
+      );
+      const root = container.querySelector('[data-cir-component="TextInput"]');
+      expect(root?.getAttribute('data-variant')).toBe(variant);
+      unmount();
+    }
+  });
+  it('applies the variant utility class for variant=minimal', () => {
+    const { container } = render(<TextInput label="x" variant="minimal" defaultValue="" />);
+    const root = container.querySelector('[data-cir-component="TextInput"]');
+    expect(root?.className).toContain('border-b');
+    expect(root?.className).toContain('rounded-none');
+  });
 });

@@ -415,6 +415,60 @@ The remaining 56 components do not (yet) take an `icon` prop — Wave 11+
 adds icons surface-by-surface. The three integrations above are the
 high-impact starter set.
 
+## Dark mode (Vis-2)
+
+Every entry in `src/components/_variants.ts` ships paired light + `dark:`
+Tailwind utilities, so a host configured for class-based dark mode gets a
+working dual theme out of the box. The runtime mirrors the user's
+`intent.global_preferences.color_mode` onto `<html data-color-mode>` from
+`<CirRoute>` (see `packages/react/src/render/route.tsx` →
+`useColorModeFromIntent`), and the variant tables key off the standard
+`dark:` prefix.
+
+### Required Tailwind config
+
+```js
+// tailwind.config.mjs
+export default {
+  // The selector form matches `<html data-color-mode="dark">` written by
+  // <CirRoute>; the 'class' fallback covers hosts that toggle class="dark"
+  // directly. Either selector enables the dark: utilities below.
+  darkMode: ['class', '[data-color-mode="dark"]'],
+  content: [
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    // Tailwind must scan our shipped variant strings:
+    './node_modules/@cir/components/dist/**/*.js',
+  ],
+};
+```
+
+`cir init` scaffolds this file automatically. Hosts that don't ship
+Tailwind (or that key on a different selector) ignore the unknown
+classes — both the light and dark utilities are inert in that case, so
+adding the `dark:` prefix never breaks a non-Tailwind host.
+
+### Visual reference
+
+- Light backgrounds (`bg-white`, `bg-gray-50`) → `dark:bg-gray-900` /
+  `dark:bg-gray-800`.
+- Light text (`text-gray-900`) → `dark:text-gray-100`.
+- Borders (`border-gray-200`) → `dark:border-gray-700`.
+- Severity tints (`bg-blue-50` / `bg-green-50` / etc.) →
+  `dark:bg-blue-950 dark:text-blue-100` style pairing.
+- Shadows: kept verbatim — Tailwind's `shadow-*` utilities adapt across
+  modes, with darker `shadow-black/40` overrides on elevated containers.
+
+The `ghost` layout variant is intentionally `bg-transparent` with no
+`dark:` sibling — it inherits the surface beneath, so adding a forced
+dark surface would harm composability.
+
+### Regression gate
+
+`test/_variants-dark.test.ts` asserts every colour-bearing entry in every
+variant table contains at least one `dark:` prefix. New variants that
+forget dark mode fail the gate at `pnpm test`.
+
 ## Tests
 
 ```sh

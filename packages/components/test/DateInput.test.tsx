@@ -59,4 +59,22 @@ describe('DateInput', () => {
   it('binding id matches', () => {
     expect(DateInputBinding.id).toBe('DateInput');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<DateInput label="Date" />);
+    const root = container.querySelector('[data-cir-component="DateInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded on data-variant', () => {
+    const { container } = render(<DateInput label="Date" variant="embedded" />);
+    const root = container.querySelector('[data-cir-component="DateInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('embedded');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(<DateInput label="Date" variant="minimal" />);
+    const root = container.querySelector('[data-cir-component="DateInput"]');
+    expect(root?.className).toContain('border-b');
+  });
 });

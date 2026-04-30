@@ -64,4 +64,18 @@ describe('Map', () => {
   it('binding id matches', () => {
     expect(MapBinding.id).toBe('Map');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<MapComponent center={CENTER} ariaLabel="m" />);
+    const root = container.querySelector('[data-cir-component="Map"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+    expect(root?.className).toContain('border');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(<MapComponent center={CENTER} ariaLabel="m" variant="minimal" />);
+    const root = container.querySelector('[data-cir-component="Map"]');
+    expect(root?.getAttribute('data-variant')).toBe('minimal');
+    expect(root?.className).toContain('p-0');
+  });
 });

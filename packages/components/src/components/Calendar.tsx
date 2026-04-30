@@ -18,8 +18,10 @@
  */
 import { useMemo, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type CalendarTone = 'default' | 'accent' | 'muted';
+export type CalendarVariant = InputVariant;
 
 export interface CalendarHighlight {
   date: string;
@@ -35,6 +37,7 @@ export interface CalendarProps {
   highlights?: readonly CalendarHighlight[];
   ariaLabel: string;
   className?: string;
+  variant?: CalendarVariant;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -98,6 +101,7 @@ export function Calendar({
   highlights,
   ariaLabel,
   className,
+  variant = 'default',
 }: CalendarProps): ReactNode {
   const activeMonth = month ?? defaultMonth(value);
   const grid = useMemo(() => buildGrid(activeMonth), [activeMonth]);
@@ -115,7 +119,12 @@ export function Calendar({
   })();
 
   return (
-    <div data-cir-component="Calendar" data-month={activeMonth} className={className}>
+    <div
+      data-cir-component="Calendar"
+      data-month={activeMonth}
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <header data-cir-part="calendar-header">
         <button
           type="button"

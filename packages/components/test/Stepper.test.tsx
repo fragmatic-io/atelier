@@ -54,4 +54,22 @@ describe('Stepper', () => {
   it('binding id matches', () => {
     expect(StepperBinding.id).toBe('Stepper');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('default variant mirrors orientation horizontal', () => {
+    const { container } = render(<Stepper steps={STEPS} />);
+    const ol = container.querySelector('ol');
+    expect(ol?.getAttribute('data-variant')).toBe('horizontal');
+  });
+  it('default variant mirrors orientation=vertical', () => {
+    const { container } = render(<Stepper steps={STEPS} orientation="vertical" />);
+    const ol = container.querySelector('ol');
+    expect(ol?.getAttribute('data-variant')).toBe('vertical');
+    expect(ol?.className).toContain('flex-col');
+  });
+  it('explicit variant=numbered overrides orientation', () => {
+    const { container } = render(<Stepper steps={STEPS} variant="numbered" />);
+    const ol = container.querySelector('ol');
+    expect(ol?.getAttribute('data-variant')).toBe('numbered');
+  });
 });

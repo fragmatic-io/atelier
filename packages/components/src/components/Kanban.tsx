@@ -16,6 +16,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, kanbanVariantClass, type KanbanVariant } from './_variants.js';
 
 export interface KanbanCard {
   id: string;
@@ -35,6 +36,7 @@ export interface KanbanProps {
   onCardClick?: (cardId: string, columnId: string) => void;
   className?: string;
   'aria-label'?: string;
+  variant?: KanbanVariant;
 }
 
 export function Kanban({
@@ -42,6 +44,7 @@ export function Kanban({
   onCardClick,
   className,
   'aria-label': ariaLabel = 'Kanban board',
+  variant = 'default',
 }: KanbanProps): ReactNode {
   const interactive = onCardClick !== undefined;
   return (
@@ -49,7 +52,8 @@ export function Kanban({
       role="group"
       aria-label={ariaLabel}
       data-cir-component="Kanban"
-      className={className}
+      data-variant={variant}
+      className={cn(kanbanVariantClass[variant], className)}
       style={{ display: 'flex', gap: '12px', overflowX: 'auto' }}
     >
       {columns.map((col) => (

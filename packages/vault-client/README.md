@@ -15,6 +15,9 @@ const vault = new VaultClient({
 });
 
 // 1) Mint a grant. The token is persisted via the storage adapter.
+//    NOTE (Wave 8 / V-3): browser hosts should NOT call requestGrant
+//    directly — see "Browser flow" below. The programmatic API is
+//    appropriate for server-side / CLI / eval contexts.
 await vault.requestGrant({
   scopes: ['lens.today', 'vocabulary.read'],
   purpose: 'Email triage demo',
@@ -30,6 +33,38 @@ await vault.patchProfile({ lenses: { today: 'compact-cards' } });
 // 4) Revoke. Drops the active token + cascades a system.security_revocation.
 await vault.revokeGrant();
 ```
+
+## Browser flow — redirect to the vault's consent screen
+
+In the browser, **don't call `requestGrant()` directly** — that bypasses the
+user-facing consent screen the vault renders for them. Instead, redirect the
+browser to `${vaultUrl}/vault/consent?...`. The vault mints the token after
+the user clicks Approve and redirects back to your callback URL with
+`?token=<jwt>`. Persist the token via `vault.tokenStorage.write(...)` (or
+the demo's `consumeGrantCallback` helper, which does this for you):
+
+```ts
+// 1) On a "Grant" button click in the host app:
+const callback = `${window.location.origin}/onboarding/grant-callback`;
+const url = new URL(`${vaultUrl}/vault/consent`);
+url.searchParams.set('app_id', 'cir.demo');
+url.searchParams.set('scopes', ['lens.today', 'vocabulary.read'].join(','));
+url.searchParams.set('redirect', callback);
+url.searchParams.set('purpose', 'Email triage demo');
+window.location.assign(url.toString());
+
+// 2) On the callback page (browser is now back on the host):
+const token = new URLSearchParams(window.location.search).get('token');
+if (token !== null) {
+  // Persist + use through the client.
+  // (The default browser storage already does this on requestGrant; we set
+  //  it manually because the consent screen — not the client — minted it.)
+  localStorage.setItem('cir.vault.token', token);
+}
+```
+
+`requestGrant()` is still useful for non-browser contexts (Node, evals,
+testing) where the consent screen would just be friction.
 
 ## Errors
 

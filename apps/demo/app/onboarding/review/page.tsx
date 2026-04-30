@@ -21,7 +21,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Button, Card, Container, Select, Stack, TextInput } from '@cir/components';
 import type { IntentProfile, IntentRule } from '@cir/schemas';
-import { saveIntentProfileAsync } from '@/lib/intent-store';
+import {
+  getVaultClient,
+  grantedScopesFromProfile,
+  saveIntentProfileAsync,
+} from '@/lib/intent-store';
+import { requestGrant } from '@/lib/intent-grant';
 import { SESSION_DRAFT_KEY } from '../describe/page';
 
 interface DraftEnvelope {
@@ -133,6 +138,32 @@ export default function OnboardingReviewPage(): React.JSX.Element {
   function save(): void {
     if (!profile) return;
     setSaving(true);
+    // Wave 8 / V-3: token-first ordering. If there is no token in storage,
+    // we kick off the consent flow and let the grant-callback page resume
+    // the save. The draft is already in sessionStorage so the callback
+    // re-applies it (the callback writes a baseline buildDemoProfile from
+    // the granted scopes; the draft re-apply is handled below by treating
+    // this page as the resume target). For this iteration we pass the
+    // describe-route as `intended` so the user lands back here after
+    // approving — the draft is still in sessionStorage and clicking Save
+    // again now has a token.
+    const client = getVaultClient();
+    if (client.getToken() === null) {
+      const scopes = grantedScopesFromProfile(profile);
+      try {
+        requestGrant({
+          scopes: scopes.length > 0 ? scopes : ['lens.today', 'vocabulary.read'],
+          intended: '/onboarding/review',
+          purpose: 'CIR demo onboarding (review draft)',
+        });
+        return; // browser is redirecting away
+      } catch (err) {
+        setSaving(false);
+        // eslint-disable-next-line no-console
+        console.error('[cir-demo] requestGrant failed', err);
+        return;
+      }
+    }
     void saveIntentProfileAsync({
       ...profile,
       // Bump updated_at to reflect the user's edits, not the LLM's draft time.

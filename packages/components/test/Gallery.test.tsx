@@ -53,4 +53,23 @@ describe('Gallery', () => {
   it('binding id matches', () => {
     expect(GalleryBinding.id).toBe('Gallery');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=grid and emits data-variant', () => {
+    const { container } = render(<Gallery items={ITEMS} />);
+    const root = container.querySelector('[data-cir-component="Gallery"]');
+    expect(root?.getAttribute('data-variant')).toBe('grid');
+  });
+  it('reflects variant=masonry layout class', () => {
+    const { container } = render(<Gallery items={ITEMS} variant="masonry" />);
+    const root = container.querySelector('[data-cir-component="Gallery"]');
+    expect(root?.getAttribute('data-variant')).toBe('masonry');
+    expect(root?.className).toContain('columns-3');
+  });
+  it('reflects variant=carousel layout class', () => {
+    const { container } = render(<Gallery items={ITEMS} variant="carousel" />);
+    const root = container.querySelector('[data-cir-component="Gallery"]');
+    expect(root?.className).toContain('overflow-x-auto');
+    expect(root?.className).toContain('snap-x');
+  });
 });

@@ -30,8 +30,10 @@
  */
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type RichTextToolbarItem = 'bold' | 'italic' | 'link' | 'bullet';
+export type RichTextVariant = InputVariant;
 
 export interface RichTextProps {
   value: string;
@@ -41,6 +43,7 @@ export interface RichTextProps {
   toolbar?: readonly RichTextToolbarItem[];
   ariaDescribedBy?: string;
   className?: string;
+  variant?: RichTextVariant;
 }
 
 const DEFAULT_TOOLBAR: readonly RichTextToolbarItem[] = ['bold', 'italic', 'link', 'bullet'];
@@ -115,6 +118,7 @@ export function RichText({
   toolbar = DEFAULT_TOOLBAR,
   ariaDescribedBy,
   className,
+  variant = 'default',
 }: RichTextProps): ReactNode {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const labelId = useId();
@@ -156,7 +160,11 @@ export function RichText({
   };
 
   return (
-    <div data-cir-component="RichText" className={className}>
+    <div
+      data-cir-component="RichText"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <span id={labelId} data-cir-part="richtext-label">
         {label}
       </span>

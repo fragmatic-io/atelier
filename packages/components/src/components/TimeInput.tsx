@@ -8,6 +8,9 @@
  */
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type TimeInputVariant = InputVariant;
 
 export interface TimeInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -18,10 +21,11 @@ export interface TimeInputProps extends Omit<
   error?: string;
   value?: string;
   defaultValue?: string;
+  variant?: TimeInputVariant;
 }
 
 export const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function TimeInput(
-  { label, helperText, error, id, className, ...rest }: TimeInputProps,
+  { label, helperText, error, id, className, variant = 'default', ...rest }: TimeInputProps,
   ref,
 ): ReactNode {
   const generatedId = useId();
@@ -30,7 +34,11 @@ export const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function T
   const errorId = error !== undefined ? `${inputId}-error` : undefined;
   const describedBy = [helperId, errorId].filter((v): v is string => v !== undefined).join(' ');
   return (
-    <div data-cir-component="TimeInput" className={className}>
+    <div
+      data-cir-component="TimeInput"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <label htmlFor={inputId} data-cir-part="input-label">
         {label}
       </label>

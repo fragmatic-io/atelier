@@ -12,16 +12,29 @@
  */
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type TextInputVariant = InputVariant;
 
 export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label: string;
   helperText?: string;
   error?: string;
   type?: 'text' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'number';
+  variant?: TextInputVariant;
 }
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function TextInput(
-  { label, helperText, error, type = 'text', id, className, ...rest }: TextInputProps,
+  {
+    label,
+    helperText,
+    error,
+    type = 'text',
+    id,
+    className,
+    variant = 'default',
+    ...rest
+  }: TextInputProps,
   ref,
 ): ReactNode {
   const generatedId = useId();
@@ -30,7 +43,11 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
   const errorId = error !== undefined ? `${inputId}-error` : undefined;
   const describedBy = [helperId, errorId].filter((v): v is string => v !== undefined).join(' ');
   return (
-    <div data-cir-component="TextInput" className={className}>
+    <div
+      data-cir-component="TextInput"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <label htmlFor={inputId} data-cir-part="input-label">
         {label}
       </label>

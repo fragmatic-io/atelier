@@ -94,4 +94,22 @@ describe('FilterBar', () => {
   it('binding id matches', () => {
     expect(FilterBarBinding.id).toBe('FilterBar');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=inline and emits data-variant', () => {
+    render(<FilterBar filters={[]} onChange={() => undefined} />);
+    const form = screen.getByRole('search');
+    expect(form.getAttribute('data-variant')).toBe('inline');
+  });
+  it('reflects variant=chip layout class', () => {
+    render(<FilterBar filters={[]} onChange={() => undefined} variant="chip" />);
+    const form = screen.getByRole('search');
+    expect(form.getAttribute('data-variant')).toBe('chip');
+    expect(form.className).toContain('flex-wrap');
+  });
+  it('reflects variant=sidebar layout class', () => {
+    render(<FilterBar filters={[]} onChange={() => undefined} variant="sidebar" />);
+    const form = screen.getByRole('search');
+    expect(form.className).toContain('flex-col');
+  });
 });

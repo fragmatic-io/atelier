@@ -9,8 +9,9 @@
  * Pure (no hooks). The grid template is inline-styled so the component is
  * functional before any stylesheet lands.
  */
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, galleryVariantClass, type GalleryVariant } from './_variants.js';
 
 export interface GalleryItem {
   id: string;
@@ -23,23 +24,41 @@ export interface GalleryProps {
   items: readonly GalleryItem[];
   columns?: number;
   className?: string;
+  variant?: GalleryVariant;
 }
 
-export function Gallery({ items, columns = 3, className }: GalleryProps): ReactNode {
+export function Gallery({
+  items,
+  columns = 3,
+  className,
+  variant = 'grid',
+}: GalleryProps): ReactNode {
   const cols = Math.max(1, columns);
+  // Inline styles vary per variant so the component is functional without
+  // any host stylesheet — utility classes layer on top for Tailwind hosts.
+  const baseStyle: CSSProperties = {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    gap: '12px',
+  };
+  const layoutStyle: CSSProperties =
+    variant === 'masonry'
+      ? { ...baseStyle, columnCount: cols }
+      : variant === 'carousel'
+        ? { ...baseStyle, display: 'flex', overflowX: 'auto' }
+        : {
+            ...baseStyle,
+            display: 'grid',
+            gridTemplateColumns: `repeat(${String(cols)}, 1fr)`,
+          };
   return (
     <ul
       data-cir-component="Gallery"
       data-columns={String(cols)}
-      className={className}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${String(cols)}, 1fr)`,
-        gap: '12px',
-        listStyle: 'none',
-        padding: 0,
-        margin: 0,
-      }}
+      data-variant={variant}
+      className={cn(galleryVariantClass[variant], className)}
+      style={layoutStyle}
     >
       {items.map((item) => (
         <li key={item.id} data-cir-part="gallery-item">

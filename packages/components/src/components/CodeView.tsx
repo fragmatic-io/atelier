@@ -14,12 +14,14 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, codeViewVariantClass, type CodeViewVariant } from './_variants.js';
 
 export interface CodeViewProps {
   code: string;
   language?: string;
   showLineNumbers?: boolean;
   className?: string;
+  variant?: CodeViewVariant;
 }
 
 export function CodeView({
@@ -27,16 +29,21 @@ export function CodeView({
   language,
   showLineNumbers = false,
   className,
+  variant = 'default',
 }: CodeViewProps): ReactNode {
   const lines = code.split('\n');
+  // The 'numbered' variant always shows line numbers regardless of the
+  // explicit prop — that's the whole point of the variant.
+  const effectiveLineNumbers = variant === 'numbered' ? true : showLineNumbers;
   return (
     <div
       data-cir-component="CodeView"
       data-language={language ?? 'plain'}
-      className={className}
+      data-variant={variant}
+      className={cn(codeViewVariantClass[variant], className)}
       style={{ display: 'flex', alignItems: 'stretch' }}
     >
-      {showLineNumbers ? (
+      {effectiveLineNumbers ? (
         <ol
           data-cir-part="codeview-line-numbers"
           aria-hidden="true"

@@ -15,6 +15,9 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, navigationVariantClass, type NavigationVariant } from './_variants.js';
+
+export type PaginationVariant = NavigationVariant;
 
 export interface PaginationProps {
   currentPage: number;
@@ -22,6 +25,7 @@ export interface PaginationProps {
   onPageChange: (next: number) => void;
   siblingCount?: number;
   className?: string;
+  variant?: PaginationVariant;
 }
 
 type PageEntry = number | 'ellipsis-left' | 'ellipsis-right';
@@ -58,12 +62,18 @@ export function Pagination({
   onPageChange,
   siblingCount = 1,
   className,
+  variant = 'default',
 }: PaginationProps): ReactNode {
   const entries = buildRange(currentPage, totalPages, siblingCount);
   const prevDisabled = currentPage <= 1;
   const nextDisabled = currentPage >= totalPages;
   return (
-    <nav aria-label="Pagination" data-cir-component="Pagination" className={className}>
+    <nav
+      aria-label="Pagination"
+      data-cir-component="Pagination"
+      data-variant={variant}
+      className={cn(navigationVariantClass[variant], className)}
+    >
       <ul
         data-cir-part="pagination-list"
         style={{ display: 'flex', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}

@@ -14,6 +14,9 @@
  */
 import { forwardRef, useId, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type NumberInputVariant = InputVariant;
 
 export interface NumberInputProps {
   label: string;
@@ -29,6 +32,7 @@ export interface NumberInputProps {
   name?: string;
   disabled?: boolean;
   className?: string;
+  variant?: NumberInputVariant;
 }
 
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(function NumberInput(
@@ -46,6 +50,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
     name,
     disabled,
     className,
+    variant = 'default',
   }: NumberInputProps,
   ref,
 ): ReactNode {
@@ -55,7 +60,11 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
   const errorId = error !== undefined ? `${inputId}-error` : undefined;
   const describedBy = [helperId, errorId].filter((v): v is string => v !== undefined).join(' ');
   return (
-    <div data-cir-component="NumberInput" className={className}>
+    <div
+      data-cir-component="NumberInput"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <label htmlFor={inputId} data-cir-part="input-label">
         {label}
       </label>

@@ -91,4 +91,31 @@ describe('Form', () => {
   it('binding id matches', () => {
     expect(FormBinding.id).toBe('Form');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<Form onSubmit={() => undefined}>x</Form>);
+    const form = container.querySelector('[data-cir-component="Form"]');
+    expect(form?.getAttribute('data-variant')).toBe('default');
+    expect(form?.className).toContain('gap-4');
+  });
+  it('reflects variant=compact', () => {
+    const { container } = render(
+      <Form onSubmit={() => undefined} variant="compact">
+        x
+      </Form>,
+    );
+    const form = container.querySelector('[data-cir-component="Form"]');
+    expect(form?.className).toContain('gap-2');
+  });
+  it('reflects variant=spacious', () => {
+    const { container } = render(
+      <Form onSubmit={() => undefined} variant="spacious">
+        x
+      </Form>,
+    );
+    const form = container.querySelector('[data-cir-component="Form"]');
+    expect(form?.getAttribute('data-variant')).toBe('spacious');
+    expect(form?.className).toContain('gap-6');
+  });
 });

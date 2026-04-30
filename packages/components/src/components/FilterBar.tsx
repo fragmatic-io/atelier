@@ -15,6 +15,7 @@
  */
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, filterBarVariantClass, type FilterBarVariant } from './_variants.js';
 
 export type FilterType = 'select' | 'toggle' | 'search';
 
@@ -35,14 +36,26 @@ export interface FilterBarProps {
   filters: readonly FilterDefinition[];
   onChange: (id: string, value: unknown) => void;
   className?: string;
+  variant?: FilterBarVariant;
 }
 
-export function FilterBar({ filters, onChange, className }: FilterBarProps): ReactNode {
+export function FilterBar({
+  filters,
+  onChange,
+  className,
+  variant = 'inline',
+}: FilterBarProps): ReactNode {
   const stop = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
   };
   return (
-    <form role="search" data-cir-component="FilterBar" className={className} onSubmit={stop}>
+    <form
+      role="search"
+      data-cir-component="FilterBar"
+      data-variant={variant}
+      className={cn(filterBarVariantClass[variant], className)}
+      onSubmit={stop}
+    >
       {filters.map((f) => {
         const inputId = `cir-filter-${f.id}`;
         if (f.type === 'select') {

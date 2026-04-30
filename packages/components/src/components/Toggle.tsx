@@ -13,6 +13,9 @@
  */
 import { forwardRef, useId, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type ToggleVariant = InputVariant;
 
 export interface ToggleProps {
   label: string;
@@ -22,17 +25,22 @@ export interface ToggleProps {
   name?: string;
   disabled?: boolean;
   className?: string;
+  variant?: ToggleVariant;
 }
 
 export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(function Toggle(
-  { label, checked, onChange, id, name, disabled, className }: ToggleProps,
+  { label, checked, onChange, id, name, disabled, className, variant = 'default' }: ToggleProps,
   ref,
 ): ReactNode {
   const generatedId = useId();
   const toggleId = id ?? `cir-toggle-${generatedId}`;
   const labelId = `${toggleId}-label`;
   return (
-    <div data-cir-component="Toggle" className={className}>
+    <div
+      data-cir-component="Toggle"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <span id={labelId} data-cir-part="toggle-label">
         {label}
       </span>

@@ -51,4 +51,33 @@ describe('Toggle', () => {
   it('binding id matches', () => {
     expect(ToggleBinding.id).toBe('Toggle');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(
+      <Toggle label="Notifications" checked={false} onChange={() => undefined} />,
+    );
+    const root = container.querySelector('[data-cir-component="Toggle"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded on data-variant', () => {
+    const { container } = render(
+      <Toggle
+        label="Notifications"
+        checked={false}
+        onChange={() => undefined}
+        variant="embedded"
+      />,
+    );
+    const root = container.querySelector('[data-cir-component="Toggle"]');
+    expect(root?.getAttribute('data-variant')).toBe('embedded');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(
+      <Toggle label="Notifications" checked={false} onChange={() => undefined} variant="minimal" />,
+    );
+    const root = container.querySelector('[data-cir-component="Toggle"]');
+    expect(root?.className).toContain('border-b');
+  });
 });

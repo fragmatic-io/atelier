@@ -15,6 +15,7 @@
  */
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, chatThreadVariantClass, type ChatThreadVariant } from './_variants.js';
 
 export type ChatRole = 'user' | 'assistant' | 'system';
 
@@ -31,6 +32,7 @@ export interface ChatThreadProps {
   autoScroll?: boolean;
   className?: string;
   'aria-label'?: string;
+  variant?: ChatThreadVariant;
 }
 
 export function ChatThread({
@@ -38,6 +40,7 @@ export function ChatThread({
   autoScroll = true,
   className,
   'aria-label': ariaLabel = 'Conversation',
+  variant = 'default',
 }: ChatThreadProps): ReactNode {
   const listRef = useRef<HTMLOListElement | null>(null);
 
@@ -56,7 +59,8 @@ export function ChatThread({
       aria-live="polite"
       data-cir-component="ChatThread"
       data-auto-scroll={autoScroll ? 'true' : 'false'}
-      className={className}
+      data-variant={variant}
+      className={cn(chatThreadVariantClass[variant], className)}
       style={{ listStyle: 'none', margin: 0, padding: 0, overflowY: 'auto' }}
     >
       {messages.map((m) => (

@@ -16,6 +16,20 @@
  *
  * No CVA dep. The tables are plain `Object.freeze`'d records. If you need
  * to compose multiple variants per component, use `cn()` to join them.
+ *
+ * ## Dark mode (Vis-2)
+ *
+ * Every variant table entry below is dual-toned: a light-mode set of
+ * Tailwind utilities followed by `dark:`-prefixed siblings. Hosts that
+ * configure Tailwind with
+ * `darkMode: ['class', '[data-color-mode="dark"]']` (or the older `'class'`
+ * strategy combined with toggling `class="dark"` on `<html>`) get a working
+ * pair-tested dark theme out of the box. The runtime mirrors
+ * `intent.global_preferences.color_mode` onto `<html data-color-mode>` from
+ * `@cir/react`'s `<CirRoute>` so the selector matches automatically.
+ *
+ * Hosts that do NOT ship Tailwind ignore the unknown classes — both the
+ * light and dark utilities are no-ops in that case.
  */
 /** Filter falsy values and join classes with single spaces. */
 export function cn(...parts: ReadonlyArray<string | false | null | undefined>): string | undefined {
@@ -29,11 +43,15 @@ export function cn(...parts: ReadonlyArray<string | false | null | undefined>): 
 export type ActionVariant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'destructive';
 
 export const actionVariantClass: Readonly<Record<ActionVariant, string>> = Object.freeze({
-  primary: 'bg-blue-600 text-white hover:bg-blue-700',
-  secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200',
-  ghost: 'bg-transparent text-gray-900 hover:bg-gray-100',
-  outline: 'bg-transparent text-gray-900 border border-gray-300 hover:bg-gray-50',
-  destructive: 'bg-red-600 text-white hover:bg-red-700',
+  primary:
+    'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:text-white dark:hover:bg-blue-400',
+  secondary:
+    'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
+  ghost: 'bg-transparent text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800',
+  outline:
+    'bg-transparent text-gray-900 border border-gray-300 hover:bg-gray-50 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-800',
+  destructive:
+    'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:text-white dark:hover:bg-red-400',
 });
 
 // -----------------------------------------------------------------------------
@@ -60,10 +78,10 @@ export const statSizeClass: Readonly<Record<Size, string>> = Object.freeze({
 export type LayoutVariant = 'bordered' | 'elevated' | 'ghost' | 'tinted';
 
 export const layoutVariantClass: Readonly<Record<LayoutVariant, string>> = Object.freeze({
-  bordered: 'border border-gray-200 rounded-md',
-  elevated: 'shadow-md rounded-md bg-white',
+  bordered: 'border border-gray-200 rounded-md dark:border-gray-700',
+  elevated: 'shadow-md rounded-md bg-white dark:bg-gray-900 dark:shadow-black/40',
   ghost: 'bg-transparent',
-  tinted: 'bg-gray-50 rounded-md',
+  tinted: 'bg-gray-50 rounded-md dark:bg-gray-800',
 });
 
 // -----------------------------------------------------------------------------
@@ -74,10 +92,13 @@ export const layoutVariantClass: Readonly<Record<LayoutVariant, string>> = Objec
 export type DisplayVariant = 'info' | 'success' | 'warning' | 'error';
 
 export const displayVariantClass: Readonly<Record<DisplayVariant, string>> = Object.freeze({
-  info: 'bg-blue-50 text-blue-900 border border-blue-200',
-  success: 'bg-green-50 text-green-900 border border-green-200',
-  warning: 'bg-amber-50 text-amber-900 border border-amber-200',
-  error: 'bg-red-50 text-red-900 border border-red-200',
+  info: 'bg-blue-50 text-blue-900 border border-blue-200 dark:bg-blue-950 dark:text-blue-100 dark:border-blue-900',
+  success:
+    'bg-green-50 text-green-900 border border-green-200 dark:bg-green-950 dark:text-green-100 dark:border-green-900',
+  warning:
+    'bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:border-amber-900',
+  error:
+    'bg-red-50 text-red-900 border border-red-200 dark:bg-red-950 dark:text-red-100 dark:border-red-900',
 });
 
 // -----------------------------------------------------------------------------
@@ -86,9 +107,9 @@ export const displayVariantClass: Readonly<Record<DisplayVariant, string>> = Obj
 export type StatVariant = 'default' | 'accent' | 'muted';
 
 export const statVariantClass: Readonly<Record<StatVariant, string>> = Object.freeze({
-  default: 'bg-white text-gray-900',
-  accent: 'bg-blue-50 text-blue-900',
-  muted: 'bg-gray-50 text-gray-600',
+  default: 'bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100',
+  accent: 'bg-blue-50 text-blue-900 dark:bg-blue-950 dark:text-blue-100',
+  muted: 'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
 });
 
 // -----------------------------------------------------------------------------
@@ -97,8 +118,9 @@ export const statVariantClass: Readonly<Record<StatVariant, string>> = Object.fr
 export type SearchVariant = 'default' | 'embedded';
 
 export const searchVariantClass: Readonly<Record<SearchVariant, string>> = Object.freeze({
-  default: 'border border-gray-300 rounded-md p-2',
-  embedded: 'bg-transparent border-0 p-0',
+  default:
+    'border border-gray-300 rounded-md p-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100',
+  embedded: 'bg-transparent border-0 p-0 dark:text-gray-100',
 });
 
 // -----------------------------------------------------------------------------
@@ -109,9 +131,10 @@ export const searchVariantClass: Readonly<Record<SearchVariant, string>> = Objec
 export type CodeBlockVariant = 'default' | 'embedded';
 
 export const codeBlockVariantClass: Readonly<Record<CodeBlockVariant, string>> = Object.freeze({
-  default: 'bg-gray-50 text-gray-900 rounded-md p-3 my-2 text-sm font-mono overflow-x-auto',
+  default:
+    'bg-gray-50 text-gray-900 rounded-md p-3 my-2 text-sm font-mono overflow-x-auto dark:bg-gray-900 dark:text-gray-100',
   embedded:
-    'bg-gray-100 text-gray-900 rounded p-2 text-xs font-mono inline-block max-w-full overflow-x-auto',
+    'bg-gray-100 text-gray-900 rounded p-2 text-xs font-mono inline-block max-w-full overflow-x-auto dark:bg-gray-800 dark:text-gray-100',
 });
 
 // -----------------------------------------------------------------------------
@@ -136,8 +159,10 @@ export const contentVariantClass = layoutVariantClass;
 export type TooltipVariant = 'default' | 'inverse';
 
 export const tooltipVariantClass: Readonly<Record<TooltipVariant, string>> = Object.freeze({
-  default: 'bg-gray-900 text-white text-sm rounded-md px-2 py-1',
-  inverse: 'bg-yellow-300 text-black text-sm rounded-md px-2 py-1',
+  default:
+    'bg-gray-900 text-white text-sm rounded-md px-2 py-1 dark:bg-gray-100 dark:text-gray-900',
+  inverse:
+    'bg-yellow-300 text-black text-sm rounded-md px-2 py-1 dark:bg-yellow-400 dark:text-black',
 });
 
 // -----------------------------------------------------------------------------
@@ -147,8 +172,10 @@ export const tooltipVariantClass: Readonly<Record<TooltipVariant, string>> = Obj
 export type HoverCardVariant = 'default' | 'compact';
 
 export const hoverCardVariantClass: Readonly<Record<HoverCardVariant, string>> = Object.freeze({
-  default: 'bg-white text-gray-900 rounded-lg shadow-lg ring-1 ring-gray-200 p-4',
-  compact: 'bg-white text-gray-900 rounded-md shadow-md ring-1 ring-gray-200 p-2',
+  default:
+    'bg-white text-gray-900 rounded-lg shadow-lg ring-1 ring-gray-200 p-4 dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700 dark:shadow-black/40',
+  compact:
+    'bg-white text-gray-900 rounded-md shadow-md ring-1 ring-gray-200 p-2 dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700 dark:shadow-black/40',
 });
 
 // -----------------------------------------------------------------------------
@@ -159,15 +186,19 @@ export type StatusBarStatus = 'operational' | 'degraded' | 'incident' | 'mainten
 export type StatusBarVariant = 'default' | 'compact';
 
 export const statusBarColorClass: Readonly<Record<StatusBarStatus, string>> = Object.freeze({
-  operational: 'bg-green-100 text-green-800 ring-1 ring-inset ring-green-200',
-  degraded: 'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-200',
-  incident: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200',
-  maintenance: 'bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-200',
+  operational:
+    'bg-green-100 text-green-800 ring-1 ring-inset ring-green-200 dark:bg-green-950 dark:text-green-200 dark:ring-green-900',
+  degraded:
+    'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-200 dark:bg-yellow-950 dark:text-yellow-200 dark:ring-yellow-900',
+  incident:
+    'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200 dark:bg-red-950 dark:text-red-200 dark:ring-red-900',
+  maintenance:
+    'bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:ring-blue-900',
 });
 
 export const statusBarVariantClass: Readonly<Record<StatusBarVariant, string>> = Object.freeze({
-  default: 'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm',
-  compact: 'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs',
+  default: 'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm dark:text-gray-100',
+  compact: 'inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs dark:text-gray-100',
 });
 
 // -----------------------------------------------------------------------------
@@ -179,7 +210,7 @@ export type BulkActionBarVariant = 'default';
 export const bulkActionBarVariantClass: Readonly<Record<BulkActionBarVariant, string>> =
   Object.freeze({
     default:
-      'fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-full shadow-2xl px-4 py-2 flex items-center gap-3 z-50',
+      'fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-full shadow-2xl px-4 py-2 flex items-center gap-3 z-50 dark:bg-gray-100 dark:text-gray-900 dark:shadow-black/60',
   });
 
 // -----------------------------------------------------------------------------
@@ -191,8 +222,8 @@ export const bulkActionBarVariantClass: Readonly<Record<BulkActionBarVariant, st
 export type PinnedSeparatorVariant = 'default' | 'subtle';
 export const pinnedSeparatorClass: Readonly<Record<PinnedSeparatorVariant, string>> = Object.freeze(
   {
-    default: 'border-b border-gray-300 my-2',
-    subtle: 'border-b border-gray-200 my-1',
+    default: 'border-b border-gray-300 my-2 dark:border-gray-600',
+    subtle: 'border-b border-gray-200 my-1 dark:border-gray-700',
   },
 );
 
@@ -210,4 +241,225 @@ export const iconSizePx: Readonly<Record<IconSize, number>> = Object.freeze({
   md: 16,
   lg: 20,
   xl: 24,
+});
+
+// -----------------------------------------------------------------------------
+// Vis-4 — variant tables for the remaining 32 components. P-10 covered the 24
+// most-impactful primitives; Vis-4 closes the gap with input-style, navigation,
+// chart, and specialized variants. Tables below are all NEW; do not edit the
+// existing tables above — Vis-2 owns those for dark-mode work.
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Input variants (TextInput, NumberInput, DateInput, TimeInput, MultiSelect,
+// Toggle, Slider, FileUpload, RichText, CodeEditor, Calendar). Same three-step
+// shape as `searchVariantClass`: a default bordered field, an `embedded`
+// flavour (no chrome, for inputs hosted inside a styled container), and a
+// `minimal` underline flavour (Material-like dense forms).
+// -----------------------------------------------------------------------------
+export type InputVariant = 'default' | 'embedded' | 'minimal';
+
+export const inputVariantClass: Readonly<Record<InputVariant, string>> = Object.freeze({
+  default: 'border border-gray-300 rounded-md p-2 text-sm',
+  embedded: 'bg-transparent border-0 p-0 text-sm',
+  minimal: 'border-0 border-b border-gray-300 rounded-none p-1 text-sm',
+});
+
+// -----------------------------------------------------------------------------
+// Navigation variants (Breadcrumb, Pagination, Sidebar). Sizes already exist on
+// these via component-specific props; the variant axis adds chrome intensity:
+// `default` is the standard surface, `subtle` drops emphasis for chrome that
+// blends into the page, and `inverse` flips contrast for dark navigation rails
+// laid over light page content.
+// -----------------------------------------------------------------------------
+export type NavigationVariant = 'default' | 'subtle' | 'inverse';
+
+export const navigationVariantClass: Readonly<Record<NavigationVariant, string>> = Object.freeze({
+  default: 'text-gray-900',
+  subtle: 'text-gray-500',
+  inverse: 'bg-gray-900 text-white',
+});
+
+// -----------------------------------------------------------------------------
+// ConfirmDialog — `default` (neutral confirmation surface) vs `destructive`
+// (red-tinted ring so the dialog itself signals risk before the user reaches
+// the action button). The existing `destructive` boolean prop continues to
+// work and is wired to default the variant to `'destructive'` for back-compat.
+// -----------------------------------------------------------------------------
+export type ConfirmDialogVariant = 'default' | 'destructive';
+
+export const confirmDialogVariantClass: Readonly<Record<ConfirmDialogVariant, string>> =
+  Object.freeze({
+    default: 'bg-white text-gray-900 rounded-md shadow-lg ring-1 ring-gray-200 p-4',
+    destructive: 'bg-white text-gray-900 rounded-md shadow-lg ring-1 ring-red-300 p-4',
+  });
+
+// -----------------------------------------------------------------------------
+// Form — visual rhythm of the form's vertical gap stack. `compact` halves the
+// gap for tight settings panels; `spacious` doubles it for hero-style flows.
+// (Density is a separate axis owned by the existing density token.)
+// -----------------------------------------------------------------------------
+export type FormVariant = 'default' | 'compact' | 'spacious';
+
+export const formVariantClass: Readonly<Record<FormVariant, string>> = Object.freeze({
+  default: 'flex flex-col gap-4',
+  compact: 'flex flex-col gap-2',
+  spacious: 'flex flex-col gap-6',
+});
+
+// -----------------------------------------------------------------------------
+// Wizard — layout style of the step strip. `default` is the inline stepper
+// above the content; `sidebar` floats steps to the left as a vertical column;
+// `inline` collapses the strip to a one-line breadcrumb of titles.
+// -----------------------------------------------------------------------------
+export type WizardVariant = 'default' | 'sidebar' | 'inline';
+
+export const wizardVariantClass: Readonly<Record<WizardVariant, string>> = Object.freeze({
+  default: 'flex flex-col gap-4',
+  sidebar: 'grid grid-cols-[200px_1fr] gap-4',
+  inline: 'flex flex-col gap-2',
+});
+
+// -----------------------------------------------------------------------------
+// FilterBar — chip-row, inline-form, or sidebar facet column. Each picks a
+// completely different layout: chips wrap, inline lays out horizontally, and
+// sidebar stacks vertically.
+// -----------------------------------------------------------------------------
+export type FilterBarVariant = 'chip' | 'inline' | 'sidebar';
+
+export const filterBarVariantClass: Readonly<Record<FilterBarVariant, string>> = Object.freeze({
+  chip: 'flex flex-wrap items-center gap-2',
+  inline: 'flex items-center gap-3',
+  sidebar: 'flex flex-col gap-3',
+});
+
+// -----------------------------------------------------------------------------
+// Gallery — visual layout. `grid` is the default uniform grid; `masonry` flows
+// items into a column-count layout for varying heights; `carousel` is a single
+// horizontal scroller.
+// -----------------------------------------------------------------------------
+export type GalleryVariant = 'grid' | 'masonry' | 'carousel';
+
+export const galleryVariantClass: Readonly<Record<GalleryVariant, string>> = Object.freeze({
+  grid: 'grid gap-3',
+  masonry: 'columns-3 gap-3',
+  carousel: 'flex gap-3 overflow-x-auto snap-x snap-mandatory',
+});
+
+// -----------------------------------------------------------------------------
+// CommandPalette — `default` (full-height modal with breathing room) and
+// `compact` (smaller surface for inline pickers / quick-jump menus).
+// -----------------------------------------------------------------------------
+export type CommandPaletteVariant = 'default' | 'compact';
+
+export const commandPaletteVariantClass: Readonly<Record<CommandPaletteVariant, string>> =
+  Object.freeze({
+    default: 'bg-white text-gray-900 rounded-lg shadow-xl ring-1 ring-gray-200 p-3 w-[480px]',
+    compact: 'bg-white text-gray-900 rounded-md shadow-md ring-1 ring-gray-200 p-2 w-[320px]',
+  });
+
+// -----------------------------------------------------------------------------
+// Stepper — layout / display style. `horizontal` is the default flex-row,
+// `vertical` stacks for sidebars, `numbered` strips the connector and leans on
+// the index numerals.
+// -----------------------------------------------------------------------------
+export type StepperVariant = 'horizontal' | 'vertical' | 'numbered';
+
+export const stepperVariantClass: Readonly<Record<StepperVariant, string>> = Object.freeze({
+  horizontal: 'flex flex-row items-center gap-3',
+  vertical: 'flex flex-col gap-3',
+  numbered: 'flex flex-row items-center gap-2',
+});
+
+// -----------------------------------------------------------------------------
+// Chart — axis + grid intensity. `default` shows axes + tick labels;
+// `minimal` drops the labels (axis lines stay); `sparkline` strips chrome
+// entirely so the chart is just the data path, suitable for inline cells.
+// -----------------------------------------------------------------------------
+export type ChartVariant = 'default' | 'minimal' | 'sparkline';
+
+export const chartVariantClass: Readonly<Record<ChartVariant, string>> = Object.freeze({
+  default: 'text-gray-700',
+  minimal: 'text-gray-500',
+  sparkline: 'text-blue-600',
+});
+
+// -----------------------------------------------------------------------------
+// Timeline — vertical rhythm. `compact` halves the gap; `sparse` doubles it.
+// -----------------------------------------------------------------------------
+export type TimelineVariant = 'default' | 'compact' | 'sparse';
+
+export const timelineVariantClass: Readonly<Record<TimelineVariant, string>> = Object.freeze({
+  default: 'flex flex-col gap-3',
+  compact: 'flex flex-col gap-1',
+  sparse: 'flex flex-col gap-6',
+});
+
+// -----------------------------------------------------------------------------
+// Tree — `default` standard padding, `condensed` tighter row height for deep
+// nested trees that would otherwise scroll a lot.
+// -----------------------------------------------------------------------------
+export type TreeVariant = 'default' | 'condensed';
+
+export const treeVariantClass: Readonly<Record<TreeVariant, string>> = Object.freeze({
+  default: 'text-sm',
+  condensed: 'text-xs leading-tight',
+});
+
+// -----------------------------------------------------------------------------
+// ChatThread — `default` is full-width bubbles, `compact` tightens spacing,
+// `split` lays out user / assistant messages on opposite sides of a divider.
+// -----------------------------------------------------------------------------
+export type ChatThreadVariant = 'default' | 'compact' | 'split';
+
+export const chatThreadVariantClass: Readonly<Record<ChatThreadVariant, string>> = Object.freeze({
+  default: 'flex flex-col gap-3',
+  compact: 'flex flex-col gap-1',
+  split: 'flex flex-col gap-3',
+});
+
+// -----------------------------------------------------------------------------
+// Map — `default` shows header + marker list, `minimal` strips the chrome to
+// a borderless surface (host paints the tiles themselves).
+// -----------------------------------------------------------------------------
+export type MapVariant = 'default' | 'minimal';
+
+export const mapVariantClass: Readonly<Record<MapVariant, string>> = Object.freeze({
+  default: 'border border-gray-200 rounded-md p-2',
+  minimal: 'p-0',
+});
+
+// -----------------------------------------------------------------------------
+// Kanban — `default` standard column padding, `compact` tighter rhythm so more
+// cards fit on a single screen.
+// -----------------------------------------------------------------------------
+export type KanbanVariant = 'default' | 'compact';
+
+export const kanbanVariantClass: Readonly<Record<KanbanVariant, string>> = Object.freeze({
+  default: 'flex gap-3 overflow-x-auto',
+  compact: 'flex gap-2 overflow-x-auto text-sm',
+});
+
+// -----------------------------------------------------------------------------
+// DiffView — `unified` default GitHub-style stacked, `split` two-column, and
+// `minimal` strips the gutter and renders just the line content.
+// -----------------------------------------------------------------------------
+export type DiffViewVariant = 'unified' | 'split' | 'minimal';
+
+export const diffViewVariantClass: Readonly<Record<DiffViewVariant, string>> = Object.freeze({
+  unified: 'font-mono text-sm',
+  split: 'font-mono text-sm grid grid-cols-2 gap-4',
+  minimal: 'font-mono text-xs',
+});
+
+// -----------------------------------------------------------------------------
+// CodeView — `default` standalone block, `embedded` inline-block flavour
+// suitable for inline code references, `numbered` always shows line numbers.
+// -----------------------------------------------------------------------------
+export type CodeViewVariant = 'default' | 'embedded' | 'numbered';
+
+export const codeViewVariantClass: Readonly<Record<CodeViewVariant, string>> = Object.freeze({
+  default: 'bg-gray-50 rounded-md p-3 text-sm font-mono overflow-x-auto',
+  embedded: 'bg-gray-100 rounded p-2 text-xs font-mono inline-block max-w-full overflow-x-auto',
+  numbered: 'bg-gray-50 rounded-md p-3 text-sm font-mono overflow-x-auto',
 });

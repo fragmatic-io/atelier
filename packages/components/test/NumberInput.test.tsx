@@ -82,4 +82,27 @@ describe('NumberInput', () => {
   it('binding id matches', () => {
     expect(NumberInputBinding.id).toBe('NumberInput');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<NumberInput label="Qty" value={0} onChange={() => undefined} />);
+    const root = container.querySelector('[data-cir-component="NumberInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded on data-variant', () => {
+    const { container } = render(
+      <NumberInput label="Qty" value={0} onChange={() => undefined} variant="embedded" />,
+    );
+    const root = container.querySelector('[data-cir-component="NumberInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('embedded');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal on data-variant + utility class', () => {
+    const { container } = render(
+      <NumberInput label="Qty" value={0} onChange={() => undefined} variant="minimal" />,
+    );
+    const root = container.querySelector('[data-cir-component="NumberInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('minimal');
+    expect(root?.className).toContain('border-b');
+  });
 });

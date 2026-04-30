@@ -24,6 +24,7 @@
 import {
   MemoryTokenStorage,
   VaultClient,
+  VaultResponseError,
   VaultUnauthorizedError,
   VaultUnreachableError,
   type VaultTokenStorage,
@@ -35,6 +36,9 @@ export const INTENT_STORAGE_KEY = 'cir.demo.intent';
 
 /** localStorage key the vault token is persisted under. */
 export const VAULT_TOKEN_STORAGE_KEY = 'cir.demo.vault.token';
+
+/** localStorage key the demo tracks minted grant jtis under (for revoke-all). */
+export const VAULT_GRANT_JTI_REGISTRY_KEY = 'cir.demo.vault.jtis';
 
 /** The lens scopes the demo asks for. Realistic for an email-triage app. */
 export const DEMO_LENS_SCOPES = [
@@ -150,7 +154,7 @@ class DemoTokenStorage implements VaultTokenStorage {
 
 /** Singleton client. Lazily constructed so SSR doesn't try to instantiate. */
 let cachedClient: VaultClient | null = null;
-function getVaultClient(): VaultClient {
+export function getVaultClient(): VaultClient {
   if (cachedClient !== null) return cachedClient;
   const tokenStorage =
     typeof window !== 'undefined' ? new DemoTokenStorage() : new MemoryTokenStorage();
@@ -168,6 +172,42 @@ function getVaultClient(): VaultClient {
  */
 export function _resetVaultClientForTesting(): void {
   cachedClient = null;
+}
+
+/**
+ * Read the per-app jti registry (the set of grants the demo minted on this
+ * device). Returns [] when none. Used by `revokeIntentProfileAsync` to
+ * issue a `DELETE /vault/grants/:jti` per minted token.
+ */
+export function trackedGrantJtis(): string[] {
+  const s = getStorage();
+  if (s === null) return [];
+  const raw = s.getItem(VAULT_GRANT_JTI_REGISTRY_KEY);
+  if (raw === null) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((x): x is string => typeof x === 'string' && x.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+/** Append a jti to the registry. Idempotent — duplicates are dropped. */
+export function trackGrantJti(jti: string): void {
+  if (jti.length === 0) return;
+  const s = getStorage();
+  if (s === null) return;
+  const existing = trackedGrantJtis();
+  if (existing.includes(jti)) return;
+  s.setItem(VAULT_GRANT_JTI_REGISTRY_KEY, JSON.stringify([...existing, jti]));
+}
+
+/** Clear the registry. Called after revoke-all. */
+export function clearTrackedGrantJtis(): void {
+  const s = getStorage();
+  if (s === null) return;
+  s.removeItem(VAULT_GRANT_JTI_REGISTRY_KEY);
 }
 
 /**
@@ -215,6 +255,7 @@ export function revokeIntentProfile(): void {
   if (!storage) return;
   storage.removeItem(INTENT_STORAGE_KEY);
   storage.removeItem(VAULT_TOKEN_STORAGE_KEY);
+  storage.removeItem(VAULT_GRANT_JTI_REGISTRY_KEY);
 }
 
 /**
@@ -264,29 +305,32 @@ function shouldFallBack(err: unknown): boolean {
 }
 
 /**
- * Provision a grant + save the profile via the vault.
+ * Persist an intent profile via the vault.
  *
- * Demo flow:
- *   1) Mint a token covering the requested scopes.
- *   2) Seed the vault with a `buildDemoProfile()` baseline (the demo's
- *      vault is open — production deployments won't allow this).
- *   3) Mirror the result into localStorage so the sync path agrees.
+ * Wave 8 / V-3 update: the grant must already be minted (the consent dance
+ * runs BEFORE save). We assume a token is in `tokenStorage`; if not,
+ * `patchProfile` will throw `VaultUnauthorizedError` and the caller routes
+ * to the consent screen.
+ *
+ * If the vault has no profile for this user yet (404 on PATCH), the demo
+ * falls back to localStorage as a baseline so the route gates have
+ * something to gate on. Production deployments seed the vault out-of-band
+ * (e.g. a sign-up flow on the vault host) so this path doesn't fire.
  *
  * On vault unreachable + fallback enabled: write to localStorage only.
  */
 export async function saveIntentProfileAsync(profile: IntentProfile): Promise<void> {
   const client = getVaultClient();
-  const grantedScopes = grantedScopesFromProfile(profile);
   try {
-    // Provision a grant (idempotent at the demo level — minting a fresh
-    // grant on every save mirrors the "consent screen confirms each save"
-    // posture; production deployments use longer-lived grants).
     if (client.getToken() === null) {
-      await client.requestGrant({
-        scopes: grantedScopes,
-        purpose: 'CIR demo onboarding',
-        user_id: profile.user_id,
-      });
+      // No token. The caller forgot to run the consent flow; mirror to
+      // localStorage so the user isn't stuck, but log loudly because this
+      // is a programming error in the host integration.
+      console.error(
+        '[cir-demo] saveIntentProfileAsync called with no token — did the consent flow complete? Falling back to localStorage.',
+      );
+      saveIntentProfile(profile);
+      return;
     }
     await client.patchProfile({
       lenses: profile.lenses,
@@ -296,6 +340,15 @@ export async function saveIntentProfileAsync(profile: IntentProfile): Promise<vo
     });
     saveIntentProfile(profile); // mirror to localStorage
   } catch (err) {
+    if (err instanceof VaultResponseError && err.status === 404) {
+      // Vault has no profile for this user yet. The reference vault dev
+      // server doesn't auto-seed; we mirror locally and surface a hint.
+      console.warn(
+        '[cir-demo] vault has no profile for this user yet (PATCH 404); persisted to localStorage. Seed the vault via storage.putProfile() to use the vault for reads.',
+      );
+      saveIntentProfile(profile);
+      return;
+    }
     if (shouldFallBack(err)) {
       saveIntentProfile(profile);
       return;
@@ -329,35 +382,62 @@ export async function loadIntentProfileAsync(): Promise<IntentProfile | null> {
   }
 }
 
-/** Async variant of `revokeIntentProfile`. Calls the vault, then clears local. */
+/** Async variant of `revokeIntentProfile`. Calls the vault, then clears local.
+ *
+ * Wave 8 / V-3: reaches the vault's `DELETE /vault/grants/:jti` for every
+ * known jti the demo minted. The reference demo only mints one token at a
+ * time so this is a single call today; the multi-jti registry shape is
+ * future-proofing for when the demo asks for multiple narrowly-scoped
+ * tokens. The vault emits `system.security_revocation` per revocation;
+ * subscribed runtimes invalidate manifests compiled from the affected
+ * slice. */
 export async function revokeIntentProfileAsync(): Promise<void> {
   const client = getVaultClient();
-  try {
-    if (client.getToken() !== null) {
-      await client.revokeGrant();
+  const jtis = trackedGrantJtis();
+  // Always include the active token's jti even if it isn't in the registry
+  // (tracked list may be stale across older sessions).
+  const activeJti = client.getActiveJti();
+  if (activeJti !== null && !jtis.includes(activeJti)) jtis.push(activeJti);
+  let lastErr: unknown = null;
+  for (const jti of jtis) {
+    try {
+      await client.revokeGrant(jti);
+    } catch (err) {
+      if (!shouldFallBack(err) && !(err instanceof VaultUnauthorizedError)) {
+        lastErr = err;
+      }
     }
-  } catch (err) {
-    if (!shouldFallBack(err) && !(err instanceof VaultUnauthorizedError)) {
-      // Re-throw real errors; ignore unauthorized (token already gone).
-      throw err;
-    }
-  } finally {
-    revokeIntentProfile();
   }
+  // Clear the registry + local profile regardless of vault outcome — we want
+  // the local UI to reflect "revoked" even when the vault was unreachable.
+  clearTrackedGrantJtis();
+  revokeIntentProfile();
+  if (lastErr !== null) throw lastErr;
 }
 
 /**
- * Async variant of `revokeLens`. Patches the vault to drop the scope from
- * `granted_scopes`, then mirrors locally. Falls through to localStorage on
- * vault unreachable.
+ * Async variant of `revokeLens`.
+ *
+ * Wave 8 / V-3: real revocation. The current token covers the entire
+ * granted scope set, so revoking a single lens means revoking the active
+ * token at the vault (which fires `system.security_revocation` →
+ * subscribed runtimes invalidate the affected manifests) and clearing the
+ * local mirror. The user is then bounced back through the consent flow to
+ * re-grant the reduced scope set.
+ *
+ * Returns `true` when the caller should bounce to `/onboarding` for a
+ * fresh consent dance, `false` when the profile was cleared entirely (also
+ * routes to onboarding).
  */
-export async function revokeLensAsync(scope: string): Promise<void> {
+export async function revokeLensAsync(scope: string): Promise<{ shouldReGrant: boolean }> {
   const current = loadIntentProfile();
-  if (current === null) return;
+  if (current === null) return { shouldReGrant: false };
   const remaining = grantedScopesFromProfile(current).filter((s) => s !== scope);
-  if (remaining.length === 0) {
-    await revokeIntentProfileAsync();
-    return;
-  }
-  await saveIntentProfileAsync(buildDemoProfile(remaining));
+  // Always revoke the current token at the vault — the token covers all
+  // currently granted scopes, so any reduction needs to revoke the broad
+  // grant before re-minting a narrower one.
+  await revokeIntentProfileAsync();
+  // The profile is gone locally. If there were remaining scopes, the
+  // caller redirects to /onboarding which will re-prompt for consent.
+  return { shouldReGrant: remaining.length > 0 };
 }

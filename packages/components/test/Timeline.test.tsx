@@ -58,4 +58,23 @@ describe('Timeline', () => {
   it('binding id matches', () => {
     expect(TimelineBinding.id).toBe('Timeline');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<Timeline entries={ENTRIES} />);
+    const root = container.querySelector('[data-cir-component="Timeline"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+    expect(root?.className).toContain('gap-3');
+  });
+  it('reflects variant=compact class', () => {
+    const { container } = render(<Timeline entries={ENTRIES} variant="compact" />);
+    const root = container.querySelector('[data-cir-component="Timeline"]');
+    expect(root?.className).toContain('gap-1');
+  });
+  it('reflects variant=sparse class', () => {
+    const { container } = render(<Timeline entries={ENTRIES} variant="sparse" />);
+    const root = container.querySelector('[data-cir-component="Timeline"]');
+    expect(root?.getAttribute('data-variant')).toBe('sparse');
+    expect(root?.className).toContain('gap-6');
+  });
 });

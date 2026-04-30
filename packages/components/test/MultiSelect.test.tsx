@@ -52,4 +52,42 @@ describe('MultiSelect', () => {
   it('binding id matches', () => {
     expect(MultiSelectBinding.id).toBe('MultiSelect');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(
+      <MultiSelect label="Fruit" options={OPTIONS} values={[]} onChange={() => undefined} />,
+    );
+    const root = container.querySelector('[data-cir-component="MultiSelect"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects each non-default variant on data-variant', () => {
+    for (const variant of ['embedded', 'minimal'] as const) {
+      const { container, unmount } = render(
+        <MultiSelect
+          label="Fruit"
+          options={OPTIONS}
+          values={[]}
+          onChange={() => undefined}
+          variant={variant}
+        />,
+      );
+      const root = container.querySelector('[data-cir-component="MultiSelect"]');
+      expect(root?.getAttribute('data-variant')).toBe(variant);
+      unmount();
+    }
+  });
+  it('applies the embedded utility class', () => {
+    const { container } = render(
+      <MultiSelect
+        label="Fruit"
+        options={OPTIONS}
+        values={[]}
+        onChange={() => undefined}
+        variant="embedded"
+      />,
+    );
+    const root = container.querySelector('[data-cir-component="MultiSelect"]');
+    expect(root?.className).toContain('bg-transparent');
+  });
 });

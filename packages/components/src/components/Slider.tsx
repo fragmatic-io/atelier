@@ -9,6 +9,9 @@
  */
 import { forwardRef, useId, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type SliderVariant = InputVariant;
 
 export interface SliderProps {
   label: string;
@@ -22,6 +25,7 @@ export interface SliderProps {
   name?: string;
   disabled?: boolean;
   className?: string;
+  variant?: SliderVariant;
 }
 
 export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
@@ -37,13 +41,18 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     name,
     disabled,
     className,
+    variant = 'default',
   }: SliderProps,
   ref,
 ): ReactNode {
   const generatedId = useId();
   const inputId = id ?? `cir-slider-${generatedId}`;
   return (
-    <div data-cir-component="Slider" className={className}>
+    <div
+      data-cir-component="Slider"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <label htmlFor={inputId} data-cir-part="slider-label">
         {label}
         {displayValue ? <span data-cir-part="slider-value">{` ${String(value)}`}</span> : null}

@@ -33,8 +33,10 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
 import { readPersistedBool, writePersistedBool } from '../lib/persisted-state.js';
+import { cn, navigationVariantClass, type NavigationVariant } from './_variants.js';
 
 export type SidebarSide = 'left' | 'right';
+export type SidebarVariant = NavigationVariant;
 
 export interface SidebarChildItem {
   id: string;
@@ -84,6 +86,7 @@ export interface SidebarProps {
   side?: SidebarSide;
   className?: string;
   'aria-label'?: string;
+  variant?: SidebarVariant;
 }
 
 /** Width (in pixels) of the icon-only collapsed column. */
@@ -148,6 +151,7 @@ export function Sidebar({
   side = 'left',
   className,
   'aria-label': ariaLabelOverride,
+  variant = 'default',
 }: SidebarProps): ReactNode {
   const isControlled = controlledCollapsed !== undefined;
 
@@ -240,7 +244,8 @@ export function Sidebar({
       data-collapsed={effectiveCollapsed ? 'true' : 'false'}
       data-cir-collapsible={collapsible ? 'true' : 'false'}
       data-cir-reduced-motion={collapsible && reducedMotion ? 'true' : undefined}
-      className={className}
+      data-variant={variant}
+      className={cn(navigationVariantClass[variant], className)}
       style={asideStyle}
     >
       <button

@@ -75,4 +75,21 @@ describe('Calendar', () => {
   it('binding id matches', () => {
     expect(CalendarBinding.id).toBe('Calendar');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<Calendar month="2026-04" ariaLabel="x" />);
+    const root = container.querySelector('[data-cir-component="Calendar"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded class', () => {
+    const { container } = render(<Calendar month="2026-04" ariaLabel="x" variant="embedded" />);
+    const root = container.querySelector('[data-cir-component="Calendar"]');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(<Calendar month="2026-04" ariaLabel="x" variant="minimal" />);
+    const root = container.querySelector('[data-cir-component="Calendar"]');
+    expect(root?.className).toContain('border-b');
+  });
 });

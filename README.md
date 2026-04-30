@@ -215,6 +215,14 @@ Once granted, `/today` loads. Open DevTools console for audit events. Try:
 - Click **Archive** → modal confirmation (`confirmation: 'modal'`).
 - Click **↶ Undo** → action dispatcher pops the LRU undo stack.
 - Visit `/settings/intent` → revoke per-lens or revoke all.
+- The intent profile carries `global_preferences.color_mode` (`light`,
+  `dark`, or `system`). `<CirRoute>` mirrors it onto
+  `<html data-color-mode>` and every component ships paired light + `dark:`
+  Tailwind utilities (Wave 7c / Vis-2) — the demo's Tailwind config keys
+  off `[data-color-mode="dark"]` so the theme switches automatically when
+  the LLM-onboarding flow infers a dark preference. See
+  [`packages/components/README.md`](packages/components/README.md) §"Dark
+  mode" for the per-component pairing reference.
 - Trigger an SSE recompile from another shell:
   ```bash
   curl -XPOST http://localhost:3000/api/triggers/publish \
@@ -245,6 +253,7 @@ pnpm exec cir-schemas dump --out .well-known/schemas      # regenerate published
 pnpm exec cir-schemas validate-data --strict              # fail on _review drafts
 pnpm exec cir-evals run                                   # eval suite
 pnpm exec cir-evals run --tag smoke                       # Gemini end-to-end smoke (skips without key)
+pnpm exec cir-evals run --tag chain                       # personalisation chain integration witness (offline-first, deterministic)
 pnpm --filter @cir/demo build                             # Next.js production build
 pnpm --filter @cir/demo e2e                               # Playwright (requires `e2e:install` first)
 ```

@@ -53,4 +53,23 @@ describe('Breadcrumb', () => {
   it('binding id matches', () => {
     expect(BreadcrumbBinding.id).toBe('Breadcrumb');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    render(<Breadcrumb items={[{ label: 'Home' }]} />);
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(nav.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=subtle class', () => {
+    render(<Breadcrumb items={[{ label: 'Home' }]} variant="subtle" />);
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(nav.getAttribute('data-variant')).toBe('subtle');
+    expect(nav.className).toContain('text-gray-500');
+  });
+  it('reflects variant=inverse class', () => {
+    render(<Breadcrumb items={[{ label: 'Home' }]} variant="inverse" />);
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(nav.className).toContain('bg-gray-900');
+    expect(nav.className).toContain('text-white');
+  });
 });

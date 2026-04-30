@@ -111,4 +111,18 @@ describe('CommandPalette', () => {
   it('binding id matches', () => {
     expect(CommandPaletteBinding.id).toBe('CommandPalette');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    render(<CommandPalette open commands={COMMANDS} onClose={() => undefined} />);
+    const dlg = document.querySelector('[data-cir-component="CommandPalette"]');
+    expect(dlg?.getAttribute('data-variant')).toBe('default');
+    expect(dlg?.className).toContain('w-[480px]');
+  });
+  it('reflects variant=compact class', () => {
+    render(<CommandPalette open commands={COMMANDS} onClose={() => undefined} variant="compact" />);
+    const dlg = document.querySelector('[data-cir-component="CommandPalette"]');
+    expect(dlg?.getAttribute('data-variant')).toBe('compact');
+    expect(dlg?.className).toContain('w-[320px]');
+  });
 });

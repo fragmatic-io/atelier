@@ -249,4 +249,22 @@ describe('Sidebar — Wave 7b collapsible behaviour', () => {
     expect(container.querySelector('[data-cir-part="sidebar-icon"]')).toBeTruthy();
     expect(container.querySelector('[data-cir-part="sidebar-children"]')).toBeNull();
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default', () => {
+    const { container } = render(<Sidebar items={[]} />);
+    const aside = container.querySelector('[data-cir-component="Sidebar"]');
+    expect(aside?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=subtle class', () => {
+    const { container } = render(<Sidebar items={[]} variant="subtle" />);
+    const aside = container.querySelector('[data-cir-component="Sidebar"]');
+    expect(aside?.className).toContain('text-gray-500');
+  });
+  it('reflects variant=inverse class', () => {
+    const { container } = render(<Sidebar items={[]} variant="inverse" />);
+    const aside = container.querySelector('[data-cir-component="Sidebar"]');
+    expect(aside?.getAttribute('data-variant')).toBe('inverse');
+    expect(aside?.className).toContain('bg-gray-900');
+  });
 });

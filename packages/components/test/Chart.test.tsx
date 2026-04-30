@@ -80,4 +80,26 @@ describe('Chart', () => {
   it('binding id matches', () => {
     expect(ChartBinding.id).toBe('Chart');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<Chart kind="line" data={DATA} ariaLabel="a" />);
+    const svg = container.querySelector('[data-cir-component="Chart"]');
+    expect(svg?.getAttribute('data-variant')).toBe('default');
+  });
+  it('variant=minimal still renders axes but suppresses labels', () => {
+    const { container } = render(
+      <Chart kind="line" data={DATA} ariaLabel="a" variant="minimal" xLabel="X" yLabel="Y" />,
+    );
+    expect(container.querySelector('[data-cir-part="chart-y-axis"]')).toBeTruthy();
+    expect(container.querySelector('[data-cir-part="chart-x-label"]')).toBeNull();
+    expect(container.querySelector('[data-cir-part="chart-y-label"]')).toBeNull();
+  });
+  it('variant=sparkline strips axes', () => {
+    const { container } = render(
+      <Chart kind="line" data={DATA} ariaLabel="a" variant="sparkline" />,
+    );
+    expect(container.querySelector('[data-cir-part="chart-y-axis"]')).toBeNull();
+    expect(container.querySelector('[data-cir-part="chart-x-axis"]')).toBeNull();
+  });
 });

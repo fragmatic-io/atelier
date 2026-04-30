@@ -15,6 +15,7 @@
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
 import { Button } from './Button.js';
+import { cn, wizardVariantClass, type WizardVariant } from './_variants.js';
 
 export interface WizardStep {
   id: string;
@@ -28,6 +29,7 @@ export interface WizardProps {
   onStepChange: (id: string) => void;
   onComplete?: () => void;
   className?: string;
+  variant?: WizardVariant;
 }
 
 export function Wizard({
@@ -36,6 +38,7 @@ export function Wizard({
   onStepChange,
   onComplete,
   className,
+  variant = 'default',
 }: WizardProps): ReactNode {
   const idx = steps.findIndex((s) => s.id === currentId);
   const safeIdx = idx < 0 ? 0 : idx;
@@ -57,7 +60,11 @@ export function Wizard({
   };
 
   return (
-    <div data-cir-component="Wizard" className={className}>
+    <div
+      data-cir-component="Wizard"
+      data-variant={variant}
+      className={cn(wizardVariantClass[variant], className)}
+    >
       <ol data-cir-part="wizard-steps" aria-label="Wizard progress">
         {steps.map((s, i) => {
           const state = i < safeIdx ? 'done' : i === safeIdx ? 'active' : 'pending';

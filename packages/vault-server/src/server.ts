@@ -25,6 +25,7 @@ import {
   type ParsedScope,
 } from './scopes.js';
 import type { GrantRecord, VaultStorage } from './storage.js';
+import { handleConsentRequest } from './consent.js';
 
 /**
  * Shape of the `system.security_revocation` trigger we emit on revoke.
@@ -82,6 +83,19 @@ export interface VaultRequest {
 export interface VaultResponse {
   status: number;
   body?: unknown;
+  /**
+   * Optional response headers. Most JSON endpoints leave this undefined and
+   * the HTTP adapter sets `content-type: application/json`. The consent UI
+   * sets `content-type: text/html` + a `set-cookie` for the CSRF nonce, so
+   * the dispatcher returns the explicit header map there.
+   */
+  headers?: Record<string, string>;
+  /**
+   * Optional pre-stringified body. When set, the HTTP adapter writes this
+   * verbatim instead of JSON-encoding `body`. Used by the consent UI for
+   * server-rendered HTML.
+   */
+  rawBody?: string;
 }
 
 /**
@@ -210,6 +224,12 @@ export async function handleVaultRequest(
   service: VaultService,
   req: VaultRequest,
 ): Promise<VaultResponse> {
+  // 0) Consent UI — runs before the JSON endpoints because it serves HTML
+  //    and reads form-encoded bodies. Returns null when the request didn't
+  //    match a consent route, so the rest of the dispatcher takes over.
+  const consentResponse = handleConsentRequest(service, req);
+  if (consentResponse !== null) return consentResponse;
+
   // 1) JWKS — public, unauthenticated.
   if (req.method === 'GET' && req.path === '/.well-known/jwks.json') {
     return json(200, buildJwks([service.key]));
@@ -476,13 +496,21 @@ async function adaptHttp(
     }
     const raw = Buffer.concat(chunks).toString('utf8');
     if (raw.length > 0) {
-      try {
-        body = JSON.parse(raw);
-      } catch {
-        res.statusCode = 400;
-        res.setHeader('content-type', 'application/json');
-        res.end(JSON.stringify({ error: 'invalid JSON body' }));
-        return;
+      // The consent endpoints accept `application/x-www-form-urlencoded`
+      // (so JS-disabled `<form method=POST>` keeps working). Everything
+      // else is JSON. We dispatch on the `content-type` header.
+      const contentType = headers['content-type'] ?? '';
+      if (contentType.includes('application/x-www-form-urlencoded')) {
+        body = raw;
+      } else {
+        try {
+          body = JSON.parse(raw);
+        } catch {
+          res.statusCode = 400;
+          res.setHeader('content-type', 'application/json');
+          res.end(JSON.stringify({ error: 'invalid JSON body' }));
+          return;
+        }
       }
     }
   }
@@ -495,8 +523,20 @@ async function adaptHttp(
     body,
   });
   res.statusCode = out.status;
-  if (out.body !== undefined) {
-    res.setHeader('content-type', 'application/json');
+  // Apply any explicit response headers (the consent UI sets HTML
+  // content-type + a CSRF cookie). We let the route override CORS headers
+  // so a 302 redirect's `Location` header lands on the response.
+  if (out.headers !== undefined) {
+    for (const [k, v] of Object.entries(out.headers)) {
+      res.setHeader(k, v);
+    }
+  }
+  if (out.rawBody !== undefined) {
+    res.end(out.rawBody);
+  } else if (out.body !== undefined) {
+    if (out.headers?.['content-type'] === undefined) {
+      res.setHeader('content-type', 'application/json');
+    }
     res.end(JSON.stringify(out.body));
   } else {
     res.end();

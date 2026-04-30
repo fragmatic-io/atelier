@@ -85,4 +85,31 @@ describe('Pagination', () => {
   it('binding id matches', () => {
     expect(PaginationBinding.id).toBe('Pagination');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    render(<Pagination currentPage={1} totalPages={3} onPageChange={() => undefined} />);
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=subtle class', () => {
+    render(
+      <Pagination currentPage={1} totalPages={3} onPageChange={() => undefined} variant="subtle" />,
+    );
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav.className).toContain('text-gray-500');
+  });
+  it('reflects variant=inverse on data-variant + class', () => {
+    render(
+      <Pagination
+        currentPage={1}
+        totalPages={3}
+        onPageChange={() => undefined}
+        variant="inverse"
+      />,
+    );
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(nav.getAttribute('data-variant')).toBe('inverse');
+    expect(nav.className).toContain('bg-gray-900');
+  });
 });

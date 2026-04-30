@@ -22,7 +22,8 @@ import {
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
-import { StreamingAuditSink } from '@cir/runtime';
+import { SequenceDetector } from '@cir/policies';
+import { BehavioralTap, StreamingAuditSink } from '@cir/runtime';
 import type { Capability, ComponentDefinition } from '@cir/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
@@ -33,6 +34,17 @@ interface CirServer {
   store: ManifestStore;
   audit: StreamingAuditSink;
   resolver: ServerManifestResolver;
+  /**
+   * Behavioural detector seeded from REAL audit events via `BehavioralTap`.
+   * Distinct from the synthetic detector in `admin-patterns.ts`, which is
+   * the seed source for the `/admin/patterns` page on first load. This
+   * detector accumulates patterns from live `action.executed` events as
+   * the user clicks through the demo. See `docs/triggers.md`
+   * §"Behavioral triggers" for the role of the tap.
+   */
+  detector: SequenceDetector;
+  /** The tap that pipes audit events into the live detector. */
+  behavioralTap: BehavioralTap;
   capabilities: Record<string, Capability>;
   components: ComponentDefinition[];
   brandKit: typeof DEMO_BRAND_KIT;
@@ -45,6 +57,15 @@ const g = globalThis as GlobalWithServer;
 
 function buildServer(): CirServer {
   const audit = new StreamingAuditSink({ bufferSize: 200, echoToConsole: false });
+
+  // Live behavioural detector. Subscribes to `audit` via a `BehavioralTap`
+  // so every real `action.executed` event lands in the sequence-detection
+  // window. This makes the engagement → graduation feedback loop the
+  // personalisation chain eval (track DD) witnesses end-to-end real,
+  // rather than synthetic.
+  const detector = new SequenceDetector({ sequenceLengths: [2, 3], threshold: 3 });
+  const behavioralTap = new BehavioralTap({ sink: audit, detector });
+  behavioralTap.start();
 
   const apiKey = process.env['GEMINI_API_KEY'];
   const geminiAvailable = !!apiKey && apiKey.length > 10;
@@ -141,6 +162,8 @@ function buildServer(): CirServer {
     store,
     audit,
     resolver,
+    detector,
+    behavioralTap,
     capabilities: CAPABILITIES,
     components,
     brandKit: DEMO_BRAND_KIT,

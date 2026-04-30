@@ -131,4 +131,41 @@ describe('ConfirmDialog', () => {
   it('binding id matches', () => {
     expect(ConfirmDialogBinding.id).toBe('ConfirmDialog');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(
+      <ConfirmDialog open title="t" onConfirm={() => undefined} onCancel={() => undefined} />,
+    );
+    const dlg = container.querySelector('[data-cir-component="ConfirmDialog"]');
+    expect(dlg?.getAttribute('data-variant')).toBe('default');
+  });
+  it('legacy destructive=true defaults variant to destructive', () => {
+    const { container } = render(
+      <ConfirmDialog
+        open
+        title="t"
+        destructive
+        onConfirm={() => undefined}
+        onCancel={() => undefined}
+      />,
+    );
+    const dlg = container.querySelector('[data-cir-component="ConfirmDialog"]');
+    expect(dlg?.getAttribute('data-variant')).toBe('destructive');
+    expect(dlg?.className).toContain('ring-red-300');
+  });
+  it('explicit variant prop wins over destructive boolean', () => {
+    const { container } = render(
+      <ConfirmDialog
+        open
+        title="t"
+        destructive
+        variant="default"
+        onConfirm={() => undefined}
+        onCancel={() => undefined}
+      />,
+    );
+    const dlg = container.querySelector('[data-cir-component="ConfirmDialog"]');
+    expect(dlg?.getAttribute('data-variant')).toBe('default');
+  });
 });

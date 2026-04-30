@@ -16,6 +16,9 @@
  */
 import { useId, useMemo, type KeyboardEvent, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type CodeEditorVariant = InputVariant;
 
 export interface CodeEditorProps {
   value: string;
@@ -26,6 +29,7 @@ export interface CodeEditorProps {
   readOnly?: boolean;
   showLineNumbers?: boolean;
   className?: string;
+  variant?: CodeEditorVariant;
 }
 
 const TAB = '  ';
@@ -39,6 +43,7 @@ export function CodeEditor({
   readOnly = false,
   showLineNumbers = false,
   className,
+  variant = 'default',
 }: CodeEditorProps): ReactNode {
   const id = useId();
   const textareaId = `${id}-textarea`;
@@ -70,7 +75,8 @@ export function CodeEditor({
       data-cir-component="CodeEditor"
       data-language={language ?? ''}
       data-line-numbers={showLineNumbers ? 'true' : 'false'}
-      className={className}
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
     >
       <label id={labelId} htmlFor={textareaId} data-cir-part="codeeditor-label">
         {label}

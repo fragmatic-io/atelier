@@ -96,6 +96,27 @@ describe('RichText', () => {
   it('binding id matches', () => {
     expect(RichTextBinding.id).toBe('RichText');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<RichText value="" onChange={() => undefined} label="Body" />);
+    const root = container.querySelector('[data-cir-component="RichText"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded class', () => {
+    const { container } = render(
+      <RichText value="" onChange={() => undefined} label="Body" variant="embedded" />,
+    );
+    const root = container.querySelector('[data-cir-component="RichText"]');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(
+      <RichText value="" onChange={() => undefined} label="Body" variant="minimal" />,
+    );
+    const root = container.querySelector('[data-cir-component="RichText"]');
+    expect(root?.className).toContain('border-b');
+  });
 });
 
 describe('sanitizeRichTextHtml', () => {

@@ -62,4 +62,42 @@ describe('Slider', () => {
   it('binding id matches', () => {
     expect(SliderBinding.id).toBe('Slider');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default', () => {
+    const { container } = render(
+      <Slider label="Volume" value={1} min={0} max={10} onChange={() => undefined} />,
+    );
+    const root = container.querySelector('[data-cir-component="Slider"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded class', () => {
+    const { container } = render(
+      <Slider
+        label="Volume"
+        value={1}
+        min={0}
+        max={10}
+        onChange={() => undefined}
+        variant="embedded"
+      />,
+    );
+    const root = container.querySelector('[data-cir-component="Slider"]');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(
+      <Slider
+        label="Volume"
+        value={1}
+        min={0}
+        max={10}
+        onChange={() => undefined}
+        variant="minimal"
+      />,
+    );
+    const root = container.querySelector('[data-cir-component="Slider"]');
+    expect(root?.getAttribute('data-variant')).toBe('minimal');
+    expect(root?.className).toContain('border-b');
+  });
 });

@@ -14,6 +14,9 @@
  */
 import { forwardRef, useId, useState, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type FileUploadVariant = InputVariant;
 
 export interface FileUploadProps {
   label: string;
@@ -24,17 +27,32 @@ export interface FileUploadProps {
   name?: string;
   disabled?: boolean;
   className?: string;
+  variant?: FileUploadVariant;
 }
 
 export const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(function FileUpload(
-  { label, onFiles, accept, multiple, id, name, disabled, className }: FileUploadProps,
+  {
+    label,
+    onFiles,
+    accept,
+    multiple,
+    id,
+    name,
+    disabled,
+    className,
+    variant = 'default',
+  }: FileUploadProps,
   ref,
 ): ReactNode {
   const generatedId = useId();
   const inputId = id ?? `cir-file-${generatedId}`;
   const [chosen, setChosen] = useState<readonly string[]>([]);
   return (
-    <div data-cir-component="FileUpload" className={className}>
+    <div
+      data-cir-component="FileUpload"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <label htmlFor={inputId} data-cir-part="file-label">
         {label}
       </label>

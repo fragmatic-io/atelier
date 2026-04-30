@@ -56,10 +56,17 @@ export default function SettingsIntentPage(): React.JSX.Element {
 
   function onRevokeOne(scope: string): void {
     void revokeLensAsync(scope).then(
-      () => {
-        const next = refresh();
-        setView(next);
-        if (!next) router.replace('/onboarding');
+      (result) => {
+        // Wave 8 / V-3: per-lens revoke now hits the vault's
+        // DELETE /vault/grants/:jti endpoint (cascades a
+        // system.security_revocation trigger), clears the local profile,
+        // and bounces back through onboarding to re-mint a narrower grant.
+        // When there's nothing left to grant, route to /onboarding/denied.
+        if (result.shouldReGrant) {
+          router.replace('/onboarding');
+        } else {
+          router.replace('/onboarding/denied');
+        }
       },
       (err: unknown) => {
         // eslint-disable-next-line no-console

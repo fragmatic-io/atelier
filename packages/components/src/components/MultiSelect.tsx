@@ -13,6 +13,9 @@
  */
 import { useId, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type MultiSelectVariant = InputVariant;
 
 export interface MultiSelectOption {
   value: string;
@@ -29,6 +32,7 @@ export interface MultiSelectProps {
   name?: string;
   disabled?: boolean;
   className?: string;
+  variant?: MultiSelectVariant;
 }
 
 export function MultiSelect({
@@ -41,11 +45,16 @@ export function MultiSelect({
   name,
   disabled,
   className,
+  variant = 'default',
 }: MultiSelectProps): ReactNode {
   const generatedId = useId();
   const selectId = id ?? `cir-multiselect-${generatedId}`;
   return (
-    <div data-cir-component="MultiSelect" className={className}>
+    <div
+      data-cir-component="MultiSelect"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <label htmlFor={selectId} data-cir-part="multiselect-label">
         {label}
       </label>

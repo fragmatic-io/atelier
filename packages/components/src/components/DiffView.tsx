@@ -13,6 +13,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, diffViewVariantClass, type DiffViewVariant } from './_variants.js';
 
 export type DiffKind = 'add' | 'remove' | 'context';
 
@@ -26,6 +27,7 @@ export interface DiffHunk {
 export interface DiffViewProps {
   hunks: readonly DiffHunk[];
   className?: string;
+  variant?: DiffViewVariant;
 }
 
 const PREFIX: Readonly<Record<DiffKind, string>> = Object.freeze({
@@ -34,11 +36,12 @@ const PREFIX: Readonly<Record<DiffKind, string>> = Object.freeze({
   context: ' ',
 });
 
-export function DiffView({ hunks, className }: DiffViewProps): ReactNode {
+export function DiffView({ hunks, className, variant = 'unified' }: DiffViewProps): ReactNode {
   return (
     <pre
       data-cir-component="DiffView"
-      className={className}
+      data-variant={variant}
+      className={cn(diffViewVariantClass[variant], className)}
       style={{
         margin: 0,
         fontFamily: 'ui-monospace, monospace',

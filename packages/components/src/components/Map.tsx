@@ -17,6 +17,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, mapVariantClass, type MapVariant } from './_variants.js';
 
 export interface MapMarker {
   id: string;
@@ -31,6 +32,7 @@ export interface MapProps {
   markers?: readonly MapMarker[];
   ariaLabel: string;
   className?: string;
+  variant?: MapVariant;
 }
 
 function osmUrl(lat: number, lng: number, zoom: number): string {
@@ -43,6 +45,7 @@ export function Map({
   markers = [],
   ariaLabel,
   className,
+  variant = 'default',
 }: MapProps): ReactNode {
   const fallbackUrl = osmUrl(center.lat, center.lng, zoom);
   return (
@@ -51,7 +54,8 @@ export function Map({
       aria-label={ariaLabel}
       data-cir-component="Map"
       data-zoom={zoom}
-      className={className}
+      data-variant={variant}
+      className={cn(mapVariantClass[variant], className)}
     >
       <header data-cir-part="map-header">
         <span data-cir-part="map-center">

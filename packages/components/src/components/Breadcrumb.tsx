@@ -9,6 +9,9 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, navigationVariantClass, type NavigationVariant } from './_variants.js';
+
+export type BreadcrumbVariant = NavigationVariant;
 
 export interface BreadcrumbItem {
   label: string;
@@ -18,11 +21,17 @@ export interface BreadcrumbItem {
 export interface BreadcrumbProps {
   items: readonly BreadcrumbItem[];
   className?: string;
+  variant?: BreadcrumbVariant;
 }
 
-export function Breadcrumb({ items, className }: BreadcrumbProps): ReactNode {
+export function Breadcrumb({ items, className, variant = 'default' }: BreadcrumbProps): ReactNode {
   return (
-    <nav aria-label="Breadcrumb" data-cir-component="Breadcrumb" className={className}>
+    <nav
+      aria-label="Breadcrumb"
+      data-cir-component="Breadcrumb"
+      data-variant={variant}
+      className={cn(navigationVariantClass[variant], className)}
+    >
       <ol
         data-cir-part="breadcrumb-list"
         style={{ display: 'flex', gap: '6px', listStyle: 'none', margin: 0, padding: 0 }}

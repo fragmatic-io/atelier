@@ -19,6 +19,7 @@
  */
 import { useState, type MouseEvent, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, treeVariantClass, type TreeVariant } from './_variants.js';
 
 export interface TreeNode {
   id: string;
@@ -32,6 +33,7 @@ export interface TreeProps {
   defaultExpandedIds?: readonly string[];
   onSelect?: (id: string) => void;
   className?: string;
+  variant?: TreeVariant;
 }
 
 interface NodeViewProps {
@@ -100,7 +102,13 @@ function NodeView({ node, expandedSet, selectedId, onPick }: NodeViewProps): Rea
   );
 }
 
-export function Tree({ nodes, defaultExpandedIds, onSelect, className }: TreeProps): ReactNode {
+export function Tree({
+  nodes,
+  defaultExpandedIds,
+  onSelect,
+  className,
+  variant = 'default',
+}: TreeProps): ReactNode {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const expandedSet: ReadonlySet<string> = new Set(defaultExpandedIds ?? []);
 
@@ -110,7 +118,12 @@ export function Tree({ nodes, defaultExpandedIds, onSelect, className }: TreePro
   };
 
   return (
-    <ul role="tree" data-cir-component="Tree" className={className}>
+    <ul
+      role="tree"
+      data-cir-component="Tree"
+      data-variant={variant}
+      className={cn(treeVariantClass[variant], className)}
+    >
       {nodes.map((node) => (
         <NodeView
           key={node.id}

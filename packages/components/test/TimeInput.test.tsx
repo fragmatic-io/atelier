@@ -49,4 +49,22 @@ describe('TimeInput', () => {
   it('binding id matches', () => {
     expect(TimeInputBinding.id).toBe('TimeInput');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    const { container } = render(<TimeInput label="Time" />);
+    const root = container.querySelector('[data-cir-component="TimeInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded class', () => {
+    const { container } = render(<TimeInput label="Time" variant="embedded" />);
+    const root = container.querySelector('[data-cir-component="TimeInput"]');
+    expect(root?.getAttribute('data-variant')).toBe('embedded');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(<TimeInput label="Time" variant="minimal" />);
+    const root = container.querySelector('[data-cir-component="TimeInput"]');
+    expect(root?.className).toContain('border-b');
+  });
 });

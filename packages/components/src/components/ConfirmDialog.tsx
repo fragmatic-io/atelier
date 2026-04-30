@@ -24,6 +24,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
 import { Button } from './Button.js';
+import { cn, confirmDialogVariantClass, type ConfirmDialogVariant } from './_variants.js';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -35,6 +36,12 @@ export interface ConfirmDialogProps {
   onCancel: () => void;
   destructive?: boolean;
   className?: string;
+  /**
+   * Vis-4 visual variant. Defaults to `'destructive'` when the legacy
+   * `destructive` boolean is true so existing callers continue to render
+   * the red-tinted surface; otherwise defaults to `'default'`.
+   */
+  variant?: ConfirmDialogVariant;
 }
 
 export function ConfirmDialog({
@@ -47,7 +54,10 @@ export function ConfirmDialog({
   onCancel,
   destructive = false,
   className,
+  variant,
 }: ConfirmDialogProps): ReactNode {
+  const effectiveVariant: ConfirmDialogVariant =
+    variant ?? (destructive ? 'destructive' : 'default');
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const cancelRef = useRef<HTMLButtonElement | null>(null);
   const [busy, setBusy] = useState(false);
@@ -104,9 +114,10 @@ export function ConfirmDialog({
       ref={dialogRef}
       data-cir-component="ConfirmDialog"
       data-destructive={destructive ? 'true' : 'false'}
+      data-variant={effectiveVariant}
       aria-labelledby="cir-confirm-title"
       aria-describedby={description !== undefined ? 'cir-confirm-desc' : undefined}
-      className={className}
+      className={cn(confirmDialogVariantClass[effectiveVariant], className)}
     >
       <h2 id="cir-confirm-title">{title}</h2>
       {description !== undefined ? <p id="cir-confirm-desc">{description}</p> : null}

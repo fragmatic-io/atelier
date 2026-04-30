@@ -87,4 +87,22 @@ describe('ChatThread', () => {
   it('binding id matches', () => {
     expect(ChatThreadBinding.id).toBe('ChatThread');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default and emits data-variant', () => {
+    render(<ChatThread messages={MESSAGES} />);
+    const log = screen.getByRole('log');
+    expect(log.getAttribute('data-variant')).toBe('default');
+    expect(log.className).toContain('gap-3');
+  });
+  it('reflects variant=compact class', () => {
+    render(<ChatThread messages={MESSAGES} variant="compact" />);
+    const log = screen.getByRole('log');
+    expect(log.className).toContain('gap-1');
+  });
+  it('reflects variant=split class', () => {
+    render(<ChatThread messages={MESSAGES} variant="split" />);
+    const log = screen.getByRole('log');
+    expect(log.getAttribute('data-variant')).toBe('split');
+  });
 });

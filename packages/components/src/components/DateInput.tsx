@@ -11,6 +11,9 @@
  */
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+
+export type DateInputVariant = InputVariant;
 
 export interface DateInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -21,10 +24,11 @@ export interface DateInputProps extends Omit<
   error?: string;
   value?: string;
   defaultValue?: string;
+  variant?: DateInputVariant;
 }
 
 export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function DateInput(
-  { label, helperText, error, id, className, ...rest }: DateInputProps,
+  { label, helperText, error, id, className, variant = 'default', ...rest }: DateInputProps,
   ref,
 ): ReactNode {
   const generatedId = useId();
@@ -33,7 +37,11 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
   const errorId = error !== undefined ? `${inputId}-error` : undefined;
   const describedBy = [helperId, errorId].filter((v): v is string => v !== undefined).join(' ');
   return (
-    <div data-cir-component="DateInput" className={className}>
+    <div
+      data-cir-component="DateInput"
+      data-variant={variant}
+      className={cn(inputVariantClass[variant], className)}
+    >
       <label htmlFor={inputId} data-cir-part="input-label">
         {label}
       </label>

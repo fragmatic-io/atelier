@@ -64,4 +64,26 @@ describe('FileUpload', () => {
   it('binding id matches', () => {
     expect(FileUploadBinding.id).toBe('FileUpload');
   });
+
+  // -- Vis-4 variant tests ---------------------------------------------------
+  it('defaults to variant=default', () => {
+    const { container } = render(<FileUpload label="Attach" onFiles={() => undefined} />);
+    const root = container.querySelector('[data-cir-component="FileUpload"]');
+    expect(root?.getAttribute('data-variant')).toBe('default');
+  });
+  it('reflects variant=embedded class', () => {
+    const { container } = render(
+      <FileUpload label="Attach" onFiles={() => undefined} variant="embedded" />,
+    );
+    const root = container.querySelector('[data-cir-component="FileUpload"]');
+    expect(root?.className).toContain('bg-transparent');
+  });
+  it('reflects variant=minimal class', () => {
+    const { container } = render(
+      <FileUpload label="Attach" onFiles={() => undefined} variant="minimal" />,
+    );
+    const root = container.querySelector('[data-cir-component="FileUpload"]');
+    expect(root?.getAttribute('data-variant')).toBe('minimal');
+    expect(root?.className).toContain('border-b');
+  });
 });

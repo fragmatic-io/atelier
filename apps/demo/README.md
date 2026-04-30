@@ -82,11 +82,28 @@ Tailwind 4 is CSS-first (no `tailwind.config.js`). Next.js 15 is the current LTS
 
 ## First-run onboarding
 
-When you boot the demo with a clean browser profile, `/` lands on `/onboarding` instead of `/today`. The grant screen lists the three lens scopes the email-triage demo asks for (`lens.today`, `lens.thread`, `vocabulary.read`), with **Grant all**, **Customize** (per-scope checkboxes), and **Deny** affordances. Granting writes a minimal `IntentProfile` to `localStorage` under the key `cir.demo.intent`; the `/today` route then loads and the user proceeds. Denying lands on `/onboarding/denied` with a "restart" button.
+When you boot the demo with a clean browser profile, `/` lands on `/onboarding` instead of `/today`. The grant screen lists the three lens scopes the email-triage demo asks for (`lens.today`, `lens.thread`, `vocabulary.read`), with **Grant all**, **Customize** (per-scope checkboxes), and **Deny** affordances.
 
-Once granted, `/settings/intent` shows the granted lenses with **Revoke this lens** per row and a **Revoke all and re-onboard** button at the bottom. Revoking the last lens (or revoking all) clears the storage slot and bounces back to `/onboarding`.
+Wave 8 / track V-3 wired the **real consent dance**:
 
-> **Vault-backed with localStorage fallback.** Wave 7 / V-1 swapped this module to call `@cir/vault-client` (which talks to `@cir/vault-server` over the [wire-format spec](../../docs/vault-protocol.md)). When `pnpm cir vault dev` is running, profile reads / writes / revokes go through the vault and a `system.security_revocation` trigger cascades on revoke. When the vault is unreachable, the async helpers fall back to `localStorage` and log `console.error`. Hosts disable the fallback via `NEXT_PUBLIC_VAULT_FALLBACK=disabled`. See `apps/demo/lib/intent-store.ts`.
+1. Click "Grant all" → the demo redirects the browser to `${NEXT_PUBLIC_VAULT_URL}/vault/consent?...` (defaults to `http://localhost:4001`).
+2. The vault renders its server-side consent screen — _outside the host app_ — with the requested scopes, the requesting app id (`cir.demo`), and Approve / Deny buttons. The screen also disclosure-discloses the full claim payload preview.
+3. Approve → vault mints a scoped token, redirects back to `/onboarding/grant-callback?token=<jwt>`.
+4. The callback page persists the token via `VaultClient.setToken()`, seeds a baseline profile, and routes the user to `/today`.
+5. Deny → redirect back with `?error=denied`; the callback shows a "Restart onboarding" card.
+
+Why the consent UI lives on the vault and not the host: that's how OAuth-grade flows work. The user trusts the vault, not the app — if the host rendered consent, the user would be trusting the app to faithfully describe what it's asking for, which is the whole problem CIR is built to solve.
+
+Once granted, `/settings/intent` shows the granted lenses with **Revoke this lens** per row and a **Revoke all and re-onboard** button at the bottom. Revoke calls `DELETE /vault/grants/:jti` on the vault, which fires a `system.security_revocation` trigger; the user is then bounced back through `/onboarding` to re-mint a narrower grant.
+
+> **Vault-first with optional localStorage fallback.** When `pnpm cir vault dev --port 4001` is running, profile reads / writes / revokes go through the vault and `system.security_revocation` cascades on revoke. When the vault is unreachable AND `NEXT_PUBLIC_VAULT_FALLBACK` is unset (default behaviour), the async helpers fall back to `localStorage` and log `console.error`. Production hosts set `NEXT_PUBLIC_VAULT_FALLBACK=disabled` to fail closed. The grant kickoff itself (the redirect to `/vault/consent`) cannot fall back — it requires a reachable vault.
+
+### Environment variables
+
+| Variable                     | Default                 | Notes                                                            |
+| ---------------------------- | ----------------------- | ---------------------------------------------------------------- |
+| `NEXT_PUBLIC_VAULT_URL`      | `http://localhost:4001` | Vault base URL the demo redirects to for consent.                |
+| `NEXT_PUBLIC_VAULT_FALLBACK` | unset (= enabled)       | Set to `disabled` to refuse localStorage fallback in production. |
 
 ### LLM-assisted onboarding
 

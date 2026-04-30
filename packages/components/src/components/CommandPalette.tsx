@@ -26,6 +26,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, commandPaletteVariantClass, type CommandPaletteVariant } from './_variants.js';
 
 export interface CommandPaletteCommand {
   id: string;
@@ -41,6 +42,7 @@ export interface CommandPaletteProps {
   onClose: () => void;
   placeholder?: string;
   className?: string;
+  variant?: CommandPaletteVariant;
 }
 
 function matches(cmd: CommandPaletteCommand, q: string): boolean {
@@ -60,6 +62,7 @@ export function CommandPalette({
   onClose,
   placeholder = 'Type a command…',
   className,
+  variant = 'default',
 }: CommandPaletteProps): ReactNode {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const inputId = useId();
@@ -140,8 +143,9 @@ export function CommandPalette({
     <dialog
       ref={dialogRef}
       data-cir-component="CommandPalette"
+      data-variant={variant}
       aria-label="Command palette"
-      className={className}
+      className={cn(commandPaletteVariantClass[variant], className)}
     >
       <div data-cir-part="palette-search">
         <label htmlFor={inputId} data-cir-part="palette-label">

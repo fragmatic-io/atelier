@@ -19,6 +19,7 @@
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
+import { cn, chartVariantClass, type ChartVariant } from './_variants.js';
 
 export interface ChartDatum {
   x: string | number;
@@ -34,6 +35,12 @@ export interface ChartProps {
   yLabel?: string;
   ariaLabel: string;
   className?: string;
+  /**
+   * Visual variant. `default` shows axes + tick labels; `minimal` drops the
+   * axis labels (axis lines stay); `sparkline` strips chrome entirely so the
+   * chart renders as just the data path, suitable for inline cells.
+   */
+  variant?: ChartVariant;
 }
 
 const PADDING = { top: 16, right: 16, bottom: 32, left: 40 };
@@ -62,7 +69,10 @@ export function Chart({
   yLabel,
   ariaLabel,
   className,
+  variant = 'default',
 }: ChartProps): ReactNode {
+  const showAxes = variant !== 'sparkline';
+  const showLabels = variant === 'default';
   const innerW = Math.max(0, width - PADDING.left - PADDING.right);
   const innerH = Math.max(0, height - PADDING.top - PADDING.bottom);
   const { min, max } = computeYDomain(data);
@@ -139,30 +149,35 @@ export function Chart({
       aria-label={ariaLabel}
       data-cir-component="Chart"
       data-kind={kind}
+      data-variant={variant}
       width={width}
       height={height}
       viewBox={`0 0 ${String(width)} ${String(height)}`}
-      className={className}
+      className={cn(chartVariantClass[variant], className)}
     >
       {/* axes */}
-      <line
-        x1={PADDING.left}
-        y1={PADDING.top}
-        x2={PADDING.left}
-        y2={PADDING.top + innerH}
-        stroke="currentColor"
-        strokeOpacity={0.4}
-        data-cir-part="chart-y-axis"
-      />
-      <line
-        x1={PADDING.left}
-        y1={PADDING.top + innerH}
-        x2={PADDING.left + innerW}
-        y2={PADDING.top + innerH}
-        stroke="currentColor"
-        strokeOpacity={0.4}
-        data-cir-part="chart-x-axis"
-      />
+      {showAxes ? (
+        <>
+          <line
+            x1={PADDING.left}
+            y1={PADDING.top}
+            x2={PADDING.left}
+            y2={PADDING.top + innerH}
+            stroke="currentColor"
+            strokeOpacity={0.4}
+            data-cir-part="chart-y-axis"
+          />
+          <line
+            x1={PADDING.left}
+            y1={PADDING.top + innerH}
+            x2={PADDING.left + innerW}
+            y2={PADDING.top + innerH}
+            stroke="currentColor"
+            strokeOpacity={0.4}
+            data-cir-part="chart-x-axis"
+          />
+        </>
+      ) : null}
       {body}
       {kind !== 'bar'
         ? points.map((p, i) => (
@@ -178,7 +193,7 @@ export function Chart({
             </circle>
           ))
         : null}
-      {xLabel !== undefined ? (
+      {showLabels && xLabel !== undefined ? (
         <text
           x={PADDING.left + innerW / 2}
           y={height - 6}
@@ -190,7 +205,7 @@ export function Chart({
           {xLabel}
         </text>
       ) : null}
-      {yLabel !== undefined ? (
+      {showLabels && yLabel !== undefined ? (
         <text
           x={12}
           y={PADDING.top + innerH / 2}
