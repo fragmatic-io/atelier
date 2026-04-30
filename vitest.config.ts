@@ -39,8 +39,16 @@ export default defineConfig({
       '**/coverage/**',
       '**/.husky/**',
       '**/.git/**',
-      // apps/* is product code (Next.js demo, etc.); not unit-tested at this layer.
-      'apps/**',
+      // apps/* is product code (Next.js demo, etc.); we don't unit-test
+      // page components here. The Playwright suite under `apps/demo/e2e/`
+      // covers route flows. The `apps/demo/test/` slot is allowed (and
+      // matched via `include` above) for pure helper modules like
+      // `lib/intent-store.ts`.
+      'apps/demo/app/**',
+      'apps/demo/components/**',
+      'apps/demo/e2e/**',
+      'apps/demo/lib/**',
+      'apps/demo/.next/**',
     ],
     passWithNoTests: false,
     coverage: {

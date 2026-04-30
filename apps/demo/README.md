@@ -75,6 +75,14 @@ Tailwind 4 is CSS-first (no `tailwind.config.js`). Next.js 15 is the current LTS
   pnpm --filter @cir/demo e2e
   ```
 
+## First-run onboarding
+
+When you boot the demo with a clean browser profile, `/` lands on `/onboarding` instead of `/today`. The grant screen lists the three lens scopes the email-triage demo asks for (`lens.today`, `lens.thread`, `vocabulary.read`), with **Grant all**, **Customize** (per-scope checkboxes), and **Deny** affordances. Granting writes a minimal `IntentProfile` to `localStorage` under the key `cir.demo.intent`; the `/today` route then loads and the user proceeds. Denying lands on `/onboarding/denied` with a "restart" button.
+
+Once granted, `/settings/intent` shows the granted lenses with **Revoke this lens** per row and a **Revoke all and re-onboard** button at the bottom. Revoking the last lens (or revoking all) clears the storage slot and bounces back to `/onboarding`.
+
+> **This is a demo-only localStorage shim, not the production vault.** The shape stored under `cir.demo.intent` validates against `@cir/schemas`'s `IntentProfileSchema` so the swap to a real backend is a one-file change. Look for `TODO(vault):` markers in `apps/demo/lib/intent-store.ts`, `apps/demo/app/onboarding/page.tsx`, and `apps/demo/app/settings/intent/page.tsx` — those are the only places that touch the storage layer.
+
 ## What's still deferred
 
 - Stale-while-revalidate (refresh in background while serving cached)

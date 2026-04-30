@@ -15,7 +15,7 @@
  * or fall back from.
  */
 
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, type GenerateContentConfig } from '@google/genai';
 import { ManifestSchema, toJsonSchema, type Manifest } from '@cir/schemas';
 import { COMPILER_SYSTEM_PROMPT, COMPILER_SYSTEM_PROMPT_VERSION } from './prompts/system.js';
 import { buildPromptContext } from './prompts/builder.js';
@@ -81,17 +81,18 @@ export class GeminiCompiler implements CompilerService {
           ? ctx.user
           : `${ctx.user}\n\n## Previous attempt failed validation\n${formatValidationError(lastError)}\n\nFix and re-emit. Output ONLY the corrected manifest JSON.`;
 
+      const config: GenerateContentConfig = {
+        systemInstruction: COMPILER_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema,
+        // Cold compiles: a touch of variability. Diff mode: deterministic.
+        temperature: ctx.diff_mode ? 0 : 0.2,
+      };
+      if (input.signal !== undefined) config.abortSignal = input.signal;
       const response = await this.#client.models.generateContent({
         model,
         contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-        config: {
-          systemInstruction: COMPILER_SYSTEM_PROMPT,
-          responseMimeType: 'application/json',
-          responseSchema,
-          // Cold compiles: a touch of variability. Diff mode: deterministic.
-          temperature: ctx.diff_mode ? 0 : 0.2,
-          abortSignal: input.signal,
-        },
+        config,
       });
 
       const text = response.text ?? '';

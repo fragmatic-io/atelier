@@ -11,6 +11,9 @@ importers:
       '@cir/cli':
         specifier: workspace:*
         version: link:packages/cli
+      '@cir/compiler':
+        specifier: workspace:*
+        version: link:packages/compiler
       '@cir/components':
         specifier: workspace:*
         version: link:packages/components
