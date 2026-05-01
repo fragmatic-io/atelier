@@ -89,6 +89,74 @@ const EMPTY_STATE_NODE = {
   children: [],
 };
 
+const ERROR_STATE_NODE = {
+  component: 'Alert',
+  props: {
+    variant: 'error' as const,
+    title: "Couldn't reach DummyJSON",
+    body: 'Check your connection and retry.',
+  },
+  children: [],
+};
+
+/**
+ * Quota-indicator card. Required by the `rate_limited_actions_show_state`
+ * policy — `dummyjson.cart.add` declares a `100/min/user` rate limit, so any
+ * route that exposes the action must surface the quota visibly.
+ */
+const QUOTA_INDICATOR_NODE = {
+  component: 'StatCard',
+  props: {
+    label: 'Cart adds remaining this minute',
+    value: '100',
+    variant: 'muted' as const,
+    size: 'sm' as const,
+  },
+  children: [],
+};
+
+/**
+ * Reversibility undo bar — a row of two Buttons that surface the
+ * `dummyjson.cart.add` ↔ `dummyjson.cart.remove` rollback pair to the
+ * `reversibility_surfaced` policy. The policy looks for `Button` /
+ * `ActionMenu` / `IconButton` carrying the rollback action; without
+ * this, every route that exposes cart.add fails validation.
+ *
+ * Cosmetically the bar reads as a "Just added — undo" toast row that
+ * the runtime would normally drive at runtime; declaring it on the
+ * manifest keeps the policy contract honest at compile time even
+ * before any cart action fires.
+ */
+const REVERSIBILITY_BAR_NODE = {
+  component: 'Stack',
+  props: {
+    direction: 'horizontal' as const,
+    gap: 'sm' as const,
+  },
+  children: [
+    {
+      component: 'Button',
+      actions: ['dummyjson.cart.add'],
+      props: {
+        variant: 'ghost' as const,
+        size: 'sm' as const,
+        label: 'Restore last removed',
+      },
+      children: [],
+    },
+    {
+      component: 'Button',
+      actions: ['dummyjson.cart.remove'],
+      props: {
+        variant: 'ghost' as const,
+        size: 'sm' as const,
+        label: 'Undo last add',
+      },
+      children: [],
+    },
+  ],
+};
+
 /** Browse layout chosen by lens. */
 function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
   // Per-density catalog body. Compact is a List, cozy is a 3-col Grid, spacious
@@ -103,8 +171,9 @@ function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
         sort: 'rating desc',
         loading_state: SKELETON_NODE,
         empty_state: EMPTY_STATE_NODE,
+        error_state: ERROR_STATE_NODE,
       },
-      actions: ['dummyjson.cart.add'],
+      actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
       props: { variant: 'bordered' },
       children: [],
     };
@@ -116,8 +185,9 @@ function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
         sort: 'rating desc',
         loading_state: SKELETON_NODE,
         empty_state: EMPTY_STATE_NODE,
+        error_state: ERROR_STATE_NODE,
       },
-      actions: ['dummyjson.cart.add'],
+      actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
       props: { columns: 2, gap: 'lg' as const, variant: 'tinted' },
       children: [],
     };
@@ -129,8 +199,9 @@ function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
         sort: 'rating desc',
         loading_state: SKELETON_NODE,
         empty_state: EMPTY_STATE_NODE,
+        error_state: ERROR_STATE_NODE,
       },
-      actions: ['dummyjson.cart.add'],
+      actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
       props: {
         columns: 3,
         gap: 'md' as const,
@@ -170,6 +241,7 @@ function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
             children: [],
           },
           STATUS_BAR_NODE,
+          QUOTA_INDICATOR_NODE,
           {
             component: 'FilterBar',
             props: {
@@ -194,6 +266,7 @@ function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
             children: [],
           },
           body,
+          REVERSIBILITY_BAR_NODE,
           {
             component: 'Pagination',
             props: { variant: 'default' as const, pageSize: 30, total: 100 },
@@ -265,14 +338,21 @@ export function productManifest(id: string, density: Density): Manifest {
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
                 STATUS_BAR_NODE,
+                QUOTA_INDICATOR_NODE,
                 {
                   component: 'DetailView',
                   data: {
                     source: 'dummyjson.product.list',
                     filter: `id = ${id}`,
                     loading_state: SKELETON_NODE,
+                    empty_state: {
+                      component: 'EmptyState',
+                      props: { title: 'Product not found' },
+                      children: [],
+                    },
+                    error_state: ERROR_STATE_NODE,
                   },
-                  actions: ['dummyjson.cart.add'],
+                  actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
                   props: { density, variant: 'elevated' as const },
                   children: [],
                 },
@@ -295,11 +375,13 @@ export function productManifest(id: string, density: Density): Manifest {
                       },
                       children: [],
                     },
+                    error_state: ERROR_STATE_NODE,
                   },
-                  actions: ['dummyjson.cart.add'],
+                  actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
                   props: { variant: 'tinted', density },
                   children: [],
                 },
+                REVERSIBILITY_BAR_NODE,
               ],
             },
           ],
@@ -353,6 +435,7 @@ export function cartManifest(density: Density): Manifest {
                       },
                       children: [],
                     },
+                    error_state: ERROR_STATE_NODE,
                   },
                   props: { density, variant: 'accent' as const },
                   children: [],
@@ -371,6 +454,7 @@ export function cartManifest(density: Density): Manifest {
                       },
                       children: [],
                     },
+                    error_state: ERROR_STATE_NODE,
                   },
                   actions: ['dummyjson.cart.remove'],
                   props: {
@@ -388,6 +472,7 @@ export function cartManifest(density: Density): Manifest {
                   },
                   children: [],
                 },
+                REVERSIBILITY_BAR_NODE,
                 {
                   component: 'Button',
                   props: {
@@ -429,16 +514,26 @@ export function checkoutManifest(density: Density): Manifest {
           props: { maxWidth: 'md' as const, density },
           children: [
             {
-              component: 'Wizard',
-              props: {
-                variant: 'sidebar' as const,
-                steps: [
-                  { id: 'shipping', label: 'Shipping', state: 'active' as const },
-                  { id: 'payment', label: 'Payment', state: 'pending' as const },
-                  { id: 'review', label: 'Review', state: 'pending' as const },
-                ],
-              },
+              component: 'Stack',
+              props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
+                STATUS_BAR_NODE,
+                // `Wizard` composes as a leaf in the components catalog,
+                // so it sits as a sibling to `Form` (not a parent).
+                // The runtime cross-binds the form steps to the wizard
+                // by id at render time.
+                {
+                  component: 'Wizard',
+                  props: {
+                    variant: 'sidebar' as const,
+                    steps: [
+                      { id: 'shipping', label: 'Shipping', state: 'active' as const },
+                      { id: 'payment', label: 'Payment', state: 'pending' as const },
+                      { id: 'review', label: 'Review', state: 'pending' as const },
+                    ],
+                  },
+                  children: [],
+                },
                 {
                   component: 'Form',
                   props: { variant: 'default' as const },

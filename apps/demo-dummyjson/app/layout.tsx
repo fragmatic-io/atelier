@@ -5,49 +5,69 @@ import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { Wordmark } from '@/components/Wordmark';
 import { CirProviders } from '@/lib/cir-providers';
+import { DUMMYJSON_BRAND_KIT } from '@/lib/brand-kit';
 
 export const metadata: Metadata = {
-  title: 'CIR demo — dummyjson catalog',
+  title: 'DummyJSON Shop — CIR demo',
   description:
-    'Lens-switching e-commerce showcase. Browse a real product catalog; switch viewing density without losing scroll.',
+    'Lens-switching e-commerce showcase, dressed in the Marigold theme. Browse a real product catalog; switch viewing density without losing scroll.',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+/**
+ * Root layout — Marigold theme.
+ *
+ * Marigold is light-mode-primary: the `<html>` tag opens with
+ * `data-color-mode="light"` so server-rendered chrome reads the cream
+ * surface even before the providers boot. The lens settings page
+ * mirrors the user's choice onto the same attribute (see
+ * `cir-providers.tsx` — `useEffect(... document.documentElement
+ * .setAttribute('data-color-mode', mode))`), so toggling is one
+ * attribute write, no flash.
+ *
+ * The brand kit is mounted as a JSON `<script type="application/json">`
+ * tag for any debug overlay (the runtime `<DebugPanel>` reads it via the
+ * `useDebugBrandKit` hook); the same value is also threaded through the
+ * services bag in `lib/cir-server.ts`.
+ */
+export default function RootLayout({ children }: { children: ReactNode }): React.JSX.Element {
   return (
-    <html lang="en">
+    <html lang="en" data-color-mode="light">
       <body>
-        <header
-          style={{
-            background: '#ffffff',
-            borderBottom: '1px solid #e7e5e4',
-            padding: '12px 16px',
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 960,
-              margin: '0 auto',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 16,
-            }}
-          >
-            <Link href="/browse" style={{ fontWeight: 600, color: '#0c0a09', fontSize: 14 }}>
-              CIR demo · DummyJSON shop
+        <header className="cir-chrome">
+          <div className="cir-chrome-inner">
+            <Link
+              href="/browse"
+              aria-label="DummyJSON Shop home"
+              style={{ display: 'inline-flex' }}
+            >
+              <Wordmark size={26} />
             </Link>
-            <nav style={{ display: 'flex', gap: 16, fontSize: 13, color: '#78716c' }}>
+            <nav className="cir-nav" aria-label="Primary">
               <Link href="/browse">Browse</Link>
               <Link href="/cart">Cart</Link>
               <Link href="/checkout">Checkout</Link>
               <Link href="/settings/lens">Lens</Link>
             </nav>
-            <span style={{ fontSize: 11, color: '#a8a29e' }}>
-              real public API · lens-switching showcase
-            </span>
+            <span className="cir-tagline">Marigold · lens-switching showcase</span>
           </div>
         </header>
+        {/*
+         * Brand-kit JSON is co-located with the layout so any embedded
+         * inspector can read it without round-tripping a fetch. Inert by
+         * default — `type="application/json"` prevents script execution.
+         */}
+        <script
+          id="cir-brand-kit"
+          type="application/json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              id: DUMMYJSON_BRAND_KIT.id,
+              version: DUMMYJSON_BRAND_KIT.version,
+            }),
+          }}
+        />
         <CirProviders>{children}</CirProviders>
       </body>
     </html>

@@ -2,11 +2,104 @@
 /* Copyright (c) 2026 The CIR Authors */
 
 /*
- * Minimal globals for the dummyjson catalog demo. We rely on @cir/components
- * shipping its own utility classes via `data-cir-component` selectors and
- * Tailwind-flavoured strings; this stylesheet just resets the page chrome
- * and provides body-level dark-mode mirroring.
+ * Marigold — globals for the dummyjson catalog demo.
+ *
+ * Light is the primary mode. The cream surface (`#fffaf3`) reads warm and
+ * approachable; the orange primary (`#ff5f3a`) gives retail energy without
+ * shouting. The whole sheet is variables-first so the brand kit drives
+ * every surface color, radius, and shadow exactly once.
  */
+
+:root {
+  /* Surfaces */
+  --cir-color-bg: #fffaf3;
+  --cir-color-bg-surface: #ffffff;
+  --cir-color-bg-subtle: #fff3e6;
+  --cir-color-bg-card: #ffffff;
+  --cir-color-bg-muted: #f7ede0;
+
+  /* Foreground */
+  --cir-color-fg: #1a1714;
+  --cir-color-fg-secondary: #554a3f;
+  --cir-color-fg-muted: #8a7d70;
+  --cir-color-fg-subtle: #b3a89c;
+  --cir-color-fg-on-primary: #ffffff;
+
+  /* Brand / accent */
+  --cir-color-primary: #ff5f3a;
+  --cir-color-primary-hover: #e84d2a;
+  --cir-color-primary-active: #cf3f1f;
+  --cir-color-success: #0d8a72;
+  --cir-color-success-subtle: #d6f0e8;
+  --cir-color-warning: #f59e0b;
+  --cir-color-danger: #dc2626;
+
+  /* Borders */
+  --cir-color-border-subtle: #f0e3d2;
+  --cir-color-border-default: #e6d6c2;
+  --cir-color-border-strong: #c9b59c;
+  --cir-color-border-focus: #ff5f3a;
+
+  /* Radii — generous, friendly. */
+  --cir-radius-xs: 6px;
+  --cir-radius-sm: 8px;
+  --cir-radius-md: 12px;
+  --cir-radius-lg: 16px;
+  --cir-radius-xl: 24px;
+  --cir-radius-full: 9999px;
+
+  /* Soft warm shadows — slight orange undertone in rgb(80, 32, 12). */
+  --cir-shadow-xs: 0 1px 2px 0 rgba(80, 32, 12, 0.04);
+  --cir-shadow-sm: 0 1px 3px 0 rgba(80, 32, 12, 0.06), 0 1px 2px 0 rgba(80, 32, 12, 0.04);
+  --cir-shadow-md: 0 4px 8px -2px rgba(80, 32, 12, 0.08), 0 2px 4px -2px rgba(80, 32, 12, 0.04);
+  --cir-shadow-lg: 0 12px 24px -8px rgba(80, 32, 12, 0.12), 0 4px 8px -4px rgba(80, 32, 12, 0.06);
+  --cir-shadow-xl: 0 24px 40px -12px rgba(80, 32, 12, 0.18), 0 8px 16px -8px rgba(80, 32, 12, 0.08);
+
+  /* Motion */
+  --cir-duration-fast: 140ms;
+  --cir-duration-normal: 220ms;
+  --cir-duration-slow: 320ms;
+  --cir-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --cir-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --cir-ease-spring: cubic-bezier(0.5, 1.6, 0.4, 1);
+
+  /* Typography */
+  --cir-font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --cir-font-display: 'Cabinet Grotesk', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --cir-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html[data-color-mode='dark'] {
+  --cir-color-bg: #1a1714;
+  --cir-color-bg-surface: #221d18;
+  --cir-color-bg-subtle: #2c241c;
+  --cir-color-bg-card: #252019;
+  --cir-color-bg-muted: #2f2820;
+
+  --cir-color-fg: #fdf6ec;
+  --cir-color-fg-secondary: #d8cdbf;
+  --cir-color-fg-muted: #a8998a;
+  --cir-color-fg-subtle: #6f6457;
+
+  --cir-color-primary: #ff7a5a;
+  --cir-color-primary-hover: #ff5f3a;
+  --cir-color-primary-active: #e84d2a;
+  --cir-color-success: #34a890;
+  --cir-color-success-subtle: #1d3a32;
+  --cir-color-warning: #fbbf24;
+  --cir-color-danger: #f87171;
+
+  --cir-color-border-subtle: #2f2820;
+  --cir-color-border-default: #423630;
+  --cir-color-border-strong: #5a4a40;
+
+  --cir-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --cir-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --cir-shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --cir-shadow-lg: 0 12px 24px -8px rgba(0, 0, 0, 0.6), 0 4px 8px -4px rgba(0, 0, 0, 0.35);
+  --cir-shadow-xl: 0 24px 40px -12px rgba(0, 0, 0, 0.75), 0 8px 16px -8px rgba(0, 0, 0, 0.45);
+}
 
 * {
   box-sizing: border-box;
@@ -16,22 +109,100 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
-  background: #fafaf9;
-  color: #0c0a09;
-}
-
-html[data-color-mode='dark'],
-html[data-color-mode='dark'] body {
-  background: #0c0a09;
-  color: #fafaf9;
+  font-family: var(--cir-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--cir-color-bg);
+  color: var(--cir-color-fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+a:hover {
+  color: var(--cir-color-primary);
+}
+
+/* Marigold focus ring — accessibility-required, on-brand. */
+:focus-visible {
+  outline: 2px solid var(--cir-color-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--cir-radius-xs);
+}
+
+/* Display family for the wordmark + h1-style headlines. */
+.cir-display {
+  font-family: var(--cir-font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Mono family — SKUs, order numbers, fixed-width tabular bits. */
+.cir-mono {
+  font-family: var(--cir-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Page chrome — a soft warm shell sitting on the cream surface. */
+.cir-chrome {
+  background: var(--cir-color-bg-surface);
+  border-bottom: 1px solid var(--cir-color-border-subtle);
+  box-shadow: var(--cir-shadow-xs);
+}
+
+.cir-chrome-inner {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.cir-nav {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--cir-color-fg-secondary);
+}
+
+.cir-nav a {
+  padding: 6px 10px;
+  border-radius: var(--cir-radius-sm);
+  transition:
+    background var(--cir-duration-fast) var(--cir-ease-out),
+    color var(--cir-duration-fast) var(--cir-ease-out);
+}
+
+.cir-nav a:hover {
+  background: var(--cir-color-bg-subtle);
+  color: var(--cir-color-fg);
+}
+
+.cir-tagline {
+  font-size: 11px;
+  color: var(--cir-color-fg-muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cir-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px auto 0;
+  max-width: 1024px;
+  padding: 6px 20px;
+  font-size: 13px;
+  color: var(--cir-color-fg-muted);
+}
+
+.cir-back-link:hover {
+  color: var(--cir-color-primary);
 }

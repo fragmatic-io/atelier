@@ -7,6 +7,47 @@ The DummyJSON catalog demo. The pitch:
 > actions are optimistic with 5s undo. Hover any product for a quick-spec
 > card. Bulk-add. Wishlist toggle.
 
+## Design system — Marigold
+
+The dummyjson app ships with a dedicated brand kit, **Marigold**: warm,
+approachable, light-mode-primary. Stripe Checkout meets Shopify Polaris.
+
+| Token             | Value          | Note                              |
+| ----------------- | -------------- | --------------------------------- |
+| `accent.primary`  | `#ff5f3a`      | Energetic warm orange. Retail.    |
+| `bg.app` (light)  | `#fffaf3`      | Cream surface — the default.      |
+| `bg.app` (dark)   | `#1a1714`      | Warm-charcoal. Dark is secondary. |
+| `accent.success`  | `#0d8a72`      | Deep blue-green. "Added to cart." |
+| `accent.danger`   | `#dc2626`      | Vivid red, destructive only.      |
+| `radius_scale`    | 8/12/16/24 px  | Generous, rounded, friendly.      |
+| `motion.duration` | 140/220/320 ms | Smooth + slightly bouncy spring.  |
+
+The full kit lives in [`lib/brand-kit.ts`](./lib/brand-kit.ts) and is
+folded into the compiler's system prompt + enforced by the
+`respects_brand_kit` policy.
+
+- **Typography.** Inter (system fallback) for body. The display family
+  is system-ui semibold today; production target is Cabinet Grotesk.
+  JetBrains Mono for SKUs and order numbers.
+- **Iconography.** Phosphor only — its rounded silhouette pairs with
+  the 8/12/16/24 radius scale.
+- **Voice.** Warm + helpful. Lead with the benefit ("Free returns
+  within 30 days"). Never push. No "Buy now!", no urgency
+  manipulation, no ALL-CAPS for emphasis. Per-surface exemplars for
+  buttons, errors, empty states, marketing, and confirmations live on
+  `voice.surfaces`.
+- **Wordmark.** [`components/Wordmark.tsx`](./components/Wordmark.tsx) —
+  a 26 px parcel-ribbon mark + "DummyJSON Shop" letterform. Uses
+  `currentColor` for the wordmark, the brand primary for the parcel.
+- **CSS variables.** [`app/globals.css`](./app/globals.css) is the
+  runtime source of truth — every surface, radius, shadow, and motion
+  token reads off `--cir-color-*` / `--cir-radius-*` / `--cir-shadow-*`
+  / `--cir-duration-*`.
+- **Tailwind.** [`tailwind.config.mjs`](./tailwind.config.mjs) mirrors
+  the brand kit onto Tailwind's theme: `bg-marigold-500`,
+  `rounded-cir-lg`, `shadow-cir-md`, `text-cir-primary`. Dark mode
+  toggles via `data-color-mode="dark"` on `<html>`.
+
 This is one of three reference apps that exercise CIR end-to-end. Where
 `apps/demo` covers email triage and `apps/demo-github` covers
 real-mutation review, **`apps/demo-dummyjson` is the personalisation

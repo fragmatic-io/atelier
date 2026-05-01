@@ -8,6 +8,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "echo '@cir/demo-dummyjson: lint deferred to root pnpm lint (apps/** is ignored at root by design)'",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
