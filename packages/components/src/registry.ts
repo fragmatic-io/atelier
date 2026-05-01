@@ -53,6 +53,7 @@ import { ListBinding } from './components/List.js';
 import { LogoBinding } from './components/Logo.js';
 import { MapBinding } from './components/Map.js';
 import { MarkdownBinding } from './components/Markdown.js';
+import { MetaBadgeBinding } from './components/MetaBadge.js';
 import { ModalBinding } from './components/Modal.js';
 import { MultiSelectBinding } from './components/MultiSelect.js';
 import { NavBarBinding } from './components/NavBar.js';
@@ -120,6 +121,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Logo: LogoBinding,
   Map: MapBinding,
   Markdown: MarkdownBinding,
+  MetaBadge: MetaBadgeBinding,
   Modal: ModalBinding,
   MultiSelect: MultiSelectBinding,
   NavBar: NavBarBinding,

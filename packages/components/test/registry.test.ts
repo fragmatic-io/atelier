@@ -45,6 +45,7 @@ const EXPECTED = [
   'Logo',
   'Map',
   'Markdown',
+  'MetaBadge',
   'Modal',
   'MultiSelect',
   'NavBar',
@@ -77,7 +78,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 64 baseline components', () => {
+  it('contains exactly the 65 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 

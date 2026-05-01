@@ -53,6 +53,9 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Logo: { can_contain: 'leaf' },
   // Leaves: no children.
   Markdown: { can_contain: 'leaf' },
+  // MetaBadge is a small inline status pill (count / label / severity / live).
+  // Content comes from props; manifest authors do not nest children.
+  MetaBadge: { can_contain: 'leaf' },
   EmptyState: { can_contain: 'leaf' },
   Button: { can_contain: 'leaf' },
   TextInput: { can_contain: 'leaf' },

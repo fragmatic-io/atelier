@@ -48,6 +48,7 @@ import { listTextRender } from './components/List.js';
 import { logoTextRender } from './components/Logo.js';
 import { mapTextRender } from './components/Map.js';
 import { markdownTextRender } from './components/Markdown.js';
+import { metaBadgeTextRender } from './components/MetaBadge.js';
 import { modalTextRender } from './components/Modal.js';
 import { multiSelectTextRender } from './components/MultiSelect.js';
 import { navBarTextRender } from './components/NavBar.js';
@@ -117,6 +118,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Logo: logoTextRender as TextRenderer,
   Map: mapTextRender as TextRenderer,
   Markdown: markdownTextRender as TextRenderer,
+  MetaBadge: metaBadgeTextRender as TextRenderer,
   Modal: modalTextRender as TextRenderer,
   MultiSelect: multiSelectTextRender as TextRenderer,
   NavBar: navBarTextRender as TextRenderer,

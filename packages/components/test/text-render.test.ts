@@ -64,6 +64,7 @@ describe('TEXT_RENDERERS', () => {
       List: { items: [1, 2, 3], renderItem: (n: number) => String(n) },
       Logo: { wordmark: 'Aurora' },
       Markdown: { content: '# hello' },
+      MetaBadge: { count: 5, label: 'unread' },
       Modal: { open: true, title: 'Edit', onClose: () => undefined },
       MultiSelect: {
         label: 'Tags',

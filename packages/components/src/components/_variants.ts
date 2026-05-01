@@ -102,6 +102,27 @@ export const displayVariantClass: Readonly<Record<DisplayVariant, string>> = Obj
 });
 
 // -----------------------------------------------------------------------------
+// MetaBadge variants — small inline status pill (count, label, severity, or
+// "live"/"unread" indicator). Reuses `displayVariantClass` for info/success/
+// warning/error severities; `default` is a neutral gray pill, and `live`
+// adds a cyan accent for "live" / streaming / unread indicators.
+// -----------------------------------------------------------------------------
+export type MetaBadgeVariant = 'default' | 'info' | 'success' | 'warning' | 'danger' | 'live';
+
+export const metaBadgeVariantClass: Readonly<Record<MetaBadgeVariant, string>> = Object.freeze({
+  default:
+    'bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700',
+  info: 'bg-blue-50 text-blue-900 border border-blue-200 dark:bg-blue-950 dark:text-blue-100 dark:border-blue-900',
+  success:
+    'bg-green-50 text-green-900 border border-green-200 dark:bg-green-950 dark:text-green-100 dark:border-green-900',
+  warning:
+    'bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:border-amber-900',
+  danger:
+    'bg-red-50 text-red-900 border border-red-200 dark:bg-red-950 dark:text-red-100 dark:border-red-900',
+  live: 'bg-cyan-50 text-cyan-900 border border-cyan-200 dark:bg-cyan-950 dark:text-cyan-100 dark:border-cyan-900',
+});
+
+// -----------------------------------------------------------------------------
 // Stat / KPI variants (StatCard, KPIRow)
 // -----------------------------------------------------------------------------
 export type StatVariant = 'default' | 'accent' | 'muted';

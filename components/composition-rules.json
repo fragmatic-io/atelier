@@ -110,6 +110,9 @@
   "Markdown": {
     "can_contain": "leaf"
   },
+  "MetaBadge": {
+    "can_contain": "leaf"
+  },
   "Modal": {
     "can_contain": "*",
     "min_children": 1

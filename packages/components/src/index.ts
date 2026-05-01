@@ -85,6 +85,9 @@ export type { QueueProps, QueueAction, QueueVariant } from './components/Queue.j
 export { Logo, LogoBinding, logoTextRender } from './components/Logo.js';
 export type { LogoProps, LogoSize } from './components/Logo.js';
 
+export { MetaBadge, MetaBadgeBinding, metaBadgeTextRender } from './components/MetaBadge.js';
+export type { MetaBadgeProps, MetaBadgeVariant } from './components/MetaBadge.js';
+
 export { DetailView, DetailViewBinding } from './components/DetailView.js';
 export type { DetailViewProps, DetailField } from './components/DetailView.js';
 
