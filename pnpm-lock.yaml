@@ -23,6 +23,9 @@ importers:
       '@cir/demo':
         specifier: workspace:*
         version: link:apps/demo
+      '@cir/demo-dummyjson':
+        specifier: workspace:*
+        version: link:apps/demo-dummyjson
       '@cir/evals':
         specifier: workspace:*
         version: link:packages/evals
@@ -140,6 +143,9 @@ importers:
       '@cir/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
+      '@cir/vault-client':
+        specifier: workspace:*
+        version: link:../../packages/vault-client
       next:
         specifier: ^15.1.0
         version: 15.5.15(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -178,6 +184,116 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  apps/demo-dummyjson:
+    dependencies:
+      '@cir/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      '@cir/components':
+        specifier: workspace:*
+        version: link:../../packages/components
+      '@cir/data-resolvers':
+        specifier: workspace:*
+        version: link:../../packages/data-resolvers
+      '@cir/policies':
+        specifier: workspace:*
+        version: link:../../packages/policies
+      '@cir/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@cir/runtime':
+        specifier: workspace:*
+        version: link:../../packages/runtime
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+      '@cir/vault-client':
+        specifier: workspace:*
+        version: link:../../packages/vault-client
+      next:
+        specifier: ^15.1.0
+        version: 15.5.15(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.5
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.5(react@19.2.5)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.17
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  apps/demo-github:
+    dependencies:
+      '@cir/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      '@cir/components':
+        specifier: workspace:*
+        version: link:../../packages/components
+      '@cir/data-resolvers':
+        specifier: workspace:*
+        version: link:../../packages/data-resolvers
+      '@cir/policies':
+        specifier: workspace:*
+        version: link:../../packages/policies
+      '@cir/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      '@cir/runtime':
+        specifier: workspace:*
+        version: link:../../packages/runtime
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+      '@cir/vault-client':
+        specifier: workspace:*
+        version: link:../../packages/vault-client
+      next:
+        specifier: ^15.1.0
+        version: 15.5.15(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.5
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.5(react@19.2.5)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.0.0
+        version: 4.2.4
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.17
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.5.0(postcss@8.5.12)
+      postcss:
+        specifier: ^8.4.49
+        version: 8.5.12
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.2.4
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/cli:
     dependencies:
       '@cir/compiler':
@@ -189,6 +305,9 @@ importers:
       '@cir/schemas':
         specifier: workspace:*
         version: link:../schemas
+      '@cir/vault-server':
+        specifier: workspace:*
+        version: link:../vault-server
     devDependencies:
       tsx:
         specifier: ^4.19.2
@@ -394,6 +513,38 @@ importers:
       zod-to-json-schema:
         specifier: ^3.24.1
         version: 3.25.2(zod@3.25.76)
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)(lightningcss@1.32.0)
+
+  packages/vault-client:
+    dependencies:
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)(lightningcss@1.32.0)
+
+  packages/vault-server:
+    dependencies:
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../schemas
     devDependencies:
       tsx:
         specifier: ^4.19.2

@@ -13,6 +13,10 @@ export { UndoBar, UNDO_BAR_BINDING } from './UndoBar';
 // Wave 7a / Int-4: optional optimistic-UI demo widget. Not wired into a
 // manifest route — hosts drop it anywhere under `<CirRuntime>`.
 export { CartAddButton, type CartAddButtonProps } from './CartAddButton';
+// Chrome — persistent shell (status pill + color-mode toggle + dev links)
+// mounted by `app/layout.tsx`. Not a `ComponentBinding`; it's a host-side
+// React tree, never referenced by a manifest.
+export { Chrome, applyColorMode, nextColorMode, readColorMode } from './Chrome';
 
 export const DEMO_BINDINGS: Record<string, ComponentBinding> = {
   DecisionQueue: DECISION_QUEUE_BINDING,

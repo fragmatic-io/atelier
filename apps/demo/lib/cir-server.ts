@@ -120,6 +120,16 @@ function buildServer(): CirServer {
       'Alert',
       'Spinner',
       'ConfirmDialog',
+      // DX-A polish: surfaced in the today fallback manifest. The compiler
+      // is allowed to compose these in any route it generates.
+      'NavBar',
+      'KPIRow',
+      'StatusBar',
+      'List',
+      'BulkActionBar',
+      'HoverCard',
+      'Skeleton',
+      'Toast',
     ].map((id) => ({
       id,
       props_schema: `${id}Props`,

@@ -5,8 +5,14 @@
   "compiled_from": {
     "capability_version": "0.1.0",
     "skill_versions": {
+      "product-grid-density": "0.1.0",
       "product-search": "0.1.0",
-      "cart-add": "0.1.0"
+      "cart-add": "0.1.0",
+      "cart-feedback": "0.1.0",
+      "checkout-progressive": "0.1.0",
+      "out-of-stock-handling": "0.1.0",
+      "price-emphasis": "0.1.0",
+      "recommendation-tile": "0.1.0"
     },
     "component_catalog_version": "0.1.0",
     "intent_profile_version": 0,
@@ -17,9 +23,16 @@
   "invalidates_on": [
     "capability_schema_change:dummyjson.product.list:>=0.2.0",
     "capability_schema_change:dummyjson.product.search:>=0.2.0",
+    "capability_schema_change:dummyjson.product.recommendations:>=0.2.0",
     "capability_schema_change:dummyjson.cart.add:>=0.2.0",
-    "skill.version_changed:product-search",
-    "skill.version_changed:cart-add",
+    "capability_schema_change:dummyjson.cart.list:>=0.2.0",
+    "capability_schema_change:dummyjson.cart.remove:>=0.2.0",
+    "skill.version_changed:product-grid-density",
+    "skill.version_changed:cart-feedback",
+    "skill.version_changed:checkout-progressive",
+    "skill.version_changed:price-emphasis",
+    "skill.version_changed:recommendation-tile",
+    "intent_profile_change:dummyjson-shopper:density",
     "explicit_user_request:m_djshopper1"
   ],
   "routes": [
@@ -31,25 +44,51 @@
       "path": "/browse",
       "title": "Browse",
       "layout": {
-        "component": "Stack",
+        "component": "Container",
+        "props": { "maxWidth": "lg", "variant": "ghost" },
         "children": [
           {
-            "component": "NavBar",
-            "props": {
-              "title": "Shop",
-              "links": [
-                { "label": "Browse", "href": "/browse" },
-                { "label": "Cart", "href": "/cart" }
-              ]
-            }
-          },
-          {
-            "component": "Container",
+            "component": "Stack",
+            "props": { "direction": "vertical", "gap": "lg" },
             "children": [
+              {
+                "component": "NavBar",
+                "props": {
+                  "title": "DummyJSON shop",
+                  "links": [
+                    { "label": "Browse", "href": "/browse" },
+                    { "label": "Cart", "href": "/cart" },
+                    { "label": "Lens", "href": "/settings/lens" }
+                  ]
+                }
+              },
+              {
+                "component": "StatusBar",
+                "props": {
+                  "status": "operational",
+                  "message": "All systems operational",
+                  "variant": "compact"
+                }
+              },
+              {
+                "component": "FilterBar",
+                "props": {
+                  "variant": "chip",
+                  "filters": [
+                    {
+                      "id": "category",
+                      "label": "Category",
+                      "values": ["smartphones", "laptops", "fragrances", "skincare", "groceries"]
+                    },
+                    { "id": "in_stock", "label": "In stock" }
+                  ]
+                }
+              },
               {
                 "component": "Search",
                 "props": {
-                  "placeholder": "Search products"
+                  "placeholder": "Search products",
+                  "variant": "default"
                 }
               },
               {
@@ -59,20 +98,28 @@
                   "sort": "rating desc",
                   "loading_state": {
                     "component": "Skeleton",
+                    "props": { "shape": "card", "count": 6 }
+                  },
+                  "empty_state": {
+                    "component": "EmptyState",
                     "props": {
-                      "shape": "card",
-                      "count": 6
+                      "title": "No products match",
+                      "body": "Try a different keyword or clear the search."
                     }
                   }
                 },
-                "actions": ["dummyjson.cart.add"]
+                "actions": ["dummyjson.cart.add"],
+                "props": {
+                  "columns": 3,
+                  "gap": "md",
+                  "variant": "ghost",
+                  "selectable": true,
+                  "bulkActions": [{ "id": "dummyjson.cart.add", "label": "Add to cart" }]
+                }
               },
               {
-                "component": "EmptyState",
-                "props": {
-                  "title": "No products match",
-                  "body": "Try a different keyword or clear the search."
-                }
+                "component": "Pagination",
+                "props": { "variant": "default", "pageSize": 30, "total": 100 }
               }
             ]
           }
@@ -80,34 +127,165 @@
       },
       "refresh": {
         "data": "on_focus + 600s_interval",
-        "structure": "never_unless_invalidated"
+        "structure": "on_intent_change:density"
       }
     },
     {
-      "path": "/search",
-      "title": "Search",
+      "path": "/product/[id]",
+      "title": "Product",
       "layout": {
-        "component": "Stack",
+        "component": "Container",
+        "props": { "maxWidth": "lg", "variant": "ghost" },
         "children": [
           {
-            "component": "Search",
-            "props": {
-              "placeholder": "Search products",
-              "autofocus": true
-            }
-          },
-          {
-            "component": "List",
-            "data": {
-              "source": "dummyjson.product.search",
-              "sort": "rating desc"
-            },
-            "actions": ["dummyjson.cart.add"]
+            "component": "Stack",
+            "props": { "direction": "vertical", "gap": "lg" },
+            "children": [
+              {
+                "component": "DetailView",
+                "data": {
+                  "source": "dummyjson.product.list",
+                  "filter": "id = 1"
+                },
+                "actions": ["dummyjson.cart.add"],
+                "props": { "variant": "elevated" }
+              },
+              {
+                "component": "Gallery",
+                "props": { "variant": "grid", "columns": 3 }
+              },
+              {
+                "component": "List",
+                "data": {
+                  "source": "dummyjson.product.recommendations",
+                  "filter": "product_id = 1",
+                  "loading_state": {
+                    "component": "Skeleton",
+                    "props": { "shape": "card", "count": 4 }
+                  },
+                  "empty_state": {
+                    "component": "EmptyState",
+                    "props": {
+                      "title": "No recommendations yet",
+                      "body": "Browse a few more products to seed personalised picks."
+                    }
+                  }
+                },
+                "actions": ["dummyjson.cart.add"],
+                "props": { "variant": "tinted" }
+              }
+            ]
           }
         ]
       },
       "refresh": {
-        "data": "on_query_change",
+        "data": "on_focus",
+        "structure": "never_unless_invalidated"
+      }
+    },
+    {
+      "path": "/cart",
+      "title": "Cart",
+      "layout": {
+        "component": "Container",
+        "props": { "maxWidth": "md", "variant": "ghost" },
+        "children": [
+          {
+            "component": "Stack",
+            "props": { "direction": "vertical", "gap": "lg" },
+            "children": [
+              {
+                "component": "KPIRow",
+                "data": {
+                  "source": "dummyjson.cart.list",
+                  "filter": "user_id = 1",
+                  "empty_state": {
+                    "component": "EmptyState",
+                    "props": {
+                      "title": "Your cart is empty",
+                      "body": "Add a product on /browse to see it here."
+                    }
+                  }
+                },
+                "props": { "variant": "accent" }
+              },
+              {
+                "component": "List",
+                "data": {
+                  "source": "dummyjson.cart.list",
+                  "filter": "user_id = 1",
+                  "loading_state": {
+                    "component": "Skeleton",
+                    "props": { "shape": "card", "count": 6 }
+                  },
+                  "empty_state": {
+                    "component": "EmptyState",
+                    "props": {
+                      "title": "Your cart is empty",
+                      "body": "Browse the catalog and tap Add to cart — items show up here with a 5s undo toast."
+                    }
+                  }
+                },
+                "actions": ["dummyjson.cart.remove"],
+                "props": {
+                  "variant": "bordered",
+                  "selectable": true,
+                  "bulkActions": [
+                    {
+                      "id": "dummyjson.cart.remove",
+                      "label": "Remove selected",
+                      "variant": "destructive",
+                      "confirmation": "modal"
+                    }
+                  ]
+                }
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "variant": "primary",
+                  "size": "lg",
+                  "label": "Checkout",
+                  "href": "/checkout"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "refresh": {
+        "data": "on_focus + 30s_interval",
+        "structure": "never_unless_invalidated"
+      }
+    },
+    {
+      "path": "/checkout",
+      "title": "Checkout",
+      "layout": {
+        "component": "Container",
+        "props": { "maxWidth": "md", "variant": "ghost" },
+        "children": [
+          {
+            "component": "Wizard",
+            "props": {
+              "variant": "sidebar",
+              "steps": [
+                { "id": "shipping", "label": "Shipping", "state": "active" },
+                { "id": "payment", "label": "Payment", "state": "pending" },
+                { "id": "review", "label": "Review", "state": "pending" }
+              ]
+            },
+            "children": [
+              {
+                "component": "Form",
+                "props": { "variant": "default" }
+              }
+            ]
+          }
+        ]
+      },
+      "refresh": {
+        "data": "on_focus",
         "structure": "never_unless_invalidated"
       }
     }
@@ -116,6 +294,8 @@
     "confirmation_required_for_destructive",
     "rate_limited_actions_show_state",
     "reversibility_surfaced",
-    "cart_modifications_rate_limited"
+    "empty_loading_error_handled",
+    "cart_modifications_rate_limited",
+    "progressive_disclosure_for_long_forms"
   ]
 }

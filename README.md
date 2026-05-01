@@ -12,20 +12,42 @@ CIR is the integration of pieces that already exist — MCP-style capabilities, 
 
 ---
 
-## Quick start
+## Quick start (10 minutes from `git clone` to a personalised UI)
 
 ```bash
 git clone https://github.com/fragmatic-io/cir.git
 cd cir
-pnpm install
+pnpm install                                              # ≈ 60s
 
-# Optional — enables the LLM compiler + LLM-assisted onboarding.
-# Without a key the demo still boots; the FallbackCompiler runs.
-echo "GEMINI_API_KEY=..." > apps/demo/.env.local
+# (Optional) drop your Gemini API key into apps/demo/.env.local for LLM
+# compile; without a key, the FallbackCompiler runs and the demo still
+# boots end-to-end.
+cp apps/demo/.env.local.example apps/demo/.env.local      # seeds sane defaults
 
-pnpm --filter @cir/demo dev
-# → http://localhost:3000  (lands on /onboarding for a clean profile)
+pnpm demo                                                 # boots vault + Next.js together
+# vault: http://localhost:4001  (consent UI lives here)
+# demo:  http://localhost:3000  (lands on /onboarding for a clean profile)
 ```
+
+`pnpm demo` is the orchestration script — it spawns `cir vault dev` (the
+intent vault server) and `next dev` (the demo app) with prefixed log
+streams, sets `NEXT_PUBLIC_VAULT_URL` automatically, and tears both down
+on Ctrl-C. First-boot path: **`/onboarding` → vault consent UI → token
+minted → `/today` rendered with intent-honoured manifest.**
+
+Three demos ship in `apps/`:
+
+- **`apps/demo`** — the personalisation showcase (LLM-assisted onboarding,
+  intent profile editing, dark mode toggle, optimistic UI, undo toasts).
+- **`apps/demo-dummyjson`** — e-commerce catalog with lens-switching
+  (compact / cozy / spacious), bulk cart actions, hover-card product
+  previews.
+- **`apps/demo-github`** — real-mutations issue queue with optimistic
+  archive, undo within 5s, hierarchy treatment for assigned-to-me, hover
+  cards on `#issue` references.
+
+Each is bootable individually with `pnpm --filter @cir/demo-<name> dev`,
+or via `pnpm demo --app <name>` once the vault is running.
 
 Developer CLI — same `cir` entry point you'll use in your own apps:
 

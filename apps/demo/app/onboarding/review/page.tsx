@@ -19,7 +19,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Card, Container, Select, Stack, TextInput } from '@cir/components';
+import {
+  Alert,
+  Button,
+  Card,
+  Container,
+  HoverCard,
+  Select,
+  Stack,
+  TextInput,
+} from '@cir/components';
 import type { IntentProfile, IntentRule } from '@cir/schemas';
 import {
   getVaultClient,
@@ -27,6 +36,7 @@ import {
   saveIntentProfileAsync,
 } from '@/lib/intent-store';
 import { requestGrant } from '@/lib/intent-grant';
+import { applyColorMode } from '@/components/Chrome';
 import { SESSION_DRAFT_KEY } from '../describe/page';
 
 interface DraftEnvelope {
@@ -67,6 +77,25 @@ function lensLabel(domain: string): string {
   return LENS_LABELS[domain] ?? `${domain} view`;
 }
 
+/**
+ * Plain-language description of the data slice each lens exposes. Used
+ * inside a `<HoverCard>` on the review screen so the user knows exactly
+ * what they're consenting to per row.
+ */
+const LENS_PREVIEW_TEXT: Readonly<Record<string, string>> = {
+  github: 'Open pull requests, review status, mentions on issues you authored.',
+  shopping: 'Recently viewed products, cart contents, order history.',
+  today: 'The decision queue: threads requiring a reply + tasks due in 7d.',
+  email: 'Inbox subjects + senders for triage. No body content.',
+  thread: 'Full message bodies for threads you opened in the last 24h.',
+};
+function lensPreviewFor(domain: string): string {
+  return (
+    LENS_PREVIEW_TEXT[domain] ??
+    `Data slice for ${domain}. The host app reads only the fields your grant exposes.`
+  );
+}
+
 export default function OnboardingReviewPage(): React.JSX.Element {
   const router = useRouter();
   const [draft, setDraft] = useState<DraftEnvelope | null>(null);
@@ -88,6 +117,16 @@ export default function OnboardingReviewPage(): React.JSX.Element {
       setMissing(true);
     }
   }, []);
+
+  // Live-preview color mode while the user is editing the draft. The
+  // chrome-level toggle persists to the profile; the review preview just
+  // mirrors the selection to <html> so the user sees the effect. Revert to
+  // 'system' when the draft is dropped.
+  useEffect(() => {
+    if (draft === null) return;
+    const cm = (draft.profile.global_preferences['color_mode'] as string | undefined) ?? 'system';
+    if (cm === 'light' || cm === 'dark' || cm === 'system') applyColorMode(cm);
+  }, [draft]);
 
   const profile = draft?.profile ?? null;
 
@@ -220,6 +259,16 @@ export default function OnboardingReviewPage(): React.JSX.Element {
   const colorMode = (profile.global_preferences['color_mode'] as string | undefined) ?? '';
   const automation = (profile.global_preferences['automation_trust'] as string | undefined) ?? '';
 
+  // DX-A polish: live-preview the density + color_mode picks against the
+  // review page itself so the user sees their choice before saving. The
+  // density preview re-runs on each change; the color mode preview applies
+  // the toggle to <html> immediately and reverts to "system" on unmount.
+  const previewDensity: 'compact' | 'comfortable' | 'spacious' =
+    density === 'compact' || density === 'comfortable' || density === 'spacious'
+      ? density
+      : 'comfortable';
+  const previewRowPadPx = previewDensity === 'compact' ? 4 : previewDensity === 'spacious' ? 16 : 8;
+
   return (
     <Container maxWidth="md" padding="md">
       <Stack direction="vertical" gap="lg">
@@ -257,18 +306,35 @@ export default function OnboardingReviewPage(): React.JSX.Element {
             />
 
             <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Views (lenses)</h3>
+            <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>
+              Hover any row to preview the data slice this lens would expose.
+            </p>
             {lensEntries.length === 0 ? (
               <p style={{ color: '#6b7280', fontSize: 14 }}>No views were inferred.</p>
             ) : (
               lensEntries.map(([domain, lens]) => (
-                <TextInput
-                  key={domain}
-                  label={lensLabel(domain)}
-                  value={lens}
-                  onChange={(e) => {
-                    patchLens(domain, e.target.value);
-                  }}
-                />
+                <HoverCard
+                  key={`hc-${domain}`}
+                  content={() => (
+                    <div data-testid={`lens-preview-${domain}`}>
+                      <strong style={{ display: 'block', marginBottom: 4 }}>lens.{domain}</strong>
+                      <p style={{ margin: 0, fontSize: 13, color: '#374151' }}>
+                        {lensPreviewFor(domain)}
+                      </p>
+                    </div>
+                  )}
+                  ariaLabel={`Preview of lens.${domain}`}
+                >
+                  <div data-cir-lens-row={domain}>
+                    <TextInput
+                      label={lensLabel(domain)}
+                      value={lens}
+                      onChange={(e) => {
+                        patchLens(domain, e.target.value);
+                      }}
+                    />
+                  </div>
+                </HoverCard>
               ))
             )}
 
@@ -339,6 +405,43 @@ export default function OnboardingReviewPage(): React.JSX.Element {
                 />
               ))
             )}
+
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Live preview</h3>
+            <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>
+              How a row would render with the picks above. Density and color mode update instantly;
+              saved state writes when you click Save.
+            </p>
+            <div
+              data-testid="review-density-preview"
+              data-density={previewDensity}
+              style={{
+                border: '1px dashed #d1d5db',
+                borderRadius: 8,
+                padding: previewRowPadPx + 4,
+                background: 'var(--cir-preview-bg, transparent)',
+              }}
+            >
+              {[
+                { id: 'r1', title: 'Reply to Alice with cohort retention data', meta: 'due today' },
+                { id: 'r2', title: 'Schedule renewal call with Bob', meta: 'due tomorrow' },
+                { id: 'r3', title: 'Review Q3 OKRs draft', meta: 'due Tue' },
+              ].map((r, i) => (
+                <div
+                  key={r.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    paddingTop: previewRowPadPx,
+                    paddingBottom: previewRowPadPx,
+                    borderTop: i === 0 ? 'none' : '1px solid #f3f4f6',
+                    fontSize: 13,
+                  }}
+                >
+                  <span>{r.title}</span>
+                  <span style={{ color: '#6b7280' }}>{r.meta}</span>
+                </div>
+              ))}
+            </div>
 
             <Stack direction="horizontal" gap="sm">
               <Button

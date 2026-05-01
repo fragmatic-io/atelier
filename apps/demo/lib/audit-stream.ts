@@ -134,8 +134,19 @@ export function parseTypesParam(raw: string | null): ReadonlySet<string> | undef
 export function buildAuditStreamResponse(opts: BuildAuditStreamOptions): Response {
   const { sink, filters = {}, signal } = opts;
   const heartbeatMs = opts.heartbeatMs ?? DEFAULT_HEARTBEAT_MS;
-  const setIntervalImpl = opts.setInterval ?? globalThis.setInterval.bind(globalThis);
-  const clearIntervalImpl = opts.clearInterval ?? globalThis.clearInterval.bind(globalThis);
+  // The injected scheduler returns and accepts an opaque id; we treat the
+  // type as `unknown` so tests can return any token they like (e.g. `42`)
+  // without leaking Node's `Timeout` into the contract. The cast on the
+  // global fallback is the price of accepting the same opaque shape.
+  const setIntervalImpl: (handler: () => void, ms: number) => unknown =
+    opts.setInterval ?? ((handler, ms) => globalThis.setInterval(handler, ms));
+  const clearIntervalImpl: (id: unknown) => void =
+    opts.clearInterval ??
+    ((id) => {
+      // Node's clearInterval accepts a Timeout instance; we cast the opaque
+      // id back into that shape so the global signature is satisfied.
+      globalThis.clearInterval(id as ReturnType<typeof setInterval>);
+    });
   const encoder = new TextEncoder();
 
   let unsubscribe: (() => void) | null = null;

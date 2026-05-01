@@ -1,0 +1,37 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) 2026 The CIR Authors */
+
+/*
+ * Minimal globals for the dummyjson catalog demo. We rely on @cir/components
+ * shipping its own utility classes via `data-cir-component` selectors and
+ * Tailwind-flavoured strings; this stylesheet just resets the page chrome
+ * and provides body-level dark-mode mirroring.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  background: #fafaf9;
+  color: #0c0a09;
+}
+
+html[data-color-mode='dark'],
+html[data-color-mode='dark'] body {
+  background: #0c0a09;
+  color: #fafaf9;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

@@ -1,0 +1,18 @@
+{
+  "id": "dummyjson.product.recommendations",
+  "kind": "data",
+  "version": "0.1.0",
+  "input": {
+    "product_id": "number",
+    "limit": "number"
+  },
+  "output": {
+    "products": "array<{ id: number, title: string, price: number, rating: number, thumbnail: string, category: string }>",
+    "total": "number"
+  },
+  "side_effects": ["reads:dummyjson_catalog"],
+  "permissions": ["catalog:read"],
+  "confirmation": "none",
+  "rate_limit": "60/min/user",
+  "reversible": true
+}

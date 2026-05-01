@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+
+/* Component styling hooks — uses data-cir-component attrs from @cir/components */
+[data-cir-component='Stack'] {
+  display: flex;
+}
+[data-cir-component='Stack'][data-direction='vertical'] {
+  flex-direction: column;
+}
+[data-cir-component='Stack'][data-direction='horizontal'] {
+  flex-direction: row;
+}
+[data-cir-component='Stack'][data-gap='sm'] {
+  gap: 8px;
+}
+[data-cir-component='Stack'][data-gap='md'] {
+  gap: 16px;
+}
+[data-cir-component='Stack'][data-gap='lg'] {
+  gap: 24px;
+}
+
+[data-cir-component='Card'] {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+}
+[data-cir-component='Container'] {
+  @apply mx-auto px-4 py-6;
+}
+[data-cir-component='Container'][data-max-width='md'] {
+  max-width: 960px;
+}
+[data-cir-component='Container'][data-max-width='lg'] {
+  max-width: 1280px;
+}
+
+[data-cir-component='Button'] {
+  @apply rounded px-3 py-1.5 text-sm font-medium transition-colors;
+}
+[data-cir-component='Button'][data-variant='primary'] {
+  @apply bg-fuchsia-600 text-white hover:bg-fuchsia-700;
+}
+[data-cir-component='Button'][data-variant='secondary'] {
+  @apply bg-gray-200 text-gray-900 hover:bg-gray-300;
+}
+[data-cir-component='Button'][data-variant='destructive'] {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+[data-cir-component='Button'][data-variant='ghost'] {
+  @apply bg-transparent text-gray-700 hover:bg-gray-100;
+}
+
+/* Hierarchy treatment (P-9): top 3 issues on /today get the hero accent. */
+[data-cir-component='List'] [data-emphasis='hero'] {
+  @apply border-l-4 border-fuchsia-500 bg-fuchsia-50/40 font-semibold;
+}
+[data-cir-component='List'] [data-emphasis='comfortable'] {
+  @apply text-gray-600;
+}
+
+/* Optimistic archive — fade transition. */
+[data-cir-component='List'] [data-archived='true'] {
+  @apply opacity-30 line-through;
+  transition: opacity 0.2s ease-out;
+}
+
+/* Status bar — operational/degraded/incident pill colours. */
+[data-cir-component='StatusBar'][data-status='operational'] {
+  @apply bg-green-100 text-green-900;
+}
+[data-cir-component='StatusBar'][data-status='degraded'] {
+  @apply bg-amber-100 text-amber-900;
+}
+[data-cir-component='StatusBar'][data-status='incident'] {
+  @apply bg-red-100 text-red-900;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    @apply bg-gray-950 text-gray-100;
+  }
+  [data-cir-component='Card'] {
+    @apply bg-gray-900 border-gray-800;
+  }
+}

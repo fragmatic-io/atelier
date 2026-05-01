@@ -3,28 +3,21 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { CirProviders } from '@/lib/cir-providers';
+import { Chrome } from '@/components/Chrome';
 
 export const metadata: Metadata = {
-  title: 'CIR demo — email triage',
-  description: 'Capability · Intent · Render — end-to-end demo',
+  title: 'CIR demo — personalisation showcase',
+  description:
+    'Capability · Intent · Render — onboarding, personalised manifest, optimistic UI, audit stream.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <header className="bg-white border-b border-gray-200 px-4 py-3">
-          <div className="max-w-screen-md mx-auto flex items-center justify-between">
-            <Link href="/today" className="font-semibold text-gray-900">
-              CIR demo
-            </Link>
-            <span className="text-xs text-gray-500">
-              fake compiler · in-memory data · no API key needed
-            </span>
-          </div>
-        </header>
+        {/* Chrome owns: status pill, color-mode toggle, dev-only audit link. */}
+        <Chrome />
         <CirProviders>{children}</CirProviders>
       </body>
     </html>
