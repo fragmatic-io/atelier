@@ -24,8 +24,28 @@ import type {
   ManifestResolver,
   TriggerSubscription,
 } from '@cir/runtime';
-import type { AmbientPolicySatisfier } from '@cir/policies';
-import type { BrandKit, IntentProfile } from '@cir/schemas';
+import type { BrandKit, IntentProfile, LayoutNode } from '@cir/schemas';
+
+/**
+ * Phase 2 #4 — Resolver fallback contract.
+ *
+ * Default state slot nodes the render walker substitutes when a data-bound
+ * node's manifest does NOT declare the corresponding `data.empty_state` /
+ * `data.loading_state` / `data.error_state`. Per `docs/ethos.md` principle
+ * #9 (Resolver supplies fallbacks), manifests opt OUT (or override) — they
+ * do not opt IN.
+ *
+ * Each slot is authored as a `LayoutNode` (the same shape manifests use) so
+ * hosts can per-app customize the default copy / surface. The walker takes
+ * the chosen node, runs it through the component registry, and renders it
+ * carrying `data-cir-default-state="empty|loading|error"` so tests and
+ * audit tooling can detect a default vs. an explicit override.
+ */
+export interface CirResolverDefaults {
+  empty?: LayoutNode;
+  loading?: LayoutNode;
+  error?: LayoutNode;
+}
 
 export interface CirRuntimeServices {
   resolver: ManifestResolver;
@@ -54,26 +74,47 @@ export interface CirRuntimeServices {
    */
   brandKit?: BrandKit;
   /**
-   * Declarations that ambient runtime services satisfy named policy
-   * obligations (Phase 2 #5 / `docs/ethos.md` principle #4).
-   *
-   * The `<UndoToast>` mounted at the app root and the `<RateLimitChip>`
-   * rendered in the chrome are the canonical examples — they live in the
-   * rendered DOM regardless of which manifest is mounted, so making each
-   * route-level manifest also declare an in-tree anchor for them is
-   * redundant. Hosts list the satisfiers here; the policy validator
-   * consults the list before falling back to manifest-tree evidence.
-   *
-   * The satisfier list is **additive**: existing manifest-level evidence
-   * (an in-tree `<UndoToast>`, a `*.rate_limit` data binding) still
-   * satisfies the obligation. The new path simply gives hosts a way to
-   * say "the chrome already covers this — stop demanding a hidden anchor
-   * node in every manifest". Pre-built declarations live in
-   * `@cir/policies` (`UNDO_TOAST_AMBIENT_SATISFIER`,
-   * `RATE_LIMIT_CHIP_AMBIENT_SATISFIER`).
+   * Per-host overrides for the resolver fallback contract (Phase 2 #4).
+   * When unset, the render walker uses `BASELINE_RESOLVER_DEFAULTS` —
+   * `<EmptyState title="No items" .../>`, `<Skeleton variant="row" .../>`,
+   * `<Alert severity="error" title="Failed to load" .../>`. Hosts shipping
+   * a distinctive empty / loading / error language pass their own nodes
+   * here so every data-bound component on the app inherits it.
    */
-  ambientPolicySatisfiers?: readonly AmbientPolicySatisfier[];
+  resolverDefaults?: CirResolverDefaults;
 }
+
+/**
+ * Baseline default state slot nodes the render walker substitutes when the
+ * host did NOT provide `services.resolverDefaults`. Centralized so unit
+ * tests can assert against the canonical defaults without depending on a
+ * specific host wiring.
+ *
+ * The `body` / `description` copy is intentionally generic — apps that want
+ * a distinctive voice (e.g. github's "Inbox zero" message) override per
+ * route by declaring the slot inline on `data.empty_state`.
+ */
+export const BASELINE_RESOLVER_DEFAULTS: Required<CirResolverDefaults> = Object.freeze({
+  empty: {
+    component: 'EmptyState',
+    props: { title: 'No items', description: 'Nothing to show yet.' },
+    children: [],
+  },
+  loading: {
+    component: 'Skeleton',
+    props: { shape: 'table-row', count: 4 },
+    children: [],
+  },
+  error: {
+    component: 'Alert',
+    props: {
+      severity: 'error',
+      title: 'Failed to load',
+      // The body string is rendered as Alert children below the title.
+    },
+    children: [],
+  },
+});
 
 /**
  * Internal context. Hooks call `useCir()` which throws when this is null —

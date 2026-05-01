@@ -23,7 +23,8 @@
       "type": "string",
       "enum": [
         "error",
-        "warn"
+        "warn",
+        "info"
       ]
     }
   },

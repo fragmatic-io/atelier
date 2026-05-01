@@ -34,10 +34,12 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { RenderNode as RenderNodeShape } from '@cir/runtime';
+import type { ComponentRegistry, RenderNode as RenderNodeShape } from '@cir/runtime';
+import type { LayoutNode } from '@cir/schemas';
 import { DataResolverContext, type DataBinding } from '../data/data-resolver.js';
 import { useDispatcher } from '../hooks/use-dispatcher.js';
 import { useCir } from '../hooks/use-cir.js';
+import { BASELINE_RESOLVER_DEFAULTS } from '../context/runtime-context.js';
 
 /**
  * Components in the catalog that accept a `density` personalisation prop.
@@ -134,6 +136,51 @@ function useResolvedData(binding: DataBinding | undefined): {
   return { data, loading, error };
 }
 
+/**
+ * Phase 2 #4 — Resolver fallback contract.
+ *
+ * Returns true when the resolver-shaped `data` looks empty: `undefined`
+ * (resolver had nothing to return), an empty array, or an empty object. The
+ * heuristic is intentionally conservative — components that use a domain-
+ * specific shape (e.g. paginated `{ items: [], total: 0 }`) keep their own
+ * empty branch, so the renderer's default fires only when no rows surface
+ * to the component at all.
+ */
+function dataLooksEmpty(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === 'object') return Object.keys(value).length === 0;
+  return false;
+}
+
+/**
+ * Convert a `LayoutNode` (the manifest shape) into a `RenderNode` using the
+ * supplied registry. Mirrors `buildRenderNode` from `@cir/runtime` but lives
+ * here because the React adapter is the only consumer that needs it for
+ * default state slots resolved at render time (the upstream `buildRenderPlan`
+ * already handled manifest-declared slots).
+ *
+ * Recursion is bounded by the slot's authored depth (typically a single
+ * `<EmptyState>` / `<Skeleton>` / `<Alert>` node). Defaults are stable across
+ * renders so the cost is negligible.
+ */
+function layoutNodeToRenderNode(node: LayoutNode, registry: ComponentRegistry): RenderNodeShape {
+  const binding = registry.get(node.component);
+  const children = (node.children ?? []).map((child) => layoutNodeToRenderNode(child, registry));
+  const out: RenderNodeShape = {
+    componentId: node.component,
+    children,
+  };
+  if (binding) out.binding = binding;
+  if (node.props) out.props = { ...node.props };
+  // Default state slots are themselves UI-only — they never carry their
+  // own data binding or actions. Skip those fields.
+  return out;
+}
+
+/** Kind tag used as the value of `data-cir-default-state`. */
+type DefaultStateKind = 'empty' | 'loading' | 'error';
+
 export interface RenderNodeProps {
   node: RenderNodeShape;
 }
@@ -173,6 +220,27 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
     props['data'] = data;
     props['loading'] = loading;
     props['error'] = error;
+
+    // Phase 2 #4 — Resolver fallback contract. When the data binding is in a
+    // loading / error / empty state, render the corresponding state slot in
+    // place of the data-bound component. Slot resolution order:
+    //   1. The manifest's inline `data.{loading,error,empty}_state` (already
+    //      planned into a RenderNode by `buildRenderPlan`).
+    //   2. The host's `services.resolverDefaults.{loading,error,empty}`.
+    //   3. The framework's `BASELINE_RESOLVER_DEFAULTS`.
+    // The walker tags the rendered output with `data-cir-default-state` when
+    // it falls through to (2) or (3) so tests / audit tooling can detect it.
+    const stateKind: DefaultStateKind | null = loading
+      ? 'loading'
+      : error !== null
+        ? 'error'
+        : dataLooksEmpty(data)
+          ? 'empty'
+          : null;
+    if (stateKind !== null) {
+      const slot = renderStateSlot(stateKind, node, services);
+      if (slot !== null) return slot;
+    }
   }
 
   // Manifest-referenced row factory (Phase 2 #3). The runtime resolves
@@ -221,4 +289,47 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
       : undefined;
 
   return createElement(Component, props, children);
+}
+
+/**
+ * Resolve a state slot for a data-bound node and render it. Returns `null`
+ * when no slot is available (no manifest slot, no host default, and no
+ * baseline default for the kind). Wrapping div carries
+ * `data-cir-default-state="empty|loading|error"` when the slot is supplied
+ * by the resolver pipeline (i.e. NOT the manifest's explicit override).
+ */
+function renderStateSlot(
+  kind: DefaultStateKind,
+  node: RenderNodeShape,
+  services: ReturnType<typeof useCir>,
+): ReactElement | null {
+  const slotKey = (
+    {
+      empty: 'empty_state',
+      loading: 'loading_state',
+      error: 'error_state',
+    } as const
+  )[kind];
+  // (1) Inline manifest slot wins outright — it's already a RenderNode.
+  const inline = node.data?.[slotKey];
+  if (inline !== undefined) {
+    return <RenderNode node={inline} />;
+  }
+  // (2) Host override on services. (3) Framework baseline.
+  const overrides = services.resolverDefaults;
+  const overrideNode: LayoutNode | undefined = (
+    {
+      empty: overrides?.empty,
+      loading: overrides?.loading,
+      error: overrides?.error,
+    } as const
+  )[kind];
+  const layout: LayoutNode | undefined = overrideNode ?? BASELINE_RESOLVER_DEFAULTS[kind];
+  if (layout === undefined) return null;
+  const renderable = layoutNodeToRenderNode(layout, services.registry);
+  return (
+    <div data-cir-default-state={kind}>
+      <RenderNode node={renderable} />
+    </div>
+  );
 }

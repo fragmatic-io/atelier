@@ -47,7 +47,11 @@ export interface ValidateOptions {
  * Run every policy in `options.policies` (defaulting to `BASELINE_POLICIES`)
  * and aggregate the violations. `ok` is true iff:
  *  - in normal mode: there are no `error`-severity violations
- *  - in `strict: true` mode: there are no violations at all
+ *  - in `strict: true` mode: there are no `error` or `warn` violations
+ *
+ * `info`-severity violations (Phase 2 #4 — resolver fallback contract) are
+ * advisories the runtime will paper over and never gate compilation, even
+ * in strict mode.
  *
  * Each policy runs independently; a thrown exception inside a policy
  * propagates (the compiler is responsible for catching unexpected failures
@@ -64,8 +68,8 @@ export function validateManifest(ctx: PolicyContext, options?: ValidateOptions):
   }
 
   const hasError = violations.some((v) => v.severity === 'error');
-  const hasAny = violations.length > 0;
-  const ok = strict ? !hasAny : !hasError;
+  const hasErrorOrWarn = violations.some((v) => v.severity === 'error' || v.severity === 'warn');
+  const ok = strict ? !hasErrorOrWarn : !hasError;
 
   return { ok, violations };
 }

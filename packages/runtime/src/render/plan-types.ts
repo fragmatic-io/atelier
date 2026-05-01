@@ -34,8 +34,23 @@ export interface RenderNode {
    * crashing — the rest of the manifest may still be useful.
    */
   binding?: ComponentBinding;
-  /** Data binding spec from the manifest, copied verbatim. */
-  data?: { source: string; filter?: string; sort?: string; group_by?: string };
+  /**
+   * Data binding spec from the manifest, copied verbatim. The optional
+   * `empty_state` / `loading_state` / `error_state` slots are forwarded as
+   * nested `RenderNode`s so the adapter can render them in place of the
+   * data-bound component when the resolver returns empty / loading / error
+   * (Phase 2 #4 — resolver fallback contract). Adapters that do not consult
+   * the slots simply ignore them.
+   */
+  data?: {
+    source: string;
+    filter?: string;
+    sort?: string;
+    group_by?: string;
+    empty_state?: RenderNode;
+    loading_state?: RenderNode;
+    error_state?: RenderNode;
+  };
   /** Capability IDs the adapter should wire to the dispatcher. */
   actions?: readonly string[];
   /** Free-form props bag from the manifest (passed through). */

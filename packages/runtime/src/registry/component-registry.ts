@@ -57,41 +57,25 @@ export interface ComponentBinding {
    */
   compositionRole?: CompositionRole;
   /**
-   * Optional ordered list of action-slot prop names this binding accepts.
-   * The renderer maps `node.actions[i]` to `actionSlots[i]`, setting
-   * `props[actionSlots[i]] = (input) => dispatch(node.actions[i], input)`.
-   *
-   * Why this exists (Phase 2 #2 — capability dispatch is first-class, ethos
-   * principle #8): React DOM rejects dotted prop names like
-   * `'app.cart.add'` on host elements (`<button>`, `<div>`). Pre-`actionSlots`
-   * the renderer set capability ids as prop names directly, forcing every
-   * actionable component to defend itself with a per-component capability-
-   * id-as-prop filter. Declaring named slots (`['onPrimaryAction',
-   * 'onSecondaryAction']`) lets components consume action handlers as
-   * normal React props with stable, DOM-safe names.
-   *
-   * Backwards compat: bindings WITHOUT `actionSlots` keep the legacy
-   * behaviour (capability id is set as a prop name directly). The renderer
-   * emits a one-shot `console.warn` per such binding so authors know to
-   * migrate. New custom bindings should declare `actionSlots` from day one.
-   *
-   * Order is significant. `node.actions[0]` always maps to `actionSlots[0]`,
-   * `node.actions[1]` to `actionSlots[1]`, etc. Excess actions (more than
-   * `actionSlots.length`) are flagged by the
-   * `actions_match_action_slots` baseline policy.
+   * Phase 2 #4 — Resolver fallback contract. When `true`, the
+   * `empty_loading_error_handled` policy keeps its strict (`error`-severity)
+   * check for this binding: the manifest MUST declare empty/loading/error
+   * slots inline. Default `false` — the renderer supplies defaults.
+   */
+  requiresExplicitStateSlots?: boolean;
+  /**
+   * Phase 2 #2 — Action-binding contract. Ordered list of action-slot prop
+   * names this binding accepts. The renderer maps `node.actions[i]` to
+   * `actionSlots[i]`, setting `props[actionSlots[i]] = (input) =>
+   * dispatch(node.actions[i], input)`. Bindings without `actionSlots` keep
+   * the legacy capability-id-as-prop behavior.
    */
   actionSlots?: readonly string[];
   /**
-   * Optional schema-validated manifest contract (Phase 2 #1, ethos
-   * principle #7). When set, the `manifest_component_contract_satisfied`
-   * policy validates every manifest node referencing this binding against
-   * the declared `allowed_props` / `required_props` shape. Bindings
-   * without a contract are unaffected (back-compat).
-   *
-   * Defensive defaults inside components (e.g. `items = []`, `label?`
-   * aliasing into `children`) are forgiveness for an enforcement gap —
-   * declare the contract here and the schema layer rejects malformed
-   * manifests upstream.
+   * Phase 2 #1 — Schema-validated manifest contract. When set, the
+   * `manifest_component_contract_satisfied` policy validates every manifest
+   * node referencing this binding against the declared `allowed_props` /
+   * `required_props` shape. Bindings without a contract are unaffected.
    */
   manifestContract?: ManifestComponentContract;
 }
@@ -163,15 +147,30 @@ export function compositionRolesFromBindings(
 }
 
 /**
- * Build a `componentId -> readonly string[]` map of declared `actionSlots`
- * from a registry-like `Record<string, ComponentBinding>`. Bindings without
- * declared slots are omitted (the policy treats absent entries as
- * "unknown — no upper bound", matching the renderer's legacy fallback).
+ * Build the set of component IDs whose bindings opt into the strict
+ * empty/loading/error state-slot check. Used by the
+ * `empty_loading_error_handled` policy: bindings in the returned set still
+ * fail validation when the manifest omits an inline slot, while bindings
+ * outside it surface only an `info` hint (the renderer supplies a default).
  *
- * Hosts pass this into `PolicyContext.action_slots` so the
- * `actions_match_action_slots` baseline policy can flag manifests that
- * declare more `node.actions` than the binding can route. See
- * `packages/policies/src/baseline/actions_match_action_slots.ts`.
+ * Mirrors `compositionRolesFromBindings`. Convenience for hosts that pass
+ * the set into `PolicyContext.requires_explicit_state_slots`.
+ */
+export function requiresExplicitStateSlotsFromBindings(
+  bindings: Readonly<Record<string, ComponentBinding>>,
+): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const [id, binding] of Object.entries(bindings)) {
+    if (binding.requiresExplicitStateSlots === true) out.add(id);
+  }
+  return out;
+}
+
+/**
+ * Build a `componentId -> readonly string[]` map of declared `actionSlots`
+ * (Phase 2 #2). Hosts pass it into `PolicyContext.action_slots` so the
+ * `actions_match_action_slots` policy can flag manifests that overstuff a
+ * node with more capabilities than the binding can route.
  */
 export function actionSlotsFromBindings(
   bindings: Readonly<Record<string, ComponentBinding>>,
@@ -184,12 +183,10 @@ export function actionSlotsFromBindings(
 }
 
 /**
- * Build a `componentId -> ManifestComponentContract` map by scanning a
- * registry-like `Record<string, ComponentBinding>`. Bindings without a
- * `manifestContract` are omitted so the resulting record only carries
- * components that declare a schema-validated contract. Convenience for
- * hosts that hand the map to `manifestComponentContractSatisfied()`
- * (`@cir/policies`).
+ * Build a `componentId -> ManifestComponentContract` map (Phase 2 #1).
+ * Hosts hand it to `manifestComponentContractSatisfied()` so the policy
+ * can validate every manifest node referencing a binding against its
+ * declared contract. Bindings without a contract are omitted.
  */
 export function manifestContractsFromBindings(
   bindings: Readonly<Record<string, ComponentBinding>>,
