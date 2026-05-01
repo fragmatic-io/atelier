@@ -298,7 +298,11 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
       audit,
       identity: { user_id: DEMO_USER_ID, app_id: DEMO_APP_ID },
       intent,
-      ambientPolicySatisfiers: AMBIENT_POLICY_SATISFIERS,
+      // NOTE: `AMBIENT_POLICY_SATISFIERS` is NOT carried on the services bag.
+      // The runtime contract (Phase 2 #5) is that the host hands satisfiers to
+      // the policy validator directly via the `validate` hook input above
+      // (`ambient_policy_satisfiers` on `PolicyContext`). The services bag
+      // stays narrow per `docs/ethos.md` principle #4 (constrained surface).
     },
     audit,
   };

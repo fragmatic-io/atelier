@@ -98,7 +98,7 @@ export const rateLimitedActionsShowState: NamedPolicy = {
           severity: 'warn',
           message: `Rate-limited action "${actionId}" is exposed without a visible quota indicator.`,
           path: `${path}/actions/${actionIdx}`,
-          hint: 'Bind a sibling or ancestor component to a data source whose name ends with `.quota`, `.rate_limit`, or `.usage`, OR declare an ambient `<RateLimitChip>` via `CirRuntimeServices.ambientPolicySatisfiers`.',
+          hint: 'Bind a sibling or ancestor component to a data source whose name ends with `.quota`, `.rate_limit`, or `.usage`, OR declare an ambient `<RateLimitChip>` via `PolicyContext.ambient_policy_satisfiers` (passed to `validateManifest` from the host).',
         });
       });
     });

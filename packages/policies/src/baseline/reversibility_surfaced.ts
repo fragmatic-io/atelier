@@ -112,7 +112,7 @@ export const reversibilitySurfaced: NamedPolicy = {
             severity: 'error',
             message: `Reversible action "${actionId}" has no undo affordance for rollback "${rollback}" in this route.`,
             path: `${path}/actions/${actionIdx}`,
-            hint: `Add a Button/ActionMenu invoking "${rollback}", an Undo/UndoBar/UndoToast component in the same route layout, OR declare an ambient \`<UndoToast>\` via \`CirRuntimeServices.ambientPolicySatisfiers\`.`,
+            hint: `Add a Button/ActionMenu invoking "${rollback}", an Undo/UndoBar/UndoToast component in the same route layout, OR declare an ambient \`<UndoToast>\` via \`PolicyContext.ambient_policy_satisfiers\` (passed to \`validateManifest\` from the host).`,
           });
         } else if (isMutating) {
           violations.push({
