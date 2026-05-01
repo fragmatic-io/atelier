@@ -22,12 +22,37 @@ import {
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
+import { composesAccordingTo, emptyLoadingErrorHandled } from '@cir/policies';
 import { StreamingAuditSink } from '@cir/runtime';
-import type { Capability, ComponentDefinition, IntentProfile } from '@cir/schemas';
+import { COMPOSITION_RULES } from '@cir/components/composition-rules';
+import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@cir/schemas';
 import type { Density } from '@cir/components';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
 import { manifestForRoute } from './manifests.js';
+
+/**
+ * Run composition + empty/loading/error policies on the LLM's output before
+ * the manifest reaches the renderer. The Gemini validate hook treats any
+ * violation as a `CompilerOutputError`, which the composite cascades on.
+ * See `docs/ethos.md` principles 1, 4, 5.
+ */
+function validateManifestSemantics(manifest: Manifest): { errors: readonly string[] } {
+  const policies = [composesAccordingTo(COMPOSITION_RULES), emptyLoadingErrorHandled];
+  const ctx = {
+    manifest,
+    capabilities: CAPABILITIES,
+    components: {},
+    rate_limited_capability_ids: new Set<string>(),
+    pii_fields: new Set<string>(),
+  };
+  const errors: string[] = [];
+  for (const policy of policies) {
+    const result = policy.evaluate(ctx);
+    for (const v of result.violations) errors.push(v.message);
+  }
+  return { errors };
+}
 
 interface CirServer {
   compiler: CompilerService;
@@ -72,6 +97,7 @@ function buildServer(): CirServer {
         apiKey: apiKey!,
         coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
         diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
+        validate: validateManifestSemantics,
       }),
     );
   }
