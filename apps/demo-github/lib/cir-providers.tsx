@@ -27,6 +27,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import {
   ActionDispatcher,
+  actionSlotsFromBindings,
   compositionRolesFromBindings,
   InMemoryTriggerBus,
   ManifestFetcher,
@@ -138,6 +139,14 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
   // role-tagged custom bindings (e.g. `<IssueQueue compositionRole="list">`)
   // as equivalent to their baseline counterparts.
   const compositionRoles = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
+  // Action slots map for the `actions_match_action_slots` baseline policy.
+  // Includes both baseline (Button, etc.) + demo-specific bindings so the
+  // policy can flag manifests that declare more capabilities than the
+  // binding has slots for.
+  const actionSlots = actionSlotsFromBindings({
+    ...COMPONENT_BINDINGS,
+    ...DEMO_GITHUB_BINDINGS,
+  });
 
   const actions = new MapActionRegistry();
   const wireAction =
@@ -187,6 +196,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           pii_fields: new Set(),
           brand_kit: DEMO_GITHUB_BRAND_KIT,
           composition_roles: compositionRoles,
+          action_slots: actionSlots,
         },
         {
           policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],

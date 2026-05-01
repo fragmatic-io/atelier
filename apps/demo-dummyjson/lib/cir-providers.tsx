@@ -28,6 +28,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import {
   ActionDispatcher,
+  actionSlotsFromBindings,
   InMemoryTriggerBus,
   ManifestFetcher,
   ManifestResolver,
@@ -176,6 +177,14 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
     ...COMPONENT_BINDINGS,
     ...DEMO_DUMMYJSON_BINDINGS,
   });
+  // Action slots map for the `actions_match_action_slots` baseline policy.
+  // Surfaces every binding whose component declares `actionSlots` (Button
+  // and friends) so the policy can flag manifests that overstuff a node
+  // with more capabilities than the binding can route.
+  const actionSlots = actionSlotsFromBindings({
+    ...COMPONENT_BINDINGS,
+    ...DEMO_DUMMYJSON_BINDINGS,
+  });
   const actions = buildActions();
 
   // Custom fetch wrapper that mirrors the user's lens onto an
@@ -221,6 +230,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           // so the policy engine treats them like the matching baseline
           // List/Grid/Table component (e.g. `ProductGrid` → `Grid`).
           composition_roles: DEMO_DUMMYJSON_COMPOSITION_ROLES,
+          action_slots: actionSlots,
         },
         {
           policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],

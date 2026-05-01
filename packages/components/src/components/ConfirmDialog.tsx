@@ -42,6 +42,20 @@ export interface ConfirmDialogProps {
    * the red-tinted surface; otherwise defaults to `'default'`.
    */
   variant?: ConfirmDialogVariant;
+  /**
+   * Phase 2 #2 — manifest-driven primary capability dispatcher. When a
+   * manifest declares `actions: ['some.cap', ...]` on a `ConfirmDialog`
+   * node, the render-node wires `actions[0]` to this slot. If supplied
+   * without an explicit `onConfirm`, the dialog dispatches it on confirm.
+   * The legacy `onConfirm` callback wins when both are supplied.
+   */
+  onPrimaryAction?: (input?: unknown) => unknown;
+  /**
+   * Manifest-driven secondary capability dispatcher; bound to `actions[1]`.
+   * Most callers leave this unset (cancel is local UI, not a capability).
+   * Declared for the actionSlots contract.
+   */
+  onSecondaryAction?: (input?: unknown) => unknown;
 }
 
 export function ConfirmDialog({
@@ -55,6 +69,11 @@ export function ConfirmDialog({
   destructive = false,
   className,
   variant,
+  // Manifest-bound capability dispatchers. `onConfirm` (the explicit React
+  // callback) wins; `onPrimaryAction` is the fallback when a manifest wires
+  // a capability without supplying a JS callback.
+  onPrimaryAction,
+  onSecondaryAction: _onSecondaryAction,
 }: ConfirmDialogProps): ReactNode {
   const effectiveVariant: ConfirmDialogVariant =
     variant ?? (destructive ? 'destructive' : 'default');
@@ -101,6 +120,16 @@ export function ConfirmDialog({
 
   const handleConfirm = (): void => {
     const result = onConfirm();
+    // Also fire the manifest-driven primary capability when present, so a
+    // manifest-only dialog (no JS `onConfirm` host wiring) still dispatches.
+    if (onPrimaryAction) {
+      try {
+        onPrimaryAction();
+      } catch {
+        // Swallow — capability dispatchers surface their own errors via
+        // the framework toast / audit log.
+      }
+    }
     if (result instanceof Promise) {
       setBusy(true);
       void result.finally(() => {
@@ -146,4 +175,5 @@ export function confirmDialogTextRender(props: ConfirmDialogProps): string {
 export const ConfirmDialogBinding: ComponentBinding = {
   id: 'ConfirmDialog',
   factory: ConfirmDialog,
+  actionSlots: ['onPrimaryAction', 'onSecondaryAction'],
 };

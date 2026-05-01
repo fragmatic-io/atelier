@@ -86,4 +86,25 @@ describe('Button', () => {
   it('binding id matches', () => {
     expect(ButtonBinding.id).toBe('Button');
   });
+  it('binding declares actionSlots: [onPrimaryAction]', () => {
+    expect(ButtonBinding.actionSlots).toEqual(['onPrimaryAction']);
+  });
+  it('wires onPrimaryAction to onClick when no explicit onClick is set', () => {
+    const fn = vi.fn();
+    render(<Button onPrimaryAction={fn}>x</Button>);
+    fireEvent.click(screen.getByRole('button'));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+  it('explicit onClick wins over onPrimaryAction', () => {
+    const click = vi.fn();
+    const action = vi.fn();
+    render(
+      <Button onClick={click} onPrimaryAction={action}>
+        x
+      </Button>,
+    );
+    fireEvent.click(screen.getByRole('button'));
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(action).not.toHaveBeenCalled();
+  });
 });

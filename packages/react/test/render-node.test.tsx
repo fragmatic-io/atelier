@@ -60,7 +60,7 @@ describe('RenderNode', () => {
     warn.mockRestore();
   });
 
-  it('passes action props that dispatch on call', async () => {
+  it('passes action props that dispatch on call (legacy capability-id-as-prop)', async () => {
     function Btn(props: Record<string, unknown>): React.ReactElement {
       const fn = props['thread.archive'] as (input: unknown) => Promise<unknown>;
       return (
@@ -109,6 +109,102 @@ describe('RenderNode', () => {
       return Promise.resolve();
     });
     expect(services.dispatcher.canUndo()).toBe(true);
+  });
+
+  it('maps node.actions to declared actionSlots when the binding declares them', async () => {
+    function Btn(props: Record<string, unknown>): React.ReactElement {
+      const fn = props['onPrimaryAction'] as (input: unknown) => Promise<unknown>;
+      return (
+        <button
+          data-testid="btn"
+          onClick={() => {
+            void fn({ thread_id: 't1' });
+          }}
+        >
+          go
+        </button>
+      );
+    }
+    const registry = new MapComponentRegistry({
+      Stack: {
+        id: 'Stack',
+        factory: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+      },
+      ActionBar: { id: 'ActionBar', factory: Btn, actionSlots: ['onPrimaryAction'] },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Stack',
+            children: [{ component: 'ActionBar', actions: ['thread.archive'] }],
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({
+      componentRegistry: registry,
+      capabilities: { 'thread.archive': archiveCapability() },
+    });
+    services.actions.register('thread.archive', () => Promise.resolve({ archived_at: 'x' }));
+    const { getByTestId } = render(
+      <CirRuntime services={services}>
+        <RenderNode node={plan.root} />
+      </CirRuntime>,
+    );
+    await act(() => {
+      getByTestId('btn').click();
+      return Promise.resolve();
+    });
+    expect(services.dispatcher.canUndo()).toBe(true);
+  });
+
+  it('warns once per binding when actions are wired without actionSlots', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    function Btn(): React.ReactElement {
+      return <button data-testid="btn">go</button>;
+    }
+    const registry = new MapComponentRegistry({
+      Stack: {
+        id: 'Stack',
+        factory: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+      },
+      ActionBar: { id: 'ActionBar', factory: Btn },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Stack',
+            children: [
+              { component: 'ActionBar', actions: ['thread.archive'] },
+              { component: 'ActionBar', actions: ['thread.archive'] },
+            ],
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({
+      componentRegistry: registry,
+      capabilities: { 'thread.archive': archiveCapability() },
+    });
+    render(
+      <CirRuntime services={services}>
+        <RenderNode node={plan.root} />
+      </CirRuntime>,
+    );
+    const legacyCalls = warn.mock.calls.filter((call: unknown[]) => {
+      const msg = call[0];
+      return typeof msg === 'string' && msg.includes('actionSlots');
+    });
+    expect(legacyCalls).toHaveLength(1);
+    warn.mockRestore();
   });
 
   it('recurses into children', () => {

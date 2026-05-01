@@ -7,6 +7,12 @@
  * Wave 7b (Vis-3): optional `icon` prop renders an `<Icon>` before the
  * children. The icon is decorative (aria-hidden) so the button's accessible
  * name still comes from `children` or an explicit `aria-label`.
+ *
+ * Phase 2 #2 — capability dispatch is first-class (ethos principle #8).
+ * `ButtonBinding` declares `actionSlots: ['onPrimaryAction']`. The renderer
+ * maps `node.actions[0]` to `props.onPrimaryAction`; this component wires
+ * that handler to `onClick` (preventing the default form submission). No
+ * dotted-key prop names ever reach `<button>`.
  */
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
@@ -43,31 +49,14 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
    * Prefer `children` when both exist.
    */
   label?: string;
-}
-
-/**
- * Strip prop names that aren't valid React DOM attributes. The manifest
- * renderer wires capability dispatchers as `props['app.cart.add'] = fn`,
- * which React DOM rejects on a `<button>`. We pull those out and bind
- * the first one to `onClick` so the manifest's intent (a button that
- * triggers an action) actually fires.
- */
-function partitionCapabilityProps(rest: Record<string, unknown>): {
-  domSafe: Record<string, unknown>;
-  firstAction: ((input?: unknown) => unknown) | null;
-} {
-  const domSafe: Record<string, unknown> = {};
-  let firstAction: ((input?: unknown) => unknown) | null = null;
-  for (const [key, value] of Object.entries(rest)) {
-    if (key.includes('.') && typeof value === 'function') {
-      if (firstAction === null) {
-        firstAction = value as (input?: unknown) => unknown;
-      }
-      continue; // do not forward to DOM
-    }
-    domSafe[key] = value;
-  }
-  return { domSafe, firstAction };
+  /**
+   * Manifest-driven primary action. The render-node wires
+   * `node.actions[0]` to this prop (binding declares
+   * `actionSlots: ['onPrimaryAction']`). When supplied without an explicit
+   * `onClick`, the button binds it to `onClick` and prevents the default
+   * to keep the manifest's intent fireable.
+   */
+  onPrimaryAction?: (input?: unknown) => unknown;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -81,18 +70,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     children,
     label,
     onClick,
+    onPrimaryAction,
     ...rest
   }: ButtonProps,
   ref,
 ): ReactNode {
-  const { domSafe, firstAction } = partitionCapabilityProps(rest);
   const handleClick: ButtonHTMLAttributes<HTMLButtonElement>['onClick'] | undefined =
     onClick !== undefined
       ? onClick
-      : firstAction !== null
+      : onPrimaryAction !== undefined
         ? (event) => {
             event.preventDefault();
-            firstAction();
+            onPrimaryAction();
           }
         : undefined;
   const resolvedChildren =
@@ -114,7 +103,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         ...style,
       }}
       onClick={handleClick}
-      {...domSafe}
+      {...rest}
     >
       {icon !== undefined ? (
         <Icon set={icon.set} name={icon.name} size={BUTTON_ICON_SIZE[size]} />
@@ -132,4 +121,8 @@ export function buttonTextRender(props: ButtonProps): string {
   const text = fromChildren !== '' ? fromChildren : (props.label ?? '');
   return text !== '' ? `[Button: ${text}]` : '[Button]';
 }
-export const ButtonBinding: ComponentBinding = { id: 'Button', factory: Button };
+export const ButtonBinding: ComponentBinding = {
+  id: 'Button',
+  factory: Button,
+  actionSlots: ['onPrimaryAction'],
+};

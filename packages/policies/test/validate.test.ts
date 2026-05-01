@@ -21,6 +21,7 @@ describe('validateManifest', () => {
       'respects_brand_kit',
       'empty_loading_error_handled',
       'composes_hierarchy_for_long_lists',
+      'actions_match_action_slots',
     ]);
   });
 

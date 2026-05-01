@@ -59,6 +59,7 @@ const DENSITY_AWARE_COMPONENTS = new Set<string>([
 ]);
 
 const warned = new Set<string>();
+const warnedLegacyActions = new Set<string>();
 
 function warnMissingBinding(componentId: string): void {
   if (warned.has(componentId)) return;
@@ -66,9 +67,26 @@ function warnMissingBinding(componentId: string): void {
   console.warn(`[cir/react] No component binding registered for "${componentId}"`);
 }
 
+/**
+ * One-shot warning for bindings that still use the legacy
+ * `props[capabilityId] = dispatch` convention. Emitted once per
+ * `componentId` so devs see exactly which bindings need an `actionSlots`
+ * upgrade without spamming the console on every render.
+ */
+function warnLegacyActionDispatch(componentId: string): void {
+  if (warnedLegacyActions.has(componentId)) return;
+  warnedLegacyActions.add(componentId);
+  console.warn(
+    `[cir/react] Component binding "${componentId}" has node.actions but no actionSlots. ` +
+      `Falling back to legacy capability-id-as-prop dispatch. Declare actionSlots on the ` +
+      `binding (e.g. ['onPrimaryAction']) to migrate — the legacy path is deprecated.`,
+  );
+}
+
 /** Test-only: clear the de-dup set so successive tests can assert warnings. */
 export function __resetMissingBindingWarnings(): void {
   warned.clear();
+  warnedLegacyActions.clear();
 }
 
 function useResolvedData(binding: DataBinding | undefined): {
@@ -157,8 +175,28 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
     props['error'] = error;
   }
 
-  for (const capabilityId of node.actions ?? []) {
-    props[capabilityId] = (input?: unknown) => dispatch(capabilityId, input);
+  // Capability dispatch (ethos principle #8). When the binding declares
+  // ordered `actionSlots`, map each `node.actions[i]` to `actionSlots[i]`
+  // — components see normal, DOM-safe React props (`onPrimaryAction`).
+  // When `actionSlots` is absent we fall back to the legacy
+  // capability-id-as-prop path so existing custom bindings keep working,
+  // and emit a one-shot console.warn so the author knows to migrate.
+  const actions = node.actions ?? [];
+  if (actions.length > 0) {
+    const slots = node.binding.actionSlots;
+    if (slots !== undefined) {
+      for (let i = 0; i < actions.length; i++) {
+        const capabilityId = actions[i];
+        const slot = slots[i];
+        if (capabilityId === undefined || slot === undefined) continue;
+        props[slot] = (input?: unknown) => dispatch(capabilityId, input);
+      }
+    } else {
+      warnLegacyActionDispatch(node.componentId);
+      for (const capabilityId of actions) {
+        props[capabilityId] = (input?: unknown) => dispatch(capabilityId, input);
+      }
+    }
   }
 
   const children: ReactNode =

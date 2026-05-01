@@ -103,6 +103,7 @@ export {
 // Registries
 // -----------------------------------------------------------------------------
 export {
+  actionSlotsFromBindings,
   compositionRolesFromBindings,
   EMPTY_REGISTRY,
   MapComponentRegistry,

@@ -64,6 +64,21 @@ export interface BulkActionBarProps {
   className?: string;
   /** Visual variant. Reserved for future extension; only `default` ships today. */
   variant?: BulkActionBarVariant;
+  /**
+   * Manifest-driven primary capability dispatcher (Phase 2 #2). When a
+   * manifest declares `actions: [...]` on a `BulkActionBar` node, the
+   * render-node wires the first capability to this slot. The bar surfaces
+   * it through `onAction(id)` for any action whose `id` matches the
+   * declared capability, so hosts that route bulk-action clicks through
+   * the framework dispatcher have a stable, DOM-safe prop name.
+   *
+   * Most hosts use the existing `onAction` + capability lookup pattern and
+   * leave this unset; it's declared so the binding can advertise an
+   * `actionSlots` entry for the contract.
+   */
+  onPrimaryAction?: (input?: unknown) => unknown;
+  /** Optional secondary capability dispatcher; second `actions[]` entry. */
+  onSecondaryAction?: (input?: unknown) => unknown;
 }
 
 function prefersReducedMotion(): boolean {
@@ -87,6 +102,10 @@ export function BulkActionBar({
   onClear,
   className,
   variant = 'default',
+  // Declared for the actionSlots contract; not consumed by the bar itself
+  // — the existing `onAction` + per-action `id` flow is preserved.
+  onPrimaryAction: _onPrimaryAction,
+  onSecondaryAction: _onSecondaryAction,
 }: BulkActionBarProps): ReactNode {
   const labelId = useId();
   const [mounted, setMounted] = useState(false);
@@ -207,4 +226,5 @@ export function bulkActionBarTextRender(props: Partial<BulkActionBarProps>): str
 export const BulkActionBarBinding: ComponentBinding = {
   id: 'BulkActionBar',
   factory: BulkActionBar as ComponentBinding['factory'],
+  actionSlots: ['onPrimaryAction', 'onSecondaryAction'],
 };

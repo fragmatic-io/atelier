@@ -54,6 +54,31 @@ export interface ComponentBinding {
    * the purposes of the composition policies. See `CompositionRole`.
    */
   compositionRole?: CompositionRole;
+  /**
+   * Optional ordered list of action-slot prop names this binding accepts.
+   * The renderer maps `node.actions[i]` to `actionSlots[i]`, setting
+   * `props[actionSlots[i]] = (input) => dispatch(node.actions[i], input)`.
+   *
+   * Why this exists (Phase 2 #2 — capability dispatch is first-class, ethos
+   * principle #8): React DOM rejects dotted prop names like
+   * `'app.cart.add'` on host elements (`<button>`, `<div>`). Pre-`actionSlots`
+   * the renderer set capability ids as prop names directly, forcing every
+   * actionable component to defend itself with a per-component capability-
+   * id-as-prop filter. Declaring named slots (`['onPrimaryAction',
+   * 'onSecondaryAction']`) lets components consume action handlers as
+   * normal React props with stable, DOM-safe names.
+   *
+   * Backwards compat: bindings WITHOUT `actionSlots` keep the legacy
+   * behaviour (capability id is set as a prop name directly). The renderer
+   * emits a one-shot `console.warn` per such binding so authors know to
+   * migrate. New custom bindings should declare `actionSlots` from day one.
+   *
+   * Order is significant. `node.actions[0]` always maps to `actionSlots[0]`,
+   * `node.actions[1]` to `actionSlots[1]`, etc. Excess actions (more than
+   * `actionSlots.length`) are flagged by the
+   * `actions_match_action_slots` baseline policy.
+   */
+  actionSlots?: readonly string[];
 }
 
 export interface ComponentRegistry {
@@ -118,6 +143,27 @@ export function compositionRolesFromBindings(
   const out: Record<string, CompositionRole> = {};
   for (const [id, binding] of Object.entries(bindings)) {
     if (binding.compositionRole !== undefined) out[id] = binding.compositionRole;
+  }
+  return out;
+}
+
+/**
+ * Build a `componentId -> readonly string[]` map of declared `actionSlots`
+ * from a registry-like `Record<string, ComponentBinding>`. Bindings without
+ * declared slots are omitted (the policy treats absent entries as
+ * "unknown — no upper bound", matching the renderer's legacy fallback).
+ *
+ * Hosts pass this into `PolicyContext.action_slots` so the
+ * `actions_match_action_slots` baseline policy can flag manifests that
+ * declare more `node.actions` than the binding can route. See
+ * `packages/policies/src/baseline/actions_match_action_slots.ts`.
+ */
+export function actionSlotsFromBindings(
+  bindings: Readonly<Record<string, ComponentBinding>>,
+): Readonly<Record<string, readonly string[]>> {
+  const out: Record<string, readonly string[]> = {};
+  for (const [id, binding] of Object.entries(bindings)) {
+    if (binding.actionSlots !== undefined) out[id] = binding.actionSlots;
   }
   return out;
 }

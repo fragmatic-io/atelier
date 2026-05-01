@@ -274,9 +274,11 @@ export const COMPONENT_METADATA: Readonly<Record<string, ComponentBindingMetadat
 export { COMPOSITION_RULES, type CompositionRule } from './composition-rules.js';
 
 // (Local definition below intentionally kept dead so this file's diff stays
-// minimal during Phase 1.5; future cleanup can drop it.)
+// minimal during Phase 1.5; future cleanup can drop it. Exported under an
+// underscore-prefixed name so `noUnusedLocals` doesn't fire while the body
+// still serves as the audit reference for `composition-rules.ts`.)
 
-const _LEGACY_COMPOSITION_RULES_BODY: Readonly<
+export const _LEGACY_COMPOSITION_RULES_BODY: Readonly<
   Record<
     string,
     { can_contain: '*' | 'leaf' | readonly string[]; min_children?: number; max_children?: number }

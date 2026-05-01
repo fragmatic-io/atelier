@@ -37,6 +37,7 @@ export { PolicyRegistry } from './registry.js';
 // -----------------------------------------------------------------------------
 // Individual baseline policies (re-exported for granular composition)
 // -----------------------------------------------------------------------------
+export { actionsMatchActionSlots } from './baseline/actions_match_action_slots.js';
 export { composesHierarchyForLongLists } from './baseline/composes_hierarchy_for_long_lists.js';
 export { dataAccessWithinGrant } from './baseline/data_access_within_grant.js';
 export {

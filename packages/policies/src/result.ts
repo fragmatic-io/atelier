@@ -93,6 +93,18 @@ export interface PolicyContext {
    * without an entry are unaffected. See `CompositionRole`.
    */
   composition_roles?: Readonly<Record<string, CompositionRole>> | undefined;
+  /**
+   * Optional map from `componentId` to its declared `actionSlots` (ordered
+   * list of capability-dispatcher prop names). Surfaced from the runtime
+   * registry via `actionSlotsFromBindings()` and consumed by the
+   * `actions_match_action_slots` baseline policy: a manifest node with
+   * `actions: [...]` may not declare more capabilities than the binding
+   * has slots for. Bindings without an entry are unconstrained (matching
+   * the renderer's legacy fallback path).
+   *
+   * Source: Phase 2 #2 — capability dispatch is first-class (ethos #8).
+   */
+  action_slots?: Readonly<Record<string, readonly string[]>> | undefined;
 }
 
 /** A pure-function policy. */
