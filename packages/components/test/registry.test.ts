@@ -128,10 +128,16 @@ describe('COMPOSITION_RULES', () => {
     expect(r.max_children).toBe(50);
   });
 
-  it('Card restricts to known display children', () => {
+  it('Card accepts wildcard children (legacy panel + tile-mode dual usage)', () => {
+    // Marketplace pivot — `<Card>` is dual-mode now. Legacy panel mode
+    // wraps a body composed of layout/display children; tile mode is
+    // rendered as a child of `<Grid data={...}>` with NO manifest
+    // children (image/title/subtitle/price/badge/actions come from props
+    // and `data` defaults). The composition rule was widened to '*' and
+    // the min_children floor was dropped accordingly.
     const r = COMPOSITION_RULES['Card']!;
-    expect(Array.isArray(r.can_contain)).toBe(true);
-    expect(r.can_contain).toEqual(['Stack', 'Grid', 'Markdown', 'Table', 'EmptyState']);
+    expect(r.can_contain).toBe('*');
+    expect(r.min_children).toBeUndefined();
   });
 
   it('layout containers Tabs/Accordion/Modal/Drawer/List/ButtonGroup/Form accept wildcard children', () => {

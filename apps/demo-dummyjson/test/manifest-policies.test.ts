@@ -3,6 +3,12 @@
 /**
  * Manifest ↔ baseline-policy contract for the dummyjson catalog demo.
  *
+ * Marketplace pivot: `<ProductCard>` and `<ProductGrid>` are gone — the
+ * `/browse` body composes baseline `<Grid data={products}>` + a single
+ * `<Card>` template child. The data-aware Grid threads each product onto
+ * the Card's `data` prop and the runtime forwards `onAction` per-item
+ * via `actionSlots: ['onAction']` on both bindings.
+ *
  * Pre-Phase-2 the manifests carried two band-aid nodes solely to satisfy
  * policy walkers: a hidden `<StatCard>` style of quota anchor, and an
  * off-screen `<Stack>` of `<Button>`s for `cart.remove` / `cart.add` so
@@ -10,20 +16,19 @@
  * replaces both with **ambient policy satisfiers** declared at the
  * services bag level (see `lib/cir-providers.tsx`):
  *
- *   - `<MarigoldHeader>` carries the `*.rate_limit` data binding AND the
- *     host declares the chip as an `AmbientPolicySatisfier` so the
- *     `rate_limited_actions_show_state` policy is satisfied without an
- *     in-tree quota anchor.
- *   - `<ProductGrid>` / `<CartItemList>` raise an inline undo toast on
- *     every reversible mutation; the host declares the ambient
- *     `<UndoToast>` so `reversibility_surfaced` is satisfied without
- *     in-tree rollback `<Button>`s.
+ *   - The chrome `<StatusBar>` carries the `*.rate_limit` data binding
+ *     AND the host declares the chip as an `AmbientPolicySatisfier` so
+ *     the `rate_limited_actions_show_state` policy is satisfied without
+ *     an in-tree quota anchor.
+ *   - The data-bound nodes raise an inline undo toast on every reversible
+ *     mutation; the host declares the ambient `<UndoToast>` so
+ *     `reversibility_surfaced` is satisfied without in-tree rollback
+ *     `<Button>`s.
  *
- * `<ProductGrid>` is a custom binding declaring `compositionRole: 'grid'`
- * (see `lib/component-bindings.ts`). The policy engine reads the
+ * `<CartItemList>` declares `compositionRole: 'list'` (see
+ * `lib/component-bindings.ts`). The policy engine reads the
  * `composition_roles` map off `PolicyContext` so it treats
- * `<ProductGrid>` like the baseline `<Grid>` for composition
- * allow-listing.
+ * `<CartItemList>` like the baseline `<List>` for composition allow-listing.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -40,13 +45,7 @@ import {
 import { manifestContractsFromBindings } from '@cir/runtime';
 import { DUMMYJSON_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
-import {
-  browseManifest,
-  browseManifestRowBinding,
-  cartManifest,
-  checkoutManifest,
-  productManifest,
-} from '../lib/manifests';
+import { browseManifest, cartManifest, checkoutManifest, productManifest } from '../lib/manifests';
 import type { Density } from '@cir/components';
 
 /**
@@ -55,12 +54,11 @@ import type { Density } from '@cir/components';
  * because it pulls in the React component factories via `@/components/*`
  * — those tsx imports would fail under vitest's module resolver in this
  * harness without a per-app vitest config. Keeping the role map mirrored
- * here is fine: the field shape is small (3 entries) and any drift trips
- * the binding-roles test below.
+ * here is fine: the field shape is small and any drift trips the
+ * binding-roles test below.
  */
 const DEMO_DUMMYJSON_COMPOSITION_ROLES: Readonly<Record<string, 'list' | 'grid' | 'table'>> =
   Object.freeze({
-    ProductGrid: 'grid',
     CartItemList: 'list',
   });
 
@@ -245,8 +243,9 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       'Timeline',
       'Gallery',
       'Tree',
-      // Custom bindings that play list/grid/detail roles.
-      'ProductGrid',
+      // Custom bindings that play list/detail roles. ProductGrid was
+      // retired in the marketplace pivot — the baseline `<Grid>` is the
+      // data-bound node now.
       'CartItemList',
       'ProductDetail',
     ]);
@@ -287,42 +286,13 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
     expect(missing).toEqual([]);
   });
 
-  // Phase 2 #3 — the alternate `/browse` manifest uses `<Grid row_binding>`
-  // instead of the `<ProductGrid>` wrapper. It must satisfy the same
-  // baseline policies (no error-severity violations) and crucially must
-  // satisfy `composes_hierarchy_for_long_lists` via the row_binding path
-  // (rich rows substitute for `density:'compact'` / `emphasizeTopN` /
-  // KPIRow). The wrapper-tax demo (browseManifest) leaves
-  // `<ProductGrid>` registered for the LLM compiler; this test guards
-  // the no-wrapper alternative.
-  it('Phase 2 #3 — alternate row_binding manifest passes baseline policies', () => {
-    const errors: string[] = [];
-    const warns: string[] = [];
-    for (const density of DENSITIES) {
-      const m = browseManifestRowBinding(density);
-      const res = validate(m);
-      for (const v of res.violations) {
-        const line = `[${v.policy_id}] ${v.message}`;
-        if (v.severity === 'error') errors.push(`browse-rb@${density}: ${line}`);
-        else warns.push(`browse-rb@${density}: ${line}`);
-      }
-    }
-    if (errors.length > 0) {
-      throw new Error(`Baseline errors:\n  ${errors.join('\n  ')}`);
-    }
-    expect(errors).toEqual([]);
-    // No `composes_hierarchy_for_long_lists` warns either — the row_binding
-    // is the satisfying clause.
-    const hierarchyWarns = warns.filter((w) => w.includes('composes_hierarchy_for_long_lists'));
-    expect(hierarchyWarns).toEqual([]);
-  });
-
-  it('ProductGrid is recognised as a Grid via composition_roles', () => {
+  it('CartItemList is recognised as a List via composition_roles', () => {
     // The `composes_according_to_rules` policy looks up `node.component`
-    // against the rule map. Without `composition_roles`, ProductGrid
+    // against the rule map. Without `composition_roles`, CartItemList
     // would be unknown — but with the role map threaded through it
-    // inherits the baseline `Grid` rule (`can_contain: '*'`).
-    expect(DEMO_DUMMYJSON_COMPOSITION_ROLES['ProductGrid']).toBe('grid');
+    // inherits the baseline `List` rule (`can_contain: '*'`).
     expect(DEMO_DUMMYJSON_COMPOSITION_ROLES['CartItemList']).toBe('list');
+    // ProductGrid was retired — the role map no longer carries it.
+    expect(DEMO_DUMMYJSON_COMPOSITION_ROLES['ProductGrid']).toBeUndefined();
   });
 });

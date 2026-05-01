@@ -25,7 +25,27 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useDispatcher } from '@cir/react';
 import type { Density } from '@cir/components';
-import type { DummyJsonProduct } from './ProductCard.js';
+
+/**
+ * Mirror of the dummyjson product envelope. Mirrored here (rather than
+ * imported from `./ProductCard`) since the marketplace pivot retired the
+ * `<ProductCard>` custom — `<Card>` baseline now serves as the tile and
+ * the type lives close to the only remaining custom that consumes it.
+ */
+export interface DummyJsonProduct {
+  id: number;
+  title: string;
+  description?: string;
+  brand?: string;
+  category?: string;
+  price: number;
+  /** dummyjson surfaces this as "percent off the listed price". */
+  discountPercentage?: number;
+  rating?: number;
+  stock?: number;
+  thumbnail?: string;
+  images?: readonly string[];
+}
 
 export interface ProductDetailProps {
   data?: DummyJsonProduct | null;

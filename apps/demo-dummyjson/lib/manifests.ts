@@ -5,31 +5,35 @@
  * `FallbackCompiler` calls `manifestForRoute` on a cache miss; without a
  * Gemini key set, this is the only source the compiler ever sees.
  *
- * The headline trick is **lens-driven layout**: `<ProductGrid>` reads the
- * intent profile's `density` and renders a single-column rich list at
- * compact, a 3-column card grid at comfortable, and a 2-column oversized
- * grid at spacious. The renderer threads density into every layout
- * component below the route root.
+ * The headline trick is **lens-driven layout**: the manifest emits a
+ * different `<Grid columns>` per density (1 / 3 / 2) and threads that
+ * density into the per-tile `<Card>`s, so compact serves a single-column
+ * rich list, comfortable serves a 3-column tile grid, and spacious serves
+ * a 2-column oversized grid.
  *
- * What changed in this rev (E-B → Phase 2 #5):
+ * What changed in this rev (marketplace pivot — `<ProductCard>` and
+ * `<ProductGrid>` collapsed onto baseline composition):
  *
- *   - `/browse`: the body is now a single `<ProductGrid>` (not a generic
- *     `<Grid>`) so cards render with image / brand / title / price / rating
- *     / "Add to cart" without any per-cell template needed in the manifest.
- *     The grid declares `compositionRole: 'grid'` via its binding, so the
- *     baseline `composes_*` policies still allow-list it.
- *   - The off-screen `REVERSIBILITY_ANCHOR_NODE` (a hidden `<Stack>` of
- *     "Restore last removed" / "Undo last add" ghost buttons) is **gone**.
+ *   - `/browse`: the body is a baseline `<Grid data={products}>` declaring
+ *     a single `<Card>` template child. The Grid threads each item as the
+ *     Card's `data` prop; the Card pulls its tile fields (`image`, `title`,
+ *     `subtitle`, `price`, `badge`) from the item shape automatically. The
+ *     manifest's `actions: ['dummyjson.cart.add', ...]` list is wired
+ *     through `actionSlots: ['onAction']` on `<Grid>` and forwarded onto
+ *     each rendered Card so per-item dispatch works without per-cell
+ *     wiring. No `<ProductGrid>` wrapper, no `<ProductCard>` row.
+ *   - The off-screen `REVERSIBILITY_ANCHOR_NODE` is **gone**.
  *     Reversibility is surfaced ambiently by the `<UndoToast>` mounted at
  *     the app root by `<CirProviders>`, declared as an
  *     `AmbientPolicySatisfier` for `reversibility_surfaced`.
  *   - `/cart`: real `<CartItemList>` with line items, totals, and a
- *     designed empty state. No bulk-action ceremony.
+ *     designed empty state. (Still custom — follow-up.)
  *   - `/product/[id]`: real `<ProductDetail>` (gallery + info + qty + add
- *     to cart). Recommendations rail still rides the `dummyjson.product
- *     .recommendations` capability via a baseline `<List>`.
+ *     to cart). (Still custom — follow-up.) Recommendations rail rides the
+ *     `dummyjson.product.recommendations` capability via a baseline
+ *     `<List>`.
  *   - `/checkout`: real `<CheckoutWizard>` with three steps and progressive
- *     disclosure (Shipping → Payment → Review).
+ *     disclosure. (Still custom — follow-up.)
  *
  * Policy obligations the manifests still satisfy:
  *
@@ -140,9 +144,9 @@ function chromeHeader(activePath: string): LayoutNode {
 // Pre-Phase-2-#5, this module exported a `REVERSIBILITY_ANCHOR_NODE` —
 // an off-screen `<Stack>` of `<Button>`s carrying `cart.add` / `cart.remove`
 // just to satisfy the `reversibility_surfaced` policy walker. That node
-// was a band-aid: `<ProductGrid>` / `<CartItemList>` already raise an
-// inline undo toast, AND the runtime mounts a global `<UndoToast>` at
-// the app root. Phase 2 #5 lets the host declare those services as
+// was a band-aid: the data-bound nodes already raise an inline undo
+// toast, AND the runtime mounts a global `<UndoToast>` at the app root.
+// Phase 2 #5 lets the host declare those services as
 // `AmbientPolicySatisfier`s in `cir-providers.tsx`, so the policy clears
 // the obligation without an in-manifest anchor. The constant is gone;
 // the manifests below are the actual rendered tree.
@@ -181,8 +185,21 @@ const DENSITY_TAG: Readonly<Record<Density, string>> = Object.freeze({
 });
 
 export function browseManifest(density: Density): Manifest {
-  const productGridNode = {
-    component: 'ProductGrid',
+  const columns = density === 'compact' ? 1 : density === 'spacious' ? 2 : 3;
+  // Marketplace pivot: the body is a baseline `<Grid>` with a `<Card>`
+  // template child. The Grid threads each product as the Card's `data`
+  // prop; the Card derives image/title/subtitle/price/badge from the
+  // product shape. The runtime wires `onAction` through `actionSlots:
+  // ['onAction']` on Grid, forwards it to each Card, and the Card's
+  // declarative footer button dispatches `dummyjson.cart.add`.
+  //
+  // Trade-off: the previous `<ProductGrid>` rendered an inline filter bar
+  // (search + category chips + in-stock toggle). Composing that off
+  // baseline is a separate decision (the manifest could add a sibling
+  // `<FilterBar>` tomorrow); this commit drops the pretty-printed
+  // categories prop in exchange for losing the bespoke binding.
+  const gridNode: LayoutNode = {
+    component: 'Grid',
     data: {
       source: 'dummyjson.product.list',
       sort: 'rating desc',
@@ -197,11 +214,17 @@ export function browseManifest(density: Density): Manifest {
       },
     },
     actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
-    props: {
-      density,
-      categories: ['smartphones', 'laptops', 'fragrances', 'skincare', 'groceries'],
-    },
-    children: [],
+    props: { columns, density },
+    children: [
+      {
+        component: 'Card',
+        props: {
+          variant: 'bordered' as const,
+          actions: [{ id: 'dummyjson.cart.add', label: 'Add', variant: 'primary' as const }],
+        },
+        children: [],
+      },
+    ],
   };
 
   return {
@@ -229,94 +252,7 @@ export function browseManifest(density: Density): Manifest {
                   'Browse',
                   '30 products across smartphones, laptops, fragrances, skincare, groceries. Switch density at /settings/lens.',
                 ),
-                productGridNode,
-              ],
-            },
-          ],
-        },
-        refresh: {
-          data: 'on_focus + 600s_interval',
-          structure: 'on_intent_change:density',
-        },
-      },
-    ],
-  };
-}
-
-/**
- * Alternate `/browse` manifest demonstrating Phase 2 #3 — the
- * **manifest-referenced row-renderer binding**. Where `browseManifest`
- * mounts a custom `<ProductGrid>` (a wrapper that hardcodes `<ProductCard>`
- * as its row), this builder uses the baseline `<Grid>` and names
- * `<ProductCard>` directly via `row_binding`. The runtime resolves the
- * row factory through the registry and threads it as `renderItem`. The
- * rendered DOM is materially the same as the wrapper-tax version (cards
- * with image, brand, price, rating, add-to-cart) without forcing a
- * per-demo `<ProductGrid>` wrapper.
- *
- * Kept alongside `browseManifest` (rather than replacing it) so the LLM
- * compiler retains the wrapper as a vocabulary entry — the compiler can
- * still reach for `<ProductGrid>` when its catalog summary names that
- * binding. The `row_binding` form is the path that does NOT require the
- * wrapper to exist, and is the preferred shape going forward (per
- * `docs/ethos.md` principle #3 — composition, not invention).
- */
-export function browseManifestRowBinding(density: Density): Manifest {
-  const gridNode: LayoutNode = {
-    component: 'Grid',
-    data: {
-      source: 'dummyjson.product.list',
-      sort: 'rating desc',
-      // Phase 2 #4: loading + error fall through to resolver defaults.
-      // Only the distinctive empty-state copy stays inline.
-      empty_state: {
-        component: 'EmptyState',
-        props: {
-          title: 'Nothing here yet',
-          body: 'Adjust the filters or clear the search to see more results.',
-        },
-        children: [],
-      },
-    },
-    actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
-    // Phase 2 #3 — name the row factory by id. The runtime adapter
-    // resolves it against the registry and threads it as `renderItem`.
-    row_binding: 'ProductCard',
-    props: {
-      density,
-      columns: density === 'compact' ? 1 : density === 'spacious' ? 2 : 3,
-    },
-    children: [],
-  };
-  return {
-    manifest_id: `m_brwrb${DENSITY_TAG[density]}001`,
-    user_id: 'demo-user',
-    app_id: 'cir.demo-dummyjson',
-    compiled_from: COMPILED_FROM,
-    ttl: null,
-    invalidates_on: INVALIDATES_ON,
-    policies_satisfied: POLICIES_SATISFIED,
-    routes: [
-      {
-        path: '/browse',
-        title: 'Browse',
-        layout: {
-          component: 'Container',
-          props: { maxWidth: 'lg' as const, density },
-          children: [
-            {
-              component: 'Stack',
-              props: { direction: 'vertical' as const, gap: 'lg' as const, density },
-              children: [
-                chromeHeader('/browse'),
-                PAGE_HEADER_NODE(
-                  'Browse',
-                  '30 products. The grid is the baseline `<Grid>` binding; rows are rendered by `<ProductCard>` via `row_binding` — no wrapper component required.',
-                ),
                 gridNode,
-                // Phase 2 #5: REVERSIBILITY_ANCHOR_NODE removed — runtime
-                // services declare ambient `reversibility_surfaced` via
-                // `<UndoToast>`. See `cir-providers.tsx`.
               ],
             },
           ],

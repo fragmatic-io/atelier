@@ -51,7 +51,7 @@ import { describe, expect, it } from 'vitest';
 const MAX_CUSTOM_BINDINGS: Readonly<Record<string, number>> = Object.freeze({
   'apps/demo': 0,
   'apps/demo-github': 0,
-  'apps/demo-dummyjson': 5,
+  'apps/demo-dummyjson': 3,
 });
 
 /**
@@ -64,12 +64,21 @@ const KNOWN_DOMAIN_CUSTOMS_FOLLOW_UP: Readonly<Record<string, readonly string[]>
   'apps/demo': [],
   'apps/demo-github': [],
   'apps/demo-dummyjson': [
-    // Domain-shape commerce primitives. ProductGrid collapses onto
-    // `<Grid>` + `<Card>` composition; ProductDetail onto
-    // `<DetailView>` + `<Gallery>` once those primitives gain the
-    // commerce-tuned variants. Marketplace plan §D.
-    'ProductCard',
-    'ProductGrid',
+    // Domain-shape commerce primitives still pending a baseline collapse.
+    // `ProductCard` and `ProductGrid` were retired this commit — the
+    // `/browse` body now composes baseline `<Grid data={...}>` + a
+    // single `<Card>` template child, with the runtime threading each
+    // product onto the Card's `data` prop and forwarding `onAction` per
+    // item. The remaining three:
+    //
+    //   - `ProductDetail` → `<DetailView>` + `<Gallery>` + `<Card>` once
+    //     those primitives gain the right commerce-tuned variants.
+    //   - `CartItemList` → `<List>` + a totals `<Card>` once the totals
+    //     surface becomes composable.
+    //   - `CheckoutWizard` → baseline `<Wizard>` + per-step `<Form>`
+    //     once Wizard accepts step data via `data`.
+    //
+    // Marketplace plan §D.
     'ProductDetail',
     'CartItemList',
     'CheckoutWizard',

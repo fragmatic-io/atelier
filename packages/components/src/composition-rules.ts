@@ -26,10 +26,15 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   // shaped manifest.
   Stack: { can_contain: '*', min_children: 1, max_children: 50 },
   Container: { can_contain: '*', min_children: 1 },
-  Card: {
-    can_contain: ['Stack', 'Grid', 'Markdown', 'Table', 'EmptyState'] as const,
-    min_children: 1,
-  },
+  // Card is dual-mode (marketplace pivot). Legacy: a bordered surface
+  // wrapping a body composed of Stack / Grid / Markdown / Table / EmptyState.
+  // Tile mode: a self-contained tile rendered inside a `<Grid data={...}>`
+  // where image / title / subtitle / price / badge / actions come from
+  // props (and `data` defaults), with NO manifest children. So we widen
+  // `can_contain` to '*' (a Card may legitimately wrap anything when used
+  // as a panel) and drop the min_children floor — the runtime fills tile
+  // fields from `data` when the manifest declared no children.
+  Card: { can_contain: '*' },
   Tabs: { can_contain: '*', min_children: 1 },
   Accordion: { can_contain: '*', min_children: 1 },
   Modal: { can_contain: '*', min_children: 1 },

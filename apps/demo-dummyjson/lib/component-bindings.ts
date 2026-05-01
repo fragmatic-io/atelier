@@ -3,25 +3,27 @@
 /**
  * Marigold demo — host-side `ComponentBinding`s.
  *
- * Marketplace pivot (this commit): three custom bindings retired by
- * collapsing onto baseline composition.
+ * Marketplace pivot continuation: `<ProductCard>` and `<ProductGrid>` are
+ * gone. The `/browse` route now composes baseline `<Grid data={products}>`
+ * + a single `<Card>` template child; the data-aware Grid threads each
+ * product onto the Card's `data` prop and the Card pulls its tile fields
+ * (image / title / subtitle / price / badge) from the product shape. The
+ * runtime wires per-item `onAction` dispatch through `actionSlots:
+ * ['onAction']` on both bindings — no host-side wrapper needed.
  *
- *   - `MarigoldHeader` → `<Stack(Logo, NavBar, StatusBar)>` pure baseline.
- *   - `Wordmark` → `<Logo>` baseline (glyph + wordmark lockup).
- *   - `RateLimitChip` → `<StatusBar>` bound to
- *     `dummyjson.cart.add.rate_limit`.
+ * What stays (three custom bindings — all genuine domain shapes still
+ * pending a baseline collapse):
  *
- * What stays (five custom bindings, all genuine domain shapes):
- *
- *   - `ProductCard` — single-product card (used inside `ProductGrid`).
- *   - `ProductGrid` — manifest-bound product catalog with
- *     `compositionRole: 'grid'` so the policy engine treats it like
- *     baseline `<Grid>`. Collapsing `ProductGrid` onto `<Grid>` + `<Card>`
- *     composition is on the marketplace plan as a follow-up.
- *   - `ProductDetail` — single-product surface for `/product/[id]`.
+ *   - `ProductDetail` — single-product surface for `/product/[id]`. Gallery
+ *     + info + qty + add-to-cart. Will collapse onto baseline `<DetailView>`
+ *     + `<Gallery>` + `<Card>` once those primitives gain the right
+ *     commerce-tuned variants. Marketplace plan §D follow-up.
  *   - `CartItemList` — `/cart` rows + totals + checkout CTA. Declares
- *     `compositionRole: 'list'`.
- *   - `CheckoutWizard` — the `/checkout` step flow.
+ *     `compositionRole: 'list'`. Will collapse onto baseline `<List>` +
+ *     `<Card>` totals once the totals card becomes composable.
+ *   - `CheckoutWizard` — the `/checkout` step flow. Will collapse onto
+ *     baseline `<Wizard>` + per-step `<Form>` once Wizard accepts step
+ *     data via `data` instead of children.
  *
  * The runtime registers these alongside `COMPONENT_BINDINGS` (the
  * baseline catalog). Any binding declaring a `compositionRole` is also
@@ -32,20 +34,7 @@
 import type { ComponentBinding } from '@cir/runtime';
 import { CartItemList } from '@/components/CartItemList';
 import { CheckoutWizard } from '@/components/CheckoutWizard';
-import { ProductCard } from '@/components/ProductCard';
 import { ProductDetail } from '@/components/ProductDetail';
-import { ProductGrid } from '@/components/ProductGrid';
-
-export const ProductCardBinding: ComponentBinding = {
-  id: 'ProductCard',
-  factory: ProductCard as ComponentBinding['factory'],
-};
-
-export const ProductGridBinding: ComponentBinding = {
-  id: 'ProductGrid',
-  factory: ProductGrid as ComponentBinding['factory'],
-  compositionRole: 'grid',
-};
 
 export const ProductDetailBinding: ComponentBinding = {
   id: 'ProductDetail',
@@ -72,8 +61,6 @@ export const CheckoutWizardBinding: ComponentBinding = {
  * regressions ("just add another custom") are surfaced.
  */
 export const DEMO_DUMMYJSON_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({
-  ProductCard: ProductCardBinding,
-  ProductGrid: ProductGridBinding,
   ProductDetail: ProductDetailBinding,
   CartItemList: CartItemListBinding,
   CheckoutWizard: CheckoutWizardBinding,

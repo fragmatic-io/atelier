@@ -11,10 +11,41 @@
  * cell per item (each cell wraps the rendered content with a checkbox)
  * and keys selection by `idOf(item, i) ?? item.id`. The legacy
  * `children` mode (no items) is unchanged.
+ *
+ * Marketplace pivot — `<Grid>` is now data-aware (mirrors `<List>`). When
+ * `data` (or `items`) is supplied:
+ *
+ *   - **Manifest declared a child template** (`children.length === 1`)
+ *     → render N copies of that child, threading each item via the
+ *     child's `data` prop. This is the path the manifest uses to compose
+ *     `<Grid data={products}>` over a `<Card>` template — the Card pulls
+ *     its tile fields from the threaded item.
+ *   - **No children declared** → default-render each item as a `<Card>`
+ *     tile (image / title / subtitle / price / badge defaults derived
+ *     from common product-shape fields). This is the zero-template form
+ *     a host can fall back on without authoring a Card node at all.
+ *   - **Custom `renderItem` supplied** (host-side React only — manifests
+ *     are JSON and can't pass functions) → unchanged from pre-pivot.
+ *
+ * Compositional rule remains `{ can_contain: '*' }`. The renderer treats
+ * the Grid as a leaf when `data`/`items` is supplied (rows come from the
+ * data binding, not manifest children).
+ *
+ * The runtime threads `onAction(actionId, item)` onto each rendered Card
+ * via the Grid's `actionSlots: ['onAction']` so per-item dispatch works
+ * without per-tile wiring.
  */
-import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  cloneElement,
+  isValidElement,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import type { ComponentBinding } from '@cir/runtime';
 import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
+import { Card } from './Card.js';
 import { STACK_GAP_PX, type StackGap } from './Stack.js';
 import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 import { DEFAULT_DENSITY, densityScaleGapPx, type Density } from './density.js';
@@ -43,6 +74,10 @@ export interface GridProps<T extends GridItem = GridItem> {
   /**
    * Wave 7b / Int-9 — opt-in items mode for selectable grids. When supplied
    * alongside `selectable`, each item renders as one cell with a checkbox.
+   *
+   * Marketplace pivot — `items` (or `data`) ALSO drives the data-aware
+   * tile path: when supplied, the Grid renders one cell per item, threading
+   * the item via the cell's `data` prop. See module-level docs.
    */
   items?: readonly T[];
   /**
@@ -52,8 +87,20 @@ export interface GridProps<T extends GridItem = GridItem> {
    * Mirrors the same fallback `<List>` ships (Phase 2 #3).
    */
   data?: unknown;
-  /** Renders the visible content of a single grid cell. Required when `items` is supplied. */
+  /**
+   * Renders the visible content of a single grid cell. When set, wins over
+   * the manifest-declared template / default Card render. Required for
+   * `selectable` + custom layouts; optional otherwise (the Grid falls back
+   * to its data-aware tile path).
+   */
   renderItem?: (item: T, index: number) => ReactNode;
+  /**
+   * Action slot — runtime-wired from the manifest's `actions` list via
+   * `actionSlots: ['onAction']`. When the Grid renders cells per item,
+   * `onAction` is threaded onto each rendered Card so per-item dispatch
+   * works without the manifest authoring per-cell wiring.
+   */
+  onAction?: (actionId: string, item?: unknown) => Promise<void> | void;
   /**
    * When true, Grid renders a checkbox over each cell and reflects
    * `data-selected` based on `selectedIds`. Requires `items` + `renderItem`.
@@ -83,6 +130,7 @@ export function Grid<T extends GridItem = GridItem>({
   items: itemsProp,
   data,
   renderItem,
+  onAction,
   selectable = false,
   idOf,
   selectedIds,
@@ -119,7 +167,7 @@ export function Grid<T extends GridItem = GridItem>({
       return String(index);
     });
   const effectiveSelected = selectedIds ?? localSelected;
-  const usingItems = Array.isArray(items) && typeof renderItem === 'function';
+  const usingItems = Array.isArray(items);
   const itemList: readonly T[] = items ?? [];
   const allIds = usingItems ? itemList.map((item, i) => idResolver(item, i)) : [];
   const emitSelection = (next: ReadonlySet<string>): void => {
@@ -155,6 +203,45 @@ export function Grid<T extends GridItem = GridItem>({
     emitSelection(new Set<string>());
   };
 
+  // Pick the per-cell render strategy when `items` is supplied.
+  //
+  //   1. Explicit `renderItem` wins — host-side React only.
+  //   2. Single manifest child → use it as a template; clone per item with
+  //      `data: item` (and forward `onAction` so per-item dispatch works).
+  //   3. No children → default-render as a `<Card data={item}>` tile; the
+  //      Card resolves its tile fields from the item shape.
+  //
+  // Manifests are JSON so paths (2) and (3) are the only ones a manifest
+  // can express — (1) exists for host-side composition.
+  const childArray = Array.isArray(children)
+    ? (children as ReactNode[])
+    : children !== undefined && children !== null
+      ? [children as ReactNode]
+      : [];
+  const validChildElements = childArray.filter((c) => isValidElement(c));
+  const templateChild = validChildElements.length === 1 ? validChildElements[0] : undefined;
+
+  function renderCell(item: T, index: number): ReactNode {
+    if (renderItem !== undefined) return renderItem(item, index);
+    if (templateChild !== undefined && isValidElement(templateChild)) {
+      // Thread the item via `data`; preserve the template's other props.
+      // Forward `onAction` only when the template hasn't declared its own,
+      // so per-item dispatch flows from the Grid's runtime-wired slot.
+      const existing = templateChild.props as Record<string, unknown>;
+      const next: Record<string, unknown> = { ...existing, data: item };
+      if (next['onAction'] === undefined && onAction !== undefined) {
+        next['onAction'] = onAction;
+      }
+      return cloneElement(templateChild, next);
+    }
+    // Default tile render. The Card pulls fields from `item`.
+    // We only thread `onAction` when set, since `exactOptionalPropertyTypes`
+    // disallows passing `undefined` through the Card's optional slot.
+    const cardProps: Record<string, unknown> = { data: item, density };
+    if (onAction !== undefined) cardProps['onAction'] = onAction;
+    return <Card {...cardProps} />;
+  }
+
   const renderedChildren: ReactNode = usingItems
     ? itemList.map((item, i) => {
         const id = idResolver(item, i);
@@ -162,7 +249,7 @@ export function Grid<T extends GridItem = GridItem>({
         if (!selectable) {
           return (
             <div key={id} data-cir-part="grid-item">
-              {renderItem ? renderItem(item, i) : null}
+              {renderCell(item, i)}
             </div>
           );
         }
@@ -186,7 +273,7 @@ export function Grid<T extends GridItem = GridItem>({
               }}
               style={{ position: 'absolute', top: 8, left: 8 }}
             />
-            {renderItem ? renderItem(item, i) : null}
+            {renderCell(item, i)}
           </div>
         );
       })
@@ -235,4 +322,35 @@ export function gridTextRender(props: GridProps): string {
 export const GridBinding: ComponentBinding = {
   id: 'Grid',
   factory: Grid as ComponentBinding['factory'],
+  actionSlots: ['onAction'],
+  manifestContract: {
+    description:
+      'CSS grid primitive. Two modes: (1) legacy `children` mode — every child renders as a ' +
+      'cell unchanged. (2) Data-aware tile mode (marketplace pivot) — when `data` (resolver-supplied ' +
+      'array) or `items` is supplied, the Grid renders one cell per item. If the manifest declared ' +
+      'a single child, it is used as a template — cloned per item with `data: item` threaded onto ' +
+      'each clone. If no children were declared, each item default-renders as a `<Card data={item}>` ' +
+      'tile (image / title / subtitle / price / badge derived from common product-shape fields). ' +
+      "The runtime wires `onAction(actionId, item)` from the manifest's `actions` list via " +
+      "`actionSlots: ['onAction']`; the Grid forwards it onto each rendered Card so per-item " +
+      'dispatch works without per-cell wiring. Selection / `bulkActions` / `selectedIds` work the ' +
+      'same in both modes.',
+    allowed_props: {
+      columns: 'unknown',
+      gap: 'string',
+      density: 'string',
+      variant: 'string',
+      className: 'string',
+      items: 'array',
+      data: 'unknown',
+      renderItem: 'function',
+      onAction: 'function',
+      selectable: 'boolean',
+      idOf: 'function',
+      selectedIds: 'object',
+      onSelectionChange: 'function',
+      bulkActions: 'array',
+      onBulkAction: 'function',
+    },
+  },
 };

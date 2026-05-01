@@ -184,14 +184,18 @@ function buildActions(): MapActionRegistry {
  *     `<Logo>` + `<NavBar>`) renders the cart-add quota chip and carries
  *     the `dummyjson.cart.add.rate_limit` data binding —
  *     `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` → `rate_limited_actions_show_state`.
- *   - The `<ProductGrid>`, `<CartItemList>`, and `<ProductDetail>` custom
- *     bindings raise an inline undo toast on every reversible mutation
- *     (`cart.add`, `cart.remove`); the policy validator treats this as
- *     an ambient `<UndoToast>` for `reversibility_surfaced`.
+ *   - The data-bound nodes raise an inline undo toast on every reversible
+ *     mutation (`cart.add`, `cart.remove`); the policy validator treats
+ *     this as an ambient `<UndoToast>` for `reversibility_surfaced`.
  *
- * Marketplace pivot: the three custom chrome bindings (`MarigoldHeader`,
- * `Wordmark`, `RateLimitChip`) are gone — manifests now compose
- * `<Stack(Logo, NavBar, StatusBar)>` directly.
+ * Marketplace pivot: five custom bindings have been retired —
+ * `MarigoldHeader` / `Wordmark` / `RateLimitChip` collapsed onto
+ * `<Stack(Logo, NavBar, StatusBar)>`; `ProductCard` / `ProductGrid`
+ * collapsed onto `<Grid data={items}>` + `<Card>` template composition
+ * (the data-aware Grid threads each item onto the Card's `data` prop).
+ * The data-aware Grid also lost its 'grid' compositionRole entry —
+ * baseline `<Grid>` is the registered Grid binding now, no role mapping
+ * needed.
  */
 const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
   UNDO_TOAST_AMBIENT_SATISFIER,
@@ -199,9 +203,9 @@ const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
 ];
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
-  // Baseline catalog first; demo-specific bindings (ProductGrid,
-  // CartItemList, …) layer on top so manifests can reference them in
-  // `LayoutNode.component`.
+  // Baseline catalog first; demo-specific bindings (ProductDetail,
+  // CartItemList, CheckoutWizard) layer on top so manifests can
+  // reference them in `LayoutNode.component`.
   const registry = new MapComponentRegistry({
     ...COMPONENT_BINDINGS,
     ...DEMO_DUMMYJSON_BINDINGS,
@@ -296,7 +300,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           brand_kit: DUMMYJSON_BRAND_KIT,
           // Custom bindings declaring `compositionRole` are surfaced here
           // so the policy engine treats them like the matching baseline
-          // List/Grid/Table component (e.g. `ProductGrid` → `Grid`).
+          // List/Grid/Table component (e.g. `CartItemList` → `List`).
           composition_roles: DEMO_DUMMYJSON_COMPOSITION_ROLES,
           // Ambient satisfiers — chrome rate-limit chip + ambient undo
           // toast. Lets the policy validator clear obligations for

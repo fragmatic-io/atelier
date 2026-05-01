@@ -219,9 +219,12 @@ function buildServer(): CirServer {
   //
   // Per `docs/ethos.md` principle #2 (composition, not invention), every
   // entry carries a `description` so the LLM picks the right component.
-  // Custom bindings (`ProductGrid`, `ProductDetail`, `CartItemList`, etc.)
+  // Custom bindings (`ProductDetail`, `CartItemList`, `CheckoutWizard`)
   // describe the specific UX they ship; the compiler picks them over
-  // generic `<Grid>` / `<List>` when the route's intent matches.
+  // generic `<DetailView>` / `<List>` / `<Wizard>` when the route's
+  // intent matches. `ProductCard` / `ProductGrid` were retired in the
+  // marketplace pivot — the compiler now composes `<Grid data={...}>` +
+  // `<Card>` directly.
   const componentIds: Array<{ id: string; description: string }> = [
     {
       id: 'Stack',
@@ -230,7 +233,14 @@ function buildServer(): CirServer {
     {
       id: 'Card',
       description:
-        'Bordered or elevated content surface. Use for grouped content with a clear edge.',
+        'Bounded content surface. Two compositions: (1) legacy bordered surface with `title` + ' +
+        'children body; (2) self-contained tile with `image`, `title`, `subtitle`, `price`, `badge`, ' +
+        'and a footer row of declarative `actions: CardAction[]` buttons. When rendered as a child ' +
+        'of `<Grid data={items}>`, the runtime threads the row item via `data`; the Card defaults ' +
+        'each tile field from common product-shape fields (`title`, `brand`, `thumbnail`, ' +
+        '`images[0]`, `price`, `discountPercentage`). For product browsing in this demo, COMPOSE ' +
+        '`<Grid data={...}>` over a single `<Card>` template child rather than authoring a custom ' +
+        'wrapper.',
     },
     {
       id: 'Container',
@@ -239,7 +249,12 @@ function buildServer(): CirServer {
     {
       id: 'Grid',
       description:
-        'Generic responsive grid for tiles. For product browsing in this demo, prefer `ProductGrid` which is density-aware and renders rich product cards.',
+        'CSS grid primitive. Data-aware: when `data` (resolver-supplied array) is bound, the Grid ' +
+        'renders one cell per item. Declare a single `<Card>` child as the per-item template (the ' +
+        'runtime clones it per item, threading the item via `data`); or omit children to default- ' +
+        'render each item as a tile-shaped Card. For `/browse`, bind `data: { source: ' +
+        "'dummyjson.product.list' }` and supply a single `<Card>` child with " +
+        "`actions: [{id: 'dummyjson.cart.add', ...}]` — per-item dispatch is wired by the runtime.",
     },
     {
       id: 'List',
@@ -337,20 +352,12 @@ function buildServer(): CirServer {
     },
     { id: 'Gallery', description: 'Image gallery / carousel. Used inside ProductDetail.' },
     { id: 'StatCard', description: 'Single KPI card. Rare in this demo.' },
-    // Custom bindings shipped in `apps/demo-dummyjson/components/`. Three
-    // were retired in the marketplace pivot (`MarigoldHeader`,
-    // `Wordmark`, `RateLimitChip`) — manifests now compose
-    // `<Stack(Logo, NavBar, StatusBar)>` directly.
-    {
-      id: 'ProductCard',
-      description:
-        'Single-product rich card: image, brand caps, title, star rating, bold price (with strikethrough on original), green Save% badge, orange Add-to-cart. Density-aware. Used by ProductGrid; rarely placed by the manifest directly.',
-    },
-    {
-      id: 'ProductGrid',
-      description:
-        "Density-aware product grid wrapping `ProductCard`. Reads `density` from intent profile: compact = single-column compact list, comfortable = 3-column card grid, spacious = 2-column oversized grid. PREFER this over `<Grid>` for `/browse`. Bind `data: { source: 'dummyjson.product.list' }`.",
-    },
+    // Custom bindings shipped in `apps/demo-dummyjson/components/`. Five
+    // have been retired in the marketplace pivot — `MarigoldHeader`,
+    // `Wordmark`, and `RateLimitChip` collapsed onto
+    // `<Stack(Logo, NavBar, StatusBar)>` composition; `ProductCard` and
+    // `ProductGrid` collapsed onto `<Grid data={items}>` + `<Card>`
+    // template composition.
     {
       id: 'ProductDetail',
       description:
@@ -380,8 +387,8 @@ function buildServer(): CirServer {
   }));
 
   // Use the canonical /browse manifest as the LLM's few-shot grounding —
-  // it exercises the most catalog vocabulary (MarigoldHeader, ProductGrid,
-  // RateLimitChip, etc.) and satisfies every policy.
+  // it exercises baseline composition (Stack, Logo, NavBar, StatusBar,
+  // Grid+Card tile pattern) and satisfies every policy.
   const fewShotExample = manifestForRoute('/browse', current.density);
   if (!fewShotExample) {
     throw new Error('demo-dummyjson: no manifest available to use as few-shot example');

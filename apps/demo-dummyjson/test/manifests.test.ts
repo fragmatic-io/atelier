@@ -3,22 +3,22 @@
 /**
  * Manifest builder tests for the dummyjson catalog demo.
  *
- * After the E-B refactor the headline `<Grid>` baseline binding has been
- * replaced with a custom `<ProductGrid>` that carries `compositionRole:
- * 'grid'`. The grid reshapes columns by reading `density` off the renderer
- * (single column at compact, 3 at comfortable, 2 at spacious), so the
- * manifest itself is identical across densities except for `props.density`
- * — the test no longer asserts a different component name per lens.
+ * Marketplace pivot: `<ProductCard>` and `<ProductGrid>` are gone. The
+ * `/browse` body is now a baseline `<Grid data={products}>` declaring a
+ * single `<Card>` template child — the data-aware Grid threads each
+ * product onto the Card's `data` prop and the Card pulls its tile fields
+ * from the product shape automatically. Per-item dispatch flows through
+ * `actionSlots: ['onAction']` on both bindings.
  *
- * Cart and Product surfaces likewise migrated to custom bindings
- * (`<CartItemList>`, `<ProductDetail>`); checkout uses `<CheckoutWizard>`.
+ * Cart, Product detail, and Checkout still ride custom bindings
+ * (`<CartItemList>`, `<ProductDetail>`, `<CheckoutWizard>`) — those
+ * collapses are follow-ups documented on the marketplace plan.
  */
 
 import { describe, expect, it } from 'vitest';
 import { ManifestSchema } from '@cir/schemas';
 import {
   browseManifest,
-  browseManifestRowBinding,
   cartManifest,
   checkoutManifest,
   manifestForRoute,
@@ -40,16 +40,34 @@ function findFirst(node: unknown, componentName: string): Record<string, unknown
 }
 
 describe('manifestForRoute', () => {
-  it('returns a ProductGrid for every density on /browse', () => {
+  it('mounts a baseline <Grid> over <Card> on /browse for every density', () => {
     for (const density of ['compact', 'comfortable', 'spacious'] as const) {
       const m = manifestForRoute('/browse', density);
       expect(m).not.toBeNull();
-      const grid = findFirst(m!.routes[0]!.layout, 'ProductGrid');
+      const grid = findFirst(m!.routes[0]!.layout, 'Grid');
       expect(grid).not.toBeNull();
-      // The renderer reads density off intent — manifest props echo it.
-      expect((grid!['props'] as { density: string }).density).toBe(density);
-      // The grid binds to the catalog list capability.
+      // Bound to the catalog list capability.
       expect((grid!['data'] as { source: string }).source).toBe('dummyjson.product.list');
+      // Single Card template child for the runtime to clone per item.
+      const children = grid!['children'] as Array<Record<string, unknown>>;
+      expect(children).toHaveLength(1);
+      expect(children[0]!['component']).toBe('Card');
+      // The Card declares its add-to-cart button declaratively.
+      const cardProps = children[0]!['props'] as { actions: Array<{ id: string }> };
+      expect(cardProps.actions).toEqual([
+        { id: 'dummyjson.cart.add', label: 'Add', variant: 'primary' },
+      ]);
+      // Per-density columns.
+      const expectedColumns = density === 'compact' ? 1 : density === 'spacious' ? 2 : 3;
+      expect((grid!['props'] as { columns: number }).columns).toBe(expectedColumns);
+    }
+  });
+
+  it('has no <ProductCard> / <ProductGrid> nodes anywhere (marketplace pivot)', () => {
+    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
+      const m = browseManifest(density);
+      expect(findFirst(m.routes[0]!.layout, 'ProductCard')).toBeNull();
+      expect(findFirst(m.routes[0]!.layout, 'ProductGrid')).toBeNull();
     }
   });
 
@@ -169,37 +187,5 @@ describe('manifestForRoute', () => {
     );
     expect(addBtn).toBeUndefined();
     expect(removeBtn).toBeUndefined();
-  });
-});
-
-describe('browseManifestRowBinding (Phase 2 #3)', () => {
-  it('mounts a baseline `<Grid>` (not the `<ProductGrid>` wrapper) on /browse', () => {
-    const m = browseManifestRowBinding('comfortable');
-    const grid = findFirst(m.routes[0]!.layout!, 'Grid');
-    expect(grid).not.toBeNull();
-    expect(findFirst(m.routes[0]!.layout!, 'ProductGrid')).toBeNull();
-  });
-
-  it('names ProductCard as the row factory via `row_binding`', () => {
-    const m = browseManifestRowBinding('comfortable');
-    const grid = findFirst(m.routes[0]!.layout!, 'Grid');
-    expect(grid?.['row_binding']).toBe('ProductCard');
-    expect((grid?.['data'] as { source: string }).source).toBe('dummyjson.product.list');
-  });
-
-  it('validates against ManifestSchema in every density', () => {
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      const m = browseManifestRowBinding(density);
-      expect(ManifestSchema.safeParse(m).success).toBe(true);
-    }
-  });
-
-  it('encodes a column hint per density (compact=1, spacious=2, comfortable=3)', () => {
-    const expected = { compact: 1, comfortable: 3, spacious: 2 } as const;
-    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      const m = browseManifestRowBinding(density);
-      const grid = findFirst(m.routes[0]!.layout!, 'Grid');
-      expect((grid!['props'] as { columns: number }).columns).toBe(expected[density]);
-    }
   });
 });
