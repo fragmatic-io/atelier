@@ -7,9 +7,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { FallbackCompiler } from '../src/fallback-compiler.ts';
-import { CompilerOutputError } from '../src/types.ts';
-import { fixtureCompileInput, fixtureManifest } from './_fixtures.ts';
+import { FallbackCompiler } from '../src/fallback-compiler.js';
+import { CompilerOutputError } from '../src/types.js';
+import { fixtureCompileInput, fixtureManifest } from './_fixtures.js';
 
 describe('FallbackCompiler', () => {
   it('returns the manifest from lookup with token_cost 0 and default id', async () => {

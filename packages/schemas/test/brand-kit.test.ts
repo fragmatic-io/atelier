@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { BrandKitSchema, type BrandKit } from '../src/brand-kit.ts';
+import { BrandKitSchema, type BrandKit } from '../src/brand-kit.js';
 
 function baseKit(): BrandKit {
   return {

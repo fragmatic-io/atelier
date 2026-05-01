@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UndoStack, type UndoEntry } from '../../src/actions/undo.ts';
+import { UndoStack, type UndoEntry } from '../../src/actions/undo.js';
 
 function entry(label: string): UndoEntry {
   return {

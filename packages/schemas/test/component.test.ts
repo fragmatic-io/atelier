@@ -6,7 +6,7 @@ import {
   ComponentRegistrySchema,
   CompositionRuleSchema,
   CompositionRulesSchema,
-} from '../src/component.ts';
+} from '../src/component.js';
 
 describe('ComponentDefinitionSchema', () => {
   it('parses the docs/artifacts.md §Component catalog example (TaskQueue)', () => {

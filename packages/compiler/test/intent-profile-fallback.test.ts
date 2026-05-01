@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { Capability } from '@cir/schemas';
-import { FallbackIntentProfileCompiler } from '../src/intent-profile-compiler.ts';
+import { FallbackIntentProfileCompiler } from '../src/intent-profile-compiler.js';
 
 function compile(description: string) {
   const c = new FallbackIntentProfileCompiler({

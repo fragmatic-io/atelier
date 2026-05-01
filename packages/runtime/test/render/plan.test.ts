@@ -3,13 +3,13 @@ import {
   buildRenderPlan,
   RouteNotFoundError,
   RouteNotRenderableError,
-} from '../../src/render/plan.ts';
+} from '../../src/render/plan.js';
 import {
   EMPTY_REGISTRY,
   MapComponentRegistry,
   type ComponentBinding,
-} from '../../src/registry/component-registry.ts';
-import { fixtureManifest } from '../fixtures/manifest.ts';
+} from '../../src/registry/component-registry.js';
+import { fixtureManifest } from '../fixtures/manifest.js';
 
 const stackBinding: ComponentBinding = { id: 'Stack', factory: 'stack-factory' };
 const decisionBinding: ComponentBinding = { id: 'DecisionQueue', factory: 'decision-factory' };

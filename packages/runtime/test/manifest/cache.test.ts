@@ -4,9 +4,9 @@ import {
   serializeCacheKey,
   type CachedManifest,
   type ManifestCacheKey,
-} from '../../src/manifest/cache.ts';
-import { MemoryManifestCache } from '../../src/manifest/memory-cache.ts';
-import { fixtureManifest } from '../fixtures/manifest.ts';
+} from '../../src/manifest/cache.js';
+import { MemoryManifestCache } from '../../src/manifest/memory-cache.js';
+import { fixtureManifest } from '../fixtures/manifest.js';
 
 function entry(): CachedManifest {
   return {

@@ -15,12 +15,12 @@
 import { describe, expect, it } from 'vitest';
 import type { BehavioralPatternDetector, DetectedPattern, ObservedAction } from '@cir/policies';
 import type { AuditEvent, Trigger } from '@cir/schemas';
-import { StreamingAuditSink } from '../../src/audit/streaming.ts';
+import { StreamingAuditSink } from '../../src/audit/streaming.js';
 import {
   BehavioralTap,
   auditEventToObservedAction,
   capabilityIdFromAuditEvent,
-} from '../../src/audit/behavioral-tap.ts';
+} from '../../src/audit/behavioral-tap.js';
 
 function makeEvent(overrides: Partial<AuditEvent> = {}): AuditEvent {
   return {

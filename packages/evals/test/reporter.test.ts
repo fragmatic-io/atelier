@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ConsoleReporter, JsonReporter } from '../src/reporter.ts';
-import type { EvalResult } from '../src/define.ts';
-import type { RunSummary } from '../src/run.ts';
+import { ConsoleReporter, JsonReporter } from '../src/reporter.js';
+import type { EvalResult } from '../src/define.js';
+import type { RunSummary } from '../src/run.js';
 
 function makeResult(overrides: Partial<EvalResult>): EvalResult {
   return {

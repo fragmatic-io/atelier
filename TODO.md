@@ -26,7 +26,6 @@ For the historical record of what _did_ land in each phase, see [`docs/build-pla
 
 ### Compiler / runtime hardening
 
-- [ ] **Per-package typecheck in `packages/runtime/`** fails standalone with TS5097 (`.ts` import extensions in tests) — workspace-wide architectural choice. Resolve when the import-extension policy is revisited (also affects `@cir/schemas`, `@cir/policies`, `@cir/evals`).
 - [ ] **`ManifestFetcher` does not validate the response body against the `Manifest` Zod schema.** `ManifestResolver`'s optional `validate` is the only client-side defense. Acceptable layering today; revisit when the host-vs-runtime trust boundary is finalized.
 - [ ] **`IndexedDBManifestCache` casts stored values without a runtime sanity check on read.** Relies on browser SOP. Add a defensive parse on `get` if we widen the threat model to "attacker who can write to the user's IDB".
 - [ ] **`ActionDispatcher` does not validate input against `capability.input`.** Host is on the hook for shape validation. Documented intentionally; revisit if the dispatcher should run a Zod-ish parse before handing off.

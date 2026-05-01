@@ -21,8 +21,8 @@ import {
   FallbackIntentProfileCompiler,
   GeminiIntentProfileCompiler,
   type CompileIntentProfileInput,
-} from '../src/intent-profile-compiler.ts';
-import { CompilerOutputError, CompilerUnavailableError } from '../src/types.ts';
+} from '../src/intent-profile-compiler.js';
+import { CompilerOutputError, CompilerUnavailableError } from '../src/types.js';
 
 interface FakeResponse {
   text?: string;

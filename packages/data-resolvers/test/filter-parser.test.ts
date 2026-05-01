@@ -9,7 +9,7 @@ import {
   toQueryString,
   toWhereClause,
   tryParseFilter,
-} from '../src/filter-parser.ts';
+} from '../src/filter-parser.js';
 
 describe('filter-parser', () => {
   it('parses single comparison with bare identifier rhs', () => {

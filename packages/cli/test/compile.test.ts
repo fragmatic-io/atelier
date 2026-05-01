@@ -17,7 +17,7 @@ import {
   loadComponents,
   redactApiKey,
   runCompile,
-} from '../src/commands/compile.ts';
+} from '../src/commands/compile.js';
 import type { Capability, Manifest } from '@cir/schemas';
 import type { CompileInput as CI, CompileResult as CR, CompilerService } from '@cir/compiler';
 

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { CapabilitySchema } from '../src/capability.ts';
-import { ManifestSchema } from '../src/manifest.ts';
-import { toJsonSchema } from '../src/json-schema.ts';
+import { CapabilitySchema } from '../src/capability.js';
+import { ManifestSchema } from '../src/manifest.js';
+import { toJsonSchema } from '../src/json-schema.js';
 
 describe('toJsonSchema', () => {
   it('emits a $id and $schema for the Capability schema', () => {

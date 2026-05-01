@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Trigger } from '@cir/schemas';
-import { wireTriggerInvalidation } from '../../src/triggers/invalidation.ts';
-import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.ts';
-import { MemoryManifestCache } from '../../src/manifest/memory-cache.ts';
-import { ManifestFetcher } from '../../src/manifest/fetcher.ts';
-import { ManifestResolver } from '../../src/manifest/resolver.ts';
-import { fixtureManifest } from '../fixtures/manifest.ts';
-import type { CachedManifest } from '../../src/manifest/cache.ts';
+import { wireTriggerInvalidation } from '../../src/triggers/invalidation.js';
+import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
+import { MemoryManifestCache } from '../../src/manifest/memory-cache.js';
+import { ManifestFetcher } from '../../src/manifest/fetcher.js';
+import { ManifestResolver } from '../../src/manifest/resolver.js';
+import { fixtureManifest } from '../fixtures/manifest.js';
+import type { CachedManifest } from '../../src/manifest/cache.js';
 
 function entry(): CachedManifest {
   return {

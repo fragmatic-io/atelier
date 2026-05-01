@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { SkillSchema } from '../src/skill.ts';
+import { SkillSchema } from '../src/skill.js';
 
 describe('SkillSchema', () => {
   it('parses the docs/artifacts.md §Skill example (email-triage)', () => {

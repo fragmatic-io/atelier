@@ -16,9 +16,9 @@ import { describe, expect, it } from 'vitest';
 import {
   manifestComponentContractSatisfied,
   type ManifestComponentContracts,
-} from '../src/baseline/manifest_component_contract_satisfied.ts';
+} from '../src/baseline/manifest_component_contract_satisfied.js';
 import type { Manifest } from '@cir/schemas';
-import type { PolicyContext } from '../src/result.ts';
+import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(layout: Manifest['routes'][number]['layout']): PolicyContext {
   return {

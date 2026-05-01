@@ -18,9 +18,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { composesHierarchyForLongLists } from '../src/baseline/composes_hierarchy_for_long_lists.ts';
+import { composesHierarchyForLongLists } from '../src/baseline/composes_hierarchy_for_long_lists.js';
 import type { Capability, LayoutNode, Manifest } from '@cir/schemas';
-import type { PolicyContext } from '../src/result.ts';
+import type { PolicyContext } from '../src/result.js';
 
 function capability(opts: { salience?: string | null } = {}): Capability {
   // Default salience expression; pass `{ salience: null }` to omit the field.

@@ -17,7 +17,7 @@ import {
   reconnectDelayMs,
   runDevTail,
   severityColor,
-} from '../src/commands/dev-tail.ts';
+} from '../src/commands/dev-tail.js';
 import type { AuditEvent } from '@cir/schemas';
 
 // -----------------------------------------------------------------------------

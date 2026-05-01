@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
-import { defineEval } from '../../src/define.ts';
+import { defineEval } from '../../src/define.js';
 
 export default defineEval({
   id: 'fixture/fail/literal',

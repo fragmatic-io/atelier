@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { PolicySchema } from '../src/policy.ts';
+import { PolicySchema } from '../src/policy.js';
 
 describe('PolicySchema', () => {
   it('parses a valid policy descriptor', () => {

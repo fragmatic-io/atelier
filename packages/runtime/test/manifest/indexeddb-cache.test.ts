@@ -2,9 +2,9 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createStore } from 'idb-keyval';
-import { IndexedDBManifestCache } from '../../src/manifest/indexeddb-cache.ts';
-import type { CachedManifest, ManifestCacheKey } from '../../src/manifest/cache.ts';
-import { fixtureManifest } from '../fixtures/manifest.ts';
+import { IndexedDBManifestCache } from '../../src/manifest/indexeddb-cache.js';
+import type { CachedManifest, ManifestCacheKey } from '../../src/manifest/cache.js';
+import { fixtureManifest } from '../fixtures/manifest.js';
 
 function entry(last_used: string): CachedManifest {
   return {

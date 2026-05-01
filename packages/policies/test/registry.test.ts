@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { PolicyRegistry } from '../src/registry.ts';
-import { BASELINE_POLICIES } from '../src/validate.ts';
-import type { NamedPolicy } from '../src/result.ts';
+import { PolicyRegistry } from '../src/registry.js';
+import { BASELINE_POLICIES } from '../src/validate.js';
+import type { NamedPolicy } from '../src/result.js';
 
 const dummy = (id: string, message = 'x'): NamedPolicy => ({
   id,

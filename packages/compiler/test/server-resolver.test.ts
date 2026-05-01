@@ -10,14 +10,14 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { AuditEvent } from '@cir/schemas';
-import { MemoryManifestStore } from '../src/manifest-store.ts';
+import { MemoryManifestStore } from '../src/manifest-store.js';
 import {
   BudgetExceededError,
   ServerManifestResolver,
   type TokenBudgetCounter,
-} from '../src/server-resolver.ts';
-import type { CompilerService, CompileResult } from '../src/types.ts';
-import { fixtureCompileInput, fixtureIntent, fixtureManifest } from './_fixtures.ts';
+} from '../src/server-resolver.js';
+import type { CompilerService, CompileResult } from '../src/types.js';
+import { fixtureCompileInput, fixtureIntent, fixtureManifest } from './_fixtures.js';
 
 function stubCompiler(token_cost = 42): { compiler: CompilerService; calls: { count: number } } {
   const calls = { count: 0 };

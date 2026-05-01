@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { CapabilitySchema, KNOWN_SIDE_EFFECTS } from '../src/capability.ts';
+import { CapabilitySchema, KNOWN_SIDE_EFFECTS } from '../src/capability.js';
 
 describe('CapabilitySchema', () => {
   it('parses the docs/artifacts.md §Capability example (thread.archive)', () => {

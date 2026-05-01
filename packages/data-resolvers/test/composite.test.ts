@@ -2,8 +2,8 @@
 // Copyright (c) 2026 The CIR Authors
 
 import { describe, expect, it, vi } from 'vitest';
-import { CompositeDataResolver } from '../src/composite.ts';
-import { MockDataResolver } from '../src/mock.ts';
+import { CompositeDataResolver } from '../src/composite.js';
+import { MockDataResolver } from '../src/mock.js';
 
 describe('CompositeDataResolver', () => {
   it('returns the first non-undefined value from the chain', async () => {

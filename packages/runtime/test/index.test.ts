@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import * as runtime from '../src/index.ts';
-import * as testingExports from '../src/testing/index.ts';
+import * as runtime from '../src/index.js';
+import * as testingExports from '../src/testing/index.js';
 
 describe('@cir/runtime public surface', () => {
   it('exports every advertised value', () => {

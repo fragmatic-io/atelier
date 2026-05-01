@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/require-await -- fake redis client signatures must be Promise-returning to match the real client; bodies do not always need await */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RedisClientType } from 'redis';
-import { RedisManifestStore, type RedisManifestStoreOptions } from '../src/redis-manifest-store.ts';
-import type { ManifestStoreKey, StoredManifest } from '../src/manifest-store.ts';
+import { RedisManifestStore, type RedisManifestStoreOptions } from '../src/redis-manifest-store.js';
+import type { ManifestStoreKey, StoredManifest } from '../src/manifest-store.js';
 import type { Manifest } from '@cir/schemas';
 
 /**

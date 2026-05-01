@@ -2,13 +2,13 @@
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it, vi } from 'vitest';
 import type { Trigger } from '@cir/schemas';
-import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.ts';
+import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import {
   DEFAULT_WS_RECONNECT_BACKOFF_MS,
   WebSocketTriggerTransport,
   type WebSocketCtor,
   type WebSocketLike,
-} from '../../src/triggers/websocket-transport.ts';
+} from '../../src/triggers/websocket-transport.js';
 
 // ---------------------------------------------------------------------------
 // FakeWebSocket — minimal seam that mirrors the WHATWG WebSocket surface this

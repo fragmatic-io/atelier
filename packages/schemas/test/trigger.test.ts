@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { TriggerSchema } from '../src/trigger.ts';
+import { TriggerSchema } from '../src/trigger.js';
 
 describe('TriggerSchema (discriminated union)', () => {
   it('parses a capability.changed trigger', () => {

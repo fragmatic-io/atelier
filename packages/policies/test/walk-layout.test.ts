@@ -3,8 +3,8 @@ import {
   collectLayoutNodes,
   escapeJsonPointerSegment,
   walkManifest,
-} from '../src/internal/walk-layout.ts';
-import { baselineManifest } from './fixtures/manifest.ts';
+} from '../src/internal/walk-layout.js';
+import { baselineManifest } from './fixtures/manifest.js';
 import type { LayoutNode } from '@cir/schemas';
 
 describe('walk-layout helpers', () => {

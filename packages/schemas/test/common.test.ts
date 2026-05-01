@@ -8,7 +8,7 @@ import {
   ManifestId,
   RateLimitString,
   SemverString,
-} from '../src/common.ts';
+} from '../src/common.js';
 
 describe('SemverString', () => {
   it('accepts canonical semver', () => {

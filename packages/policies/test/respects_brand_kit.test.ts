@@ -11,9 +11,9 @@
 
 import { describe, expect, it } from 'vitest';
 import type { BrandKit, Manifest } from '@cir/schemas';
-import { respectsBrandKit, hexContrastRatio } from '../src/baseline/respects_brand_kit.ts';
-import type { PolicyContext } from '../src/result.ts';
-import { baselineContext } from './fixtures/manifest.ts';
+import { respectsBrandKit, hexContrastRatio } from '../src/baseline/respects_brand_kit.js';
+import type { PolicyContext } from '../src/result.js';
+import { baselineContext } from './fixtures/manifest.js';
 
 function kitWith(extras: Partial<BrandKit>): BrandKit {
   return {

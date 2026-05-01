@@ -8,14 +8,14 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { CompositeCompiler } from '../src/composite-compiler.ts';
+import { CompositeCompiler } from '../src/composite-compiler.js';
 import {
   CompilerOutputError,
   CompilerUnavailableError,
   type CompilerService,
   type CompileResult,
-} from '../src/types.ts';
-import { fixtureCompileInput, fixtureManifest } from './_fixtures.ts';
+} from '../src/types.js';
+import { fixtureCompileInput, fixtureManifest } from './_fixtures.js';
 
 function stubResult(model: string): CompileResult {
   return {

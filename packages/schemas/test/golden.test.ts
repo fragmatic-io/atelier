@@ -20,8 +20,8 @@ import { mkdtemp, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
-import { SCHEMA_REGISTRY } from '../src/cli/registry.ts';
-import { toJsonSchema } from '../src/json-schema.ts';
+import { SCHEMA_REGISTRY } from '../src/cli/registry.js';
+import { toJsonSchema } from '../src/json-schema.js';
 
 const GOLDEN_DIR = new URL('./golden/', import.meta.url).pathname;
 

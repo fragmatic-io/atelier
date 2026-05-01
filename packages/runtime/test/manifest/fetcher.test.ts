@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ManifestFetcher, ManifestFetchError } from '../../src/manifest/fetcher.ts';
-import type { ManifestCacheKey } from '../../src/manifest/cache.ts';
-import { fixtureManifest } from '../fixtures/manifest.ts';
+import { ManifestFetcher, ManifestFetchError } from '../../src/manifest/fetcher.js';
+import type { ManifestCacheKey } from '../../src/manifest/cache.js';
+import { fixtureManifest } from '../fixtures/manifest.js';
 
 const KEY: ManifestCacheKey = { user_id: 'vid', app_id: 'mail.example.com', route: '/today' };
 

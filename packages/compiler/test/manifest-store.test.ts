@@ -12,8 +12,8 @@ import {
   MemoryManifestStore,
   type ManifestStoreKey,
   type StoredManifest,
-} from '../src/manifest-store.ts';
-import { fixtureManifest } from './_fixtures.ts';
+} from '../src/manifest-store.js';
+import { fixtureManifest } from './_fixtures.js';
 
 const baseKey: ManifestStoreKey = {
   user_id: 'u1',

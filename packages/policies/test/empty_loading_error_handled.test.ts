@@ -17,9 +17,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { emptyLoadingErrorHandled } from '../src/baseline/empty_loading_error_handled.ts';
+import { emptyLoadingErrorHandled } from '../src/baseline/empty_loading_error_handled.js';
 import type { LayoutNode, Manifest } from '@cir/schemas';
-import type { PolicyContext } from '../src/result.ts';
+import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(
   routes: Manifest['routes'],

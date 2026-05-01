@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALWAYS_CONFIRM, ALWAYS_DECLINE, requiresConfirmation } from '../../src/actions/confirm.ts';
+import { ALWAYS_CONFIRM, ALWAYS_DECLINE, requiresConfirmation } from '../../src/actions/confirm.js';
 
 describe('requiresConfirmation', () => {
   it('returns true for modal and verbal_required', () => {

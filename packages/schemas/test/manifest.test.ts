@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { ManifestSchema, ThreadManifestSchema, TurnDeltaSchema } from '../src/manifest.ts';
+import { ManifestSchema, ThreadManifestSchema, TurnDeltaSchema } from '../src/manifest.js';
 
 describe('ManifestSchema', () => {
   it('parses the full docs/artifacts.md §Render manifest example', () => {

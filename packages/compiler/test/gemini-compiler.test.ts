@@ -16,9 +16,9 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { GoogleGenAI } from '@google/genai';
-import { GeminiCompiler } from '../src/gemini-compiler.ts';
-import { CompilerOutputError, CompilerUnavailableError } from '../src/types.ts';
-import { fixtureCompileInput, fixtureManifest } from './_fixtures.ts';
+import { GeminiCompiler } from '../src/gemini-compiler.js';
+import { CompilerOutputError, CompilerUnavailableError } from '../src/types.js';
+import { fixtureCompileInput, fixtureManifest } from './_fixtures.js';
 
 interface FakeResponse {
   text?: string;

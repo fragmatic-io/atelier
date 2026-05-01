@@ -19,8 +19,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { SequenceDetector, type ObservedAction } from '../src/index.ts';
-import { __sequenceDetectorInternals } from '../src/behavioral/sequence-detector.ts';
+import { SequenceDetector, type ObservedAction } from '../src/index.js';
+import { __sequenceDetectorInternals } from '../src/behavioral/sequence-detector.js';
 
 function obs(
   user_id: string,

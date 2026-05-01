@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
-import { defineEval, type EvalSpec } from '../src/define.ts';
+import { defineEval, type EvalSpec } from '../src/define.js';
 
 describe('defineEval', () => {
   it('round-trips a spec without mutation', () => {

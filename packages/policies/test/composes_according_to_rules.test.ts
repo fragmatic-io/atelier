@@ -9,9 +9,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { composesAccordingTo, type CompositionRules } from '../src/baseline/composition_rules.ts';
+import { composesAccordingTo, type CompositionRules } from '../src/baseline/composition_rules.js';
 import type { Manifest } from '@cir/schemas';
-import type { PolicyContext } from '../src/result.ts';
+import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(layout: Manifest['routes'][number]['layout']): PolicyContext {
   return {

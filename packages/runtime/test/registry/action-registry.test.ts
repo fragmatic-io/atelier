@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MapActionRegistry } from '../../src/registry/action-registry.ts';
+import { MapActionRegistry } from '../../src/registry/action-registry.js';
 
 describe('MapActionRegistry', () => {
   it('register/has/get round-trips', () => {

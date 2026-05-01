@@ -8,7 +8,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { devCommand } from '../src/commands/dev.ts';
+import { devCommand } from '../src/commands/dev.js';
 
 describe('devCommand --tail-only', () => {
   let writeSpy: ReturnType<typeof vi.spyOn>;

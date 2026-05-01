@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { reversibilitySurfaced } from '../src/baseline/reversibility_surfaced.ts';
-import { baselineContext } from './fixtures/manifest.ts';
+import { reversibilitySurfaced } from '../src/baseline/reversibility_surfaced.js';
+import { baselineContext } from './fixtures/manifest.js';
 
 describe('reversibility_surfaced', () => {
   it('passes when an UndoBar is present in the route', () => {

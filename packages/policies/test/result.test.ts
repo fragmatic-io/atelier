@@ -5,8 +5,8 @@ import type {
   PolicyContext,
   PolicyResult,
   PolicyViolation,
-} from '../src/result.ts';
-import { baselineContext } from './fixtures/manifest.ts';
+} from '../src/result.js';
+import { baselineContext } from './fixtures/manifest.js';
 
 describe('result types', () => {
   it('compose at the type level: NamedPolicy holds a Policy whose result is a PolicyResult', () => {

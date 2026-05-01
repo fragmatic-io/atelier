@@ -2,7 +2,7 @@
 // Copyright (c) 2026 The CIR Authors
 
 import { describe, expect, it, vi } from 'vitest';
-import { OpenApiDataResolver, findOperation, specRefFromImportedFrom } from '../src/openapi.ts';
+import { OpenApiDataResolver, findOperation, specRefFromImportedFrom } from '../src/openapi.js';
 import type { Capability } from '@cir/schemas';
 
 function makeCapability(overrides: Partial<Capability> = {}): Capability {

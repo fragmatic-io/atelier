@@ -2,7 +2,7 @@
 // Copyright (c) 2026 The CIR Authors
 
 import { describe, expect, it, vi } from 'vitest';
-import { RestDataResolver, buildRestUrl } from '../src/rest.ts';
+import { RestDataResolver, buildRestUrl } from '../src/rest.js';
 
 function jsonResponse(body: unknown, init: { status?: number } = {}): Response {
   return new Response(JSON.stringify(body), {

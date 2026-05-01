@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Trigger } from '@cir/schemas';
-import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.ts';
+import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import {
   WILDCARD_TRIGGER_TYPE,
   type TriggerHandler,
   type TriggerSubscription,
-} from '../../src/triggers/subscription.ts';
+} from '../../src/triggers/subscription.js';
 
 // This test is mostly a type-level conformance check: the in-memory bus
 // satisfies the `TriggerSubscription` contract.

@@ -2,8 +2,8 @@
 // Copyright (c) 2026 The CIR Authors
 
 import { describe, expect, it, vi } from 'vitest';
-import { withCache } from '../src/cache.ts';
-import type { DataBinding } from '../src/types.ts';
+import { withCache } from '../src/cache.js';
+import type { DataBinding } from '../src/types.js';
 
 function makeClock(start = 0): { now: () => number; advance: (ms: number) => void } {
   let t = start;

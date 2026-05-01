@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Trigger } from '@cir/schemas';
-import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.ts';
+import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 
 const SCHEMA_TRIGGER: Trigger = {
   type: 'capability.changed',

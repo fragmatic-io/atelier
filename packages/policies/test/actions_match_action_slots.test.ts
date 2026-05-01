@@ -13,9 +13,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { actionsMatchActionSlots } from '../src/baseline/actions_match_action_slots.ts';
+import { actionsMatchActionSlots } from '../src/baseline/actions_match_action_slots.js';
 import type { LayoutNode, Manifest } from '@cir/schemas';
-import type { PolicyContext } from '../src/result.ts';
+import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(
   layout: LayoutNode,

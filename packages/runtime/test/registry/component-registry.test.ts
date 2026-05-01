@@ -4,7 +4,7 @@ import {
   EMPTY_REGISTRY,
   MapComponentRegistry,
   type ComponentBinding,
-} from '../../src/registry/component-registry.ts';
+} from '../../src/registry/component-registry.js';
 
 describe('EMPTY_REGISTRY', () => {
   it('reports no components', () => {

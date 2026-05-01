@@ -5,7 +5,7 @@ import {
   ConversationOverlaySchema,
   GlobalPreferencesSchema,
   IntentProfileSchema,
-} from '../src/intent.ts';
+} from '../src/intent.js';
 
 describe('IntentProfileSchema', () => {
   it('parses the full docs/artifacts.md §Intent profile example', () => {

@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CapabilitySchema, type Capability } from '@cir/schemas';
-import { importOpenApi } from '../src/commands/import-openapi.ts';
+import { importOpenApi } from '../src/commands/import-openapi.js';
 
 /** Read a generated capability and parse it through `CapabilitySchema`. */
 async function readCapability(path: string): Promise<Capability> {
@@ -448,7 +448,7 @@ describe('cir import openapi', () => {
 
   it('matchesPii export is exhaustive on the wordlist boundary', async () => {
     // Sanity sweep that camel/snake forms match and non-PII names do not.
-    const { matchesPii } = await import('../src/commands/import-openapi.ts');
+    const { matchesPii } = await import('../src/commands/import-openapi.js');
     expect(matchesPii('email')).toBe('email');
     expect(matchesPii('userEmail')).toBe('email');
     expect(matchesPii('email_address')).toBe('email');

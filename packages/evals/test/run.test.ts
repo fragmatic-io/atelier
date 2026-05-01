@@ -2,8 +2,8 @@
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
 import { resolve } from 'node:path';
-import { runEvals } from '../src/run.ts';
-import { defineEval } from '../src/define.ts';
+import { runEvals } from '../src/run.js';
+import { defineEval } from '../src/define.js';
 
 const FIXTURES_CWD = resolve(import.meta.dirname);
 const FIXTURE_PATTERN = 'fixtures/**/*.eval.ts';

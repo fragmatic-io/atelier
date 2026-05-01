@@ -4,7 +4,7 @@ import {
   type BehavioralPatternDetector,
   type DetectedPattern,
   type ObservedAction,
-} from '../src/behavioral/detector.ts';
+} from '../src/behavioral/detector.js';
 
 describe('NoopBehavioralDetector', () => {
   it('observe + reset are no-ops and do not throw', () => {

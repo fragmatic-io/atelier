@@ -2,7 +2,7 @@
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { parseSkillMarkdown } from '../src/skill-parser.ts';
+import { parseSkillMarkdown } from '../src/skill-parser.js';
 
 describe('parseSkillMarkdown', () => {
   it('parses valid markdown with full frontmatter', () => {

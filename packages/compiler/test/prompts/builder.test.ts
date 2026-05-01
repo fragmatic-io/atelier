@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildPromptContext } from '../../src/prompts/builder.ts';
+import { buildPromptContext } from '../../src/prompts/builder.js';
 import {
   fixtureBrandKit,
   fixtureCompileInput,
@@ -16,7 +16,7 @@ import {
   fixtureManifest,
   fixtureSkill,
   fixtureTrigger,
-} from '../_fixtures.ts';
+} from '../_fixtures.js';
 
 describe('buildPromptContext', () => {
   it('includes capabilities, components, and intent JSON when supplied', () => {

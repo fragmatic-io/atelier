@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { BASELINE_POLICIES, validateManifest } from '../src/validate.ts';
-import { baselineContext } from './fixtures/manifest.ts';
-import type { NamedPolicy } from '../src/result.ts';
+import { BASELINE_POLICIES, validateManifest } from '../src/validate.js';
+import { baselineContext } from './fixtures/manifest.js';
+import type { NamedPolicy } from '../src/result.js';
 
 describe('validateManifest', () => {
   it('runs every BASELINE_POLICY and reports ok on the clean baseline', () => {

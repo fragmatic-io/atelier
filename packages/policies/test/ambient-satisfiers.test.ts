@@ -14,7 +14,7 @@ import {
   undoToastSatisfier,
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
-} from '../src/baseline/ambient-satisfiers.ts';
+} from '../src/baseline/ambient-satisfiers.js';
 
 describe('ambientCovers', () => {
   it('returns false on empty / undefined satisfier lists', () => {

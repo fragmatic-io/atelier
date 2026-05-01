@@ -2,7 +2,7 @@
 // Copyright (c) 2026 The CIR Authors
 
 import { describe, expect, it, vi } from 'vitest';
-import { GraphQLDataResolver, defaultFieldName } from '../src/graphql.ts';
+import { GraphQLDataResolver, defaultFieldName } from '../src/graphql.js';
 import type { Capability } from '@cir/schemas';
 
 function jsonResponse(body: unknown, init: { status?: number } = {}): Response {

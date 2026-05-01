@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { rateLimitedActionsShowState } from '../src/baseline/rate_limited_actions_show_state.ts';
-import { baselineContext } from './fixtures/manifest.ts';
+import { rateLimitedActionsShowState } from '../src/baseline/rate_limited_actions_show_state.js';
+import { baselineContext } from './fixtures/manifest.js';
 
 describe('rate_limited_actions_show_state', () => {
   it('passes when no rate-limited capabilities are referenced', () => {

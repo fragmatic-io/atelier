@@ -2,7 +2,7 @@
 // Copyright (c) 2026 The CIR Authors
 
 import { describe, expect, it } from 'vitest';
-import { MockDataResolver } from '../src/mock.ts';
+import { MockDataResolver } from '../src/mock.js';
 
 describe('MockDataResolver', () => {
   it('returns the fixture value for a known capability id', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { noPiiInQueryStrings } from '../src/baseline/no_pii_in_query_strings.ts';
-import { baselineContext } from './fixtures/manifest.ts';
+import { noPiiInQueryStrings } from '../src/baseline/no_pii_in_query_strings.js';
+import { baselineContext } from './fixtures/manifest.js';
 
 describe('no_pii_in_query_strings', () => {
   it('passes when pii_fields is empty (no policy data)', () => {

@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AuditEvent, Capability } from '@cir/schemas';
-import { ActionDispatcher } from '../../src/actions/dispatcher.ts';
-import type { AuditSink } from '../../src/audit/emit.ts';
+import { ActionDispatcher } from '../../src/actions/dispatcher.js';
+import type { AuditSink } from '../../src/audit/emit.js';
 import {
   ALWAYS_CONFIRM,
   ALWAYS_DECLINE,
   type ConfirmationCallback,
-} from '../../src/actions/confirm.ts';
-import { MapActionRegistry } from '../../src/registry/action-registry.ts';
-import { fixtureCapabilities } from '../fixtures/manifest.ts';
+} from '../../src/actions/confirm.js';
+import { MapActionRegistry } from '../../src/registry/action-registry.js';
+import { fixtureCapabilities } from '../fixtures/manifest.js';
 
 const ctx = { user_id: 'vid', app_id: 'mail.example.com', manifest_id: 'm_8f3a2b1c' };
 

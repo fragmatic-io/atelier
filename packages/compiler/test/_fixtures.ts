@@ -15,7 +15,7 @@ import type {
   Skill,
   Trigger,
 } from '@cir/schemas';
-import type { CompileInput } from '../src/types.ts';
+import type { CompileInput } from '../src/types.js';
 
 const COMPILED_FROM = {
   capability_version: '1.0.0',

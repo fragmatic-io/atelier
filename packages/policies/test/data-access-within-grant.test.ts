@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { dataAccessWithinGrant } from '../src/baseline/data_access_within_grant.ts';
-import { baselineContext } from './fixtures/manifest.ts';
+import { dataAccessWithinGrant } from '../src/baseline/data_access_within_grant.js';
+import { baselineContext } from './fixtures/manifest.js';
 
 describe('data_access_within_grant', () => {
   it('passes when every projected field falls under the user grant', () => {

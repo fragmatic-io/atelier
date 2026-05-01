@@ -16,7 +16,7 @@ import {
   renderManifest,
   runInspect,
   stripAnsi,
-} from '../src/commands/inspect.ts';
+} from '../src/commands/inspect.js';
 import type { Manifest } from '@cir/schemas';
 
 function fixtureManifest(): Manifest {

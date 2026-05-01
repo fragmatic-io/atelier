@@ -24,11 +24,11 @@ import {
   BudgetMeteredCompiler,
   InMemoryBudgetCounter,
   mergeCompileBudgets,
-} from '../src/budget-meter.ts';
-import { CompositeCompiler } from '../src/composite-compiler.ts';
-import { BudgetExceededError } from '../src/server-resolver.ts';
-import { type CompileInput, type CompileResult, type CompilerService } from '../src/types.ts';
-import { fixtureCompileInput, fixtureManifest } from './_fixtures.ts';
+} from '../src/budget-meter.js';
+import { CompositeCompiler } from '../src/composite-compiler.js';
+import { BudgetExceededError } from '../src/server-resolver.js';
+import { type CompileInput, type CompileResult, type CompilerService } from '../src/types.js';
+import { fixtureCompileInput, fixtureManifest } from './_fixtures.js';
 
 function stubResult(overrides: Partial<CompileResult> = {}): CompileResult {
   return {

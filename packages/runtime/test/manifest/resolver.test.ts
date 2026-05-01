@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AuditEvent } from '@cir/schemas';
-import { ManifestFetcher } from '../../src/manifest/fetcher.ts';
-import { ManifestResolver, ManifestValidationError } from '../../src/manifest/resolver.ts';
-import { MemoryManifestCache } from '../../src/manifest/memory-cache.ts';
-import type { ManifestCacheKey } from '../../src/manifest/cache.ts';
-import type { AuditSink } from '../../src/audit/emit.ts';
-import { fixtureManifest } from '../fixtures/manifest.ts';
+import { ManifestFetcher } from '../../src/manifest/fetcher.js';
+import { ManifestResolver, ManifestValidationError } from '../../src/manifest/resolver.js';
+import { MemoryManifestCache } from '../../src/manifest/memory-cache.js';
+import type { ManifestCacheKey } from '../../src/manifest/cache.js';
+import type { AuditSink } from '../../src/audit/emit.js';
+import { fixtureManifest } from '../fixtures/manifest.js';
 
 const KEY: ManifestCacheKey = { user_id: 'vid', app_id: 'mail.example.com', route: '/today' };
 

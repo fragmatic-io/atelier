@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { confirmationRequiredForDestructive } from '../src/baseline/confirmation_required_for_destructive.ts';
-import { baselineContext } from './fixtures/manifest.ts';
+import { confirmationRequiredForDestructive } from '../src/baseline/confirmation_required_for_destructive.js';
+import { baselineContext } from './fixtures/manifest.js';
 import type { LayoutNode } from '@cir/schemas';
 
 describe('confirmation_required_for_destructive', () => {

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 import { describe, expect, it, vi } from 'vitest';
-import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.ts';
+import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import {
   SseTriggerTransport,
   type EventSourceCtor,
   type EventSourceLike,
-} from '../../src/triggers/sse-transport.ts';
+} from '../../src/triggers/sse-transport.js';
 import type { Trigger } from '@cir/schemas';
 
 class FakeEventSource implements EventSourceLike {
