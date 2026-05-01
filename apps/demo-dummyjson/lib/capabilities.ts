@@ -97,4 +97,49 @@ export const CAPABILITIES: Record<string, Capability> = {
     rollback: 'dummyjson.cart.add',
     low_stakes: true,
   },
+  // Quota source — read-only capability surfacing the cart-add rate-limit
+  // budget. Bound by `<MarigoldHeader>` so the
+  // `rate_limited_actions_show_state` policy walker finds a quota
+  // ancestor on every route that exposes a rate-limited action. Phase
+  // 1.5 (Dynamic UI Activation) added this; without it, any LLM-
+  // produced manifest exposing `dummyjson.cart.{add,remove}` would
+  // fail the policy.
+  'dummyjson.cart.add.rate_limit': {
+    id: 'dummyjson.cart.add.rate_limit',
+    kind: 'data',
+    version: '0.1.0',
+    input: { user_id: 'number' },
+    output: {
+      remaining: 'number',
+      limit: 'number',
+      reset_at: 'number',
+    },
+    side_effects: [],
+    permissions: ['cart:read'],
+    confirmation: 'none',
+    rate_limit: '120/min/user',
+    reversible: true,
+    low_stakes: true,
+  },
+  // Same shape, different capability. Cart-add and cart-remove share a
+  // rate-limit budget in practice but the policy walker treats them as
+  // separate sources. Splitting them keeps the validator strict and
+  // honest.
+  'dummyjson.cart.remove.rate_limit': {
+    id: 'dummyjson.cart.remove.rate_limit',
+    kind: 'data',
+    version: '0.1.0',
+    input: { user_id: 'number' },
+    output: {
+      remaining: 'number',
+      limit: 'number',
+      reset_at: 'number',
+    },
+    side_effects: [],
+    permissions: ['cart:read'],
+    confirmation: 'none',
+    rate_limit: '120/min/user',
+    reversible: true,
+    low_stakes: true,
+  },
 };

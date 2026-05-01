@@ -116,8 +116,13 @@ describe('manifestForRoute', () => {
       () => checkoutManifest('comfortable'),
     ]) {
       const m = builder();
-      const chip = findFirst(m.routes[0]!.layout!, 'RateLimitChip');
-      expect(chip).not.toBeNull();
+      // Post-Phase-1.5: chrome is a single <MarigoldHeader> binding that
+      // renders the chip internally and carries the
+      // `dummyjson.cart.add.rate_limit` data binding the policy walker
+      // looks for.
+      const chrome = findFirst(m.routes[0]!.layout!, 'MarigoldHeader');
+      expect(chrome).not.toBeNull();
+      expect(chrome?.data?.source).toMatch(/\.rate_limit$/);
     }
   });
 

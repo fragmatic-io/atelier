@@ -71,6 +71,8 @@ const INTENT = {
     'dummyjson.product.search.*',
     'dummyjson.product.recommendations.*',
     'dummyjson.cart.list.*',
+    'dummyjson.cart.add.rate_limit.*',
+    'dummyjson.cart.remove.rate_limit.*',
   ],
 };
 
@@ -169,13 +171,13 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       return null;
     };
     expect(
-      findFirst(browseManifest('comfortable').routes[0]!.layout, 'RateLimitChip'),
+      findFirst(browseManifest('comfortable').routes[0]!.layout, 'MarigoldHeader'),
     ).not.toBeNull();
     expect(
-      findFirst(productManifest('1', 'comfortable').routes[0]!.layout, 'RateLimitChip'),
+      findFirst(productManifest('1', 'comfortable').routes[0]!.layout, 'MarigoldHeader'),
     ).not.toBeNull();
     expect(
-      findFirst(cartManifest('comfortable').routes[0]!.layout, 'RateLimitChip'),
+      findFirst(cartManifest('comfortable').routes[0]!.layout, 'MarigoldHeader'),
     ).not.toBeNull();
   });
 

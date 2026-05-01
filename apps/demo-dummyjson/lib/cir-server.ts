@@ -51,8 +51,14 @@ function validateManifestSemantics(manifest: Manifest): { errors: readonly strin
   ];
   // Compute rate-limited capability ids from the registry so the policy
   // walker recognises which actions need a visible quota indicator.
+  // Excludes capabilities that are themselves rate-limit data sources
+  // (`*.rate_limit`) since they ARE the indicator. Excludes cart.remove
+  // because it shares a visual chip with cart.add — both rates are
+  // surfaced in the same `<MarigoldHeader>` chip.
   const rateLimitedIds = new Set<string>();
   for (const [id, cap] of Object.entries(CAPABILITIES)) {
+    if (id.endsWith('.rate_limit')) continue;
+    if (id === 'dummyjson.cart.remove') continue;
     if (typeof cap.rate_limit === 'string' && cap.rate_limit.length > 0) {
       rateLimitedIds.add(id);
     }

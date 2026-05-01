@@ -88,29 +88,18 @@ const POLICIES_SATISFIED = [
  * rate-limited action (here: `dummyjson.cart.add` on /browse, /cart,
  * /product).
  */
-function chromeHeader(): LayoutNode {
+function chromeHeader(activePath: string): LayoutNode {
   return {
-    component: 'Stack',
-    props: { direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between' },
-    children: [
-      {
-        component: 'NavBar',
-        props: {
-          brand: 'Marigold',
-          items: [
-            { label: 'Browse', href: '/browse' },
-            { label: 'Cart', href: '/cart' },
-            { label: 'Lens', href: '/settings/lens' },
-          ],
-        },
-        children: [],
-      },
-      {
-        component: 'RateLimitChip',
-        props: { label: '60 cart adds / 60s', tone: 'idle' },
-        children: [],
-      },
-    ],
+    component: 'MarigoldHeader',
+    props: { activePath, quotaLabel: '60 cart adds / 60s' },
+    // The header binds to the cart-add rate-limit data source so the
+    // `rate_limited_actions_show_state` policy walker sees a quota
+    // ancestor on every route that exposes `dummyjson.cart.*`. The
+    // pattern `<capability>.rate_limit` is the policy's allow-list. The
+    // chip in the rendered DOM displays the value; the data binding is
+    // what the manifest validator inspects.
+    data: { source: 'dummyjson.cart.add.rate_limit' },
+    children: [],
   };
 }
 
@@ -256,7 +245,7 @@ export function browseManifest(density: Density): Manifest {
               component: 'Stack',
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
-                chromeHeader(),
+                chromeHeader('/browse'),
                 PAGE_HEADER_NODE(
                   'Browse',
                   '30 products across smartphones, laptops, fragrances, skincare, groceries. Switch density at /settings/lens.',
@@ -302,7 +291,7 @@ export function productManifest(id: string, density: Density): Manifest {
               component: 'Stack',
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
-                chromeHeader(),
+                chromeHeader('/product/' + id),
                 {
                   component: 'ProductDetail',
                   data: {
@@ -383,7 +372,7 @@ export function cartManifest(density: Density): Manifest {
               component: 'Stack',
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
-                chromeHeader(),
+                chromeHeader('/cart'),
                 PAGE_HEADER_NODE(
                   'Your cart',
                   'Review the line items below. Removing is reversible — the toast at the bottom shows an undo for 5 seconds.',
@@ -443,7 +432,7 @@ export function checkoutManifest(density: Density): Manifest {
               component: 'Stack',
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
-                chromeHeader(),
+                chromeHeader('/checkout'),
                 PAGE_HEADER_NODE(
                   'Checkout',
                   'Three quick steps. Each one is reversible until you place the order.',

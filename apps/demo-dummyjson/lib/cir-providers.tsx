@@ -205,6 +205,8 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
               'dummyjson.product.search.*',
               'dummyjson.product.recommendations.*',
               'dummyjson.cart.list.*',
+              'dummyjson.cart.add.rate_limit.*',
+              'dummyjson.cart.remove.rate_limit.*',
             ],
           },
           rate_limited_capability_ids: new Set([
