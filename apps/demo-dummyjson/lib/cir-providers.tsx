@@ -214,17 +214,56 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
   });
   const actions = buildActions();
 
+  // Audit sink lives client-side. The CompileBadge subscribes to it.
+  // Below, `lensFetch` captures `x-cir-compiler` / `x-cir-tokens` /
+  // `x-cir-duration-ms` headers from the manifest API response and emits
+  // a synthetic `manifest.compiled` event so the badge surfaces the
+  // server-side compile metadata. Without this bridge the badge would
+  // only ever see client-side `manifest.served` events.
+  const audit = new StreamingAuditSink({ bufferSize: 200, echoToConsole: true });
+
   // Custom fetch wrapper that mirrors the user's lens onto an
-  // `x-cir-density` request header. The manifest endpoint reads it through
-  // `densityFromRequest()` so the FallbackCompiler picks the right variant.
-  const lensFetch: typeof fetch = (input, init) => {
+  // `x-cir-density` request header AND mirrors the server's compile
+  // metadata back into the local audit sink.
+  const lensFetch: typeof fetch = async (input, init) => {
     const headers = new Headers(init?.headers);
     headers.set('x-cir-density', loadLens());
-    return fetch(input, { ...(init ?? {}), headers });
+    const res = await fetch(input, { ...(init ?? {}), headers });
+    // Phase 1.5 polish — bridge server compile metadata into the local
+    // audit stream so `<CompileBadge>` can render `compiled · 2.5-pro ·
+    // 8.4k tok · 1.8s` for Gemini compiles, `fallback · 0 tok` when the
+    // safety net catches, `served · ... ago` on cache hit. Headers come
+    // from `apps/demo-dummyjson/app/api/cir/manifest/[...slug]/route.ts`.
+    if (res.ok) {
+      const compilerId = res.headers.get('x-cir-compiler');
+      const tokens = Number(res.headers.get('x-cir-tokens') ?? '0');
+      const durationMs = Number(res.headers.get('x-cir-duration-ms') ?? '0');
+      const source = res.headers.get('x-cir-source');
+      const manifestId = res.headers.get('etag')?.replace(/"/g, '');
+      if (compilerId) {
+        const isServed = source === 'tier_3_cache';
+        audit.emit({
+          event_id: `evt_client_${Date.now().toString(36)}`,
+          timestamp: new Date().toISOString(),
+          user_id: 'demo-user',
+          app_id: 'cir.demo-dummyjson',
+          type: isServed ? 'manifest.served' : 'manifest.compiled',
+          actor: 'system',
+          before_state_hash: '',
+          after_state_hash: '',
+          trigger_chain: [],
+          token_cost: tokens,
+          policy_evaluations: [],
+          ...(manifestId ? { manifest_id: manifestId } : {}),
+          ...(compilerId ? { compiler_model: compilerId } : {}),
+          ...(durationMs > 0 ? { duration_ms: durationMs } : {}),
+        });
+      }
+    }
+    return res;
   };
   const fetcher = new ManifestFetcher({ baseUrl: '/api/cir', fetch: lensFetch });
   const cache = new MemoryManifestCache();
-  const audit = new StreamingAuditSink({ bufferSize: 200, echoToConsole: true });
   const resolver = new ManifestResolver({
     fetcher,
     cache,

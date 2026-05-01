@@ -43,30 +43,47 @@ interface BadgeState {
 }
 
 function deriveState(events: readonly AuditEvent[], manifest_id?: string): BadgeState {
-  // Walk newest-first.
+  // First pass: prefer events carrying `compiler_model` (set by the
+  // server-side resolver in Phase 1.5 + bridged into the local sink by
+  // each demo's fetch wrapper). Without a model the event is a stale
+  // local emit — useful as a last-resort fallback but not as authoritative
+  // as the bridged server data.
   for (let i = events.length - 1; i >= 0; i -= 1) {
     const e = events[i]!;
     if (manifest_id && e.manifest_id !== manifest_id) continue;
+    if (e.compiler_model === undefined) continue;
+    const model = e.compiler_model;
+    const isFallback = model === 'fallback-hand-written';
     if (e.type === 'manifest.served') {
       return {
         type: 'served',
-        tokens: 0,
+        ...(model !== undefined ? { model } : {}),
+        tokens: e.token_cost ?? 0,
         age_ms: Date.now() - new Date(e.timestamp).getTime(),
       };
     }
     if (e.type === 'manifest.compiled') {
-      // Phase 1.5: surface compiler_model + duration_ms when the resolver
-      // included them. `fallback-hand-written` is the well-known id of the
-      // `FallbackCompiler` — show it as a distinct state so the user can
-      // tell when the LLM cascaded vs ran successfully.
-      const model = e.compiler_model;
-      const isFallback = model === 'fallback-hand-written';
       return {
         type: isFallback ? 'fallback' : 'compiled',
-        ...(model !== undefined ? { model } : {}),
+        model,
         tokens: e.token_cost ?? 0,
         age_ms: Date.now() - new Date(e.timestamp).getTime(),
         ...(e.duration_ms !== undefined ? { duration_ms: e.duration_ms } : {}),
+      };
+    }
+  }
+  // Second pass: any compiled/served event, model-less. Ordered newest-first.
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const e = events[i]!;
+    if (manifest_id && e.manifest_id !== manifest_id) continue;
+    if (e.type === 'manifest.served') {
+      return { type: 'served', tokens: 0, age_ms: Date.now() - new Date(e.timestamp).getTime() };
+    }
+    if (e.type === 'manifest.compiled') {
+      return {
+        type: 'compiled',
+        tokens: e.token_cost ?? 0,
+        age_ms: Date.now() - new Date(e.timestamp).getTime(),
       };
     }
   }
@@ -128,7 +145,9 @@ export function CompileBadge(props: CompileBadgeProps): React.JSX.Element | null
       ? [`compiled`, modelLabel, tokenLabel, durationLabel].filter(Boolean).join(' · ')
       : state.type === 'fallback'
         ? [`fallback`, tokenLabel, durationLabel].filter(Boolean).join(' · ')
-        : `served · ${formatAge(state.age_ms)} · 0 tok`;
+        : // served: surface the originating compiler model when known so the
+          // user can tell what produced the cached manifest.
+          [`served`, modelLabel, formatAge(state.age_ms), '0 tok'].filter(Boolean).join(' · ');
 
   return (
     <span

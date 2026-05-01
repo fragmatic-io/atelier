@@ -32,7 +32,7 @@ import {
   UNDO_TOAST_AMBIENT_SATISFIER,
   type AmbientPolicySatisfier,
 } from '@cir/policies';
-import { StreamingAuditSink, manifestContractsFromBindings } from '@cir/runtime';
+import { StreamingAuditSink } from '@cir/runtime';
 import { COMPOSITION_RULES } from '@cir/components/composition-rules';
 import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@cir/schemas';
 import type { Density } from '@cir/components';
@@ -57,6 +57,16 @@ const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
  * violation as a `CompilerOutputError`, which the composite cascades on.
  * See `docs/ethos.md` principles 1, 4, 5.
  */
+// Per-binding manifest contracts the policy validates against. Empty here
+// because the demo's custom bindings live in a client-side module that
+// can't be pulled into this server-side route, and importing the
+// baseline `COMPONENT_BINDINGS` from `@cir/components` drags client-only
+// React contexts into the Next bundle. The policy is additive — bindings
+// without a contract are silently skipped — so passing an empty map is
+// safe. Phase 3 follow-up: lift baseline contracts into a server-safe
+// catalog so they're enforceable at compile time too.
+const MANIFEST_CONTRACTS = {} as const;
+
 function validateManifestSemantics(manifest: Manifest): { errors: readonly string[] } {
   const policies = [
     composesAccordingTo(COMPOSITION_RULES),

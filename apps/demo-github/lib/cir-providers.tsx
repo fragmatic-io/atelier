@@ -192,9 +192,43 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
   // sends the verbal_required confirmation envelope and we POST.
   actions.register('github.issue.bulk_close', wireAction('github.issue.bulk_close'));
 
-  const fetcher = new ManifestFetcher({ baseUrl: '/api' });
-  const cache = new MemoryManifestCache();
+  // Audit sink lives client-side. The fetch wrapper bridges server
+  // compile metadata (compiler model, tokens, duration) into the local
+  // sink so `<CompileBadge>` surfaces it. Without this bridge the badge
+  // would only see client-side `manifest.served` events.
   const audit = new StreamingAuditSink({ bufferSize: 200, echoToConsole: true });
+  const auditFetch: typeof fetch = async (input, init) => {
+    const res = await fetch(input, init);
+    if (res.ok) {
+      const compilerId = res.headers.get('x-cir-compiler');
+      const tokens = Number(res.headers.get('x-cir-tokens') ?? '0');
+      const durationMs = Number(res.headers.get('x-cir-duration-ms') ?? '0');
+      const source = res.headers.get('x-cir-source');
+      const manifestId = res.headers.get('etag')?.replace(/"/g, '');
+      if (compilerId) {
+        const isServed = source === 'tier_3_cache';
+        audit.emit({
+          event_id: `evt_client_${Date.now().toString(36)}`,
+          timestamp: new Date().toISOString(),
+          user_id: 'demo-github-user',
+          app_id: 'cir.demo-github',
+          type: isServed ? 'manifest.served' : 'manifest.compiled',
+          actor: 'system',
+          before_state_hash: '',
+          after_state_hash: '',
+          trigger_chain: [],
+          token_cost: tokens,
+          policy_evaluations: [],
+          ...(manifestId ? { manifest_id: manifestId } : {}),
+          ...(compilerId ? { compiler_model: compilerId } : {}),
+          ...(durationMs > 0 ? { duration_ms: durationMs } : {}),
+        });
+      }
+    }
+    return res;
+  };
+  const fetcher = new ManifestFetcher({ baseUrl: '/api', fetch: auditFetch });
+  const cache = new MemoryManifestCache();
 
   const resolver = new ManifestResolver({
     fetcher,
