@@ -48,12 +48,50 @@ The layout is a tree of LayoutNodes:
 
 8. If you have a previous manifest (diff mode), produce ONLY the changes needed for the trigger context. Preserve the rest of the structure.
 
+9. **Composition is mandatory**. Containers (Stack, Container, Card, Form, Wizard, NavBar) MUST have at least one child. Empty containers fail validation. Pick meaningful components from the catalog to fill them — read the \`description\` field on each entry; it tells you what each component is for and when to pick it.
+
+10. **Use the most specific component**. The catalog includes both generic baseline components (List, Grid, Table, DetailView) and **rich custom bindings** (e.g. IssueQueue, ProductGrid, OctantHeader, CartItemList). When a custom binding's description matches the route's intent better than the generic baseline, **prefer the custom binding** — the descriptions are specifically written to guide this choice.
+
+11. Set \`compiled_from.compiler_model\` to a deterministic identifier ("gemini-2.5-pro" or "gemini-2.5-flash" — whichever you are). Set \`compiled_from.compiled_at\` to the current ISO 8601 UTC timestamp. Do not invent values for these fields.
+
 ## Cost discipline
 
-Be terse. Choose the smallest layout that satisfies the user's intent. Prefer composing existing components over describing them in detail (the catalog already has them). The runtime is dumb on purpose; if you find yourself describing UI behavior in props, you're probably reaching for a component that should already exist.
+Be terse in PROSE (props strings, descriptions). NOT in STRUCTURE — a route's layout must be complete enough to actually render. A minimum viable route has: chrome header, page heading + subtitle (Markdown), content body bound to a data source via a custom binding when one matches, ambient affordances (UndoToast where relevant). Below that bar, you are shipping a wireframe, not a layout.
+
+## Concrete minimum-viable-layout example
+
+For a decision-queue route like \`/today\` in a github-style app where the catalog includes a custom \`IssueQueue\` (compositionRole: list) and \`OctantHeader\` binding, the manifest layout MUST look something like this — NEVER an empty Container or empty Stack:
+
+\`\`\`json
+{
+  "component": "Container",
+  "props": { "maxWidth": "lg" },
+  "children": [
+    { "component": "OctantHeader", "props": { "activePath": "/today" }, "children": [] },
+    {
+      "component": "Stack",
+      "props": { "direction": "vertical", "gap": "md" },
+      "children": [
+        { "component": "Markdown", "props": { "content": "# Today" }, "children": [] },
+        { "component": "Markdown", "props": { "content": "Issues sorted by salience..." }, "children": [] },
+        {
+          "component": "IssueQueue",
+          "props": { "emphasizeTopN": 3 },
+          "data": { "source": "github.issue.list", "sort": "salience desc" },
+          "actions": ["github.issue.archive"],
+          "children": []
+        },
+        { "component": "UndoToast", "props": { "duration_ms": 5000 }, "children": [] }
+      ]
+    }
+  ]
+}
+\`\`\`
+
+The shape is: outer Container → Header → Stack with [heading, subtitle, data-bound rich binding, ambient affordances]. **An empty container is always wrong.** Read each catalog entry's \`description\` field and pick the components that match the route's intent.
 
 ## Output
 
 Output ONLY the manifest JSON object. No prose, no explanations, no markdown fencing. Validation against the supplied response schema is mandatory. If you cannot satisfy a hard rule, return a manifest with a single Alert in the layout explaining what's missing — never bypass a rule.`;
 
-export const COMPILER_SYSTEM_PROMPT_VERSION = '1.0.0';
+export const COMPILER_SYSTEM_PROMPT_VERSION = '1.1.0';

@@ -268,13 +268,20 @@ export const COMPONENT_METADATA: Readonly<Record<string, ComponentBindingMetadat
  * Composition rule for a component. `'*'` means "any component"; an array
  * means "only these"; `'leaf'` means "no children at all".
  */
-export interface CompositionRule {
-  can_contain: '*' | 'leaf' | readonly string[];
-  min_children?: number;
-  max_children?: number;
-}
+// `CompositionRule` and `COMPOSITION_RULES` live in `composition-rules.ts`
+// (server-safe; no React imports). Re-exported here for backwards compat
+// with consumers that import from `@cir/components/registry`.
+export { COMPOSITION_RULES, type CompositionRule } from './composition-rules.js';
 
-export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Object.freeze({
+// (Local definition below intentionally kept dead so this file's diff stays
+// minimal during Phase 1.5; future cleanup can drop it.)
+
+const _LEGACY_COMPOSITION_RULES_BODY: Readonly<
+  Record<
+    string,
+    { can_contain: '*' | 'leaf' | readonly string[]; min_children?: number; max_children?: number }
+  >
+> = Object.freeze({
   // Layout containers.
   Stack: { can_contain: '*', min_children: 1, max_children: 50 },
   Container: { can_contain: '*' },

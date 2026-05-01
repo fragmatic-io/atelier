@@ -38,6 +38,20 @@ export interface GeminiCompilerOptions {
   client?: GoogleGenAI;
   /** Maximum retries on validation failure. Default 1. */
   maxRetries?: number;
+  /**
+   * Optional post-parse hook the host supplies to enforce composition /
+   * policy rules on the LLM's output. If it returns a non-empty `errors`
+   * array, the compiler treats the output as invalid: it retries (up to
+   * `maxRetries`) with the failure reason injected into the prompt, then
+   * throws `CompilerOutputError` so the `CompositeCompiler` cascades to
+   * the next compiler (typically `FallbackCompiler`).
+   *
+   * Without this, an LLM that emits a structurally-valid but
+   * semantically-broken manifest (empty Stack, unknown component id,
+   * etc.) would propagate to the runtime and surface as a render error
+   * instead of cascading. Phase 1.5 (Dynamic UI Activation) added this.
+   */
+  validate?: (manifest: Manifest) => { errors: readonly string[] };
 }
 
 const DEFAULT_COLD_MODEL = 'gemini-2.5-pro';
@@ -49,6 +63,7 @@ export class GeminiCompiler implements CompilerService {
   readonly #coldModel: string;
   readonly #diffModel: string;
   readonly #maxRetries: number;
+  readonly #validate: ((manifest: Manifest) => { errors: readonly string[] }) | undefined;
 
   constructor(opts: GeminiCompilerOptions) {
     if (!opts.apiKey) {
@@ -58,6 +73,7 @@ export class GeminiCompiler implements CompilerService {
     this.#coldModel = opts.coldModel ?? DEFAULT_COLD_MODEL;
     this.#diffModel = opts.diffModel ?? DEFAULT_DIFF_MODEL;
     this.#maxRetries = opts.maxRetries ?? 1;
+    this.#validate = opts.validate;
     this.id = `gemini-compiler[${this.#coldModel},${this.#diffModel},sys@${COMPILER_SYSTEM_PROMPT_VERSION}]`;
   }
 
@@ -113,6 +129,26 @@ export class GeminiCompiler implements CompilerService {
           );
         }
         continue;
+      }
+
+      // Host-supplied post-parse validation (composition rules, policy
+      // enforcement). When it surfaces errors, retry once with the failure
+      // reasons injected into the prompt, then cascade.
+      if (this.#validate) {
+        const { errors } = this.#validate(manifest);
+        if (errors.length > 0) {
+          const validationError = new Error(
+            `Manifest semantically invalid:\n  - ${errors.join('\n  - ')}`,
+          );
+          lastError = validationError;
+          if (attempt === this.#maxRetries) {
+            throw new CompilerOutputError(
+              `Gemini output failed semantic validation after ${String(attempt + 1)} attempts`,
+              validationError,
+            );
+          }
+          continue;
+        }
       }
 
       return {

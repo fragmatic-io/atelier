@@ -43,6 +43,9 @@
       "text_render": {
         "type": "boolean",
         "default": true
+      },
+      "description": {
+        "type": "string"
       }
     },
     "required": [

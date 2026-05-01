@@ -93,51 +93,162 @@ function buildServer(): CirServer {
   });
 
   // Components catalog summary — what the compiler is allowed to reference.
-  // Includes the demo's custom bindings (ProductGrid, ProductDetail, …) so
-  // the Gemini compiler is allowed to compose them. The runtime registry in
-  // `cir-providers.tsx` knows the actual factories.
-  const componentIds = [
-    'Stack',
-    'Card',
-    'Container',
-    'Grid',
-    'List',
-    'Markdown',
-    'Table',
-    'EmptyState',
-    'Button',
-    'TextInput',
-    'Select',
-    'Alert',
-    'Spinner',
-    'Skeleton',
-    'StatusBar',
-    'Search',
-    'FilterBar',
-    'Pagination',
-    'Tooltip',
-    'HoverCard',
-    'BulkActionBar',
-    'Toast',
-    'NavBar',
-    'KPIRow',
-    'Wizard',
-    'Form',
-    'DetailView',
-    'Gallery',
-    'StatCard',
+  //
+  // Per `docs/ethos.md` principle #2 (composition, not invention), every
+  // entry carries a `description` so the LLM picks the right component.
+  // Custom bindings (`ProductGrid`, `ProductDetail`, `CartItemList`, etc.)
+  // describe the specific UX they ship; the compiler picks them over
+  // generic `<Grid>` / `<List>` when the route's intent matches.
+  const componentIds: Array<{ id: string; description: string }> = [
+    {
+      id: 'Stack',
+      description: 'Vertical or horizontal layout container with gap. Wrap any group of children.',
+    },
+    {
+      id: 'Card',
+      description:
+        'Bordered or elevated content surface. Use for grouped content with a clear edge.',
+    },
+    {
+      id: 'Container',
+      description: 'Page-width container with maxWidth + padding. Top-level wrapper for routes.',
+    },
+    {
+      id: 'Grid',
+      description:
+        'Generic responsive grid for tiles. For product browsing in this demo, prefer `ProductGrid` which is density-aware and renders rich product cards.',
+    },
+    {
+      id: 'List',
+      description:
+        'Generic semantic <ul>. For shopping cart, prefer `CartItemList`. Use `<List>` for related-products rails or generic recommendations.',
+    },
+    {
+      id: 'Markdown',
+      description: 'Rich-text body. Use for headings, descriptions, and prose copy.',
+    },
+    {
+      id: 'Table',
+      description: 'Generic dense rows with columns. Rare in this demo — most data is products.',
+    },
+    {
+      id: 'EmptyState',
+      description:
+        'Standalone empty-state with title + body. Used as `empty_state` slot or sibling to a data binding.',
+    },
+    {
+      id: 'Button',
+      description:
+        "Primary action affordance. Carries one capability id in `actions`. For 'Add to cart' inside a card, the binding wires it; the manifest only declares `actions`.",
+    },
+    {
+      id: 'TextInput',
+      description:
+        'Single-line text input. Pair with `<Form>` for submission (e.g. shipping form).',
+    },
+    {
+      id: 'Select',
+      description: 'Dropdown selection. For shipping country, payment method, etc.',
+    },
+    {
+      id: 'Alert',
+      description:
+        'Inline severity-flagged message. Use for `error_state` slots or persistent notices.',
+    },
+    { id: 'Spinner', description: 'Indeterminate loading affordance.' },
+    {
+      id: 'Skeleton',
+      description:
+        'Loading-state placeholder shapes (card, row, line). Use as `loading_state` slot.',
+    },
+    {
+      id: 'StatusBar',
+      description:
+        'Status pill with operational/degraded/down. Marigold uses `RateLimitChip` for rate-limit state — pick that when surfacing a rate-limited capability.',
+    },
+    {
+      id: 'Search',
+      description: 'Search input with debounced submit. Top of `/browse` to filter products.',
+    },
+    {
+      id: 'FilterBar',
+      description: 'Filter chips/dropdowns above a list. variant=chip for selectable categories.',
+    },
+    { id: 'Pagination', description: 'Pagination controls (Prev / page numbers / Next).' },
+    { id: 'Tooltip', description: 'Hover popover for inline help.' },
+    {
+      id: 'HoverCard',
+      description: 'Hoverable preview surface. Use for inline reference previews.',
+    },
+    {
+      id: 'BulkActionBar',
+      description:
+        'Bottom-center action bar that auto-mounts when a `selectable` List has rows selected.',
+    },
+    {
+      id: 'Toast',
+      description:
+        'Transient notification. Prefer `<UndoToast>`-equivalent for reversible actions.',
+    },
+    {
+      id: 'NavBar',
+      description: 'Top nav with brand + items. Pair with `RateLimitChip` for the chrome row.',
+    },
+    { id: 'KPIRow', description: 'Horizontal row of stat cards. Rare in this demo.' },
+    {
+      id: 'Wizard',
+      description:
+        'Multi-step process indicator (Shipping → Payment → Review). For checkout, prefer `CheckoutWizard` which is data-aware.',
+    },
+    { id: 'Form', description: 'Form root with submit semantics. Wraps inputs.' },
+    {
+      id: 'DetailView',
+      description:
+        'Single-record detail surface. For products, prefer `ProductDetail` which adds gallery + qty + add-to-cart.',
+    },
+    { id: 'Gallery', description: 'Image gallery / carousel. Used inside ProductDetail.' },
+    { id: 'StatCard', description: 'Single KPI card. Rare in this demo.' },
     // Custom bindings shipped in `apps/demo-dummyjson/components/`.
-    'ProductCard',
-    'ProductGrid',
-    'ProductDetail',
-    'CartItemList',
-    'CheckoutWizard',
-    'RateLimitChip',
-    'Wordmark',
+    {
+      id: 'ProductCard',
+      description:
+        'Single-product rich card: image, brand caps, title, star rating, bold price (with strikethrough on original), green Save% badge, orange Add-to-cart. Density-aware. Used by ProductGrid; rarely placed by the manifest directly.',
+    },
+    {
+      id: 'ProductGrid',
+      description:
+        "Density-aware product grid wrapping `ProductCard`. Reads `density` from intent profile: compact = single-column compact list, comfortable = 3-column card grid, spacious = 2-column oversized grid. PREFER this over `<Grid>` for `/browse`. Bind `data: { source: 'dummyjson.product.list' }`.",
+    },
+    {
+      id: 'ProductDetail',
+      description:
+        "Rich product detail page: gallery + info + qty + add-to-cart. PREFER over `<DetailView>` for `/product/[id]`. Bind `data: { source: 'dummyjson.product.list', filter: 'id = …' }`.",
+    },
+    {
+      id: 'CartItemList',
+      description:
+        "Cart line items with image + qty + remove + totals + designed empty state. PREFER over `<List>` for `/cart`. Bind `data: { source: 'dummyjson.cart.list' }`.",
+    },
+    {
+      id: 'CheckoutWizard',
+      description:
+        'Three-step Shipping/Payment/Review with progressive disclosure. PREFER over `<Wizard>` for `/checkout`.',
+    },
+    {
+      id: 'RateLimitChip',
+      description:
+        'Small inline rate-limit indicator (e.g. "60 cart adds / 60s"). Place in chrome header for any route surfacing a rate-limited action. Satisfies `rate_limited_actions_show_state` policy.',
+    },
+    {
+      id: 'Wordmark',
+      description:
+        'Marigold parcel-ribbon SVG + "DummyJSON Shop" lockup. Place at the start of chrome row.',
+    },
   ];
-  const components: ComponentDefinition[] = componentIds.map((id) => ({
-    id,
-    props_schema: `${id}Props`,
+  const components: ComponentDefinition[] = componentIds.map((c) => ({
+    id: c.id,
+    description: c.description,
+    props_schema: `${c.id}Props`,
     data_sources: [],
     actions_supported: [],
     responsive_targets: ['web'],

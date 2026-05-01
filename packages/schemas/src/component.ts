@@ -41,6 +41,19 @@ export const ComponentDefinitionSchema = z.object({
   examples: z.array(z.string().min(1)),
   /** Whether this component has a text fallback. Defaults true. */
   text_render: z.boolean().default(true),
+  /**
+   * Short prose description for the LLM compiler — what is this component,
+   * when should you pick it, when should you avoid it. This is the load-
+   * bearing field that lets a compiler choose `<IssueQueue>` over `<List>`
+   * when the route is a decision queue. Optional for backwards compat: a
+   * catalog without descriptions still renders, but the compiler relies
+   * heavily on this signal in its picking decisions.
+   *
+   * Phase 1.5 (Dynamic UI Activation) requires every shipped demo to
+   * populate this for every binding it exposes, especially custom ones.
+   * See `docs/ethos.md` principle #2 (composition, not invention).
+   */
+  description: z.string().optional(),
 });
 
 export type ComponentDefinition = z.infer<typeof ComponentDefinitionSchema>;

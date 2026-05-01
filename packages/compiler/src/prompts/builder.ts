@@ -70,14 +70,27 @@ export function buildPromptContext(input: CompileInput): BuiltPromptContext {
     lines.push('');
   }
 
-  // Components — name + props_schema name + allowed actions.
+  // Components — id + description + props_schema + allowed actions.
+  // Description is the load-bearing field for picking decisions: it tells
+  // the LLM when to pick `<IssueQueue>` over `<List>`, etc. See
+  // `docs/ethos.md` principle #2 (composition, not invention).
   lines.push(`## Components you may reference (by id)`);
-  const componentSummary = input.components.map((c) => ({
-    id: (c as { id?: string }).id ?? '<no-id>',
-    props_schema: c.props_schema,
-    data_sources: c.data_sources,
-    actions_supported: c.actions_supported,
-  }));
+  lines.push(
+    `Pick the most specific component that fits the route's intent. ` +
+      `Custom bindings carry their purpose in the description; prefer them ` +
+      `over generic baseline components when the description matches.`,
+  );
+  const componentSummary = input.components.map((c) => {
+    const desc = (c as { description?: string }).description;
+    const id = (c as { id?: string }).id ?? '<no-id>';
+    return {
+      id,
+      ...(typeof desc === 'string' && desc.length > 0 ? { description: desc } : {}),
+      props_schema: c.props_schema,
+      data_sources: c.data_sources,
+      actions_supported: c.actions_supported,
+    };
+  });
   lines.push('```json');
   lines.push(JSON.stringify(componentSummary, null, 2));
   lines.push('```');

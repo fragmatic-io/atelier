@@ -1,6 +1,7 @@
 {
   "Accordion": {
-    "can_contain": "*"
+    "can_contain": "*",
+    "min_children": 1
   },
   "ActionMenu": {
     "can_contain": "leaf"
@@ -24,7 +25,8 @@
     "can_contain": "leaf"
   },
   "Card": {
-    "can_contain": ["Stack", "Grid", "Markdown", "Table", "EmptyState"]
+    "can_contain": ["Stack", "Grid", "Markdown", "Table", "EmptyState"],
+    "min_children": 1
   },
   "Chart": {
     "can_contain": "leaf"
@@ -48,7 +50,8 @@
     "can_contain": "leaf"
   },
   "Container": {
-    "can_contain": "*"
+    "can_contain": "*",
+    "min_children": 1
   },
   "DateInput": {
     "can_contain": "leaf"
@@ -60,7 +63,8 @@
     "can_contain": "leaf"
   },
   "Drawer": {
-    "can_contain": "*"
+    "can_contain": "*",
+    "min_children": 1
   },
   "EmptyState": {
     "can_contain": "leaf"
@@ -104,7 +108,8 @@
     "can_contain": "leaf"
   },
   "Modal": {
-    "can_contain": "*"
+    "can_contain": "*",
+    "min_children": 1
   },
   "MultiSelect": {
     "can_contain": "leaf"
@@ -165,7 +170,8 @@
     "can_contain": "leaf"
   },
   "Tabs": {
-    "can_contain": "*"
+    "can_contain": "*",
+    "min_children": 1
   },
   "TextInput": {
     "can_contain": "leaf"
