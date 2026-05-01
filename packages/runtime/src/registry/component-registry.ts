@@ -40,6 +40,8 @@
  */
 export type CompositionRole = 'list' | 'grid' | 'table';
 
+import type { ManifestComponentContract } from '@cir/schemas';
+
 /**
  * One bound component. `factory` is opaque to the runtime — it could be a
  * React component, a Vue component, a native bridge handle, etc.
@@ -79,6 +81,19 @@ export interface ComponentBinding {
    * `actions_match_action_slots` baseline policy.
    */
   actionSlots?: readonly string[];
+  /**
+   * Optional schema-validated manifest contract (Phase 2 #1, ethos
+   * principle #7). When set, the `manifest_component_contract_satisfied`
+   * policy validates every manifest node referencing this binding against
+   * the declared `allowed_props` / `required_props` shape. Bindings
+   * without a contract are unaffected (back-compat).
+   *
+   * Defensive defaults inside components (e.g. `items = []`, `label?`
+   * aliasing into `children`) are forgiveness for an enforcement gap —
+   * declare the contract here and the schema layer rejects malformed
+   * manifests upstream.
+   */
+  manifestContract?: ManifestComponentContract;
 }
 
 export interface ComponentRegistry {
@@ -164,6 +179,24 @@ export function actionSlotsFromBindings(
   const out: Record<string, readonly string[]> = {};
   for (const [id, binding] of Object.entries(bindings)) {
     if (binding.actionSlots !== undefined) out[id] = binding.actionSlots;
+  }
+  return out;
+}
+
+/**
+ * Build a `componentId -> ManifestComponentContract` map by scanning a
+ * registry-like `Record<string, ComponentBinding>`. Bindings without a
+ * `manifestContract` are omitted so the resulting record only carries
+ * components that declare a schema-validated contract. Convenience for
+ * hosts that hand the map to `manifestComponentContractSatisfied()`
+ * (`@cir/policies`).
+ */
+export function manifestContractsFromBindings(
+  bindings: Readonly<Record<string, ComponentBinding>>,
+): Readonly<Record<string, ManifestComponentContract>> {
+  const out: Record<string, ManifestComponentContract> = {};
+  for (const [id, binding] of Object.entries(bindings)) {
+    if (binding.manifestContract !== undefined) out[id] = binding.manifestContract;
   }
   return out;
 }

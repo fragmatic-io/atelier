@@ -19,26 +19,50 @@ import {
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
-import { SequenceDetector, composesAccordingTo, emptyLoadingErrorHandled } from '@cir/policies';
-import { BehavioralTap, StreamingAuditSink } from '@cir/runtime';
-import { COMPOSITION_RULES } from '@cir/components/composition-rules';
+import {
+  SequenceDetector,
+  composesAccordingTo,
+  emptyLoadingErrorHandled,
+  manifestComponentContractSatisfied,
+} from '@cir/policies';
+import { BehavioralTap, StreamingAuditSink, manifestContractsFromBindings } from '@cir/runtime';
+import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
 import type { Capability, ComponentDefinition, Manifest } from '@cir/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
+import { DEMO_GITHUB_BINDINGS } from './component-bindings.js';
 import { manifestForRoute } from './manifests.js';
 
 /**
- * Run COMPOSITION_RULES against every route's layout in a manifest. Returns
- * the violation messages so the caller can decide whether to retry / cascade.
- * Used as the `validate` hook on `GeminiCompiler` — empty containers,
- * over-stuffed slots, leaf-with-children mistakes get caught here and the
- * composite falls through to the hand-written fallback.
+ * Build the per-binding manifest contract map for the policy. Merges the
+ * baseline `COMPONENT_BINDINGS` with the demo's custom `DEMO_GITHUB_BINDINGS`
+ * so contracts declared on either side are enforced. Bindings without a
+ * `manifestContract` are silently skipped (the policy is strictly
+ * additive).
  */
-function validateManifestComposition(manifest: Manifest): { errors: readonly string[] } {
-  // Run the policies the runtime renderer enforces post-render — but at
-  // compile time, so the LLM gets a chance to retry before its output
-  // reaches the renderer. See ETHOS principles 1 & 5.
-  const policies = [composesAccordingTo(COMPOSITION_RULES), emptyLoadingErrorHandled];
+const MANIFEST_CONTRACTS = manifestContractsFromBindings({
+  ...COMPONENT_BINDINGS,
+  ...DEMO_GITHUB_BINDINGS,
+});
+
+/**
+ * Compile-time validate hook. Runs the renderer's policies on the LLM
+ * output before the manifest reaches the runtime — so a malformed
+ * `<NavBar links={...}>` (or any other manifest contract drift) cascades
+ * to the FallbackCompiler instead of crashing inside React.
+ *
+ * Phase 2 #1: adds `manifest_component_contract_satisfied` — the
+ * schema-validated per-binding contract policy that replaces the
+ * defensive defaults band-aided in commits 9ae2122 / 0c6cc26.
+ *
+ * See ETHOS principles 4, 5, 7.
+ */
+function validateManifestSemantics(manifest: Manifest): { errors: readonly string[] } {
+  const policies = [
+    composesAccordingTo(COMPOSITION_RULES),
+    emptyLoadingErrorHandled,
+    manifestComponentContractSatisfied(MANIFEST_CONTRACTS),
+  ];
   const ctx = {
     manifest,
     capabilities: CAPABILITIES,
@@ -95,12 +119,11 @@ function buildServer(): CirServer {
         apiKey: apiKey!,
         coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
         diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
-        // Composition validation — see ETHOS principle #4. The LLM may
-        // emit a Zod-valid manifest with empty containers (`<Stack />`
-        // with no children). Composition rules catch that here so the
-        // composite cascades to the FallbackCompiler instead of letting
-        // a broken manifest reach the renderer.
-        validate: validateManifestComposition,
+        // Semantic validation — see ETHOS principles 4, 5, 7. Catches
+        // composition drift (empty containers), missing empty/loading/
+        // error slots, AND per-binding manifest contract violations
+        // (Phase 2 #1) before the LLM's output reaches the renderer.
+        validate: validateManifestSemantics,
       }),
     );
   }

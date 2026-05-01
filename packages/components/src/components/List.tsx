@@ -56,10 +56,12 @@ export interface ListProps<T> {
   renderItem?: (item: T, index: number) => ReactNode;
   empty?: ReactNode;
   /**
-   * Manifest-friendly alias for `items`. When the manifest renderer
-   * resolves a `data` binding, it passes the array as `data`. We accept
-   * either: explicit `items` wins, otherwise fall back to `data` if it
-   * is array-shaped, otherwise empty.
+   * Manifest contract slot for the resolver-supplied data array. When the
+   * manifest renderer resolves a `data` binding, it threads the result
+   * through this prop. Explicit `items` wins; falling back to `data`
+   * keeps the manifest's `data: { source: '...' }` binding from
+   * requiring a host-side adapter. Both are declared in
+   * `ListBinding.manifestContract`.
    */
   data?: unknown;
   bordered?: boolean;
@@ -345,4 +347,30 @@ export function listTextRender(props: ListProps<unknown>): string {
 export const ListBinding: ComponentBinding = {
   id: 'List',
   factory: List as ComponentBinding['factory'],
+  manifestContract: {
+    description:
+      'Generic semantic <ul>. Either `items` (typed array) or `data` (the resolver-supplied alias) supplies rows; `renderItem` is optional (the component falls back to a best-effort label). The `data` slot is part of the formal contract — the renderer threads resolved data into it (see `RenderNode`). Replaces the implicit fallback band-aided in commit 0c6cc26.',
+    allowed_props: {
+      items: 'array',
+      data: 'unknown',
+      renderItem: 'function',
+      empty: 'react-node',
+      bordered: 'boolean',
+      density: 'string',
+      variant: 'string',
+      className: 'string',
+      showPinnedSeparator: 'boolean',
+      pinnedSeparatorVariant: 'string',
+      pinAriaLabel: 'function',
+      selectable: 'boolean',
+      idOf: 'function',
+      selectedIds: 'object',
+      onSelectionChange: 'function',
+      bulkActions: 'array',
+      onBulkAction: 'function',
+      // Loading / error props are wired by the renderer from data bindings.
+      loading: 'boolean',
+      error: 'unknown',
+    },
+  },
 };

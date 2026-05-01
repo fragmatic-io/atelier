@@ -54,6 +54,10 @@ export {
   type CompositionRule,
   type CompositionRules,
 } from './baseline/composition_rules.js';
+export {
+  manifestComponentContractSatisfied,
+  type ManifestComponentContracts,
+} from './baseline/manifest_component_contract_satisfied.js';
 
 // -----------------------------------------------------------------------------
 // Internal helpers (exported so downstream policy authors can reuse them)

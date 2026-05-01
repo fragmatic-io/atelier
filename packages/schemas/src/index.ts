@@ -66,6 +66,19 @@ export {
 } from './component.js';
 
 // -----------------------------------------------------------------------------
+// Manifest component contract (schema-validated per-binding prop shape)
+// See ETHOS principle #7. Consumed by the runtime registry (opt-in field on
+// `ComponentBinding`) and the `manifest_component_contract_satisfied`
+// policy in `@cir/policies`.
+// -----------------------------------------------------------------------------
+export {
+  ManifestComponentContractSchema,
+  ManifestComponentPropTypeSchema,
+  type ManifestComponentContract,
+  type ManifestComponentPropType,
+} from './manifest-component-contract.js';
+
+// -----------------------------------------------------------------------------
 // Intent
 // -----------------------------------------------------------------------------
 export {

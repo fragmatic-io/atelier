@@ -8,11 +8,18 @@
  * children. The icon is decorative (aria-hidden) so the button's accessible
  * name still comes from `children` or an explicit `aria-label`.
  *
- * Phase 2 #2 — capability dispatch is first-class (ethos principle #8).
- * `ButtonBinding` declares `actionSlots: ['onPrimaryAction']`. The renderer
- * maps `node.actions[0]` to `props.onPrimaryAction`; this component wires
- * that handler to `onClick` (preventing the default form submission). No
- * dotted-key prop names ever reach `<button>`.
+ * Phase 2 #1 — manifest contract is schema-validated. `ButtonBinding`
+ * declares `manifestContract`; the `manifest_component_contract_satisfied`
+ * policy walks the manifest tree and rejects unknown / wrong-typed props
+ * at compile time. Replaces the implicit forgiveness band-aid from commit
+ * 9ae2122.
+ *
+ * Phase 2 #2 — capability dispatch is first-class. `ButtonBinding`
+ * declares `actionSlots: ['onPrimaryAction']`. The renderer maps
+ * `node.actions[0]` to `props.onPrimaryAction`; this component wires that
+ * handler to `onClick` (preventing the default form submission). No
+ * dotted-key prop names ever reach `<button>` — `partitionCapabilityProps`
+ * was the band-aid; it's now gone.
  */
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
@@ -44,9 +51,10 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   icon?: { set: string; name: string };
   children?: ReactNode;
   /**
-   * Manifest-friendly alias for `children`. When the manifest renderer
-   * supplies `label: 'Save'`, fall back to it if `children` is empty.
-   * Prefer `children` when both exist.
+   * Manifest contract slot for the button's accessible name. Manifests
+   * commonly ship `label: 'Save'` (a JSON-friendly shape) rather than a
+   * `children` react-node. Component renders `label` when `children`
+   * is empty. Both are declared in `ButtonBinding.manifestContract`.
    */
   label?: string;
   /**
@@ -125,4 +133,26 @@ export const ButtonBinding: ComponentBinding = {
   id: 'Button',
   factory: Button,
   actionSlots: ['onPrimaryAction'],
+  manifestContract: {
+    description:
+      'Action primitive. Manifests typically supply `label` (rendered as button text); `children` is permitted for hosts that nest react-nodes. `variant`, `size`, `type` enumerate the visual contract. `icon` is a `{ set, name }` bag. The capability dispatcher (`actions: ["…"]`) is wired by the renderer to `onPrimaryAction` via `actionSlots` — manifests never declare `onPrimaryAction` directly.',
+    allowed_props: {
+      label: 'string',
+      children: 'react-node',
+      variant: 'string',
+      size: 'string',
+      type: 'string',
+      icon: 'object',
+      className: 'string',
+      style: 'object',
+      // Generic accessibility / DOM hooks that flow through `...rest`.
+      // Listed so manifests can supply them without tripping unknown-key
+      // violations. Anything else fails the policy.
+      'aria-label': 'string',
+      'aria-hidden': 'boolean',
+      'data-cir-policy-anchor': 'string',
+      disabled: 'boolean',
+      onClick: 'function',
+    },
+  },
 };

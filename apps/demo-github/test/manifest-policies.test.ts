@@ -18,8 +18,13 @@
 
 import { describe, expect, it } from 'vitest';
 import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
-import { BASELINE_POLICIES, composesAccordingTo, validateManifest } from '@cir/policies';
-import { compositionRolesFromBindings } from '@cir/runtime';
+import {
+  BASELINE_POLICIES,
+  composesAccordingTo,
+  manifestComponentContractSatisfied,
+  validateManifest,
+} from '@cir/policies';
+import { compositionRolesFromBindings, manifestContractsFromBindings } from '@cir/runtime';
 import type { Manifest } from '@cir/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
@@ -67,6 +72,10 @@ const ROUTES: readonly string[] = [
 ];
 
 const COMPOSITION_ROLES = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
+const MANIFEST_CONTRACTS = manifestContractsFromBindings({
+  ...COMPONENT_BINDINGS,
+  ...DEMO_GITHUB_BINDINGS,
+});
 
 function validate(manifest: Manifest) {
   return validateManifest(
@@ -80,7 +89,11 @@ function validate(manifest: Manifest) {
       composition_roles: COMPOSITION_ROLES,
     },
     {
-      policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
+      policies: [
+        ...BASELINE_POLICIES,
+        composesAccordingTo(COMPOSITION_RULES),
+        manifestComponentContractSatisfied(MANIFEST_CONTRACTS),
+      ],
     },
   );
 }

@@ -105,6 +105,7 @@ export {
 export {
   actionSlotsFromBindings,
   compositionRolesFromBindings,
+  manifestContractsFromBindings,
   EMPTY_REGISTRY,
   MapComponentRegistry,
   type ComponentBinding,

@@ -30,7 +30,13 @@
 
 import { describe, expect, it } from 'vitest';
 import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
-import { BASELINE_POLICIES, composesAccordingTo, validateManifest } from '@cir/policies';
+import {
+  BASELINE_POLICIES,
+  composesAccordingTo,
+  manifestComponentContractSatisfied,
+  validateManifest,
+} from '@cir/policies';
+import { manifestContractsFromBindings } from '@cir/runtime';
 import { DUMMYJSON_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
 import { browseManifest, cartManifest, checkoutManifest, productManifest } from '../lib/manifests';
@@ -76,6 +82,8 @@ const INTENT = {
   ],
 };
 
+const MANIFEST_CONTRACTS = manifestContractsFromBindings(COMPONENT_BINDINGS);
+
 function validate(manifest: ReturnType<typeof browseManifest>) {
   return validateManifest(
     {
@@ -88,7 +96,11 @@ function validate(manifest: ReturnType<typeof browseManifest>) {
       composition_roles: DEMO_DUMMYJSON_COMPOSITION_ROLES,
     },
     {
-      policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
+      policies: [
+        ...BASELINE_POLICIES,
+        composesAccordingTo(COMPOSITION_RULES),
+        manifestComponentContractSatisfied(MANIFEST_CONTRACTS),
+      ],
     },
   );
 }

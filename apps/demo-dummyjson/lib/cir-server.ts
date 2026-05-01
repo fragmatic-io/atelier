@@ -25,11 +25,12 @@ import {
 import {
   composesAccordingTo,
   emptyLoadingErrorHandled,
+  manifestComponentContractSatisfied,
   rateLimitedActionsShowState,
   reversibilitySurfaced,
 } from '@cir/policies';
-import { StreamingAuditSink } from '@cir/runtime';
-import { COMPOSITION_RULES } from '@cir/components/composition-rules';
+import { StreamingAuditSink, manifestContractsFromBindings } from '@cir/runtime';
+import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
 import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@cir/schemas';
 import type { Density } from '@cir/components';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';
@@ -37,10 +38,27 @@ import { CAPABILITIES } from './capabilities.js';
 import { manifestForRoute } from './manifests.js';
 
 /**
- * Run composition + empty/loading/error policies on the LLM's output before
- * the manifest reaches the renderer. The Gemini validate hook treats any
- * violation as a `CompilerOutputError`, which the composite cascades on.
- * See `docs/ethos.md` principles 1, 4, 5.
+ * Per-binding manifest contract map for the policy. Drawn from the
+ * baseline `COMPONENT_BINDINGS` only — the demo's custom bindings ship
+ * inside `lib/component-bindings.ts`, which transitively pulls in
+ * client-side React components (`@/components/*.tsx`). Importing it here
+ * would push those into the server compile path and break the SSR / test
+ * resolution of the cir-server module. The custom bindings can declare
+ * their own `manifestContract` later — once they do, the renderer's
+ * registry on the React side enforces it; the SSR validate hook focuses
+ * on the baseline catalog here.
+ *
+ * Bindings without a `manifestContract` are silently skipped (the policy
+ * is strictly additive).
+ */
+const MANIFEST_CONTRACTS = manifestContractsFromBindings(COMPONENT_BINDINGS);
+
+/**
+ * Run composition + empty/loading/error + per-binding manifest contract
+ * policies on the LLM's output before the manifest reaches the renderer.
+ * The Gemini validate hook treats any violation as a
+ * `CompilerOutputError`, which the composite cascades on. See
+ * `docs/ethos.md` principles 1, 4, 5, 7.
  */
 function validateManifestSemantics(manifest: Manifest): { errors: readonly string[] } {
   const policies = [
@@ -48,6 +66,7 @@ function validateManifestSemantics(manifest: Manifest): { errors: readonly strin
     emptyLoadingErrorHandled,
     rateLimitedActionsShowState,
     reversibilitySurfaced,
+    manifestComponentContractSatisfied(MANIFEST_CONTRACTS),
   ];
   // Compute rate-limited capability ids from the registry so the policy
   // walker recognises which actions need a visible quota indicator.

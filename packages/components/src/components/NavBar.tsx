@@ -26,7 +26,13 @@ export interface NavBarProps {
   className?: string;
 }
 
-export function NavBar({ items = [], brand, className }: NavBarProps): ReactNode {
+/**
+ * Phase 2 #1 — manifest contract is now schema-validated upstream by the
+ * `manifest_component_contract_satisfied` policy. The previous defensive
+ * `items = []` default (band-aided in commit 9ae2122) is gone: a manifest
+ * that omits `items` now fails the policy at compile time.
+ */
+export function NavBar({ items, brand, className }: NavBarProps): ReactNode {
   return (
     <nav
       role="navigation"
@@ -68,4 +74,14 @@ export function navBarTextRender(props: NavBarProps): string {
 export const NavBarBinding: ComponentBinding = {
   id: 'NavBar',
   factory: NavBar,
+  manifestContract: {
+    description:
+      'Top navigation bar. Manifests must supply `items` (NavItem[]); `brand` is an optional react-node slot. Replaces the legacy `links`/`title` shape band-aided in commit 9ae2122.',
+    allowed_props: {
+      items: 'array',
+      brand: 'react-node',
+      className: 'string',
+    },
+    required_props: ['items'],
+  },
 };
