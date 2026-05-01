@@ -46,9 +46,21 @@ export type CompositionRules = Record<string, CompositionRule>;
 
 const POLICY_ID = 'composes_according_to_rules';
 
+/** Maps a `compositionRole` to the baseline component id whose rules apply. */
+const ROLE_TO_BASELINE: Readonly<Record<'list' | 'grid' | 'table', string>> = Object.freeze({
+  list: 'List',
+  grid: 'Grid',
+  table: 'Table',
+});
+
 /**
  * Factory — apps configure the rule set their compiler/runtime knows about.
  * Returns a `NamedPolicy` that can be added to the policy list.
+ *
+ * When a `composition_roles` map is supplied on `PolicyContext`, custom
+ * components are resolved through that map onto a baseline rule (e.g.
+ * `compositionRole: 'grid'` reuses the `Grid` rule). This keeps demos that
+ * register a `<ProductGrid>` from having to duplicate the entire rule set.
  */
 export function composesAccordingTo(rules: CompositionRules): NamedPolicy {
   return {
@@ -59,7 +71,14 @@ export function composesAccordingTo(rules: CompositionRules): NamedPolicy {
     evaluate(ctx) {
       const violations: PolicyViolation[] = [];
       walkManifest(ctx.manifest, (node, path) => {
-        const rule = rules[node.component];
+        let rule = rules[node.component];
+        if (!rule && ctx.composition_roles) {
+          const role = ctx.composition_roles[node.component];
+          if (role) {
+            const baseline = ROLE_TO_BASELINE[role];
+            rule = rules[baseline];
+          }
+        }
         if (!rule) return; // unknown component — skip; runtime renders fallback
 
         const children = node.children ?? [];

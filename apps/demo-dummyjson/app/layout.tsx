@@ -4,8 +4,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
-import { Wordmark } from '@/components/Wordmark';
 import { CirProviders } from '@/lib/cir-providers';
 import { DUMMYJSON_BRAND_KIT } from '@/lib/brand-kit';
 
@@ -35,28 +33,12 @@ export default function RootLayout({ children }: { children: ReactNode }): React
   return (
     <html lang="en" data-color-mode="light">
       <body>
-        <header className="cir-chrome">
-          <div className="cir-chrome-inner">
-            <Link
-              href="/browse"
-              aria-label="DummyJSON Shop home"
-              style={{ display: 'inline-flex' }}
-            >
-              <Wordmark size={26} />
-            </Link>
-            <nav className="cir-nav" aria-label="Primary">
-              <Link href="/browse">Browse</Link>
-              <Link href="/cart">Cart</Link>
-              <Link href="/checkout">Checkout</Link>
-              <Link href="/settings/lens">Lens</Link>
-            </nav>
-            <span className="cir-tagline">Marigold · lens-switching showcase</span>
-          </div>
-        </header>
         {/*
-         * Brand-kit JSON is co-located with the layout so any embedded
-         * inspector can read it without round-tripping a fetch. Inert by
-         * default — `type="application/json"` prevents script execution.
+         * Chrome (wordmark + nav + tagline) used to live here as a static
+         * HTML <header>. Post-E-B, the manifest renders chrome as part of
+         * the page tree (NavBar with brand="Marigold" + RateLimitChip), so
+         * the static block here was duplicating the menu. Removed; the
+         * manifest now owns chrome end-to-end.
          */}
         <script
           id="cir-brand-kit"

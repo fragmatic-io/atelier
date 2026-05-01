@@ -46,6 +46,21 @@ describe('MapComponentRegistry', () => {
     expect(reg.get('Card')?.factory).toBe(2);
     expect(reg.list()).toHaveLength(1);
   });
+
+  it('round-trips an optional compositionRole on a binding', () => {
+    // The host opts a custom binding into the policy engine's
+    // List/Grid/Table allow-list by setting `compositionRole` — the runtime
+    // itself does not interpret the field; it just preserves it on the
+    // binding so the host can collect them into a `composition_roles` map
+    // when invoking `validateManifest`.
+    const grid: ComponentBinding = {
+      id: 'ProductGrid',
+      factory: () => 'grid',
+      compositionRole: 'grid',
+    };
+    const reg = new MapComponentRegistry({ ProductGrid: grid });
+    expect(reg.get('ProductGrid')?.compositionRole).toBe('grid');
+  });
 });
 
 describe('compositionRolesFromBindings', () => {

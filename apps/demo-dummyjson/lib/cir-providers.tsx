@@ -52,6 +52,7 @@ import { validateManifest, BASELINE_POLICIES, composesAccordingTo } from '@cir/p
 import type { IntentProfile, Manifest } from '@cir/schemas';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
+import { DEMO_DUMMYJSON_BINDINGS, DEMO_DUMMYJSON_COMPOSITION_ROLES } from './component-bindings.js';
 import { loadIntentProfile, loadLens } from './intent-store.js';
 
 type CirServices = Parameters<typeof CirRuntime>[0]['services'];
@@ -67,7 +68,13 @@ const DEFAULT_USER_ID = 1;
 function buildDummyJsonResolver(): RestDataResolver {
   return new RestDataResolver({
     urlMap: {
-      'dummyjson.product.list': 'https://dummyjson.com/products?limit=30',
+      'dummyjson.product.list': (binding: DataBinding): string => {
+        // Detail page passes `filter: 'id = N'` — fetch the single product
+        // directly. List page omits the filter and pulls the first 30.
+        const id = extractEqValue(binding.filter, 'id');
+        if (id) return `https://dummyjson.com/products/${id}`;
+        return 'https://dummyjson.com/products?limit=30';
+      },
       'dummyjson.product.search': (binding: DataBinding): string => {
         const q = extractEqValue(binding.filter, 'q') ?? '';
         return `https://dummyjson.com/products/search?q=${encodeURIComponent(q)}&limit=30`;
@@ -75,8 +82,7 @@ function buildDummyJsonResolver(): RestDataResolver {
       'dummyjson.product.recommendations': (binding: DataBinding): string => {
         // The dummyjson public API does not expose a recommendation
         // endpoint. We approximate by hitting the focal product's category
-        // and returning the first 4 neighbours. Caller-supplied `limit` is
-        // honoured by `transform` below.
+        // and returning a small slate of neighbours from that category.
         const productId = extractEqValue(binding.filter, 'product_id') ?? '1';
         return `https://dummyjson.com/products/${productId}`;
       },
@@ -163,7 +169,13 @@ function buildActions(): MapActionRegistry {
 }
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
-  const registry = new MapComponentRegistry({ ...COMPONENT_BINDINGS });
+  // Baseline catalog first; demo-specific bindings (ProductGrid,
+  // CartItemList, …) layer on top so manifests can reference them in
+  // `LayoutNode.component`.
+  const registry = new MapComponentRegistry({
+    ...COMPONENT_BINDINGS,
+    ...DEMO_DUMMYJSON_BINDINGS,
+  });
   const actions = buildActions();
 
   // Custom fetch wrapper that mirrors the user's lens onto an
@@ -203,6 +215,10 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           ]),
           pii_fields: new Set(['email']),
           brand_kit: DUMMYJSON_BRAND_KIT,
+          // Custom bindings declaring `compositionRole` are surfaced here
+          // so the policy engine treats them like the matching baseline
+          // List/Grid/Table component (e.g. `ProductGrid` → `Grid`).
+          composition_roles: DEMO_DUMMYJSON_COMPOSITION_ROLES,
         },
         {
           policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],

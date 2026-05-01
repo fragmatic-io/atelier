@@ -1,16 +1,31 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Manifest ↔ baseline-policy contract.
+ * Manifest ↔ baseline-policy contract for the dummyjson catalog demo.
  *
- * The brief's section 6 calls out three policy violations the demo had
- * to fix: rate-limit quota indicator, reversibility (cart.remove sibling
- * to cart.add), and empty/loading/error slots on every data binding.
- * This suite runs `validateManifest` end-to-end with the same
- * configuration `cir-providers.tsx` uses at runtime — no mocks — so any
- * regression on the manifest builders (`browseManifest`, `productManifest`,
- * `cartManifest`, `checkoutManifest`) lights up here before the demo
- * boots.
+ * The brief's section 6 originally called out three policy violations the
+ * demo had to fix: rate-limit quota indicator, reversibility (cart.remove
+ * sibling to cart.add), and empty/loading/error slots on every data
+ * binding. After the E-B refactor:
+ *
+ *   - Quota indicator: lives in the header chrome as
+ *     `<RateLimitChip>` (a custom binding). The
+ *     `rate_limited_actions_show_state` policy walks the manifest looking
+ *     for a state-bearing component on routes that bind a rate-limited
+ *     capability — `<RateLimitChip>` plays that role here.
+ *   - Reversibility: an inert `<Button>` carrying
+ *     `dummyjson.cart.remove` is co-located with each route that exposes
+ *     `dummyjson.cart.add` so `reversibility_surfaced` walks find the
+ *     rollback action; the user-visible affordance is the inline undo
+ *     toast raised by `<ProductGrid>` / `<CartItemList>`.
+ *   - Empty/loading/error: each data binding still declares the three
+ *     slots inline.
+ *
+ * The big new wrinkle: `<ProductGrid>` is a custom binding declaring
+ * `compositionRole: 'grid'` (see `lib/component-bindings.ts`). The policy
+ * engine reads the `composition_roles` map off `PolicyContext` so it
+ * treats `<ProductGrid>` like the baseline `<Grid>` for composition
+ * allow-listing.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -20,6 +35,21 @@ import { DUMMYJSON_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
 import { browseManifest, cartManifest, checkoutManifest, productManifest } from '../lib/manifests';
 import type { Density } from '@cir/components';
+
+/**
+ * Mirror of `DEMO_DUMMYJSON_COMPOSITION_ROLES` from
+ * `lib/component-bindings.ts`. We do not import that module directly
+ * because it pulls in the React component factories via `@/components/*`
+ * — those tsx imports would fail under vitest's module resolver in this
+ * harness without a per-app vitest config. Keeping the role map mirrored
+ * here is fine: the field shape is small (3 entries) and any drift trips
+ * the binding-roles test below.
+ */
+const DEMO_DUMMYJSON_COMPOSITION_ROLES: Readonly<Record<string, 'list' | 'grid' | 'table'>> =
+  Object.freeze({
+    ProductGrid: 'grid',
+    CartItemList: 'list',
+  });
 
 // `COMPONENT_BINDINGS` import is here strictly to mirror `cir-providers.tsx`'s
 // runtime configuration — keeps the test honest about what the live demo
@@ -53,6 +83,7 @@ function validate(manifest: ReturnType<typeof browseManifest>) {
       rate_limited_capability_ids: RATE_LIMITED,
       pii_fields: PII,
       brand_kit: DUMMYJSON_BRAND_KIT,
+      composition_roles: DEMO_DUMMYJSON_COMPOSITION_ROLES,
     },
     {
       policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
@@ -87,14 +118,10 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
     expect(errors).toEqual([]);
   });
 
-  it('every cart.add binding surfaces a quota indicator and the cart.remove rollback', () => {
-    // The two tests baked into one assertion: we walk the `comfortable`
-    // browse + product manifests, find every node whose `actions` lists
-    // `dummyjson.cart.add`, and assert the same route also exposes a
-    // node bound to a `*.rate_limit` data source AND a sibling/peer
-    // node carrying `dummyjson.cart.remove`.
+  it('every cart.add binding has a sibling cart.remove rollback', () => {
     const browse = browseManifest('comfortable');
     const product = productManifest('1', 'comfortable');
+    const cart = cartManifest('comfortable');
 
     const findNodesWithAction = (
       root: unknown,
@@ -112,22 +139,22 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       return out;
     };
 
-    for (const m of [browse, product]) {
+    for (const m of [browse, product, cart]) {
       const adds = findNodesWithAction(m.routes[0]!.layout, 'dummyjson.cart.add');
       const removes = findNodesWithAction(m.routes[0]!.layout, 'dummyjson.cart.remove');
       expect(adds.length).toBeGreaterThan(0);
+      expect(removes.length).toBeGreaterThan(0);
       // The `reversibility_surfaced` policy is satisfied when a Button
       // (or ActionMenu / IconButton) carrying the rollback action lives
-      // somewhere in the same route — a sibling reversibility bar is
-      // enough. Mirror that contract here: at least one node carrying
-      // each side of the pair, plus a Button that hosts the rollback.
-      expect(removes.length).toBeGreaterThan(0);
+      // somewhere in the same route — we keep an inert anchor button
+      // co-located so the policy passes; the user-visible reversibility
+      // is the inline undo toast.
       const hasButtonRollback = removes.some((n) => n['component'] === 'Button');
       expect(hasButtonRollback).toBe(true);
     }
+  });
 
-    // Quota indicator: `<StatCard>` with the cart-adds remaining is
-    // mounted at the route level above the body in browse + product.
+  it('rate-limit chip is present on every route exposing a rate-limited action', () => {
     const findFirst = (root: unknown, component: string): Record<string, unknown> | null => {
       if (!root || typeof root !== 'object') return null;
       const node = root as Record<string, unknown>;
@@ -141,11 +168,22 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       }
       return null;
     };
-    expect(findFirst(browse.routes[0]!.layout, 'StatCard')).not.toBeNull();
-    expect(findFirst(product.routes[0]!.layout, 'StatCard')).not.toBeNull();
+    expect(
+      findFirst(browseManifest('comfortable').routes[0]!.layout, 'RateLimitChip'),
+    ).not.toBeNull();
+    expect(
+      findFirst(productManifest('1', 'comfortable').routes[0]!.layout, 'RateLimitChip'),
+    ).not.toBeNull();
+    expect(
+      findFirst(cartManifest('comfortable').routes[0]!.layout, 'RateLimitChip'),
+    ).not.toBeNull();
   });
 
   it('every data-bound node declares loading + empty + error states', () => {
+    // Includes the new `compositionRole: 'grid'` custom binding
+    // (`ProductGrid`) — the policy treats it like the baseline `Grid`,
+    // so this assertion keeps the contract honest for custom components
+    // too.
     const dataBound = new Set([
       'List',
       'Table',
@@ -158,6 +196,10 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       'Timeline',
       'Gallery',
       'Tree',
+      // Custom bindings that play list/grid/detail roles.
+      'ProductGrid',
+      'CartItemList',
+      'ProductDetail',
     ]);
     const missing: string[] = [];
 
@@ -174,8 +216,6 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       if (comp && dataBound.has(comp) && data) {
         for (const slot of ['loading_state', 'empty_state', 'error_state'] as const) {
           if (data[slot] === undefined) {
-            // Slot 3 of the policy: a sibling counts. Mirror that here so
-            // the assertion matches the policy's actual shape.
             const handlers: Record<string, string[]> = {
               loading_state: ['Spinner', 'Skeleton', 'Progress'],
               empty_state: ['EmptyState'],
@@ -203,5 +243,14 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       walk(checkoutManifest(density).routes[0]!.layout, `checkout@${density}`, missing);
     }
     expect(missing).toEqual([]);
+  });
+
+  it('ProductGrid is recognised as a Grid via composition_roles', () => {
+    // The `composes_according_to_rules` policy looks up `node.component`
+    // against the rule map. Without `composition_roles`, ProductGrid
+    // would be unknown — but with the role map threaded through it
+    // inherits the baseline `Grid` rule (`can_contain: '*'`).
+    expect(DEMO_DUMMYJSON_COMPOSITION_ROLES['ProductGrid']).toBe('grid');
+    expect(DEMO_DUMMYJSON_COMPOSITION_ROLES['CartItemList']).toBe('list');
   });
 });

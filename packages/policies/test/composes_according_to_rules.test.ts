@@ -160,4 +160,29 @@ describe('composesAccordingTo', () => {
     expect(policy.applies_to).toBe('manifest');
     expect(policy.severity).toBe('error');
   });
+
+  it('inherits the baseline rule when a custom binding declares compositionRole', () => {
+    // The host registered `ProductGrid` with `compositionRole: 'grid'`. The
+    // RULES map does not list ProductGrid directly. With `composition_roles`
+    // threaded onto the context, `ProductGrid`'s children are validated
+    // against the rule for `Grid` (or the closest baseline `'*'` carrier
+    // in this test, which we set up explicitly).
+    const rulesWithGrid: CompositionRules = {
+      ...RULES,
+      Grid: { can_contain: ['Markdown', 'Stack'] as const },
+    };
+    const policy = composesAccordingTo(rulesWithGrid);
+    const ctx: PolicyContext = {
+      ...ctxFor({
+        component: 'ProductGrid',
+        children: [{ component: 'Wildcard' }],
+      }),
+      composition_roles: { ProductGrid: 'grid' },
+    };
+    const result = policy.evaluate(ctx);
+    expect(result.ok).toBe(false);
+    const v = result.violations.find((x) => x.message.includes('"ProductGrid"'));
+    expect(v).toBeDefined();
+    expect(v?.message).toContain('Allowed: [Markdown, Stack]');
+  });
 });

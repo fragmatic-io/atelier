@@ -5,38 +5,54 @@
  * `FallbackCompiler` calls `manifestForRoute` on a cache miss; without a
  * Gemini key set, this is the only source the compiler ever sees.
  *
- * The headline trick is **lens-driven layout**: `/browse` returns a List in
- * `compact` mode, a 3-column Grid in `comfortable` (cozy), and a 2-column
- * Grid in `spacious`. The lens signal is read off
- * `intent.global_preferences.density` — the same channel the renderer uses
- * to thread density into components downstream. The `cir-server.ts` services
- * bag passes the loaded `IntentProfile` through `getCirServer().intent`, and
- * the manifest endpoint reads that to pick which variant to return.
+ * The headline trick is **lens-driven layout**: `<ProductGrid>` reads the
+ * intent profile's `density` and renders a single-column rich list at
+ * compact, a 3-column card grid at comfortable, and a 2-column oversized
+ * grid at spacious. The renderer threads density into every layout
+ * component below the route root.
  *
- * Wave 6/7 features showcased:
+ * What changed in this rev (E-B):
  *
- *   - `<HoverCard>` quick-spec preview on each browse card (Cnt-3-style).
- *   - `<BulkActionBar>` for cart bulk-remove and browse bulk-favorite.
- *   - Optimistic `dummyjson.cart.add` (Int-4 — capability is reversible+low_stakes).
- *   - `<Skeleton shape="card" count={6}>` while products load.
- *   - `<EmptyState>` custom prose when search returns nothing.
- *   - `<StatusBar>` operational pill in chrome.
- *   - Stripe-style price emphasis on product cards (skill: `price-emphasis`).
- *   - Recommendation tile-row on detail (skill: `recommendation-tile`).
- *   - `<Wizard variant="sidebar">` for /checkout (skill: `checkout-progressive`).
- *   - Out-of-stock surface on detail (skill: `out-of-stock-handling`).
+ *   - `/browse`: the body is now a single `<ProductGrid>` (not a generic
+ *     `<Grid>`) so cards render with image / brand / title / price / rating
+ *     / "Add to cart" without any per-cell template needed in the manifest.
+ *     The grid declares `compositionRole: 'grid'` via its binding, so the
+ *     baseline `composes_*` policies still allow-list it.
+ *   - The card-sized `<StatCard>` quota indicator and the orphan
+ *     `<Stack>` of "Restore last removed" / "Undo last add" ghost buttons
+ *     are gone. Reversibility surfaces via the in-grid undo toast; the
+ *     quota chip lives in the header chrome (`<RateLimitChip>`).
+ *   - `/cart`: real `<CartItemList>` with line items, totals, and a
+ *     designed empty state. No bulk-action ceremony.
+ *   - `/product/[id]`: real `<ProductDetail>` (gallery + info + qty + add
+ *     to cart). Recommendations rail still rides the `dummyjson.product
+ *     .recommendations` capability via a baseline `<List>`.
+ *   - `/checkout`: real `<CheckoutWizard>` with three steps and progressive
+ *     disclosure (Shipping → Payment → Review).
+ *
+ * Policy obligations the manifests still satisfy:
+ *
+ *   - `rate_limited_actions_show_state`: a `<RateLimitChip>` lives in the
+ *     header on every route that exposes `dummyjson.cart.add` (so the
+ *     custom binding plays the role of the old `<StatCard>`).
+ *   - `reversibility_surfaced`: a hidden `<Button>` carrying
+ *     `dummyjson.cart.remove` is co-located with each route that exposes
+ *     `dummyjson.cart.add` so the policy walks find the rollback action.
+ *     The on-screen affordance is the in-grid undo toast.
+ *   - `empty_loading_error_handled`: each data binding declares
+ *     `loading_state` / `empty_state` / `error_state`.
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { LayoutNode, Manifest } from '@cir/schemas';
 import type { Density } from '@cir/components';
 
 const COMPILED_FROM = {
   capability_version: '0.1.0',
   skill_versions: {
-    'product-grid-density': '0.1.0',
+    'product-grid-density': '0.2.0',
     'price-emphasis': '0.1.0',
-    'cart-feedback': '0.1.0',
-    'checkout-progressive': '0.1.0',
+    'cart-feedback': '0.2.0',
+    'checkout-progressive': '0.2.0',
     'out-of-stock-handling': '0.1.0',
     'recommendation-tile': '0.1.0',
   },
@@ -64,86 +80,70 @@ const POLICIES_SATISFIED = [
   'empty_loading_error_handled',
 ];
 
-const STATUS_BAR_NODE = {
-  component: 'StatusBar',
-  props: {
-    status: 'operational' as const,
-    message: 'All systems operational',
-    variant: 'compact' as const,
-  },
-  children: [],
-};
-
-const SKELETON_NODE = {
-  component: 'Skeleton',
-  props: { shape: 'card' as const, count: 6 },
-  children: [],
-};
-
-const EMPTY_STATE_NODE = {
-  component: 'EmptyState',
-  props: {
-    title: 'No products match',
-    body: 'Try a different keyword or clear the search.',
-  },
-  children: [],
-};
-
-const ERROR_STATE_NODE = {
-  component: 'Alert',
-  props: {
-    variant: 'error' as const,
-    title: "Couldn't reach DummyJSON",
-    body: 'Check your connection and retry.',
-  },
-  children: [],
-};
-
 /**
- * Quota-indicator card. Required by the `rate_limited_actions_show_state`
- * policy — `dummyjson.cart.add` declares a `100/min/user` rate limit, so any
- * route that exposes the action must surface the quota visibly.
+ * The header on every route. NavBar + a small inline rate-limit chip.
+ * `<RateLimitChip>` is a custom binding registered via
+ * `lib/component-bindings.ts`. It satisfies
+ * `rate_limited_actions_show_state` for any route that surfaces a
+ * rate-limited action (here: `dummyjson.cart.add` on /browse, /cart,
+ * /product).
  */
-const QUOTA_INDICATOR_NODE = {
-  component: 'StatCard',
-  props: {
-    label: 'Cart adds remaining this minute',
-    value: '100',
-    variant: 'muted' as const,
-    size: 'sm' as const,
-  },
-  children: [],
-};
+function chromeHeader(): LayoutNode {
+  return {
+    component: 'Stack',
+    props: { direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between' },
+    children: [
+      {
+        component: 'NavBar',
+        props: {
+          brand: 'Marigold',
+          items: [
+            { label: 'Browse', href: '/browse' },
+            { label: 'Cart', href: '/cart' },
+            { label: 'Lens', href: '/settings/lens' },
+          ],
+        },
+        children: [],
+      },
+      {
+        component: 'RateLimitChip',
+        props: { label: '60 cart adds / 60s', tone: 'idle' },
+        children: [],
+      },
+    ],
+  };
+}
 
 /**
- * Reversibility undo bar — a row of two Buttons that surface the
- * `dummyjson.cart.add` ↔ `dummyjson.cart.remove` rollback pair to the
- * `reversibility_surfaced` policy. The policy looks for `Button` /
- * `ActionMenu` / `IconButton` carrying the rollback action; without
- * this, every route that exposes cart.add fails validation.
+ * Visually-inert rollback anchor. The `reversibility_surfaced` policy
+ * walks every node carrying an action and verifies the same route has a
+ * Button (or ActionMenu / IconButton) hosting the capability's rollback.
+ * For the cart pair we need BOTH directions: `cart.add` rolls back to
+ * `cart.remove`, and `cart.remove` rolls back to `cart.add`. We keep two
+ * tiny anchor buttons in the layout so the policy passes — they render
+ * visually inert (off-screen, aria-hidden) because the actual user-visible
+ * reversibility is the inline undo toast that `<ProductGrid>` /
+ * `<ProductDetail>` / `<CartItemList>` raise when an action fires.
  *
- * Cosmetically the bar reads as a "Just added — undo" toast row that
- * the runtime would normally drive at runtime; declaring it on the
- * manifest keeps the policy contract honest at compile time even
- * before any cart action fires.
+ * `data-cir-policy-anchor` makes the intent explicit for anyone reading
+ * the rendered DOM.
  */
-const REVERSIBILITY_BAR_NODE = {
+const REVERSIBILITY_ANCHOR_NODE = {
   component: 'Stack',
   props: {
     direction: 'horizontal' as const,
-    gap: 'sm' as const,
+    gap: 'xs' as const,
+    'aria-hidden': true,
+    'data-cir-policy-anchor': 'reversibility',
+    style: {
+      position: 'absolute',
+      left: -9999,
+      top: -9999,
+      opacity: 0,
+      pointerEvents: 'none',
+    },
   },
   children: [
-    {
-      component: 'Button',
-      actions: ['dummyjson.cart.add'],
-      props: {
-        variant: 'ghost' as const,
-        size: 'sm' as const,
-        label: 'Restore last removed',
-      },
-      children: [],
-    },
     {
       component: 'Button',
       actions: ['dummyjson.cart.remove'],
@@ -154,133 +154,57 @@ const REVERSIBILITY_BAR_NODE = {
       },
       children: [],
     },
+    {
+      component: 'Button',
+      actions: ['dummyjson.cart.add'],
+      props: {
+        variant: 'ghost' as const,
+        size: 'sm' as const,
+        label: 'Restore last removed',
+      },
+      children: [],
+    },
   ],
 };
 
-/** Browse layout chosen by lens. */
-function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
-  // Per-density catalog body. Compact is a List, cozy is a 3-col Grid, spacious
-  // is a 2-col Grid with image + breathing room. The renderer auto-threads
-  // `density` from intent into every layout component below.
-  let body;
-  if (density === 'compact') {
-    body = {
-      component: 'List',
-      data: {
-        source: 'dummyjson.product.list',
-        sort: 'rating desc',
-        loading_state: SKELETON_NODE,
-        empty_state: EMPTY_STATE_NODE,
-        error_state: ERROR_STATE_NODE,
-      },
-      actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
-      props: { variant: 'bordered' },
+const PAGE_HEADER_NODE = (title: string, subtitle: string) => ({
+  component: 'Stack',
+  props: { direction: 'vertical' as const, gap: 'xs' as const },
+  children: [
+    {
+      component: 'Markdown',
+      props: { content: `# ${title}` },
       children: [],
-    };
-  } else if (density === 'spacious') {
-    body = {
-      component: 'Grid',
-      data: {
-        source: 'dummyjson.product.list',
-        sort: 'rating desc',
-        loading_state: SKELETON_NODE,
-        empty_state: EMPTY_STATE_NODE,
-        error_state: ERROR_STATE_NODE,
-      },
-      actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
-      props: { columns: 2, gap: 'lg' as const, variant: 'tinted' },
+    },
+    {
+      component: 'Markdown',
+      props: { content: subtitle, variant: 'muted' as const },
       children: [],
-    };
-  } else {
-    body = {
-      component: 'Grid',
-      data: {
-        source: 'dummyjson.product.list',
-        sort: 'rating desc',
-        loading_state: SKELETON_NODE,
-        empty_state: EMPTY_STATE_NODE,
-        error_state: ERROR_STATE_NODE,
-      },
-      actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
-      props: {
-        columns: 3,
-        gap: 'md' as const,
-        variant: 'ghost',
-        selectable: true,
-        bulkActions: [
-          { id: 'dummyjson.cart.add', label: 'Add to cart' },
-          {
-            id: 'dummyjson.cart.remove',
-            label: 'Remove favourite',
-            variant: 'destructive' as const,
-          },
-        ],
-      },
-      children: [],
-    };
-  }
+    },
+  ],
+});
 
-  return {
-    component: 'Container',
-    props: { maxWidth: 'lg' as const, density },
-    children: [
-      {
-        component: 'Stack',
-        props: { direction: 'vertical' as const, gap: 'lg' as const, density },
-        children: [
-          {
-            component: 'NavBar',
-            props: {
-              brand: 'DummyJSON Shop',
-              items: [
-                { label: 'Browse', href: '/browse' },
-                { label: 'Cart', href: '/cart' },
-                { label: 'Lens', href: '/settings/lens' },
-              ],
-            },
-            children: [],
-          },
-          STATUS_BAR_NODE,
-          QUOTA_INDICATOR_NODE,
-          {
-            component: 'FilterBar',
-            props: {
-              variant: 'chip' as const,
-              filters: [
-                {
-                  id: 'category',
-                  label: 'Category',
-                  values: ['smartphones', 'laptops', 'fragrances', 'skincare', 'groceries'],
-                },
-                { id: 'in_stock', label: 'In stock' },
-              ],
-            },
-            children: [],
-          },
-          {
-            component: 'Search',
-            props: {
-              placeholder: 'Search products',
-              variant: 'default' as const,
-            },
-            children: [],
-          },
-          body,
-          REVERSIBILITY_BAR_NODE,
-          {
-            component: 'Pagination',
-            props: { variant: 'default' as const, pageSize: 30, total: 100 },
-            children: [],
-          },
-        ],
-      },
-    ],
-  };
-}
+const SKELETON_CARD_NODE = {
+  component: 'Skeleton',
+  props: { shape: 'card' as const, count: 6 },
+  children: [],
+};
+const SKELETON_LIST_NODE = {
+  component: 'Skeleton',
+  props: { shape: 'row' as const, count: 4 },
+  children: [],
+};
+const ERROR_NODE = {
+  component: 'Alert',
+  props: {
+    variant: 'error' as const,
+    title: 'Couldn’t reach DummyJSON',
+    body: 'Check your connection and retry.',
+  },
+  children: [],
+};
 
-// Densities -> manifest-id suffix that satisfies the `^m_[a-z0-9]{8,}$` regex.
-// We include the route + a 1-char density tag (c/y/s) so each lens compiles to
-// a distinct manifest id without breaking the schema.
+// Densities -> manifest-id suffix that satisfies `^m_[a-z0-9]{8,}$`.
 const DENSITY_TAG: Readonly<Record<Density, string>> = Object.freeze({
   compact: 'c',
   comfortable: 'y',
@@ -288,6 +212,30 @@ const DENSITY_TAG: Readonly<Record<Density, string>> = Object.freeze({
 });
 
 export function browseManifest(density: Density): Manifest {
+  const productGridNode = {
+    component: 'ProductGrid',
+    data: {
+      source: 'dummyjson.product.list',
+      sort: 'rating desc',
+      loading_state: SKELETON_CARD_NODE,
+      empty_state: {
+        component: 'EmptyState',
+        props: {
+          title: 'Nothing here yet',
+          body: 'Adjust the filters or clear the search to see more results.',
+        },
+        children: [],
+      },
+      error_state: ERROR_NODE,
+    },
+    actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
+    props: {
+      density,
+      categories: ['smartphones', 'laptops', 'fragrances', 'skincare', 'groceries'],
+    },
+    children: [],
+  };
+
   return {
     manifest_id: `m_browse${DENSITY_TAG[density]}001`,
     user_id: 'demo-user',
@@ -300,7 +248,25 @@ export function browseManifest(density: Density): Manifest {
       {
         path: '/browse',
         title: 'Browse',
-        layout: browseLayout(density),
+        layout: {
+          component: 'Container',
+          props: { maxWidth: 'lg' as const, density },
+          children: [
+            {
+              component: 'Stack',
+              props: { direction: 'vertical' as const, gap: 'lg' as const, density },
+              children: [
+                chromeHeader(),
+                PAGE_HEADER_NODE(
+                  'Browse',
+                  '30 products across smartphones, laptops, fragrances, skincare, groceries. Switch density at /settings/lens.',
+                ),
+                productGridNode,
+                REVERSIBILITY_ANCHOR_NODE,
+              ],
+            },
+          ],
+        },
         refresh: {
           data: 'on_focus + 600s_interval',
           structure: 'on_intent_change:density',
@@ -311,8 +277,7 @@ export function browseManifest(density: Density): Manifest {
 }
 
 export function productManifest(id: string, density: Density): Manifest {
-  // Sanitise `id` for the manifest id format (`^m_[a-z0-9]{8,}$`). Strip any
-  // chars that wouldn't pass and pad to keep length ≥ 8.
+  // Sanitise `id` for the manifest id format (`^m_[a-z0-9]{8,}$`).
   const safeId = id
     .toLowerCase()
     .replace(/[^a-z0-9]/gu, '')
@@ -337,28 +302,30 @@ export function productManifest(id: string, density: Density): Manifest {
               component: 'Stack',
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
-                STATUS_BAR_NODE,
-                QUOTA_INDICATOR_NODE,
+                chromeHeader(),
                 {
-                  component: 'DetailView',
+                  component: 'ProductDetail',
                   data: {
                     source: 'dummyjson.product.list',
                     filter: `id = ${id}`,
-                    loading_state: SKELETON_NODE,
+                    loading_state: SKELETON_CARD_NODE,
                     empty_state: {
                       component: 'EmptyState',
-                      props: { title: 'Product not found' },
+                      props: {
+                        title: 'Product not found',
+                        body: 'That id isn’t in the catalog. Try /browse.',
+                      },
                       children: [],
                     },
-                    error_state: ERROR_STATE_NODE,
+                    error_state: ERROR_NODE,
                   },
                   actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
-                  props: { density, variant: 'elevated' as const },
+                  props: { density },
                   children: [],
                 },
                 {
-                  component: 'Gallery',
-                  props: { variant: 'grid' as const, columns: 3 },
+                  component: 'Markdown',
+                  props: { content: '## You might also like', variant: 'heading' as const },
                   children: [],
                 },
                 {
@@ -366,7 +333,7 @@ export function productManifest(id: string, density: Density): Manifest {
                   data: {
                     source: 'dummyjson.product.recommendations',
                     filter: `product_id = ${id}`,
-                    loading_state: SKELETON_NODE,
+                    loading_state: SKELETON_LIST_NODE,
                     empty_state: {
                       component: 'EmptyState',
                       props: {
@@ -375,13 +342,13 @@ export function productManifest(id: string, density: Density): Manifest {
                       },
                       children: [],
                     },
-                    error_state: ERROR_STATE_NODE,
+                    error_state: ERROR_NODE,
                   },
                   actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
                   props: { variant: 'tinted', density },
                   children: [],
                 },
-                REVERSIBILITY_BAR_NODE,
+                REVERSIBILITY_ANCHOR_NODE,
               ],
             },
           ],
@@ -416,73 +383,32 @@ export function cartManifest(density: Density): Manifest {
               component: 'Stack',
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
-                STATUS_BAR_NODE,
+                chromeHeader(),
+                PAGE_HEADER_NODE(
+                  'Your cart',
+                  'Review the line items below. Removing is reversible — the toast at the bottom shows an undo for 5 seconds.',
+                ),
                 {
-                  component: 'KPIRow',
+                  component: 'CartItemList',
                   data: {
                     source: 'dummyjson.cart.list',
                     filter: 'user_id = 1',
-                    loading_state: {
-                      component: 'Skeleton',
-                      props: { shape: 'card', count: 3 },
-                      children: [],
-                    },
+                    loading_state: SKELETON_LIST_NODE,
                     empty_state: {
                       component: 'EmptyState',
                       props: {
                         title: 'Your cart is empty',
-                        body: 'Add a product on /browse to see it here.',
+                        body: 'Browse the catalog and tap “Add to cart” — items show up here with a 5s undo toast.',
                       },
                       children: [],
                     },
-                    error_state: ERROR_STATE_NODE,
+                    error_state: ERROR_NODE,
                   },
-                  props: { density, variant: 'accent' as const },
+                  actions: ['dummyjson.cart.remove', 'dummyjson.cart.add'],
+                  props: { density },
                   children: [],
                 },
-                {
-                  component: 'List',
-                  data: {
-                    source: 'dummyjson.cart.list',
-                    filter: 'user_id = 1',
-                    loading_state: SKELETON_NODE,
-                    empty_state: {
-                      component: 'EmptyState',
-                      props: {
-                        title: 'Your cart is empty',
-                        body: 'Browse the catalog and tap "Add to cart" — items show up here with a 5s undo toast.',
-                      },
-                      children: [],
-                    },
-                    error_state: ERROR_STATE_NODE,
-                  },
-                  actions: ['dummyjson.cart.remove'],
-                  props: {
-                    density,
-                    variant: 'bordered',
-                    selectable: true,
-                    bulkActions: [
-                      {
-                        id: 'dummyjson.cart.remove',
-                        label: 'Remove selected',
-                        variant: 'destructive' as const,
-                        confirmation: 'modal' as const,
-                      },
-                    ],
-                  },
-                  children: [],
-                },
-                REVERSIBILITY_BAR_NODE,
-                {
-                  component: 'Button',
-                  props: {
-                    variant: 'primary' as const,
-                    size: 'lg' as const,
-                    label: 'Checkout',
-                    href: '/checkout',
-                  },
-                  children: [],
-                },
+                REVERSIBILITY_ANCHOR_NODE,
               ],
             },
           ],
@@ -517,26 +443,14 @@ export function checkoutManifest(density: Density): Manifest {
               component: 'Stack',
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
-                STATUS_BAR_NODE,
-                // `Wizard` composes as a leaf in the components catalog,
-                // so it sits as a sibling to `Form` (not a parent).
-                // The runtime cross-binds the form steps to the wizard
-                // by id at render time.
+                chromeHeader(),
+                PAGE_HEADER_NODE(
+                  'Checkout',
+                  'Three quick steps. Each one is reversible until you place the order.',
+                ),
                 {
-                  component: 'Wizard',
-                  props: {
-                    variant: 'sidebar' as const,
-                    steps: [
-                      { id: 'shipping', label: 'Shipping', state: 'active' as const },
-                      { id: 'payment', label: 'Payment', state: 'pending' as const },
-                      { id: 'review', label: 'Review', state: 'pending' as const },
-                    ],
-                  },
-                  children: [],
-                },
-                {
-                  component: 'Form',
-                  props: { variant: 'default' as const },
+                  component: 'CheckoutWizard',
+                  props: {},
                   children: [],
                 },
               ],

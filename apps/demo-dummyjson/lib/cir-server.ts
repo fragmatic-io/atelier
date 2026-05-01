@@ -93,6 +93,9 @@ function buildServer(): CirServer {
   });
 
   // Components catalog summary — what the compiler is allowed to reference.
+  // Includes the demo's custom bindings (ProductGrid, ProductDetail, …) so
+  // the Gemini compiler is allowed to compose them. The runtime registry in
+  // `cir-providers.tsx` knows the actual factories.
   const componentIds = [
     'Stack',
     'Card',
@@ -123,6 +126,14 @@ function buildServer(): CirServer {
     'DetailView',
     'Gallery',
     'StatCard',
+    // Custom bindings shipped in `apps/demo-dummyjson/components/`.
+    'ProductCard',
+    'ProductGrid',
+    'ProductDetail',
+    'CartItemList',
+    'CheckoutWizard',
+    'RateLimitChip',
+    'Wordmark',
   ];
   const components: ComponentDefinition[] = componentIds.map((id) => ({
     id,

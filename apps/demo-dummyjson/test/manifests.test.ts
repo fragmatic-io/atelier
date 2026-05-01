@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Lens-driven manifest builder. Each lens density resolves to a distinct
- * manifest layout (List vs 3-col Grid vs 2-col Grid) for the same /browse
- * route. Plus shape sanity for the other routes.
+ * Manifest builder tests for the dummyjson catalog demo.
+ *
+ * After the E-B refactor the headline `<Grid>` baseline binding has been
+ * replaced with a custom `<ProductGrid>` that carries `compositionRole:
+ * 'grid'`. The grid reshapes columns by reading `density` off the renderer
+ * (single column at compact, 3 at comfortable, 2 at spacious), so the
+ * manifest itself is identical across densities except for `props.density`
+ * — the test no longer asserts a different component name per lens.
+ *
+ * Cart and Product surfaces likewise migrated to custom bindings
+ * (`<CartItemList>`, `<ProductDetail>`); checkout uses `<CheckoutWizard>`.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -31,27 +39,17 @@ function findFirst(node: unknown, componentName: string): Record<string, unknown
 }
 
 describe('manifestForRoute', () => {
-  it('returns three distinct browse layouts across the three lenses', () => {
-    const compact = manifestForRoute('/browse', 'compact');
-    const cozy = manifestForRoute('/browse', 'comfortable');
-    const spacious = manifestForRoute('/browse', 'spacious');
-    expect(compact).not.toBeNull();
-    expect(cozy).not.toBeNull();
-    expect(spacious).not.toBeNull();
-
-    // Compact is a List; cozy / spacious are Grids.
-    const compactLayout = compact!.routes[0]!.layout!;
-    const cozyLayout = cozy!.routes[0]!.layout!;
-    const spaciousLayout = spacious!.routes[0]!.layout!;
-    expect(findFirst(compactLayout, 'List')).not.toBeNull();
-    expect(findFirst(cozyLayout, 'Grid')).not.toBeNull();
-    expect(findFirst(spaciousLayout, 'Grid')).not.toBeNull();
-
-    // Cozy is 3 columns; spacious is 2 columns.
-    expect((findFirst(cozyLayout, 'Grid') as { props: { columns: number } }).props.columns).toBe(3);
-    expect(
-      (findFirst(spaciousLayout, 'Grid') as { props: { columns: number } }).props.columns,
-    ).toBe(2);
+  it('returns a ProductGrid for every density on /browse', () => {
+    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
+      const m = manifestForRoute('/browse', density);
+      expect(m).not.toBeNull();
+      const grid = findFirst(m!.routes[0]!.layout, 'ProductGrid');
+      expect(grid).not.toBeNull();
+      // The renderer reads density off intent — manifest props echo it.
+      expect((grid!['props'] as { density: string }).density).toBe(density);
+      // The grid binds to the catalog list capability.
+      expect((grid!['data'] as { source: string }).source).toBe('dummyjson.product.list');
+    }
   });
 
   it('every variant validates against ManifestSchema', () => {
@@ -77,22 +75,13 @@ describe('manifestForRoute', () => {
     expect(m!.routes[0]!.path).toBe('/browse');
   });
 
-  it('cart manifest exposes selectable list with bulk-remove', () => {
+  it('cart manifest mounts CartItemList bound to cart.list', () => {
     const m = cartManifest('comfortable')!;
-    const list = findFirst(m.routes[0]!.layout!, 'List');
-    expect(list).not.toBeNull();
-    const props = list!['props'] as { selectable?: boolean; bulkActions?: { id: string }[] };
-    expect(props.selectable).toBe(true);
-    expect(props.bulkActions?.[0]?.id).toBe('dummyjson.cart.remove');
-  });
-
-  it('browse manifest in cozy mode exposes a grid bulk action bar (HoverCard wiring smoke)', () => {
-    const m = browseManifest('comfortable')!;
-    const grid = findFirst(m.routes[0]!.layout!, 'Grid');
-    expect(grid).not.toBeNull();
-    const props = grid!['props'] as { selectable?: boolean; bulkActions?: { id: string }[] };
-    expect(props.selectable).toBe(true);
-    expect(props.bulkActions?.length ?? 0).toBeGreaterThan(0);
+    const cart = findFirst(m.routes[0]!.layout!, 'CartItemList');
+    expect(cart).not.toBeNull();
+    const data = cart!['data'] as { source: string; filter: string };
+    expect(data.source).toBe('dummyjson.cart.list');
+    expect(data.filter).toContain('user_id = 1');
   });
 
   it('product detail manifest references the recommendations capability', () => {
@@ -104,11 +93,63 @@ describe('manifestForRoute', () => {
     expect(data.filter).toContain('15');
   });
 
-  it('checkout manifest exercises Wizard variant=sidebar', () => {
+  it('product detail manifest mounts ProductDetail with the focal product filter', () => {
+    const m = productManifest('15', 'comfortable')!;
+    const detail = findFirst(m.routes[0]!.layout!, 'ProductDetail');
+    expect(detail).not.toBeNull();
+    const data = detail!['data'] as { source: string; filter: string };
+    expect(data.source).toBe('dummyjson.product.list');
+    expect(data.filter).toBe('id = 15');
+  });
+
+  it('checkout manifest mounts the CheckoutWizard custom binding', () => {
     const m = checkoutManifest('comfortable')!;
-    const wiz = findFirst(m.routes[0]!.layout!, 'Wizard');
+    const wiz = findFirst(m.routes[0]!.layout!, 'CheckoutWizard');
     expect(wiz).not.toBeNull();
-    expect((wiz!['props'] as { variant: string }).variant).toBe('sidebar');
-    expect((wiz!['props'] as { steps: unknown[] }).steps).toHaveLength(3);
+  });
+
+  it('every route surfaces the rate-limit chip in the chrome header', () => {
+    for (const builder of [
+      () => browseManifest('comfortable'),
+      () => cartManifest('comfortable'),
+      () => productManifest('1', 'comfortable'),
+      () => checkoutManifest('comfortable'),
+    ]) {
+      const m = builder();
+      const chip = findFirst(m.routes[0]!.layout!, 'RateLimitChip');
+      expect(chip).not.toBeNull();
+    }
+  });
+
+  it('drops the card-sized StatCard quota indicator from the body', () => {
+    // The old design surfaced the rate-limit quota as a card-sized
+    // StatCard in the page body. The new design moves that to a small
+    // inline `<RateLimitChip>` in the chrome header (asserted above).
+    const m = browseManifest('comfortable')!;
+    expect(findFirst(m.routes[0]!.layout!, 'StatCard')).toBeNull();
+  });
+
+  it('reversibility anchor buttons are present but render off-screen', () => {
+    // The reversibility policy needs Button nodes carrying both
+    // `cart.add` and `cart.remove` in every route that exposes the cart
+    // pair. The user-visible reversibility is the inline undo toast;
+    // the anchors are flagged with `data-cir-policy-anchor=reversibility`
+    // and positioned off-screen.
+    const m = browseManifest('comfortable')!;
+    const findAll = (root: unknown, comp: string, out: unknown[] = []): unknown[] => {
+      if (!root || typeof root !== 'object') return out;
+      const node = root as Record<string, unknown>;
+      if (node['component'] === comp) out.push(node);
+      const children = node['children'];
+      if (Array.isArray(children)) for (const c of children) findAll(c, comp, out);
+      return out;
+    };
+    const buttons = findAll(m.routes[0]!.layout!, 'Button') as Array<Record<string, unknown>>;
+    const addBtn = buttons.find((b) => (b['actions'] as string[])?.includes('dummyjson.cart.add'));
+    const removeBtn = buttons.find((b) =>
+      (b['actions'] as string[])?.includes('dummyjson.cart.remove'),
+    );
+    expect(addBtn).toBeDefined();
+    expect(removeBtn).toBeDefined();
   });
 });

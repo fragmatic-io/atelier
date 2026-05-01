@@ -14,10 +14,17 @@
  */
 export default {
   darkMode: ['class', '[data-color-mode="dark"]'],
+  // The `@cir/components` package ships its variant utility classes inline
+  // (`bg-green-100`, `text-green-800`, …). Without scanning the workspace
+  // copy of those source files, Tailwind's JIT never emits the classes and
+  // surfaces like the StatusBar dot render with no color (the visible
+  // "black dot on a 'green' pill" bug). Mirror the demo-github content
+  // glob to keep the two demos consistent.
   content: [
     './app/**/*.{ts,tsx,js,jsx}',
     './components/**/*.{ts,tsx,js,jsx}',
     './lib/**/*.{ts,tsx,js,jsx}',
+    '../../packages/components/src/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {
