@@ -24,7 +24,7 @@ import type {
   ManifestResolver,
   TriggerSubscription,
 } from '@cir/runtime';
-import type { IntentProfile } from '@cir/schemas';
+import type { BrandKit, IntentProfile } from '@cir/schemas';
 
 export interface CirRuntimeServices {
   resolver: ManifestResolver;
@@ -45,6 +45,13 @@ export interface CirRuntimeServices {
    * `<CirRuntime>` provider remains the only place to wire personalisation.
    */
   intent?: IntentProfile;
+  /**
+   * The active brand kit for this app. Optional — kits live at
+   * `/.well-known/brand-kit.json` in production, but hosts thread a typed
+   * reference here for the compiler / policy engine to read directly.
+   * Track DS-A (Wave 11) wired this for `apps/demo`'s "Aurora" theme.
+   */
+  brandKit?: BrandKit;
 }
 
 /**

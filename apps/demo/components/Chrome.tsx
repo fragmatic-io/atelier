@@ -39,6 +39,7 @@ import {
   saveIntentProfileAsync,
 } from '../lib/intent-store';
 import type { IntentProfile } from '@cir/schemas';
+import { Wordmark } from './Wordmark';
 
 type ColorMode = 'light' | 'dark' | 'system';
 
@@ -159,18 +160,29 @@ export function Chrome({ devMode }: ChromeProps): React.JSX.Element {
   return (
     <header
       data-cir-part="chrome"
-      className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3"
+      className="bg-surface border-b border-border px-4 py-2"
+      style={{
+        background: 'var(--cir-color-surface)',
+        borderBottom: '1px solid var(--cir-color-border)',
+        color: 'var(--cir-color-fg)',
+      }}
     >
       <div className="max-w-screen-md mx-auto flex items-center justify-between gap-3">
-        <Link href="/today" className="font-semibold text-gray-900 dark:text-gray-100">
-          CIR demo
+        <Link
+          href="/today"
+          aria-label="CIR — back to Today"
+          className="inline-flex items-center"
+          style={{ color: 'var(--cir-color-fg)' }}
+        >
+          <Wordmark size={20} />
         </Link>
         <div className="flex items-center gap-3">
           <StatusBar status="operational" message="All systems operational" variant="compact" />
           {showSettings ? (
             <Link
               href="/settings/intent"
-              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-xs"
+              style={{ color: 'var(--cir-color-fg-muted)' }}
             >
               Settings
             </Link>
@@ -179,7 +191,8 @@ export function Chrome({ devMode }: ChromeProps): React.JSX.Element {
             <Link
               href="/admin/audit"
               data-testid="chrome-audit-link"
-              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-xs"
+              style={{ color: 'var(--cir-color-fg-muted)' }}
             >
               Audit
             </Link>
@@ -191,7 +204,13 @@ export function Chrome({ devMode }: ChromeProps): React.JSX.Element {
               data-testid="chrome-color-mode-toggle"
               data-color-mode={mode}
               aria-label={`Color mode: ${MODE_LABELS[mode]}. Click to cycle.`}
-              className="inline-flex items-center gap-1 rounded-md border border-gray-200 dark:border-gray-700 px-2 py-1 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs"
+              style={{
+                border: '1px solid var(--cir-color-border)',
+                borderRadius: 'var(--cir-radius-sm)',
+                color: 'var(--cir-color-fg)',
+                background: 'transparent',
+              }}
             >
               <span aria-hidden="true">{MODE_GLYPH[mode]}</span>
               <span>{MODE_LABELS[mode]}</span>

@@ -224,6 +224,10 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
       audit,
       identity: { user_id: 'demo-user', app_id: 'cir.demo' },
       intent,
+      // Track DS-A: Aurora brand kit threaded through the services bag so the
+      // compiler service / policy engine read it directly rather than refetching
+      // `/.well-known/brand-kit.json` on every compile.
+      brandKit: DEMO_BRAND_KIT,
     },
     audit,
   };

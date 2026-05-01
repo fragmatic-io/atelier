@@ -60,6 +60,35 @@ See `docs/architecture.md` §"Compiler service in detail" for the full prompt st
 
 Tailwind 4 is CSS-first (no `tailwind.config.js`). Next.js 15 is the current LTS. React Server Components route the boundary correctly because every CIR file that needs hooks ships a `'use client'` directive. See `packages/react/README.md` §"Next.js / React Server Components".
 
+## Design system — Aurora
+
+The demo ships a typed brand kit ("Aurora") that drives the visual language end-to-end:
+
+| Layer                | Where                     | What it does                                                                  |
+| -------------------- | ------------------------- | ----------------------------------------------------------------------------- |
+| Tokens (declarative) | `lib/brand-kit.ts`        | Typed `BrandKit`: colours, spacing, typography, radii, shadows, motion, voice |
+| CSS variables        | `app/globals.css`         | Projects the kit into `--cir-color-*` / `--cir-radius-*` / `--cir-shadow-*`   |
+| Tailwind theme       | `tailwind.config.mjs`     | Mirrors the same tokens as utilities (`bg-bg`, `text-fg`, `rounded-md`, …)    |
+| Wordmark             | `components/Wordmark.tsx` | Geometric SVG mark with an Aurora-cyan live-status dot                        |
+| Runtime contract     | `lib/cir-providers.tsx`   | Threads the `BrandKit` into the services bag for compiler / policy reads      |
+
+**Visual language**
+
+- **Primary**: deep purple `#6e56cf` (Linear-style violet)
+- **Accent**: cyan `#67e8f9` — reserved for activity / recency signals
+- **Destructive**: warm red `#e5484d`
+- **Sans**: Inter (system fallback chain — no font hosting in scope)
+- **Mono**: JetBrains Mono (system fallback chain)
+- **Radii**: tight 4-step scale `4 / 6 / 8 / 12 px`
+- **Shadows**: low-spread "barely there" lift, paired light + dark per elevation level
+- **Motion**: `0.16` cadence — `fast 100ms / normal 160ms / slow 240ms`
+- **Density**: dense by default — Linear-grade rhythm
+- **Voice**: imperative + technical — start with a verb, lowercase for system events, no exclamation marks, no marketing tone
+
+Dark mode is the primary surface. The runtime mirrors `intent.global_preferences.color_mode` onto `<html data-color-mode>`, and `globals.css` swaps the variable layer accordingly. The user's saved preference still wins on hydration; the SSR pass paints dark by default so the first paint matches Aurora's brand identity.
+
+Per-app variant overrides live in `globals.css` via CSS variables, NOT in the kit's `variants` map — the universal `@cir/components` tables in `packages/components/src/components/_variants.ts` stay intact across demos.
+
 ## Sanitized markdown, SSE invalidation, Playwright
 
 - **`/thread/[id]` route** + `ThreadView` component — renders an email thread with messages through the sanitized `Markdown` (GFM tables, strikethrough, autolinks; raw HTML stripped; `javascript:` URLs dropped; external links get `rel=noopener noreferrer`).
