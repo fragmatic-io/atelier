@@ -33,7 +33,7 @@ import {
   type AmbientPolicySatisfier,
 } from '@cir/policies';
 import { StreamingAuditSink, manifestContractsFromBindings } from '@cir/runtime';
-import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
+import { COMPOSITION_RULES } from '@cir/components/composition-rules';
 import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@cir/schemas';
 import type { Density } from '@cir/components';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';

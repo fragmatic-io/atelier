@@ -111,5 +111,13 @@ export const AuditEventSchema = z.object({
   token_cost: z.number().nonnegative(),
   policy_evaluations: z.array(PolicyEvaluationSchema),
   manifest_id: ManifestId.optional(),
+  /**
+   * Phase 1.5 — compile-narrative metadata. Optional so non-compile event
+   * types stay clean. Set on `manifest.compiled` events by the resolver
+   * so the `<CompileBadge>` can show the model + wall-clock duration
+   * alongside the existing token-cost figure.
+   */
+  compiler_model: z.string().optional(),
+  duration_ms: z.number().nonnegative().optional(),
 });
 export type AuditEvent = z.infer<typeof AuditEventSchema>;

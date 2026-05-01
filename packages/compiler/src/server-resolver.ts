@@ -182,6 +182,12 @@ export class ServerManifestResolver {
       token_cost: result.token_cost,
       policy_evaluations: [],
       manifest_id: result.manifest.manifest_id,
+      // Phase 1.5: compile-narrative metadata for `<CompileBadge>`. The
+      // model name (`gemini-2.5-pro` vs `fallback-hand-written`) lets the
+      // user see which compiler served them; duration tells them how long
+      // the LLM took. See `docs/ethos.md` principle #5 (visible compilation).
+      compiler_model: result.model,
+      duration_ms: result.duration_ms,
     });
 
     return {

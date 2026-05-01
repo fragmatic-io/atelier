@@ -141,6 +141,9 @@
               "props": {
                 "type": "object",
                 "additionalProperties": {}
+              },
+              "row_binding": {
+                "$ref": "#/properties/routes/items/properties/layout/properties/component"
               }
             },
             "required": [

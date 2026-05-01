@@ -13,6 +13,13 @@
  *
  * Drive it from the resolver's last `manifest.compiled` / `manifest.served`
  * audit event, or from a `ResolveResult` returned by a server endpoint.
+ *
+ * Phase 1.5 — `compiler_model` + `duration_ms` are read off the
+ * `manifest.compiled` audit event so the badge shows `compiled ·
+ * gemini-2.5-pro · 8.4k tok · 1.8s` instead of just `compiled · 0 tok`.
+ * The `fallback` state fires when the model name is `fallback-hand-written`
+ * (the FallbackCompiler's id) so the user can tell at a glance whether
+ * the LLM ran or the safety net caught it. See `docs/ethos.md` #5.
  */
 
 import { useEffect, useState } from 'react';
@@ -48,10 +55,18 @@ function deriveState(events: readonly AuditEvent[], manifest_id?: string): Badge
       };
     }
     if (e.type === 'manifest.compiled') {
+      // Phase 1.5: surface compiler_model + duration_ms when the resolver
+      // included them. `fallback-hand-written` is the well-known id of the
+      // `FallbackCompiler` — show it as a distinct state so the user can
+      // tell when the LLM cascaded vs ran successfully.
+      const model = e.compiler_model;
+      const isFallback = model === 'fallback-hand-written';
       return {
-        type: 'compiled',
+        type: isFallback ? 'fallback' : 'compiled',
+        ...(model !== undefined ? { model } : {}),
         tokens: e.token_cost ?? 0,
         age_ms: Date.now() - new Date(e.timestamp).getTime(),
+        ...(e.duration_ms !== undefined ? { duration_ms: e.duration_ms } : {}),
       };
     }
   }
@@ -99,10 +114,21 @@ export function CompileBadge(props: CompileBadgeProps): React.JSX.Element | null
   if (hidden) return null;
   if (state.type === 'unknown') return null;
 
+  const modelLabel = state.model
+    ? state.model.replace(/^gemini-/, '').replace(/^fallback-hand-written$/, 'fallback')
+    : '';
+  const tokenLabel = `${formatTokens(state.tokens)} tok`;
+  const durationLabel = state.duration_ms
+    ? state.duration_ms < 1000
+      ? `${String(state.duration_ms)}ms`
+      : `${(state.duration_ms / 1000).toFixed(1)}s`
+    : '';
   const detail =
     state.type === 'compiled'
-      ? `compiled · ${formatTokens(state.tokens)} tok`
-      : `served · ${formatAge(state.age_ms)} · 0 tok`;
+      ? [`compiled`, modelLabel, tokenLabel, durationLabel].filter(Boolean).join(' · ')
+      : state.type === 'fallback'
+        ? [`fallback`, tokenLabel, durationLabel].filter(Boolean).join(' · ')
+        : `served · ${formatAge(state.age_ms)} · 0 tok`;
 
   return (
     <span

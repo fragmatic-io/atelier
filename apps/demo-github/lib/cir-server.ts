@@ -26,7 +26,13 @@ import {
   manifestComponentContractSatisfied,
 } from '@cir/policies';
 import { BehavioralTap, StreamingAuditSink, manifestContractsFromBindings } from '@cir/runtime';
-import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
+import { COMPOSITION_RULES } from '@cir/components/composition-rules';
+// COMPONENT_BINDINGS comes from a deep import path in the React adapter
+// (`@cir/components` index pulls IconBrandContext which uses createContext
+// — Next.js forbids that on the server). For the manifest-contract policy
+// we only need the metadata, not the React factories; importing nothing
+// here keeps the policy degrading gracefully (skips bindings without a
+// declared contract — additive behavior).
 import type { Capability, ComponentDefinition, Manifest } from '@cir/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
@@ -40,8 +46,14 @@ import { manifestForRoute } from './manifests.js';
  * `manifestContract` are silently skipped (the policy is strictly
  * additive).
  */
+// Per-binding contracts the manifest policy validates against. We can't
+// pull `COMPONENT_BINDINGS` (the React factories) into this server-side
+// module without dragging client-only React contexts into the Next route
+// bundle. The demo's own bindings (server-safe by construction) are
+// enough — the policy is additive, so baseline bindings without contracts
+// here are silently skipped. Phase 3 will move contracts to a server-safe
+// catalog so the baseline is enforceable too.
 const MANIFEST_CONTRACTS = manifestContractsFromBindings({
-  ...COMPONENT_BINDINGS,
   ...DEMO_GITHUB_BINDINGS,
 });
 

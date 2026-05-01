@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { CirProviders } from '@/lib/cir-providers';
 import { DUMMYJSON_BRAND_KIT } from '@/lib/brand-kit';
+import { LensSwitcher } from '@/components/LensSwitcher';
 
 export const metadata: Metadata = {
   title: 'DummyJSON Shop — CIR demo',
@@ -51,6 +52,16 @@ export default function RootLayout({ children }: { children: ReactNode }): React
           }}
         />
         <CirProviders>{children}</CirProviders>
+        {/*
+         * Phase 1.5 polish — `<LensSwitcher>` floats over every route. A
+         * click writes the new density through `setLensAsync` and reloads
+         * the page so `<CirRoute>` re-fetches the manifest with the new
+         * `x-cir-density` header → guaranteed cache miss → fresh compile.
+         * The `<CompileBadge>` mounted by `CirProviders` ticks model +
+         * tokens + duration in front of the user. Visible compilation,
+         * intent reshape, in one demo. See `docs/ethos.md` #3 + #5.
+         */}
+        <LensSwitcher />
       </body>
     </html>
   );
