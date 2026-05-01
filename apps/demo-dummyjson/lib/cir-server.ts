@@ -22,7 +22,12 @@ import {
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
-import { composesAccordingTo, emptyLoadingErrorHandled } from '@cir/policies';
+import {
+  composesAccordingTo,
+  emptyLoadingErrorHandled,
+  rateLimitedActionsShowState,
+  reversibilitySurfaced,
+} from '@cir/policies';
 import { StreamingAuditSink } from '@cir/runtime';
 import { COMPOSITION_RULES } from '@cir/components/composition-rules';
 import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@cir/schemas';
@@ -38,12 +43,25 @@ import { manifestForRoute } from './manifests.js';
  * See `docs/ethos.md` principles 1, 4, 5.
  */
 function validateManifestSemantics(manifest: Manifest): { errors: readonly string[] } {
-  const policies = [composesAccordingTo(COMPOSITION_RULES), emptyLoadingErrorHandled];
+  const policies = [
+    composesAccordingTo(COMPOSITION_RULES),
+    emptyLoadingErrorHandled,
+    rateLimitedActionsShowState,
+    reversibilitySurfaced,
+  ];
+  // Compute rate-limited capability ids from the registry so the policy
+  // walker recognises which actions need a visible quota indicator.
+  const rateLimitedIds = new Set<string>();
+  for (const [id, cap] of Object.entries(CAPABILITIES)) {
+    if (typeof cap.rate_limit === 'string' && cap.rate_limit.length > 0) {
+      rateLimitedIds.add(id);
+    }
+  }
   const ctx = {
     manifest,
     capabilities: CAPABILITIES,
     components: {},
-    rate_limited_capability_ids: new Set<string>(),
+    rate_limited_capability_ids: rateLimitedIds,
     pii_fields: new Set<string>(),
   };
   const errors: string[] = [];
@@ -63,6 +81,8 @@ interface CirServer {
   components: ComponentDefinition[];
   brandKit: typeof DUMMYJSON_BRAND_KIT;
   geminiAvailable: boolean;
+  /** Concrete few-shot manifest the API route forwards as `CompileInput.fewShotExample`. */
+  fewShotExample: Manifest;
   /**
    * The currently-active lens. The manifest endpoint mirrors a request
    * header (`x-cir-density`) into this slot before resolving so the
@@ -236,6 +256,11 @@ function buildServer(): CirServer {
     { id: 'StatCard', description: 'Single KPI card. Rare in this demo.' },
     // Custom bindings shipped in `apps/demo-dummyjson/components/`.
     {
+      id: 'MarigoldHeader',
+      description:
+        'Single-row chrome (Wordmark + nav + small rate-limit chip). USE THIS as the FIRST child of every route. Replaces a Stack of NavBar+RateLimitChip — there should be exactly one MarigoldHeader per manifest. Do NOT compose NavBar yourself; MarigoldHeader handles that internally.',
+    },
+    {
       id: 'ProductCard',
       description:
         'Single-product rich card: image, brand caps, title, star rating, bold price (with strikethrough on original), green Save% badge, orange Add-to-cart. Density-aware. Used by ProductGrid; rarely placed by the manifest directly.',
@@ -283,6 +308,14 @@ function buildServer(): CirServer {
     text_render: true,
   }));
 
+  // Use the canonical /browse manifest as the LLM's few-shot grounding —
+  // it exercises the most catalog vocabulary (MarigoldHeader, ProductGrid,
+  // RateLimitChip, etc.) and satisfies every policy.
+  const fewShotExample = manifestForRoute('/browse', current.density);
+  if (!fewShotExample) {
+    throw new Error('demo-dummyjson: no manifest available to use as few-shot example');
+  }
+
   return {
     compiler,
     store,
@@ -292,6 +325,7 @@ function buildServer(): CirServer {
     components,
     brandKit: DUMMYJSON_BRAND_KIT,
     geminiAvailable,
+    fewShotExample,
     get density(): Density {
       return current.density;
     },

@@ -29,6 +29,7 @@
 import type { ComponentBinding } from '@cir/runtime';
 import { CartItemList } from '@/components/CartItemList';
 import { CheckoutWizard } from '@/components/CheckoutWizard';
+import { MarigoldHeader } from '@/components/MarigoldHeader';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDetail } from '@/components/ProductDetail';
 import { ProductGrid } from '@/components/ProductGrid';
@@ -75,12 +76,18 @@ export const WordmarkBinding: ComponentBinding = {
   factory: Wordmark as ComponentBinding['factory'],
 };
 
+export const MarigoldHeaderBinding: ComponentBinding = {
+  id: 'MarigoldHeader',
+  factory: MarigoldHeader as ComponentBinding['factory'],
+};
+
 /**
  * All custom bindings the demo registers on top of `COMPONENT_BINDINGS`.
  * Spread into `MapComponentRegistry` after the baseline so manifests can
  * reference any of these names in `LayoutNode.component`.
  */
 export const DEMO_DUMMYJSON_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({
+  MarigoldHeader: MarigoldHeaderBinding,
   ProductCard: ProductCardBinding,
   ProductGrid: ProductGridBinding,
   ProductDetail: ProductDetailBinding,

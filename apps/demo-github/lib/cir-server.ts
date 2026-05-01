@@ -65,6 +65,8 @@ interface CirServer {
   components: ComponentDefinition[];
   brandKit: typeof DEMO_GITHUB_BRAND_KIT;
   geminiAvailable: boolean;
+  /** Concrete few-shot manifest the API route forwards as `CompileInput.fewShotExample`. */
+  fewShotExample: Manifest;
 }
 
 const KEY = '__cir_demo_github_server';
@@ -278,6 +280,15 @@ function buildServer(): CirServer {
     ...(c.description !== undefined ? { description: c.description } : {}),
   }));
 
+  // The fallback manifest for `/today` is the canonical hand-written
+  // example for this app — it uses every binding the catalog declares
+  // and satisfies every policy. Using it as the LLM's few-shot grounding
+  // teaches Gemini the right composition pattern for THIS app.
+  const fewShotExample = manifestForRoute('/today') ?? manifestForRoute('/repos');
+  if (!fewShotExample) {
+    throw new Error('demo-github: no manifest available to use as few-shot example');
+  }
+
   return {
     compiler,
     store,
@@ -289,6 +300,7 @@ function buildServer(): CirServer {
     components,
     brandKit: DEMO_GITHUB_BRAND_KIT,
     geminiAvailable,
+    fewShotExample,
   };
 }
 

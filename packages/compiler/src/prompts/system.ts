@@ -58,40 +58,18 @@ The layout is a tree of LayoutNodes:
 
 Be terse in PROSE (props strings, descriptions). NOT in STRUCTURE — a route's layout must be complete enough to actually render. A minimum viable route has: chrome header, page heading + subtitle (Markdown), content body bound to a data source via a custom binding when one matches, ambient affordances (UndoToast where relevant). Below that bar, you are shipping a wireframe, not a layout.
 
-## Concrete minimum-viable-layout example
+## Hard mandates derived from the policy validator
 
-For a decision-queue route like \`/today\` in a github-style app where the catalog includes a custom \`IssueQueue\` (compositionRole: list) and \`OctantHeader\` binding, the manifest layout MUST look something like this — NEVER an empty Container or empty Stack:
+For a route that exposes any **rate-limited capability** in \`actions\` (anywhere in the tree), you MUST include a node binding a quota data source. The data source name follows the pattern \`<capability>.rate_limit\` / \`<capability>.quota\` / \`<capability>.usage\`. Either a visible chip (e.g. a custom binding from the host's catalog) OR a display-none \`<StatCard>\` works — what the policy walker needs is a node carrying the data binding.
 
-\`\`\`json
-{
-  "component": "Container",
-  "props": { "maxWidth": "lg" },
-  "children": [
-    { "component": "OctantHeader", "props": { "activePath": "/today" }, "children": [] },
-    {
-      "component": "Stack",
-      "props": { "direction": "vertical", "gap": "md" },
-      "children": [
-        { "component": "Markdown", "props": { "content": "# Today" }, "children": [] },
-        { "component": "Markdown", "props": { "content": "Issues sorted by salience..." }, "children": [] },
-        {
-          "component": "IssueQueue",
-          "props": { "emphasizeTopN": 3 },
-          "data": { "source": "github.issue.list", "sort": "salience desc" },
-          "actions": ["github.issue.archive"],
-          "children": []
-        },
-        { "component": "UndoToast", "props": { "duration_ms": 5000 }, "children": [] }
-      ]
-    }
-  ]
-}
-\`\`\`
+For a route that exposes any **reversible capability** in \`actions\`, you MUST include either an \`<UndoToast>\` somewhere in the layout OR a \`<Button>\` carrying the rollback capability id (the rollback id is declared on the capability spec). Without one of these, the policy validator rejects the manifest and your compile is wasted.
 
-The shape is: outer Container → Header → Stack with [heading, subtitle, data-bound rich binding, ambient affordances]. **An empty container is always wrong.** Read each catalog entry's \`description\` field and pick the components that match the route's intent.
+Read the catalog descriptions carefully. Custom bindings often satisfy multiple obligations at once — e.g. a single \`<XHeader>\` may render the chrome AND carry the rate-limit data binding internally. The host's few-shot example (when supplied below) shows the canonical pattern for that host's bindings.
+
+**An empty Container or empty Stack is always wrong.** Pick the most specific binding that matches the route's intent.
 
 ## Output
 
 Output ONLY the manifest JSON object. No prose, no explanations, no markdown fencing. Validation against the supplied response schema is mandatory. If you cannot satisfy a hard rule, return a manifest with a single Alert in the layout explaining what's missing — never bypass a rule.`;
 
-export const COMPILER_SYSTEM_PROMPT_VERSION = '1.1.0';
+export const COMPILER_SYSTEM_PROMPT_VERSION = '1.2.0';

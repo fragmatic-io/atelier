@@ -45,6 +45,11 @@ export async function GET(req: Request, { params }: RouteParams): Promise<Respon
       capabilities: server.capabilities,
       components: server.components,
       brandKit: server.brandKit,
+      // Concrete few-shot grounding for the LLM. The framework's prompt is
+      // structure-only; this gives the host's catalog vocabulary as a real
+      // prior example. Per `docs/ethos.md`: prompts are framework-level,
+      // concrete examples are per-host.
+      fewShotExample: server.fewShotExample,
       signal: req.signal,
     });
 

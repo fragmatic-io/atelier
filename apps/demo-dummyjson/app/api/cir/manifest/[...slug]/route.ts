@@ -43,6 +43,12 @@ export async function GET(req: Request, { params }: RouteParams): Promise<Respon
       capabilities: server.capabilities,
       components: server.components,
       brandKit: server.brandKit,
+      // Per `docs/ethos.md`: prompts are framework-level, concrete
+      // examples per-host. We feed the canonical fallback manifest for
+      // `/browse` as the LLM's few-shot grounding so Gemini learns this
+      // app's composition pattern (MarigoldHeader, ProductGrid,
+      // CartItemList, etc.) rather than guessing from descriptions alone.
+      fewShotExample: server.fewShotExample,
       signal: req.signal,
     });
 

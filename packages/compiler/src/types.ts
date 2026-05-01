@@ -65,6 +65,22 @@ export interface CompileInput {
   previousManifest?: Manifest;
   /** Hard deadline; compiler aborts if exceeded. */
   signal?: AbortSignal;
+  /**
+   * Optional concrete few-shot example. The framework's system prompt
+   * supplies structural guidance ("header → container → stack [heading,
+   * subtitle, data-bound rich binding, ambient affordances]"), but the
+   * LLM benefits from a concrete grounding example in the *host's* own
+   * catalog vocabulary. Each app supplies one (typically the most
+   * representative route's hand-written manifest from its
+   * `manifestForRoute` fallback) so the LLM mirrors the right patterns.
+   *
+   * Without this, the framework falls back to a generic baseline-only
+   * structure template — which works but produces less-rich output.
+   *
+   * Per `docs/ethos.md`: prompts are framework-level; concrete examples
+   * are per-host.
+   */
+  fewShotExample?: Manifest;
 }
 
 export interface CompileResult {
