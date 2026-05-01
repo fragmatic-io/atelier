@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compositionRolesFromBindings,
   EMPTY_REGISTRY,
   MapComponentRegistry,
   type ComponentBinding,
@@ -44,5 +45,28 @@ describe('MapComponentRegistry', () => {
     reg.register({ id: 'Card', factory: 2 });
     expect(reg.get('Card')?.factory).toBe(2);
     expect(reg.list()).toHaveLength(1);
+  });
+});
+
+describe('compositionRolesFromBindings', () => {
+  it('extracts the role for every binding that declares one', () => {
+    const bindings: Record<string, ComponentBinding> = {
+      IssueQueue: { id: 'IssueQueue', factory: 1, compositionRole: 'list' },
+      RepoTable: { id: 'RepoTable', factory: 2, compositionRole: 'table' },
+      Wordmark: { id: 'Wordmark', factory: 3 }, // no role
+    };
+    expect(compositionRolesFromBindings(bindings)).toEqual({
+      IssueQueue: 'list',
+      RepoTable: 'table',
+    });
+  });
+
+  it('returns an empty record when no bindings declare roles', () => {
+    expect(compositionRolesFromBindings({})).toEqual({});
+    expect(
+      compositionRolesFromBindings({
+        Card: { id: 'Card', factory: 1 },
+      }),
+    ).toEqual({});
   });
 });

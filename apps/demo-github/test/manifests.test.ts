@@ -19,6 +19,7 @@
 import { describe, expect, it } from 'vitest';
 import { ManifestSchema } from '@cir/schemas';
 import { BASELINE_POLICIES, validateManifest } from '@cir/policies';
+import { compositionRolesFromBindings } from '@cir/runtime';
 import {
   inboxManifest,
   issueDetailManifest,
@@ -29,6 +30,7 @@ import {
 } from '../lib/manifests';
 import { CAPABILITIES } from '../lib/capabilities';
 import { DEMO_GITHUB_BRAND_KIT } from '../lib/brand-kit';
+import { DEMO_GITHUB_BINDINGS } from '../lib/component-bindings';
 
 const RATE_LIMITED = new Set([
   'github.issue.create',
@@ -128,6 +130,7 @@ describe('demo-github manifests', () => {
       newIssueManifest(),
       inboxManifest(),
     ];
+    const compositionRoles = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
     for (const manifest of manifests) {
       const result = validateManifest(
         {
@@ -137,6 +140,7 @@ describe('demo-github manifests', () => {
           rate_limited_capability_ids: RATE_LIMITED,
           pii_fields: new Set(),
           brand_kit: DEMO_GITHUB_BRAND_KIT,
+          composition_roles: compositionRoles,
         },
         { policies: BASELINE_POLICIES },
       );

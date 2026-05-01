@@ -19,9 +19,11 @@
 import { describe, expect, it } from 'vitest';
 import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
 import { BASELINE_POLICIES, composesAccordingTo, validateManifest } from '@cir/policies';
+import { compositionRolesFromBindings } from '@cir/runtime';
 import type { Manifest } from '@cir/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
+import { DEMO_GITHUB_BINDINGS } from '../lib/component-bindings';
 import { manifestForRoute } from '../lib/manifests';
 
 // `COMPONENT_BINDINGS` mirrored to keep this test honest about what the
@@ -64,6 +66,8 @@ const ROUTES: readonly string[] = [
   '/issue/123',
 ];
 
+const COMPOSITION_ROLES = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
+
 function validate(manifest: Manifest) {
   return validateManifest(
     {
@@ -73,6 +77,7 @@ function validate(manifest: Manifest) {
       rate_limited_capability_ids: RATE_LIMITED,
       pii_fields: new Set(),
       brand_kit: DEMO_GITHUB_BRAND_KIT,
+      composition_roles: COMPOSITION_ROLES,
     },
     {
       policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
@@ -118,9 +123,7 @@ describe('demo-github manifest pipeline ↔ BASELINE_POLICIES', () => {
     // intentional gaps documented inline.
     const known = new Set<string>([
       ...Object.keys(COMPONENT_BINDINGS),
-      'IssueQueue',
-      'RateLimitStatusBar',
-      'Wordmark',
+      ...Object.keys(DEMO_GITHUB_BINDINGS),
       // `UndoToast` is referenced in the manifests as the ambient
       // reversibility affordance. It is NOT a shipped binding today; the
       // runtime renders it via fallback. We allow-list it so this test

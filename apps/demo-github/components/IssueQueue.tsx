@@ -23,19 +23,44 @@
  *      until the data arrives.
  *   6. Salience scoring — sort uses the capability's `salience_default`.
  *
- * The component is intentionally bottom-up — it doesn't read the
- * manifest. It does call the dispatcher (via context) so audit events
- * are emitted the same way they would be for a manifest-rendered list.
+ * Manifest contract — when rendered through the manifest pipeline the
+ * runtime threads `data`, `loading`, and `error` props from the resolved
+ * binding. We accept either:
+ *   - `data: GitHubIssue[]` (a bare array)
+ *   - `data: { issues: GitHubIssue[] }` (the wrapped shape the
+ *     `/api/data/github.issue.list` proxy returns)
+ *   - `initialIssues` (legacy direct-import path; still used by tests)
+ *
+ * The component renders a skeleton block while `loading`, an error alert
+ * when `error` is set, an empty state when there are no issues, and the
+ * rich queue otherwise. The `<RenderNode>` walker pairs this with the
+ * manifest's empty/loading/error sibling nodes via the
+ * `compositionRole: 'list'` role we register the binding under.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatcher } from '@cir/react';
 import { BulkActionBar, HoverCard, Skeleton, Toast, type BulkAction } from '@cir/components';
-import { FIXTURE_ISSUES, findIssueByNumber, type GitHubIssue } from '@/lib/github-fixtures';
-import { emphasisFor, rankBySalience } from '@/lib/salience';
+import { FIXTURE_ISSUES, findIssueByNumber, type GitHubIssue } from '../lib/github-fixtures';
+import { emphasisFor, rankBySalience } from '../lib/salience';
 
 interface IssueQueueProps {
+  /** Direct fixture path — the legacy `/today` page used this. */
   initialIssues?: readonly GitHubIssue[];
+  /**
+   * Manifest-pipeline path. The data resolver returns either a bare array
+   * or the wrapped `{ issues: [...] }` shape; we accept both. `unknown` so
+   * we don't lock in a particular wrapper before introspecting.
+   */
+  data?: unknown;
+  /** Manifest-pipeline `loading` prop (true while resolver is pending). */
+  loading?: boolean;
+  /** Manifest-pipeline `error` prop (Error when the resolver failed). */
+  error?: Error | null;
+  /** Per-route subtitle used above the queue. */
+  subtitle?: string;
+  /** Heading rendered above the queue. */
+  heading?: string;
 }
 
 interface ArchiveSnapshot {
@@ -45,6 +70,20 @@ interface ArchiveSnapshot {
 }
 
 const HASH_REF_RE = /#(\d+)/g;
+
+/**
+ * Extract the issues array from whatever the resolver handed us. Supports
+ * the wrapped `{ issues }` shape the demo's `/api/data` proxy returns and
+ * the bare-array shape `MockDataResolver` may emit.
+ */
+function coerceIssues(value: unknown): readonly GitHubIssue[] | null {
+  if (Array.isArray(value)) return value as readonly GitHubIssue[];
+  if (value !== null && typeof value === 'object') {
+    const wrapped = (value as { issues?: unknown }).issues;
+    if (Array.isArray(wrapped)) return wrapped as readonly GitHubIssue[];
+  }
+  return null;
+}
 
 function MentionAware({ body }: { body: string }) {
   const parts: React.ReactNode[] = [];
@@ -94,26 +133,35 @@ function MentionAware({ body }: { body: string }) {
   return <>{parts}</>;
 }
 
-export function IssueQueue({ initialIssues }: IssueQueueProps): React.JSX.Element {
+export function IssueQueue({
+  initialIssues,
+  data,
+  loading,
+  error,
+  subtitle,
+  heading,
+}: IssueQueueProps): React.JSX.Element {
   const dispatch = useDispatcher();
-  const [loaded, setLoaded] = useState(initialIssues !== undefined);
-  const [issues, setIssues] = useState<readonly GitHubIssue[]>(initialIssues ?? FIXTURE_ISSUES);
+
+  // Source-of-truth for issues: prefer manifest-pipeline `data`, fall back
+  // to `initialIssues`, then to fixtures so the demo never renders blank.
+  const fromData = useMemo(() => coerceIssues(data), [data]);
+  const sourceIssues = useMemo<readonly GitHubIssue[]>(() => {
+    if (fromData && fromData.length > 0) return fromData;
+    if (initialIssues && initialIssues.length > 0) return initialIssues;
+    return FIXTURE_ISSUES;
+  }, [fromData, initialIssues]);
+
+  const [issues, setIssues] = useState<readonly GitHubIssue[]>(sourceIssues);
+  // Re-sync when the manifest re-resolves with a different snapshot.
+  useEffect(() => {
+    setIssues(sourceIssues);
+  }, [sourceIssues]);
+
   const [archived, setArchived] = useState<ReadonlySet<number>>(new Set());
   const [selected, setSelected] = useState<ReadonlySet<number>>(new Set());
   const [snapshot, setSnapshot] = useState<ArchiveSnapshot | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Skeleton-as-shape: simulate a small delay so the empty/loaded
-  // transition is visible in the demo. In production the resolver
-  // streams data and this delay collapses.
-  useEffect(() => {
-    if (initialIssues) return;
-    const t = setTimeout(() => {
-      setIssues(FIXTURE_ISSUES);
-      setLoaded(true);
-    }, 250);
-    return () => clearTimeout(t);
-  }, [initialIssues]);
 
   const visible = useMemo(() => {
     const active = issues.filter((i) => !archived.has(i.id));
@@ -176,7 +224,6 @@ export function IssueQueue({ initialIssues }: IssueQueueProps): React.JSX.Elemen
       return next;
     });
     setSelected(new Set());
-    // Audit a single fan-out event so the audit stream reflects the bulk.
     void dispatch('github.issue.archive', { issue_ids: ids.map(String) }).catch(() => undefined);
   }
 
@@ -214,12 +261,44 @@ export function IssueQueue({ initialIssues }: IssueQueueProps): React.JSX.Elemen
     else if (actionId === 'close') void bulkClose();
   }
 
-  return (
-    <div data-cir-component="IssueQueue">
-      {!loaded ? (
+  // ---------------------------------------------------------------------
+  // Render branches: loading → error → empty → queue. Each renders the
+  // surrounding heading + subtitle so the page chrome stays consistent.
+  // ---------------------------------------------------------------------
+
+  const headerBlock = (
+    <header className="mb-4">
+      {heading !== undefined ? (
+        <h1
+          className="text-2xl font-semibold tracking-tight"
+          style={{ color: 'var(--cir-color-fg)' }}
+        >
+          {heading}
+        </h1>
+      ) : null}
+      {subtitle !== undefined ? (
+        <p className="mt-1 text-sm" style={{ color: 'var(--cir-color-fg-muted)' }}>
+          {subtitle}
+        </p>
+      ) : null}
+    </header>
+  );
+
+  if (loading === true && fromData === null) {
+    return (
+      <div data-cir-component="IssueQueue" data-cir-state="loading">
+        {headerBlock}
         <ul aria-busy="true" className="space-y-2">
-          {[1, 2, 3, 4].map((k) => (
-            <li key={k} className="p-3 border rounded">
+          {[1, 2, 3, 4, 5].map((k) => (
+            <li
+              key={k}
+              className="p-3"
+              style={{
+                border: '1px solid var(--cir-color-border)',
+                borderRadius: 'var(--cir-radius-md)',
+                background: 'var(--cir-color-bg-card)',
+              }}
+            >
               <Skeleton width="40%" height={16} />
               <div className="mt-2">
                 <Skeleton width="80%" height={12} />
@@ -227,74 +306,191 @@ export function IssueQueue({ initialIssues }: IssueQueueProps): React.JSX.Elemen
             </li>
           ))}
         </ul>
-      ) : (
-        <ul
-          data-cir-component="List"
-          data-cir-list-variant="hierarchy"
-          className="divide-y divide-gray-200 dark:divide-gray-800"
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div data-cir-component="IssueQueue" data-cir-state="error">
+        {headerBlock}
+        <div
+          role="alert"
+          className="p-4 text-sm"
+          style={{
+            border: '1px solid var(--cir-color-danger)',
+            borderRadius: 'var(--cir-radius-md)',
+            background: 'color-mix(in srgb, var(--cir-color-danger) 8%, transparent)',
+            color: 'var(--cir-color-danger)',
+          }}
         >
-          {visible.map(({ issue }, idx) => {
-            const emphasis = emphasisFor(idx);
-            const isArchived = archived.has(issue.id);
-            return (
-              <li
-                key={issue.id}
-                data-emphasis={emphasis}
-                data-archived={isArchived ? 'true' : 'false'}
-                data-cir-issue-row
-                className="p-3"
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(issue.id)}
-                    onChange={() => toggleSelect(issue.id)}
-                    aria-label={`Select issue ${String(issue.number)}`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <a
-                        href={`/issue/${String(issue.number)}`}
-                        className="hover:underline"
-                        style={{ color: 'var(--cir-color-fg)' }}
-                        data-cir-issue-link
-                      >
-                        <span className="cir-mono" style={{ color: 'var(--cir-color-fg-muted)' }}>
-                          #{issue.number}
-                        </span>{' '}
-                        {issue.title}
-                      </a>
-                      {issue.assigned_to_me ? (
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded cir-mono"
-                          style={{
-                            background:
-                              'color-mix(in srgb, var(--cir-color-brand) 12%, transparent)',
-                            color: 'var(--cir-color-brand)',
-                          }}
-                        >
-                          you
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      <MentionAware body={issue.body} />
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => archiveOne(issue)}
-                    className="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
-                    data-cir-action="archive"
+          <strong>Failed to load issues.</strong>{' '}
+          <span style={{ color: 'var(--cir-color-fg-muted)' }}>
+            {error.message || 'Check your token in /settings/github.'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (visible.length === 0) {
+    return (
+      <div data-cir-component="IssueQueue" data-cir-state="empty">
+        {headerBlock}
+        <div
+          className="p-8 text-center"
+          style={{
+            border: '1px dashed var(--cir-color-border)',
+            borderRadius: 'var(--cir-radius-md)',
+            background: 'var(--cir-color-bg-card)',
+            color: 'var(--cir-color-fg-muted)',
+          }}
+        >
+          <div className="text-base font-medium" style={{ color: 'var(--cir-color-fg)' }}>
+            Inbox zero.
+          </div>
+          <div className="text-sm mt-1">No issues need a decision right now.</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div data-cir-component="IssueQueue" data-cir-state="ready">
+      {headerBlock}
+      <ul
+        data-cir-component="List"
+        data-cir-list-variant="hierarchy"
+        className="space-y-px"
+        style={{
+          border: '1px solid var(--cir-color-border)',
+          borderRadius: 'var(--cir-radius-md)',
+          overflow: 'hidden',
+          background: 'var(--cir-color-bg-card)',
+        }}
+      >
+        {visible.map(({ issue }, idx) => {
+          const emphasis = emphasisFor(idx);
+          const isArchived = archived.has(issue.id);
+          const isHero = emphasis === 'hero';
+          return (
+            <li
+              key={issue.id}
+              data-emphasis={emphasis}
+              data-archived={isArchived ? 'true' : 'false'}
+              data-cir-issue-row
+              className="p-3 flex items-start gap-3"
+              style={{
+                borderLeft: isHero ? `4px solid var(--cir-color-brand)` : `4px solid transparent`,
+                background:
+                  idx % 2 === 0 ? 'var(--cir-color-bg-card)' : 'var(--cir-color-bg-muted)',
+                borderTop: idx === 0 ? 'none' : '1px solid var(--cir-color-border)',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={selected.has(issue.id)}
+                onChange={() => toggleSelect(issue.id)}
+                aria-label={`Select issue ${String(issue.number)}`}
+                style={{ marginTop: 4 }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <a
+                    href={`/issue/${String(issue.number)}`}
+                    className="hover:underline"
+                    style={{
+                      color: 'var(--cir-color-fg)',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                    }}
+                    data-cir-issue-link
                   >
-                    Archive
-                  </button>
+                    {issue.title}
+                  </a>
+                  <span
+                    className="cir-mono"
+                    style={{
+                      color: 'var(--cir-color-fg-muted)',
+                      fontSize: '12px',
+                    }}
+                  >
+                    {issue.repo.owner}/{issue.repo.name}#{issue.number}
+                  </span>
+                  {issue.assigned_to_me ? (
+                    <span
+                      className="cir-mono"
+                      style={{
+                        fontSize: '11px',
+                        padding: '1px 6px',
+                        borderRadius: '999px',
+                        background: 'color-mix(in srgb, var(--cir-color-brand) 14%, transparent)',
+                        color: 'var(--cir-color-brand)',
+                      }}
+                    >
+                      you
+                    </span>
+                  ) : (
+                    <span
+                      className="cir-mono"
+                      style={{
+                        fontSize: '11px',
+                        padding: '1px 6px',
+                        borderRadius: '999px',
+                        background: 'var(--cir-color-bg-muted)',
+                        color: 'var(--cir-color-fg-muted)',
+                      }}
+                    >
+                      team
+                    </span>
+                  )}
+                  {issue.priority === 'high' ? (
+                    <span
+                      className="cir-mono"
+                      style={{
+                        fontSize: '11px',
+                        padding: '1px 6px',
+                        borderRadius: '999px',
+                        background: 'color-mix(in srgb, var(--cir-color-danger) 14%, transparent)',
+                        color: 'var(--cir-color-danger)',
+                      }}
+                    >
+                      high
+                    </span>
+                  ) : null}
                 </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                <div
+                  className="mt-1"
+                  style={{
+                    color: 'var(--cir-color-fg-muted)',
+                    fontSize: '13px',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  <MentionAware body={issue.body} />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => archiveOne(issue)}
+                className="cir-mono"
+                style={{
+                  fontSize: '12px',
+                  padding: '4px 10px',
+                  borderRadius: 'var(--cir-radius-sm)',
+                  border: '1px solid var(--cir-color-border)',
+                  background: 'transparent',
+                  color: 'var(--cir-color-fg-muted)',
+                  cursor: 'pointer',
+                }}
+                data-cir-action="archive"
+              >
+                Archive
+              </button>
+            </li>
+          );
+        })}
+      </ul>
 
       <BulkActionBar
         actions={bulkActions}
@@ -315,11 +511,12 @@ export function IssueQueue({ initialIssues }: IssueQueueProps): React.JSX.Elemen
         <button
           type="button"
           onClick={undoArchive}
-          className="fixed bottom-6 right-6 z-50 px-3 py-1 rounded"
+          className="fixed bottom-6 right-6 z-50 px-3 py-1 rounded cir-mono"
           style={{
             background: 'var(--cir-color-brand)',
             color: 'var(--cir-color-brand-fg)',
             boxShadow: 'var(--cir-shadow-popover)',
+            fontSize: '12px',
           }}
         >
           Undo archive

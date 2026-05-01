@@ -15,6 +15,7 @@
 // Core types
 // -----------------------------------------------------------------------------
 export type {
+  CompositionRole,
   NamedPolicy,
   Policy,
   PolicyContext,

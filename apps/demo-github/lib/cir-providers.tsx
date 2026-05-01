@@ -27,6 +27,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import {
   ActionDispatcher,
+  compositionRolesFromBindings,
   InMemoryTriggerBus,
   ManifestFetcher,
   ManifestResolver,
@@ -124,13 +125,19 @@ interface BuiltServices {
 }
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
-  // Baseline catalog first; demo-specific bindings (IssueQueue,
-  // RateLimitStatusBar, Wordmark) are layered on top so the manifest can
-  // reference any of them in `LayoutNode.component`.
+  // Baseline catalog first; demo-specific bindings (IssueQueue, RepoTable,
+  // OctantHeader, RateLimitStatusBar, Wordmark) are layered on top so the
+  // manifest can reference any of them in `LayoutNode.component`.
   const registry = new MapComponentRegistry({
     ...COMPONENT_BINDINGS,
     ...DEMO_GITHUB_BINDINGS,
   });
+
+  // Composition roles surfaced through `PolicyContext.composition_roles`
+  // so the long-list-hierarchy and empty/loading/error policies treat
+  // role-tagged custom bindings (e.g. `<IssueQueue compositionRole="list">`)
+  // as equivalent to their baseline counterparts.
+  const compositionRoles = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
 
   const actions = new MapActionRegistry();
   const wireAction =
@@ -179,6 +186,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           ]),
           pii_fields: new Set(),
           brand_kit: DEMO_GITHUB_BRAND_KIT,
+          composition_roles: compositionRoles,
         },
         {
           policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],

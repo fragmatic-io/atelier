@@ -121,6 +121,8 @@ function buildServer(): CirServer {
     'ButtonGroup',
     // Custom demo bindings.
     'IssueQueue',
+    'RepoTable',
+    'OctantHeader',
     'RateLimitStatusBar',
     'Wordmark',
   ];

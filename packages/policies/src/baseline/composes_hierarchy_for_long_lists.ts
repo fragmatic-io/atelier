@@ -41,6 +41,15 @@ const POLICY_ID = 'composes_hierarchy_for_long_lists';
 /** Components the policy considers "long-list-ish" — same set as the skill. */
 const LONG_LIST_COMPONENTS: ReadonlySet<string> = new Set(['List', 'Table', 'Grid']);
 
+/**
+ * Roles that count as long-list-ish for the role-driven extension. A host
+ * can register a custom component (e.g. `<IssueQueue>`) under one of these
+ * roles via `PolicyContext.composition_roles`; this policy then evaluates
+ * it identically to the baseline component of that role. Kept narrow on
+ * purpose — a `'kpi'` role would NOT trigger this policy.
+ */
+const LONG_LIST_ROLES: ReadonlySet<string> = new Set(['list', 'table', 'grid']);
+
 /** Default cardinality threshold above which hierarchy treatment is required. */
 const HIERARCHY_THRESHOLD = 7;
 
@@ -102,8 +111,18 @@ export const composesHierarchyForLongLists: NamedPolicy = {
   evaluate(ctx): PolicyResult {
     const violations: PolicyViolation[] = [];
 
+    const roles = ctx.composition_roles;
+
     walkManifest(ctx.manifest, (node, path, ancestors) => {
-      if (!LONG_LIST_COMPONENTS.has(node.component)) return;
+      // Baseline ids OR a host-registered custom binding whose role is
+      // long-list-ish. The role check is the role-driven extension: a
+      // custom `<IssueQueue compositionRole="list">` is policy-equivalent
+      // to a bare `<List>` here.
+      const role = roles?.[node.component];
+      const isLongListShape =
+        LONG_LIST_COMPONENTS.has(node.component) ||
+        (role !== undefined && LONG_LIST_ROLES.has(role));
+      if (!isLongListShape) return;
       if (!node.data) return; // No data binding — no obligation.
 
       // Resolve the bound capability via the data source field. Bindings

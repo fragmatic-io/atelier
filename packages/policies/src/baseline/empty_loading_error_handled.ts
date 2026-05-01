@@ -61,6 +61,14 @@ const DATA_BOUND_COMPONENTS: ReadonlySet<string> = new Set([
   'Tree',
 ]);
 
+/**
+ * Roles whose registered custom bindings are subject to the same
+ * empty/loading/error obligation. A custom `<IssueQueue compositionRole="list">`
+ * collapses to nothing on an empty source the same way `<List>` does, so
+ * the policy must apply.
+ */
+const DATA_BOUND_ROLES: ReadonlySet<string> = new Set(['list', 'table', 'grid']);
+
 /** Components that, when present as a sibling, count as handling "empty". */
 const EMPTY_HANDLER_COMPONENTS: ReadonlySet<string> = new Set(['EmptyState']);
 
@@ -168,8 +176,15 @@ export const emptyLoadingErrorHandled: NamedPolicy = {
   evaluate(ctx): PolicyResult {
     const violations: PolicyViolation[] = [];
 
+    const roles = ctx.composition_roles;
+
     walkManifest(ctx.manifest, (node, path, ancestors) => {
-      if (!DATA_BOUND_COMPONENTS.has(node.component)) return;
+      // Baseline ids OR a host-registered binding whose role is data-bound.
+      const role = roles?.[node.component];
+      const isDataBound =
+        DATA_BOUND_COMPONENTS.has(node.component) ||
+        (role !== undefined && DATA_BOUND_ROLES.has(role));
+      if (!isDataBound) return;
       if (!node.data) return; // No data binding — no obligation.
 
       const parent = ancestors.length > 0 ? ancestors[ancestors.length - 1] : undefined;

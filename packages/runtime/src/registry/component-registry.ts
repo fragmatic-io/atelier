@@ -18,6 +18,29 @@
  */
 
 /**
+ * Composition role a binding plays in policy / layout reasoning.
+ *
+ * Baseline catalog components (`List`, `Table`, `Grid`) are always treated
+ * as their nominal role. Custom bindings — e.g. `IssueQueue`, `RepoTable`,
+ * `KanbanBoard` — can opt into one of these roles so the policy engine
+ * applies the same composition rules (long-list hierarchy treatment,
+ * empty/loading/error obligations, etc.) to them as it would to the
+ * baseline component of the same role.
+ *
+ * `undefined` means "no role" — the binding is not subject to role-driven
+ * policy obligations. This keeps the field strictly opt-in and backwards
+ * compatible: existing bindings without `compositionRole` are unaffected.
+ *
+ * Source: Wave 8 / E-A — `apps/demo-github` showcase work needed
+ * `<IssueQueue>` to be policy-equivalent to `<List>` for the
+ * `composes_hierarchy_for_long_lists` and `empty_loading_error_handled`
+ * checks. The role mechanism is the architecturally correct way to admit
+ * custom bindings into those policies without growing per-policy
+ * allow-lists.
+ */
+export type CompositionRole = 'list' | 'grid' | 'table';
+
+/**
  * One bound component. `factory` is opaque to the runtime — it could be a
  * React component, a Vue component, a native bridge handle, etc.
  */
@@ -25,6 +48,12 @@ export interface ComponentBinding {
   id: string;
   /** Framework-specific factory the adapter hands to its renderer. */
   factory: unknown;
+  /**
+   * Optional composition role. When present, the policy engine treats this
+   * binding as equivalent to the baseline component of the same role for
+   * the purposes of the composition policies. See `CompositionRole`.
+   */
+  compositionRole?: CompositionRole;
 }
 
 export interface ComponentRegistry {
@@ -75,4 +104,20 @@ export class MapComponentRegistry implements ComponentRegistry {
   list(): readonly string[] {
     return [...this.#bindings.keys()];
   }
+}
+
+/**
+ * Build a `componentId -> CompositionRole` map by scanning a registry-like
+ * `Record<string, ComponentBinding>`. Bindings without a `compositionRole`
+ * are omitted so the resulting record stays minimal. Convenience for hosts
+ * that pass the map into `PolicyContext.composition_roles`.
+ */
+export function compositionRolesFromBindings(
+  bindings: Readonly<Record<string, ComponentBinding>>,
+): Readonly<Record<string, CompositionRole>> {
+  const out: Record<string, CompositionRole> = {};
+  for (const [id, binding] of Object.entries(bindings)) {
+    if (binding.compositionRole !== undefined) out[id] = binding.compositionRole;
+  }
+  return out;
 }

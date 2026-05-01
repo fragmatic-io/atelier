@@ -142,4 +142,47 @@ describe('composes_hierarchy_for_long_lists', () => {
     expect(composesHierarchyForLongLists.severity).toBe('warn');
     expect(composesHierarchyForLongLists.description).toContain('hierarchy');
   });
+
+  it('applies to host-registered custom bindings whose composition role is list-ish', () => {
+    // Custom `<IssueQueue>` with a long-list role and no hierarchy treatment
+    // should warn — same as a bare `<List>` would.
+    const layout: LayoutNode = {
+      component: 'IssueQueue',
+      data: { source: 'thread.list' },
+    };
+    const ctx = ctxFor(layout);
+    const result = composesHierarchyForLongLists.evaluate({
+      ...ctx,
+      composition_roles: { IssueQueue: 'list' },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toHaveLength(1);
+    expect(result.violations[0]!.message).toContain('IssueQueue');
+  });
+
+  it('passes when a role-tagged custom binding declares emphasizeTopN', () => {
+    const layout: LayoutNode = {
+      component: 'IssueQueue',
+      data: { source: 'thread.list' },
+      props: { emphasizeTopN: 3 },
+    };
+    const ctx = ctxFor(layout);
+    const result = composesHierarchyForLongLists.evaluate({
+      ...ctx,
+      composition_roles: { IssueQueue: 'list' },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.violations).toHaveLength(0);
+  });
+
+  it('does NOT apply to a custom binding without a registered composition role', () => {
+    // Backwards compatibility: bindings without a role are unaffected.
+    const layout: LayoutNode = {
+      component: 'IssueQueue',
+      data: { source: 'thread.list' },
+    };
+    const result = composesHierarchyForLongLists.evaluate(ctxFor(layout));
+    expect(result.ok).toBe(true);
+    expect(result.violations).toHaveLength(0);
+  });
 });

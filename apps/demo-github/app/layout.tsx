@@ -3,10 +3,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { CirProviders } from '@/lib/cir-providers';
-import { Wordmark } from '@/components/Wordmark';
-import { RateLimitStatusBar } from '@/components/RateLimitStatusBar';
 import { DEMO_GITHUB_BRAND_KIT } from '@/lib/brand-kit';
 
 export const metadata: Metadata = {
@@ -48,35 +45,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_BOOTSTRAP }} />
       </head>
       <body>
-        <header className="octant-chrome">
-          <div className="octant-chrome-inner">
-            <Link
-              href="/today"
-              aria-label="Octant — go to Today"
-              style={{ color: 'var(--cir-color-fg)', display: 'inline-flex' }}
-            >
-              <Wordmark height={24} />
-            </Link>
-            <nav>
-              <Link href="/today">Today</Link>
-              <Link href="/repos">Repos</Link>
-              <Link href="/inbox">Inbox</Link>
-              <Link href="/issue/new">New</Link>
-              <Link href="/settings/github" className="octant-token-cta">
-                Sign in with token
-              </Link>
-            </nav>
-          </div>
-        </header>
-        <div
-          style={{
-            maxWidth: 1280,
-            margin: '0 auto',
-            padding: '12px var(--cir-space-lg) 0',
-          }}
-        >
-          <RateLimitStatusBar />
-        </div>
+        {/*
+         * Chrome (wordmark + nav + rate-limit chip) used to live here as a
+         * static HTML <header>. Post-E-A, the manifest renders an
+         * <OctantHeader> binding instead — so chrome is layout-data, not
+         * a fixed DOM frame. The static shell is intentionally minimal now;
+         * its only job is to host the providers and let the manifest paint
+         * the rest. (Removing the static header eliminates the
+         * "menu-twice" duplication.)
+         */}
         <CirProviders>{children}</CirProviders>
       </body>
     </html>

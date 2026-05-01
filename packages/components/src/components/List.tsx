@@ -138,9 +138,9 @@ export function List<T>({
       if (typeof item === 'object') {
         const o = item as Record<string, unknown>;
         return (
-          (o.title as string | undefined) ??
-          (o.name as string | undefined) ??
-          (o.label as string | undefined) ??
+          (o['title'] as string | undefined) ??
+          (o['name'] as string | undefined) ??
+          (o['label'] as string | undefined) ??
           JSON.stringify(item)
         );
       }

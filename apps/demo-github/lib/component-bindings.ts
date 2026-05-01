@@ -1,31 +1,54 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Demo-app-specific `ComponentBinding`s. Three custom components ship in
+ * Demo-app-specific `ComponentBinding`s. The custom components ship in
  * `apps/demo-github/components/` and need to be referenceable from
  * manifests by name (so `<RenderNode>` can find a factory when it walks
  * the layout tree):
  *
  *   - `IssueQueue` — the rich `/today` queue surface (optimistic archive,
  *     hover-card mentions, bulk-close with verbal confirmation).
+ *     `compositionRole: 'list'` so the policy engine treats it the same
+ *     as a baseline `<List>` for the long-list-hierarchy and
+ *     empty/loading/error obligations.
+ *   - `RepoTable` — the dense `/repos` table with hover-card previews on
+ *     each row's name and an inline "Create issue" affordance.
+ *     `compositionRole: 'table'` for the same reason.
+ *   - `OctantHeader` — the persistent app chrome (wordmark + nav +
+ *     small rate-limit chip). No composition role — it's a leaf chrome
+ *     component, not a long list.
  *   - `RateLimitStatusBar` — `<StatusBar>` driven by the GitHub client's
- *     cached rate-limit snapshot.
+ *     cached rate-limit snapshot. Kept for legacy manifests.
  *   - `Wordmark` — the Octant brand lockup (octagon + wordmark).
  *
  * The runtime registers these alongside `COMPONENT_BINDINGS` (the
- * baseline catalog). Manifests today use only baseline names; these
- * custom bindings are live so future manifests can opt in by referencing
- * them directly without touching providers wiring.
+ * baseline catalog) AND `cir-providers.tsx` derives the
+ * `composition_roles` map for `validateManifest()` from these bindings
+ * via `compositionRolesFromBindings()`.
  */
 
 import type { ComponentBinding } from '@cir/runtime';
-import { IssueQueue } from '@/components/IssueQueue';
-import { RateLimitStatusBar } from '@/components/RateLimitStatusBar';
-import { Wordmark } from '@/components/Wordmark';
+import { IssueQueue } from '../components/IssueQueue';
+import { OctantHeader } from '../components/OctantHeader';
+import { RateLimitStatusBar } from '../components/RateLimitStatusBar';
+import { RepoTable } from '../components/RepoTable';
+import { Wordmark } from '../components/Wordmark';
 
 export const IssueQueueBinding: ComponentBinding = {
   id: 'IssueQueue',
   factory: IssueQueue as ComponentBinding['factory'],
+  compositionRole: 'list',
+};
+
+export const RepoTableBinding: ComponentBinding = {
+  id: 'RepoTable',
+  factory: RepoTable as ComponentBinding['factory'],
+  compositionRole: 'table',
+};
+
+export const OctantHeaderBinding: ComponentBinding = {
+  id: 'OctantHeader',
+  factory: OctantHeader as ComponentBinding['factory'],
 };
 
 export const RateLimitStatusBarBinding: ComponentBinding = {
@@ -45,6 +68,8 @@ export const WordmarkBinding: ComponentBinding = {
  */
 export const DEMO_GITHUB_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({
   IssueQueue: IssueQueueBinding,
+  RepoTable: RepoTableBinding,
+  OctantHeader: OctantHeaderBinding,
   RateLimitStatusBar: RateLimitStatusBarBinding,
   Wordmark: WordmarkBinding,
 });

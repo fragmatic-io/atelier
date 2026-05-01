@@ -282,6 +282,34 @@ describe('empty_loading_error_handled', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('treats a host-registered list-role custom binding the same as <List>', () => {
+    // A custom `<IssueQueue compositionRole="list">` whose data binding has
+    // no empty/loading/error states should fail just like a bare `<List>`.
+    const layout: LayoutNode = {
+      component: 'IssueQueue',
+      data: { source: 'thread.list' },
+    };
+    const ctx = ctxFor(singleRoute(layout));
+    const result = emptyLoadingErrorHandled.evaluate({
+      ...ctx,
+      composition_roles: { IssueQueue: 'list' },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.violations).toHaveLength(3);
+  });
+
+  it('does NOT apply to custom bindings without a registered composition role', () => {
+    // Backwards compatibility: bindings without a role are unaffected by the
+    // role-driven extension.
+    const layout: LayoutNode = {
+      component: 'IssueQueue',
+      data: { source: 'thread.list' },
+    };
+    const result = emptyLoadingErrorHandled.evaluate(ctxFor(singleRoute(layout)));
+    expect(result.ok).toBe(true);
+    expect(result.violations).toHaveLength(0);
+  });
+
   it('reports paths via JSON Pointer rooted at the manifest', () => {
     const layout: LayoutNode = {
       component: 'Stack',

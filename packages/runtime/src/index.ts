@@ -103,10 +103,12 @@ export {
 // Registries
 // -----------------------------------------------------------------------------
 export {
+  compositionRolesFromBindings,
   EMPTY_REGISTRY,
   MapComponentRegistry,
   type ComponentBinding,
   type ComponentRegistry,
+  type CompositionRole,
 } from './registry/component-registry.js';
 export {
   MapActionRegistry,

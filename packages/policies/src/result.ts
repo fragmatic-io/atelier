@@ -18,6 +18,26 @@ import type { BrandKit, Capability, IntentProfile, Manifest } from '@cir/schemas
 export type PolicySeverity = 'error' | 'warn';
 
 /**
+ * Composition role a custom component plays for policy evaluation.
+ *
+ * Baseline catalog ids (`List`, `Table`, `Grid`) are always treated as their
+ * nominal role. Hosts can register additional component ids here so the
+ * composition policies (`composes_hierarchy_for_long_lists`,
+ * `empty_loading_error_handled`) treat them equivalently — e.g. a custom
+ * `<IssueQueue>` whose `compositionRole` is `'list'` is subject to the same
+ * long-list hierarchy obligation as a bare `<List>`.
+ *
+ * The mechanism is strictly opt-in / additive — components without an entry
+ * in the map are unaffected. Mirrors `CompositionRole` on `ComponentBinding`
+ * (`@cir/runtime`); kept independent here so `@cir/policies` does not gain
+ * a runtime dependency.
+ *
+ * Source: Wave 8 / E-A — see
+ * `/Users/vid/cir/apps/demo-github/lib/component-bindings.ts`.
+ */
+export type CompositionRole = 'list' | 'grid' | 'table';
+
+/**
  * One violation emitted by a policy.
  *
  * `path` is an RFC 6901 JSON Pointer rooted at the manifest object, so audit
@@ -66,6 +86,13 @@ export interface PolicyContext {
    * flags inline raw colors / pixel values.
    */
   brand_kit?: BrandKit | undefined;
+  /**
+   * Optional map from custom component id to composition role. The
+   * composition policies use this to treat host-registered custom bindings
+   * as equivalent to the baseline component of the named role. Bindings
+   * without an entry are unaffected. See `CompositionRole`.
+   */
+  composition_roles?: Readonly<Record<string, CompositionRole>> | undefined;
 }
 
 /** A pure-function policy. */

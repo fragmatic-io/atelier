@@ -16,7 +16,7 @@
 
 import { useEffect, useState } from 'react';
 import { StatusBar } from '@cir/components';
-import { getRateLimitState, type RateLimitState } from '@/lib/github-client';
+import { getRateLimitState, type RateLimitState } from '../lib/github-client';
 
 function format(state: RateLimitState): { message: string; detail: string } {
   if (state.last_updated === 0) {
