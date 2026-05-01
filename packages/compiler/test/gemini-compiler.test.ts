@@ -67,7 +67,10 @@ describe('GeminiCompiler', () => {
     expect(r.token_cost).toBe(350);
     expect(r.model).toBe('gemini-2.5-pro');
     expect(r.diff_mode).toBe(false);
-    expect(r.manifest.manifest_id).toBe('m_demotoday');
+    // Phase 1.5: manifest_id is server-generated, not LLM-authored.
+    // The framework overwrites whatever the LLM emits with a fresh value
+    // matching the schema regex — eliminates one class of validation retry.
+    expect(r.manifest.manifest_id).toMatch(/^m_[a-z0-9]{8,}$/);
     expect(generateContent).toHaveBeenCalledTimes(1);
     const args = generateContent.mock.calls[0]?.[0] as { model: string };
     expect(args.model).toBe('gemini-2.5-pro');
@@ -107,7 +110,10 @@ describe('GeminiCompiler', () => {
     const r = await c.compile(fixtureCompileInput());
 
     expect(generateContent).toHaveBeenCalledTimes(2);
-    expect(r.manifest.manifest_id).toBe('m_demotoday');
+    // Phase 1.5: manifest_id is server-generated, not LLM-authored.
+    // The framework overwrites whatever the LLM emits with a fresh value
+    // matching the schema regex — eliminates one class of validation retry.
+    expect(r.manifest.manifest_id).toMatch(/^m_[a-z0-9]{8,}$/);
   });
 
   it('validation failure with maxRetries=0 throws CompilerOutputError', async () => {
