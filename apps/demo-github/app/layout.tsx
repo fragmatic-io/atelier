@@ -43,7 +43,7 @@ const COLOR_MODE_BOOTSTRAP = `
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-brand-kit={DEMO_GITHUB_BRAND_KIT.id}>
+    <html lang="en" data-brand-kit={DEMO_GITHUB_BRAND_KIT.id} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_BOOTSTRAP }} />
       </head>

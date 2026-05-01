@@ -231,8 +231,8 @@ function browseLayout(density: Density): Manifest['routes'][number]['layout'] {
           {
             component: 'NavBar',
             props: {
-              title: 'DummyJSON Shop',
-              links: [
+              brand: 'DummyJSON Shop',
+              items: [
                 { label: 'Browse', href: '/browse' },
                 { label: 'Cart', href: '/cart' },
                 { label: 'Lens', href: '/settings/lens' },

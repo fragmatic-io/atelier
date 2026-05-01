@@ -26,7 +26,7 @@ export interface NavBarProps {
   className?: string;
 }
 
-export function NavBar({ items, brand, className }: NavBarProps): ReactNode {
+export function NavBar({ items = [], brand, className }: NavBarProps): ReactNode {
   return (
     <nav
       role="navigation"

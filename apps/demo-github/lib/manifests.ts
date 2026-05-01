@@ -133,8 +133,8 @@ function navNode(): LayoutNode {
   return {
     component: 'NavBar',
     props: {
-      title: 'Octant',
-      links: [
+      brand: 'Octant',
+      items: [
         { label: 'Today', href: '/today' },
         { label: 'Repos', href: '/repos' },
         { label: 'Inbox', href: '/inbox' },
