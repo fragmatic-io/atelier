@@ -4,13 +4,13 @@
 'use client';
 
 /**
- * UndoBar — surfaces the dispatcher's undo affordance.
+ * UndoBar — runtime-ambient undo affordance for the Aurora demo.
  *
- * Required by the `reversibility_surfaced` policy in `@cir/policies`: any
- * route that references reversible actions must include an Undo affordance
- * (a component named Undo/UndoBar/UndoToast, OR a Button bound to a rollback
- * capability). Without this, `validateManifest` rejects the manifest at
- * resolve time and the runtime falls back to the prior cached manifest.
+ * Marketplace pivot: this component is no longer a manifest-referenced
+ * binding. It mounts at the React root (`cir-providers.tsx`) and the
+ * companion `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy
+ * context tells `reversibility_surfaced` the obligation is covered for
+ * every reversible action the runtime fires — regardless of route.
  *
  * Behavior: a fixed footer with one "Undo last action" button. Clicking
  * pops the dispatcher's undo stack and dispatches the rollback capability.
@@ -20,7 +20,6 @@
  */
 
 import { useCallback, useState } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
 import { useCir } from '@cir/react';
 
 export function UndoBar(): React.JSX.Element {
@@ -63,7 +62,6 @@ export function UndoBar(): React.JSX.Element {
   );
 }
 
-export const UNDO_BAR_BINDING: ComponentBinding = {
-  id: 'UndoBar',
-  factory: UndoBar,
-};
+// No `ComponentBinding` export — UndoBar is mounted ambiently in
+// `cir-providers.tsx`, not referenced from any manifest. The
+// `UNDO_TOAST_AMBIENT_SATISFIER` declaration covers the policy obligation.

@@ -180,16 +180,18 @@ function buildActions(): MapActionRegistry {
  * Ambient runtime services this app mounts that satisfy named policy
  * obligations (Phase 2 #5 / `docs/ethos.md` principle #4):
  *
- *   - `<MarigoldHeader>` renders the rate-limit chip on every route and
- *     carries the `dummyjson.cart.add.rate_limit` data binding —
- *     `<RateLimitChip>` ambient → `rate_limited_actions_show_state`.
+ *   - The chrome `<StatusBar>` (composed in the manifest as a sibling of
+ *     `<Logo>` + `<NavBar>`) renders the cart-add quota chip and carries
+ *     the `dummyjson.cart.add.rate_limit` data binding —
+ *     `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` → `rate_limited_actions_show_state`.
  *   - The `<ProductGrid>`, `<CartItemList>`, and `<ProductDetail>` custom
  *     bindings raise an inline undo toast on every reversible mutation
  *     (`cart.add`, `cart.remove`); the policy validator treats this as
  *     an ambient `<UndoToast>` for `reversibility_surfaced`.
  *
- * Declaring these here removes the need for in-manifest "policy anchor"
- * nodes — see `lib/manifests.ts` for the band-aid we deleted.
+ * Marketplace pivot: the three custom chrome bindings (`MarigoldHeader`,
+ * `Wordmark`, `RateLimitChip`) are gone — manifests now compose
+ * `<Stack(Logo, NavBar, StatusBar)>` directly.
  */
 const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
   UNDO_TOAST_AMBIENT_SATISFIER,

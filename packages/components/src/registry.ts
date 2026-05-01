@@ -50,6 +50,7 @@ import { IconBinding } from './components/Icon.js';
 import { KPIRowBinding } from './components/KPIRow.js';
 import { KanbanBinding } from './components/Kanban.js';
 import { ListBinding } from './components/List.js';
+import { LogoBinding } from './components/Logo.js';
 import { MapBinding } from './components/Map.js';
 import { MarkdownBinding } from './components/Markdown.js';
 import { ModalBinding } from './components/Modal.js';
@@ -58,6 +59,7 @@ import { NavBarBinding } from './components/NavBar.js';
 import { NumberInputBinding } from './components/NumberInput.js';
 import { PaginationBinding } from './components/Pagination.js';
 import { ProgressBinding } from './components/Progress.js';
+import { QueueBinding } from './components/Queue.js';
 import { RichTextBinding } from './components/RichText.js';
 import { SearchBinding } from './components/Search.js';
 import { SelectBinding } from './components/Select.js';
@@ -115,6 +117,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   KPIRow: KPIRowBinding,
   Kanban: KanbanBinding,
   List: ListBinding,
+  Logo: LogoBinding,
   Map: MapBinding,
   Markdown: MarkdownBinding,
   Modal: ModalBinding,
@@ -123,6 +126,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   NumberInput: NumberInputBinding,
   Pagination: PaginationBinding,
   Progress: ProgressBinding,
+  Queue: QueueBinding,
   RichText: RichTextBinding,
   Search: SearchBinding,
   Select: SelectBinding,
@@ -251,6 +255,23 @@ export const COMPONENT_METADATA: Readonly<Record<string, ComponentBindingMetadat
     NavBar: {
       // Navigation primitive — `links` come from props, not a capability.
       examples: ['/recipes/github-reviewer.json', '/recipes/dummyjson-shopper.json'],
+    },
+    // Logo is a brand-mark leaf; assets / wordmark are authored at compile
+    // time via brand kit, not bound to a capability.
+    Logo: {
+      examples: ['/recipes/github-reviewer.json', '/recipes/dummyjson-shopper.json'],
+    },
+    // Queue subsumes the inbox/task/issue/review list-of-actionable-items
+    // pattern. It binds to any list-shaped capability the host publishes;
+    // the demos wire it to thread.list, task.list, issue.list, etc. We
+    // keep the data sources empty (honest — no shipped capability is
+    // canonically "the" Queue source) but examples cite the demos.
+    Queue: {
+      examples: [
+        '/recipes/aurora-decisions.json',
+        '/recipes/github-reviewer.json',
+        '/recipes/dummyjson-shopper.json',
+      ],
     },
     EmptyState: {
       // Display leaf — content is authored at compile time.

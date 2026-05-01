@@ -1,18 +1,31 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Hand-written manifests that stand in for the Phase 5 LLM-backed compiler.
- * Returned from `app/api/manifest/[...slug]/route.ts` so the runtime's
- * fetcher exercises the real cold-path flow.
+ * Reference manifests for `apps/demo` — kept as a host-authored example of
+ * what a baseline-only composition looks like, exercised by
+ * `test/fake-manifests.test.ts`.
  *
- * DX-A polish: the `/today` manifest now opens with a `<NavBar>` and a
- * `<KPIRow>` (3 stats) above the existing decision queue + task queue.
- * The KPIRow values are inlined as static strings — production hosts wire
- * the same row to a `system.metrics` capability via a `data` binding so the
- * stats stay live.
+ * Marketplace pivot: every node here is a baseline component shipped in
+ * `@cir/components`. The previous Aurora demo wired four custom bindings
+ * (`DecisionQueue`, `TaskQueue`, `ThreadView`, `UndoBar`) — they're gone:
+ *
+ *   - `DecisionQueue` / `TaskQueue` → `<Queue>` baseline (capability binding +
+ *     declarative `actions` array per row).
+ *   - `ThreadView` → `<Stack>` + `<NavBar>` + `<Markdown>` + `<ChatThread>`
+ *     pure composition.
+ *   - `UndoBar` → ambient runtime service (mounted in `cir-providers.tsx`,
+ *     declared via `ambient_policy_satisfiers`).
+ *
+ * Headers compose as `<Stack direction="horizontal">` of `<Logo>` (brand
+ * mark + wordmark) + `<NavBar>` (nav items). Both are baseline.
+ *
+ * The runtime never serves these manifests — Gemini compiles every route,
+ * with the framework's `GenericFallbackCompiler` as the cascade tail. Hosts
+ * inspect this file as a worked example of "what a zero-custom demo looks
+ * like" and the test suite uses it as a fixture.
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest, LayoutNode } from '@cir/schemas';
 import { getStore } from './fake-data';
 
 const COMPILED_FROM = {
@@ -20,7 +33,7 @@ const COMPILED_FROM = {
   skill_versions: {},
   component_catalog_version: '1.0.0',
   intent_profile_version: 1,
-  compiler_model: 'fake-compiler-v0',
+  compiler_model: 'reference-baseline-composition',
   compiled_at: '2026-04-29T12:00:00Z',
 };
 
@@ -31,11 +44,7 @@ const INVALIDATES_ON = [
 
 const POLICIES_SATISFIED = ['data_access_within_grant', 'confirmation_required_for_destructive'];
 
-/**
- * Snapshot the in-memory store for the KPI row. Pure read; no mutation.
- * Returns plain strings so the manifest stays JSON-safe (the runtime
- * accepts `ReactNode` for `KPIStat.value` but the wire is JSON).
- */
+/** Snapshot the in-memory store for the KPI row. Pure read; no mutation. */
 function todayKpiStats(): { open: number; dueToday: number; mentions: number } {
   const store = getStore();
   const open = store.threads.filter((t) => t.requires_decision && !t.archived).length;
@@ -47,6 +56,44 @@ function todayKpiStats(): { open: number; dueToday: number; mentions: number } {
   // capability.
   const mentions = store.threads.filter((t) => !t.archived).length - open;
   return { open, dueToday, mentions: Math.max(0, mentions) };
+}
+
+/**
+ * Compose the Aurora header: `<Logo>` brand lockup on the left, `<NavBar>`
+ * nav items on the right. Pure baseline — no `OctantHeader` / `MarigoldHeader`
+ * / `Wordmark` per-host customs.
+ */
+function auroraHeader(activePath: '/today' | '/settings/intent' | 'thread'): LayoutNode {
+  return {
+    component: 'Stack',
+    props: { direction: 'horizontal', gap: 'md', align: 'center' },
+    children: [
+      {
+        component: 'Logo',
+        props: {
+          glyph: '\u{1F30C}', // Milky Way — Aurora's brand glyph
+          wordmark: 'Aurora',
+          size: 'md',
+          href: '/today',
+        },
+        children: [],
+      },
+      {
+        component: 'NavBar',
+        props: {
+          items: [
+            { label: 'Today', href: '/today', active: activePath === '/today' },
+            {
+              label: 'Settings',
+              href: '/settings/intent',
+              active: activePath === '/settings/intent',
+            },
+          ],
+        },
+        children: [],
+      },
+    ],
+  };
 }
 
 export function todayManifest(): Manifest {
@@ -71,17 +118,7 @@ export function todayManifest(): Manifest {
               component: 'Stack',
               props: { direction: 'vertical', gap: 'lg' },
               children: [
-                {
-                  component: 'NavBar',
-                  props: {
-                    items: [
-                      { label: 'Today', href: '/today', active: true },
-                      { label: 'Settings', href: '/settings/intent' },
-                    ],
-                    brand: 'Decision queue',
-                  },
-                  children: [],
-                },
+                auroraHeader('/today'),
                 {
                   component: 'KPIRow',
                   props: {
@@ -95,14 +132,25 @@ export function todayManifest(): Manifest {
                 },
                 {
                   component: 'Alert',
-                  props: {
-                    severity: 'info',
-                    title: 'Welcome to the CIR demo',
-                  },
+                  props: { severity: 'info', title: 'Welcome to the CIR demo' },
                   children: [],
                 },
+                // Decision queue — Queue baseline, bound to thread.list with
+                // declarative per-row actions. Replaces the old DecisionQueue
+                // custom binding.
                 {
-                  component: 'DecisionQueue',
+                  component: 'Queue',
+                  props: {
+                    title: 'Decisions to make today',
+                    actions: [
+                      {
+                        id: 'task.create_from_thread',
+                        label: 'Make task',
+                        variant: 'secondary',
+                      },
+                      { id: 'thread.archive', label: 'Archive', variant: 'destructive' },
+                    ],
+                  },
                   data: {
                     source: 'thread.list',
                     filter: 'requires_decision = true',
@@ -110,8 +158,17 @@ export function todayManifest(): Manifest {
                   actions: ['task.create_from_thread', 'thread.archive'],
                   children: [],
                 },
+                // Task queue — same Queue primitive, different binding +
+                // actions. Replaces the old TaskQueue custom binding.
                 {
-                  component: 'TaskQueue',
+                  component: 'Queue',
+                  props: {
+                    title: 'Your tasks',
+                    actions: [
+                      { id: 'task.complete', label: 'Done', variant: 'secondary' },
+                      { id: 'task.snooze', label: 'Snooze', variant: 'ghost' },
+                    ],
+                  },
                   data: {
                     source: 'task.list',
                     filter: 'due_within = 7d',
@@ -120,11 +177,11 @@ export function todayManifest(): Manifest {
                   actions: ['task.complete', 'task.snooze'],
                   children: [],
                 },
-                // Required by `reversibility_surfaced` policy: every reversible
-                // action in this route needs an undo affordance somewhere in
-                // the layout. UndoBar covers all four (thread.archive,
-                // task.create_from_thread, task.complete, task.snooze).
-                { component: 'UndoBar', children: [] },
+                // No `<UndoBar>` node any more — the Aurora app mounts an
+                // ambient `<UndoBar>` at the React root and declares
+                // `UNDO_TOAST_AMBIENT_SATISFIER` on the policy context, which
+                // satisfies `reversibility_surfaced` for every reversible
+                // action this route invokes.
               ],
             },
           ],
@@ -156,16 +213,54 @@ export function threadManifest(id: string): Manifest {
           props: { maxWidth: 'md' },
           children: [
             {
-              component: 'ThreadView',
-              data: {
-                source: 'thread.get',
-                filter: `id = "${id}"`,
-              },
-              actions: ['thread.archive', 'task.create_from_thread'],
-              children: [],
+              component: 'Stack',
+              props: { direction: 'vertical', gap: 'md' },
+              children: [
+                auroraHeader('thread'),
+                {
+                  component: 'Markdown',
+                  props: { content: `# Thread \`${id}\`` },
+                  children: [],
+                },
+                // Action row — pure ButtonGroup composition. Each Button
+                // dispatches a capability via the manifest's `actions` array
+                // (the runtime resolves the binding by id).
+                {
+                  component: 'ButtonGroup',
+                  props: {},
+                  children: [
+                    {
+                      component: 'Button',
+                      props: { variant: 'secondary', children: 'Make task' },
+                      actions: ['task.create_from_thread'],
+                      children: [],
+                    },
+                    {
+                      component: 'Button',
+                      props: { variant: 'destructive', children: 'Archive' },
+                      actions: ['thread.archive'],
+                      children: [],
+                    },
+                  ],
+                },
+                // Messages — ChatThread baseline. Resolver threads
+                // `data: thread.get` (whole thread) and the renderer feeds
+                // `data.thread.messages` into ChatThread's `messages` prop.
+                // For this reference manifest the binding is the whole
+                // `thread.get` capability; production hosts can publish a
+                // `thread.messages` capability that returns the array
+                // directly.
+                {
+                  component: 'ChatThread',
+                  data: {
+                    source: 'thread.get',
+                    filter: `id = "${id}"`,
+                  },
+                  children: [],
+                },
+                // Same ambient-undo coverage as /today.
+              ],
             },
-            // Same reversibility coverage as /today.
-            { component: 'UndoBar', children: [] },
           ],
         },
         refresh: {

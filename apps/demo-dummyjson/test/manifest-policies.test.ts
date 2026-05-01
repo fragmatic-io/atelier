@@ -201,7 +201,7 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       expect(stripBtn(m.routes[0]!.layout, 'dummyjson.cart.remove')).toBeNull();
     }
     // Sanity check — the chrome IS still mounted (the rate-limit chip).
-    expect(findFirst(browse.routes[0]!.layout, 'MarigoldHeader')).not.toBeNull();
+    expect(findFirst(browse.routes[0]!.layout, 'StatusBar')).not.toBeNull();
   });
 
   it('rate-limit chip is present on every route exposing a rate-limited action', () => {
@@ -218,15 +218,11 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       }
       return null;
     };
+    expect(findFirst(browseManifest('comfortable').routes[0]!.layout, 'StatusBar')).not.toBeNull();
     expect(
-      findFirst(browseManifest('comfortable').routes[0]!.layout, 'MarigoldHeader'),
+      findFirst(productManifest('1', 'comfortable').routes[0]!.layout, 'StatusBar'),
     ).not.toBeNull();
-    expect(
-      findFirst(productManifest('1', 'comfortable').routes[0]!.layout, 'MarigoldHeader'),
-    ).not.toBeNull();
-    expect(
-      findFirst(cartManifest('comfortable').routes[0]!.layout, 'MarigoldHeader'),
-    ).not.toBeNull();
+    expect(findFirst(cartManifest('comfortable').routes[0]!.layout, 'StatusBar')).not.toBeNull();
   });
 
   it('every data-bound node declares a DISTINCTIVE empty_state inline (Phase 2 #4)', () => {

@@ -1,38 +1,36 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
 /**
- * Demo-app-specific `ComponentBinding`s. The custom components ship in
- * `apps/demo-github/components/` and need to be referenceable from
- * manifests by name (so `<RenderNode>` can find a factory when it walks
- * the layout tree):
+ * Octant demo — host-side `ComponentBinding`s.
  *
- *   - `IssueQueue` — the rich `/today` queue surface (optimistic archive,
- *     hover-card mentions, bulk-close with verbal confirmation).
- *     `compositionRole: 'list'` so the policy engine treats it the same
- *     as a baseline `<List>` for the long-list-hierarchy and
- *     empty/loading/error obligations.
- *   - `RepoTable` — the dense `/repos` table with hover-card previews on
- *     each row's name and an inline "Create issue" affordance.
- *     `compositionRole: 'table'` for the same reason.
- *   - `OctantHeader` — the persistent app chrome (wordmark + nav +
- *     small rate-limit chip). No composition role — it's a leaf chrome
- *     component, not a long list.
- *   - `RateLimitStatusBar` — `<StatusBar>` driven by the GitHub client's
- *     cached rate-limit snapshot. Kept for legacy manifests.
- *   - `Wordmark` — the Octant brand lockup (octagon + wordmark).
+ * Marketplace pivot (this commit): four custom bindings retired by
+ * collapsing onto baseline composition.
  *
- * The runtime registers these alongside `COMPONENT_BINDINGS` (the
+ *   - `RepoTable` → baseline `<Table>` (columns declared in the manifest).
+ *   - `RateLimitStatusBar` → baseline `<StatusBar>` bound to
+ *     `github.api.rate_limit`.
+ *   - `OctantHeader` → `<Stack>` of `<Logo>` (octagon glyph + wordmark) +
+ *     `<NavBar>` + `<StatusBar>`. Pure baseline composition.
+ *   - `Wordmark` → `<Logo>` baseline (glyph + wordmark lockup).
+ *
+ * What stays (one custom binding):
+ *
+ *   - `IssueQueue` — the rich queue surface with optimistic archive,
+ *     hover-card mentions, salience hierarchy, and bulk actions. The
+ *     marketplace plan calls for collapsing this onto `<Queue>` in a
+ *     follow-up commit (it's the proof-point use case for the new
+ *     baseline primitive); keeping it here for now so the github demo's
+ *     interaction model is preserved while we soak the migration on
+ *     Aurora first.
+ *
+ * The runtime registers `IssueQueue` alongside `COMPONENT_BINDINGS` (the
  * baseline catalog) AND `cir-providers.tsx` derives the
- * `composition_roles` map for `validateManifest()` from these bindings
- * via `compositionRolesFromBindings()`.
+ * `composition_roles` map for `validateManifest()` from these bindings via
+ * `compositionRolesFromBindings()`.
  */
 
 import type { ComponentBinding } from '@cir/runtime';
 import { IssueQueue } from '../components/IssueQueue';
-import { OctantHeader } from '../components/OctantHeader';
-import { RateLimitStatusBar } from '../components/RateLimitStatusBar';
-import { RepoTable } from '../components/RepoTable';
-import { Wordmark } from '../components/Wordmark';
 
 export const IssueQueueBinding: ComponentBinding = {
   id: 'IssueQueue',
@@ -40,36 +38,14 @@ export const IssueQueueBinding: ComponentBinding = {
   compositionRole: 'list',
 };
 
-export const RepoTableBinding: ComponentBinding = {
-  id: 'RepoTable',
-  factory: RepoTable as ComponentBinding['factory'],
-  compositionRole: 'table',
-};
-
-export const OctantHeaderBinding: ComponentBinding = {
-  id: 'OctantHeader',
-  factory: OctantHeader as ComponentBinding['factory'],
-};
-
-export const RateLimitStatusBarBinding: ComponentBinding = {
-  id: 'RateLimitStatusBar',
-  factory: RateLimitStatusBar as ComponentBinding['factory'],
-};
-
-export const WordmarkBinding: ComponentBinding = {
-  id: 'Wordmark',
-  factory: Wordmark as ComponentBinding['factory'],
-};
-
 /**
- * All custom bindings the demo registers on top of `COMPONENT_BINDINGS`.
+ * Custom bindings the demo registers on top of `COMPONENT_BINDINGS`.
  * Spread into `MapComponentRegistry` after the baseline so manifests can
  * reference any of these names in `LayoutNode.component`.
+ *
+ * The `marketplace-pressure` eval gate caps this set's size so future
+ * regressions ("just add another custom") are surfaced.
  */
 export const DEMO_GITHUB_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({
   IssueQueue: IssueQueueBinding,
-  RepoTable: RepoTableBinding,
-  OctantHeader: OctantHeaderBinding,
-  RateLimitStatusBar: RateLimitStatusBarBinding,
-  Wordmark: WordmarkBinding,
 });

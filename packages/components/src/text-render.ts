@@ -45,6 +45,7 @@ import { iconTextRender } from './components/Icon.js';
 import { kpiRowTextRender } from './components/KPIRow.js';
 import { kanbanTextRender } from './components/Kanban.js';
 import { listTextRender } from './components/List.js';
+import { logoTextRender } from './components/Logo.js';
 import { mapTextRender } from './components/Map.js';
 import { markdownTextRender } from './components/Markdown.js';
 import { modalTextRender } from './components/Modal.js';
@@ -53,6 +54,7 @@ import { navBarTextRender } from './components/NavBar.js';
 import { numberInputTextRender } from './components/NumberInput.js';
 import { paginationTextRender } from './components/Pagination.js';
 import { progressTextRender } from './components/Progress.js';
+import { queueTextRender } from './components/Queue.js';
 import { richTextTextRender } from './components/RichText.js';
 import { searchTextRender } from './components/Search.js';
 import { selectTextRender } from './components/Select.js';
@@ -112,6 +114,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   KPIRow: kpiRowTextRender as TextRenderer,
   Kanban: kanbanTextRender as TextRenderer,
   List: listTextRender as TextRenderer,
+  Logo: logoTextRender as TextRenderer,
   Map: mapTextRender as TextRenderer,
   Markdown: markdownTextRender as TextRenderer,
   Modal: modalTextRender as TextRenderer,
@@ -120,6 +123,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   NumberInput: numberInputTextRender as TextRenderer,
   Pagination: paginationTextRender as TextRenderer,
   Progress: progressTextRender as TextRenderer,
+  Queue: queueTextRender as TextRenderer,
   RichText: richTextTextRender as TextRenderer,
   Search: searchTextRender as TextRenderer,
   Select: selectTextRender as TextRenderer,

@@ -85,25 +85,55 @@ const POLICIES_SATISFIED = [
 ];
 
 /**
- * The header on every route. NavBar + a small inline rate-limit chip.
- * `<RateLimitChip>` is a custom binding registered via
- * `lib/component-bindings.ts`. It satisfies
- * `rate_limited_actions_show_state` for any route that surfaces a
- * rate-limited action (here: `dummyjson.cart.add` on /browse, /cart,
- * /product).
+ * The header on every route. Composed entirely from baseline primitives
+ * after the marketplace pivot:
+ *
+ *   `<Stack direction="horizontal">` →
+ *      `<Logo glyph="🌼" wordmark="marigold" />`,
+ *      `<NavBar items={...} />`,
+ *      `<StatusBar variant="compact" status="operational" message="60/60" />`
+ *
+ * The retired customs (`MarigoldHeader`, `Wordmark`, `RateLimitChip`)
+ * are gone — the manifest declares structure + capability binding;
+ * `<StatusBar>`'s `data: { source: 'dummyjson.cart.add.rate_limit' }`
+ * keeps the `rate_limited_actions_show_state` policy walker honest, and
+ * `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` declared on the policy context
+ * covers any route where the chip is collapsed off-screen.
  */
 function chromeHeader(activePath: string): LayoutNode {
+  const navItems: { label: string; href: string; active: boolean }[] = [
+    { label: 'Browse', href: '/browse', active: activePath === '/browse' },
+    { label: 'Cart', href: '/cart', active: activePath === '/cart' },
+  ];
   return {
-    component: 'MarigoldHeader',
-    props: { activePath, quotaLabel: '60 cart adds / 60s' },
-    // The header binds to the cart-add rate-limit data source so the
-    // `rate_limited_actions_show_state` policy walker sees a quota
-    // ancestor on every route that exposes `dummyjson.cart.*`. The
-    // pattern `<capability>.rate_limit` is the policy's allow-list. The
-    // chip in the rendered DOM displays the value; the data binding is
-    // what the manifest validator inspects.
-    data: { source: 'dummyjson.cart.add.rate_limit' },
-    children: [],
+    component: 'Stack',
+    props: { direction: 'horizontal', gap: 'md', align: 'center' },
+    children: [
+      {
+        component: 'Logo',
+        props: {
+          glyph: '\u{1F33C}', // marigold flower — the demo's brand glyph
+          wordmark: 'marigold',
+          size: 'md',
+          href: '/browse',
+        },
+        children: [],
+      },
+      {
+        component: 'NavBar',
+        props: { items: navItems },
+        children: [],
+      },
+      {
+        component: 'StatusBar',
+        props: { variant: 'compact', status: 'operational', message: '60/60' },
+        // Bound to the cart-add quota source so the
+        // `rate_limited_actions_show_state` policy walker sees a quota
+        // ancestor on every route that exposes `dummyjson.cart.*`.
+        data: { source: 'dummyjson.cart.add.rate_limit' },
+        children: [],
+      },
+    ],
   };
 }
 

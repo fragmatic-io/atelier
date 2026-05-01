@@ -27,7 +27,6 @@ import { BehavioralTap, StreamingAuditSink } from '@cir/runtime';
 import type { Capability, ComponentDefinition } from '@cir/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
-import { manifestForRoute } from './fake-manifests';
 
 interface CirServer {
   compiler: CompilerService;
@@ -70,11 +69,10 @@ function buildServer(): CirServer {
   const apiKey = process.env['GEMINI_API_KEY'];
   const geminiAvailable = !!apiKey && apiKey.length > 10;
 
-  // Phase 3 polish — `fake-manifests.ts` retained ONLY as the source of
-  // `fewShotExample` (host-supplied grounding for Gemini) and as fixture
-  // for tests. The compile chain now uses the framework's
-  // `GenericFallbackCompiler` for last-resort behavior, not a hand-written
-  // per-route lookup.
+  // Marketplace pivot — Aurora ships zero manifest-referenced customs.
+  // The compile chain is `[Gemini, GenericFallbackCompiler]`; the host's
+  // `lib/fake-manifests.ts` is a baseline-only reference exercised by
+  // tests, not served at runtime.
   const compilers: CompilerService[] = [];
   if (geminiAvailable) {
     compilers.push(
@@ -103,69 +101,66 @@ function buildServer(): CirServer {
   });
 
   // Components catalog summary — what the compiler is allowed to reference.
-  // We list both the @cir/components baseline + the demo's domain components.
-  const components: ComponentDefinition[] = [
-    // Baseline (from @cir/components)
-    ...([
-      'Stack',
-      'Card',
-      'Container',
-      'Grid',
-      'Markdown',
-      'Table',
-      'EmptyState',
-      'Button',
-      'TextInput',
-      'Select',
-      'Alert',
-      'Spinner',
-      'ConfirmDialog',
-      // DX-A polish: surfaced in the today fallback manifest. The compiler
-      // is allowed to compose these in any route it generates.
-      'NavBar',
-      'KPIRow',
-      'StatusBar',
-      'List',
-      'BulkActionBar',
-      'HoverCard',
-      'Skeleton',
-      'Toast',
-    ].map((id) => ({
-      id,
-      props_schema: `${id}Props`,
-      data_sources: [],
-      actions_supported: [],
-      responsive_targets: ['web'],
-      design_tokens: '@cir/demo/brand@0.1.0',
-      examples: [],
-      text_render: true,
-    })) as ComponentDefinition[]),
-    // Domain extensions
-    ...(['DecisionQueue', 'TaskQueue', 'ThreadView', 'UndoBar'].map((id) => ({
-      id,
-      props_schema: `${id}Props`,
-      data_sources:
-        id === 'DecisionQueue'
-          ? ['thread.list']
-          : id === 'TaskQueue'
-            ? ['task.list']
-            : id === 'ThreadView'
-              ? ['thread.get']
-              : [],
-      actions_supported:
-        id === 'DecisionQueue'
-          ? ['thread.archive', 'task.create_from_thread']
-          : id === 'TaskQueue'
-            ? ['task.complete', 'task.snooze']
-            : id === 'ThreadView'
-              ? ['thread.archive', 'task.create_from_thread']
-              : [],
-      responsive_targets: ['web'],
-      design_tokens: '@cir/demo/brand@0.1.0',
-      examples: [],
-      text_render: true,
-    })) as ComponentDefinition[]),
+  //
+  // Marketplace pivot: Aurora's catalog is **baseline-only**. Every previous
+  // domain extension (`DecisionQueue`, `TaskQueue`, `ThreadView`, `UndoBar`)
+  // is gone — the LLM composes baseline `<Queue>` / `<ChatThread>` /
+  // `<Stack>` + `<Logo>` + `<NavBar>` instead. The `marketplace-pressure`
+  // eval gate enforces zero customs here going forward.
+  const baselineIds = [
+    // Layout
+    'Stack',
+    'Container',
+    'Grid',
+    'Card',
+    'Split',
+    // Display
+    'Markdown',
+    'Table',
+    'List',
+    'Queue',
+    'EmptyState',
+    'KPIRow',
+    'StatCard',
+    'StatusBar',
+    'Skeleton',
+    // Brand chrome (compose as Stack(Logo, NavBar) — no per-host header)
+    'Logo',
+    'NavBar',
+    'Breadcrumb',
+    // Action / forms
+    'Button',
+    'ButtonGroup',
+    'ActionMenu',
+    'TextInput',
+    'Select',
+    'ConfirmDialog',
+    'BulkActionBar',
+    // Feedback / overlays
+    'Alert',
+    'Spinner',
+    'Toast',
+    'HoverCard',
+    'Tooltip',
+    // Conversation
+    'ChatThread',
+    // Icons
+    'Icon',
   ];
+  const components: ComponentDefinition[] = baselineIds.map((id) => ({
+    id,
+    props_schema: `${id}Props`,
+    data_sources:
+      id === 'Queue' ? ['thread.list', 'task.list'] : id === 'ChatThread' ? ['thread.get'] : [],
+    actions_supported:
+      id === 'Queue'
+        ? ['thread.archive', 'task.create_from_thread', 'task.complete', 'task.snooze']
+        : [],
+    responsive_targets: ['web'],
+    design_tokens: '@cir/demo/brand@0.1.0',
+    examples: [],
+    text_render: true,
+  })) as ComponentDefinition[];
 
   return {
     compiler,

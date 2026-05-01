@@ -42,6 +42,7 @@ const EXPECTED = [
   'KPIRow',
   'Kanban',
   'List',
+  'Logo',
   'Map',
   'Markdown',
   'Modal',
@@ -50,6 +51,7 @@ const EXPECTED = [
   'NumberInput',
   'Pagination',
   'Progress',
+  'Queue',
   'RichText',
   'Search',
   'Select',
@@ -75,7 +77,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 61 baseline components', () => {
+  it('contains exactly the 64 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 

@@ -287,6 +287,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "Logo": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@cir/components/baseline@0.1.0",
+    "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
+    "props_schema": "LogoProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "Map": {
     "actions_supported": [],
     "data_sources": [],
@@ -356,6 +365,19 @@
     "design_tokens": "@cir/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ProgressProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "Queue": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@cir/components/baseline@0.1.0",
+    "examples": [
+      "/recipes/aurora-decisions.json",
+      "/recipes/github-reviewer.json",
+      "/recipes/dummyjson-shopper.json"
+    ],
+    "props_schema": "QueueProps",
     "responsive_targets": ["web"],
     "text_render": true
   },

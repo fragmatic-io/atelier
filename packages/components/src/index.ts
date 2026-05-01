@@ -79,6 +79,12 @@ export type { EmptyStateProps } from './components/EmptyState.js';
 export { List, ListBinding } from './components/List.js';
 export type { ListProps } from './components/List.js';
 
+export { Queue, QueueBinding, queueTextRender } from './components/Queue.js';
+export type { QueueProps, QueueAction, QueueVariant } from './components/Queue.js';
+
+export { Logo, LogoBinding, logoTextRender } from './components/Logo.js';
+export type { LogoProps, LogoSize } from './components/Logo.js';
+
 export { DetailView, DetailViewBinding } from './components/DetailView.js';
 export type { DetailViewProps, DetailField } from './components/DetailView.js';
 

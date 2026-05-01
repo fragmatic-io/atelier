@@ -172,16 +172,22 @@ function buildServer(): CirServer {
 
   // Components catalog summary — what the compiler is allowed to reference.
   //
-  // Per `docs/ethos.md` principle #2 (composition, not invention), every
-  // entry carries a `description` so the LLM can pick the right component.
-  // Custom bindings (`IssueQueue`, `RepoTable`, `OctantHeader`,
-  // `RateLimitStatusBar`, `Wordmark`) describe their specific UX so the
-  // compiler picks them over the generic baseline alternatives when the
-  // route's intent matches.
+  // Marketplace pivot: four custom bindings retired this commit.
+  //   - `RepoTable` → baseline `<Table>` (manifest declares columns).
+  //   - `RateLimitStatusBar` → baseline `<StatusBar>` bound to
+  //     `github.api.rate_limit`.
+  //   - `OctantHeader` → `<Stack>` of `<Logo>` + `<NavBar>` + `<StatusBar>`.
+  //   - `Wordmark` → `<Logo>` baseline (glyph + wordmark lockup).
   //
-  // Catalog descriptions are the difference between "the LLM picks `<List>`"
-  // and "the LLM picks `<IssueQueue>` because the route is a decision
-  // queue with optimistic archive and salience hierarchy."
+  // What stays: `IssueQueue` (the rich queue surface — collapsed onto
+  // `<Queue>` in a follow-up commit, after the new baseline primitive
+  // soaks on Aurora). The catalog description nudges the LLM to use
+  // `<IssueQueue>` for decision queues until that migration completes.
+  //
+  // Per `docs/ethos.md` principle #11 (marketplace is the product;
+  // custom bindings are a last resort), every entry carries a
+  // `description` so the LLM picks the right component without needing a
+  // host-shaped wrapper.
   const baseline: Array<Pick<ComponentDefinition, 'description'> & { id: string }> = [
     {
       id: 'Stack',
@@ -198,8 +204,7 @@ function buildServer(): CirServer {
     },
     {
       id: 'Grid',
-      description:
-        'Generic responsive grid for cards or tiles. Prefer custom bindings (e.g. RepoTable) when the description matches better.',
+      description: 'Generic responsive grid for cards or tiles.',
     },
     {
       id: 'Markdown',
@@ -208,7 +213,7 @@ function buildServer(): CirServer {
     {
       id: 'Table',
       description:
-        'Generic dense rows with columns. For repo browsing in this demo, prefer `RepoTable` which adds hover-card previews and inline create-issue links.',
+        "Dense rows with columns. USE THIS for repo browsing (`/repos`) — declare columns explicitly in `props`. Hover-card row previews live in the host's row template; the manifest contributes structure + capability binding only.",
     },
     {
       id: 'EmptyState',
@@ -241,11 +246,6 @@ function buildServer(): CirServer {
       id: 'DetailView',
       description: 'Single-record detail surface (header + body). Used by `/issue/[id]`.',
     },
-    {
-      id: 'StatusBar',
-      description:
-        'Status pill with operational/degraded/down. For ambient system status. Octant uses a custom `RateLimitStatusBar` for GitHub API rate-limit state.',
-    },
     { id: 'StatCard', description: 'Single KPI card with label, value, optional delta.' },
     { id: 'KPIRow', description: 'Horizontal row of `StatCard`s. For dashboard summaries.' },
     { id: 'Form', description: 'Form root with submit semantics. Wraps inputs.' },
@@ -270,7 +270,17 @@ function buildServer(): CirServer {
     {
       id: 'NavBar',
       description:
-        'Top nav with brand + items. In this demo, the chrome NavBar is wrapped by `OctantHeader` which adds the rate-limit chip.',
+        'Top nav with `items` and an optional `brand` slot. Compose with `<Logo>` and `<StatusBar>` inside a horizontal `<Stack>` to build the Octant chrome — there is no per-host header binding any more.',
+    },
+    {
+      id: 'Logo',
+      description:
+        'Brand mark + wordmark primitive. For Octant pass `glyph: "\\u2B22"` (black medium octagon) and `wordmark: "octant"`. Compose as a sibling of `<NavBar>` inside a `<Stack>` to build the chrome.',
+    },
+    {
+      id: 'StatusBar',
+      description:
+        'Status pill with operational / degraded / down. Bind to `github.api.rate_limit` in the chrome to surface API quota live; ambient `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` clears the `rate_limited_actions_show_state` policy.',
     },
     {
       id: 'Skeleton',
@@ -290,31 +300,17 @@ function buildServer(): CirServer {
       id: 'ButtonGroup',
       description: 'Cluster of related buttons (toggle group or action set).',
     },
-    // Custom demo bindings — described so the LLM picks them over baseline.
+    {
+      id: 'Queue',
+      description:
+        'Generic "items requiring action" baseline. For Octant prefer `<IssueQueue>` (richer hover-card mentions + salience) until the post-pivot migration consolidates onto `<Queue>`.',
+    },
+    // Last remaining custom binding — collapsing onto baseline `<Queue>`
+    // is a follow-up commit (see ETHOS principle #11).
     {
       id: 'IssueQueue',
       description:
-        'Rich decision queue for `/today`-style routes. Renders fixture-bound issues as cards with: bold title, mono `repo#NNN` reference, green `you`/`team` assignee chip, body with inline link-blue mono `#NNN` mention refs (hover-card on each), ghost Archive button, multi-select checkboxes. Top three rows get green left-border salience emphasis. Pair with `<UndoToast>` so optimistic archive is reversible. PREFER this over `<List>` when the route is a decision queue.',
-    },
-    {
-      id: 'RepoTable',
-      description:
-        'Rich repository browser for `/repos`. Hover-card previews on each row showing recent activity, inline `Create issue` deep-link per row, mono on owner/repo. PREFER this over `<Table>` when the route is repo-browsing.',
-    },
-    {
-      id: 'OctantHeader',
-      description:
-        'Single-row chrome (octagon Wordmark + nav + small rate-limit chip). USE THIS as the first child of every route. Replaces the static layout chrome — there should be exactly one OctantHeader per manifest.',
-    },
-    {
-      id: 'RateLimitStatusBar',
-      description:
-        'GitHub API rate-limit chip (used inside OctantHeader). Surfaces `github.api.rate_limit` as `5000/5000 · 60s reset`. Satisfies `rate_limited_actions_show_state` policy when the route exposes a rate-limited action.',
-    },
-    {
-      id: 'Wordmark',
-      description:
-        'Octagon SVG logo + lowercase mono "octant" lockup. Embedded inside `OctantHeader`; rarely referenced directly from a manifest.',
+        'Rich decision queue for `/today`-style routes. Renders fixture-bound issues as cards with: bold title, mono `repo#NNN` reference, green `you`/`team` assignee chip, body with inline link-blue mono `#NNN` mention refs (hover-card on each), ghost Archive button, multi-select checkboxes. Top three rows get green left-border salience emphasis. Pair with ambient `<UndoToast>` so optimistic archive is reversible. PREFER this over `<List>` / `<Queue>` when the route is a decision queue.',
     },
   ];
   const components: ComponentDefinition[] = baseline.map((c) => ({

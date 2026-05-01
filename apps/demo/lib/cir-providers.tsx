@@ -42,12 +42,17 @@ import {
   type DataBinding,
 } from '@cir/react';
 import { CompositeDataResolver, MockDataResolver, RestDataResolver } from '@cir/data-resolvers';
-import { validateManifest, BASELINE_POLICIES, composesAccordingTo } from '@cir/policies';
+import {
+  validateManifest,
+  BASELINE_POLICIES,
+  composesAccordingTo,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+} from '@cir/policies';
 import type { IntentProfile, Manifest } from '@cir/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
 import { loadIntentProfile } from './intent-store';
-import { DEMO_BINDINGS } from '@/components';
+import { AmbientUndoBar, DEMO_BINDINGS } from '@/components';
 
 type CirServices = Parameters<typeof CirRuntime>[0]['services'];
 
@@ -189,6 +194,11 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           rate_limited_capability_ids: new Set(),
           pii_fields: new Set(['email']),
           brand_kit: DEMO_BRAND_KIT,
+          // Marketplace pivot: `<UndoBar>` is no longer a manifest node —
+          // we mount it ambiently below. Declaring the satisfier here
+          // tells `reversibility_surfaced` the obligation is covered for
+          // every reversible action this runtime fires.
+          ambient_policy_satisfiers: [UNDO_TOAST_AMBIENT_SATISFIER],
         },
         {
           policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
@@ -265,6 +275,14 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
     <>
       <CirRuntime services={services} dataResolver={dataResolver}>
         {children}
+        {/*
+          Ambient undo bar — mounted INSIDE <CirRuntime> so it can read the
+          dispatcher via `useCir()`, but OUTSIDE the manifest tree so it's
+          not a manifest-referenced custom binding. The companion
+          `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy context
+          tells `reversibility_surfaced` the obligation is covered.
+        */}
+        <AmbientUndoBar />
       </CirRuntime>
       <Portal />
       <DebugPanel sink={audit} />

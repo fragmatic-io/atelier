@@ -136,17 +136,18 @@ interface BuiltServices {
  * Ambient runtime services this app mounts that satisfy named policy
  * obligations (Phase 2 #5 / `docs/ethos.md` principle #4):
  *
- *   - `<OctantHeader>` renders the rate-limit chip on every route, polling
- *     the GitHub-client rate-limit snapshot — `<RateLimitStatusBar>`
- *     ambient → `rate_limited_actions_show_state`.
+ *   - The header `<StatusBar>` (composed in the manifest as a sibling of
+ *     `<Logo>` + `<NavBar>`) is bound to `github.api.rate_limit` and lives
+ *     on every route — `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` clears
+ *     `rate_limited_actions_show_state` for every rate-limited capability.
  *   - The manifest layouts include an in-tree `<UndoToast>` plus the
  *     `<IssueQueue>` raises its own optimistic-archive toast. Mount-time
  *     declaration here covers any reversible capability the dispatcher
  *     fires while the app is mounted.
  *
- * Declaring these here removes the need for the in-manifest
- * `rateLimitQuotaNode()` band-aid (the hidden `<StatCard>` we deleted in
- * `lib/manifests.ts`).
+ * Marketplace pivot: the four custom chrome bindings (`OctantHeader`,
+ * `Wordmark`, `RateLimitStatusBar`, `RepoTable`) are gone — manifests
+ * compose `<Stack(Logo, NavBar, StatusBar)>` directly.
  */
 const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
   UNDO_TOAST_AMBIENT_SATISFIER,
@@ -154,9 +155,11 @@ const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
 ];
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
-  // Baseline catalog first; demo-specific bindings (IssueQueue, RepoTable,
-  // OctantHeader, RateLimitStatusBar, Wordmark) are layered on top so the
-  // manifest can reference any of them in `LayoutNode.component`.
+  // Baseline catalog first; the remaining demo-specific binding
+  // (`IssueQueue`) is layered on top so manifests can reference it. Four
+  // others (`RepoTable`, `OctantHeader`, `RateLimitStatusBar`, `Wordmark`)
+  // were retired in the marketplace pivot — manifests compose baseline
+  // `<Table>` / `<Stack(Logo, NavBar, StatusBar)>` instead.
   const registry = new MapComponentRegistry({
     ...COMPONENT_BINDINGS,
     ...DEMO_GITHUB_BINDINGS,

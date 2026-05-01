@@ -73,12 +73,48 @@ const POLICIES_SATISFIED: readonly string[] = [
   'composes_hierarchy_for_long_lists',
 ];
 
-/** Octant header — wordmark + nav + small rate-limit chip. */
+/**
+ * Octant header — `<Stack>` of `<Logo>` (octagon glyph + wordmark),
+ * `<NavBar>` (nav items), and `<StatusBar>` (rate-limit chip). Pure
+ * baseline composition — no `<OctantHeader>` / `<Wordmark>` / `<RateLimitStatusBar>`
+ * customs (deleted in the marketplace pivot).
+ */
 function headerNode(activePath: string): LayoutNode {
+  const navItems: { label: string; href: string; active: boolean }[] = [
+    { label: 'Today', href: '/today', active: activePath === '/today' },
+    { label: 'Repos', href: '/repos', active: activePath === '/repos' },
+    { label: 'Inbox', href: '/inbox', active: activePath === '/inbox' },
+    { label: 'New issue', href: '/issue/new', active: activePath === '/issue/new' },
+  ];
   return {
-    component: 'OctantHeader',
-    props: { activePath },
-    children: [],
+    component: 'Stack',
+    props: { direction: 'horizontal', gap: 'md', align: 'center' },
+    children: [
+      {
+        component: 'Logo',
+        props: {
+          glyph: '\u{2B22}', // black medium octagon — the Octant mark
+          wordmark: 'octant',
+          size: 'md',
+          href: '/today',
+        },
+        children: [],
+      },
+      {
+        component: 'NavBar',
+        props: { items: navItems },
+        children: [],
+      },
+      // Rate-limit indicator. Bound to `github.api.rate_limit` so the chip
+      // renders the live quota; ambient `RATE_LIMIT_CHIP_AMBIENT_SATISFIER`
+      // covers the `rate_limited_actions_show_state` policy.
+      {
+        component: 'StatusBar',
+        props: { variant: 'compact', status: 'operational', message: 'API' },
+        data: { source: 'github.api.rate_limit' },
+        children: [],
+      },
+    ],
   };
 }
 
@@ -192,12 +228,20 @@ export function reposManifest(): Manifest {
               props: { maxWidth: 'lg' },
               children: [
                 {
-                  component: 'RepoTable',
+                  // `RepoTable` (the dense table with hover-card row previews
+                  // and per-row "Create issue" deep-links) collapsed onto
+                  // baseline `<Table>` in the marketplace pivot. The table's
+                  // row template is the host's responsibility on the React
+                  // side (cell renderers); the manifest declares structure +
+                  // capability binding only.
+                  component: 'Table',
                   props: {
-                    heading: 'Repositories',
-                    subtitle:
-                      'Hover a name for the description; "Create issue" deep-links per row.',
-                    emphasizeTopN: 1,
+                    caption: 'Repositories',
+                    columns: [
+                      { key: 'full_name', header: 'Repository' },
+                      { key: 'stargazers_count', header: 'Stars' },
+                      { key: 'open_issues_count', header: 'Open issues' },
+                    ],
                     // `issue.create` carries the `post` side-effect; gate
                     // the per-row dispatch behind a modal so
                     // `confirmation_required_for_destructive` is satisfied.

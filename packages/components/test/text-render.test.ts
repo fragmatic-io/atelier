@@ -62,6 +62,7 @@ describe('TEXT_RENDERERS', () => {
         stats: [{ id: 's1', label: 'Users', value: 1234 }],
       },
       List: { items: [1, 2, 3], renderItem: (n: number) => String(n) },
+      Logo: { wordmark: 'Aurora' },
       Markdown: { content: '# hello' },
       Modal: { open: true, title: 'Edit', onClose: () => undefined },
       MultiSelect: {
@@ -77,6 +78,7 @@ describe('TEXT_RENDERERS', () => {
       NumberInput: { label: 'Quantity', value: 1, onChange: () => undefined },
       Pagination: { currentPage: 1, totalPages: 5, onPageChange: () => undefined },
       Progress: { value: 42 },
+      Queue: { items: [{ id: 'a', title: 'Renew domain' }], title: 'Decisions' },
       Search: { value: 'tea', onChange: () => undefined },
       Select: {
         label: 'Fruit',
@@ -113,7 +115,6 @@ describe('TEXT_RENDERERS', () => {
         onAction: () => undefined,
         onClear: () => undefined,
       },
-      Icon: { set: 'lucide', name: 'archive' },
       Wizard: {
         steps: [
           { id: 'a', title: 'A', content: 'a' },

@@ -101,6 +101,9 @@
   "List": {
     "can_contain": "*"
   },
+  "Logo": {
+    "can_contain": "leaf"
+  },
   "Map": {
     "can_contain": "leaf"
   },
@@ -124,6 +127,9 @@
     "can_contain": "leaf"
   },
   "Progress": {
+    "can_contain": "leaf"
+  },
+  "Queue": {
     "can_contain": "leaf"
   },
   "RichText": {

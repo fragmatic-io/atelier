@@ -287,7 +287,12 @@ function buildServer(): CirServer {
     {
       id: 'StatusBar',
       description:
-        'Status pill with operational/degraded/down. Marigold uses `RateLimitChip` for rate-limit state — pick that when surfacing a rate-limited capability.',
+        'Status pill with operational / degraded / down. Bind to `dummyjson.cart.add.rate_limit` in the chrome to surface the cart-add quota live; ambient `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` clears the `rate_limited_actions_show_state` policy.',
+    },
+    {
+      id: 'Logo',
+      description:
+        'Brand mark + wordmark primitive. For Marigold pass `glyph: "\\u{1F33C}"` (marigold flower) and `wordmark: "marigold"`. Compose as a sibling of `<NavBar>` and `<StatusBar>` inside a `<Stack>` to build the chrome — there is no `<MarigoldHeader>` / `<Wordmark>` custom any more.',
     },
     {
       id: 'Search',
@@ -315,7 +320,8 @@ function buildServer(): CirServer {
     },
     {
       id: 'NavBar',
-      description: 'Top nav with brand + items. Pair with `RateLimitChip` for the chrome row.',
+      description:
+        'Top nav with `items`. Compose with `<Logo>` and `<StatusBar>` inside a horizontal `<Stack>` to build the Marigold chrome — there is no per-host header binding any more.',
     },
     { id: 'KPIRow', description: 'Horizontal row of stat cards. Rare in this demo.' },
     {
@@ -331,12 +337,10 @@ function buildServer(): CirServer {
     },
     { id: 'Gallery', description: 'Image gallery / carousel. Used inside ProductDetail.' },
     { id: 'StatCard', description: 'Single KPI card. Rare in this demo.' },
-    // Custom bindings shipped in `apps/demo-dummyjson/components/`.
-    {
-      id: 'MarigoldHeader',
-      description:
-        'Single-row chrome (Wordmark + nav + small rate-limit chip). USE THIS as the FIRST child of every route. Replaces a Stack of NavBar+RateLimitChip — there should be exactly one MarigoldHeader per manifest. Do NOT compose NavBar yourself; MarigoldHeader handles that internally.',
-    },
+    // Custom bindings shipped in `apps/demo-dummyjson/components/`. Three
+    // were retired in the marketplace pivot (`MarigoldHeader`,
+    // `Wordmark`, `RateLimitChip`) — manifests now compose
+    // `<Stack(Logo, NavBar, StatusBar)>` directly.
     {
       id: 'ProductCard',
       description:
@@ -361,16 +365,6 @@ function buildServer(): CirServer {
       id: 'CheckoutWizard',
       description:
         'Three-step Shipping/Payment/Review with progressive disclosure. PREFER over `<Wizard>` for `/checkout`.',
-    },
-    {
-      id: 'RateLimitChip',
-      description:
-        'Small inline rate-limit indicator (e.g. "60 cart adds / 60s"). Place in chrome header for any route surfacing a rate-limited action. Satisfies `rate_limited_actions_show_state` policy.',
-    },
-    {
-      id: 'Wordmark',
-      description:
-        'Marigold parcel-ribbon SVG + "DummyJSON Shop" lockup. Place at the start of chrome row.',
     },
   ];
   const components: ComponentDefinition[] = componentIds.map((c) => ({

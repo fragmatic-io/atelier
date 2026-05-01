@@ -45,6 +45,12 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   // List wraps each child via `renderItem`, so the manifest may compose it
   // with anything ('*'), per the spec for List.
   List: { can_contain: '*' },
+  // Queue renders its rows from `data` / `items` and per-row buttons from
+  // declarative `actions` props — no manifest-level children. Treated as a
+  // list role for long-list-hierarchy obligations.
+  Queue: { can_contain: 'leaf' },
+  // Logo is a brand-mark leaf — `<img>` / glyph / wordmark, no children.
+  Logo: { can_contain: 'leaf' },
   // Leaves: no children.
   Markdown: { can_contain: 'leaf' },
   EmptyState: { can_contain: 'leaf' },

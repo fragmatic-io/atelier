@@ -117,20 +117,30 @@ describe('manifestForRoute', () => {
       () => checkoutManifest('comfortable'),
     ]) {
       const m = builder();
-      // Post-Phase-1.5: chrome is a single <MarigoldHeader> binding that
-      // renders the chip internally and carries the
+      // Marketplace pivot: chrome is `<Stack(Logo, NavBar, StatusBar)>`
+      // pure baseline composition. The `<StatusBar>` carries the
       // `dummyjson.cart.add.rate_limit` data binding the policy walker
-      // looks for.
-      const chrome = findFirst(m.routes[0]!.layout!, 'MarigoldHeader');
-      expect(chrome).not.toBeNull();
-      expect(chrome?.data?.source).toMatch(/\.rate_limit$/);
+      // looks for; ambient `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` clears the
+      // obligation if the chip is collapsed off-screen.
+      const chip = findFirst(m.routes[0]!.layout!, 'StatusBar');
+      expect(chip).not.toBeNull();
+      const data = chip?.['data'] as { source?: string } | undefined;
+      expect(data?.source).toMatch(/\.rate_limit$/);
+      // The retired `<MarigoldHeader>` / `<Wordmark>` / `<RateLimitChip>`
+      // customs are gone.
+      expect(findFirst(m.routes[0]!.layout!, 'MarigoldHeader')).toBeNull();
+      expect(findFirst(m.routes[0]!.layout!, 'Wordmark')).toBeNull();
+      expect(findFirst(m.routes[0]!.layout!, 'RateLimitChip')).toBeNull();
+      // Pure-baseline brand chrome — `<Logo>` + `<NavBar>` siblings.
+      expect(findFirst(m.routes[0]!.layout!, 'Logo')).not.toBeNull();
+      expect(findFirst(m.routes[0]!.layout!, 'NavBar')).not.toBeNull();
     }
   });
 
   it('drops the card-sized StatCard quota indicator from the body', () => {
     // The old design surfaced the rate-limit quota as a card-sized
-    // StatCard in the page body. The new design moves that to a small
-    // inline `<RateLimitChip>` in the chrome header (asserted above).
+    // StatCard in the page body. The new design moves that to a
+    // `<StatusBar>` chip in the chrome header (asserted above).
     const m = browseManifest('comfortable')!;
     expect(findFirst(m.routes[0]!.layout!, 'StatCard')).toBeNull();
   });

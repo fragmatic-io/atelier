@@ -104,13 +104,17 @@ describe('demo-github manifests', () => {
     // `display: none` and a `github.api.rate_limit` data binding, solely
     // to satisfy the `rate_limited_actions_show_state` policy walker.
     // Quota is now declared as an `AmbientPolicySatisfier` on the
-    // services bag — `<OctantHeader>`'s rate-limit chip lives in the
-    // chrome on every route. The hidden anchor card is gone.
+    // services bag — the chrome `<StatusBar>` (composed in the manifest as
+    // a sibling of `<Logo>` + `<NavBar>`) lives on every route. The
+    // hidden anchor card is gone.
     const m = todayManifest();
     expect(findFirst(m.routes[0]!.layout!, 'StatCard')).toBeNull();
-    // The chrome IS still mounted (it's `<OctantHeader>`), and the chip
-    // it renders is what actually shows the quota.
-    expect(findFirst(m.routes[0]!.layout!, 'OctantHeader')).not.toBeNull();
+    // The chrome IS still mounted — `<Stack(Logo, NavBar, StatusBar)>` —
+    // post the marketplace pivot. The retired `<OctantHeader>` is gone.
+    expect(findFirst(m.routes[0]!.layout!, 'Logo')).not.toBeNull();
+    expect(findFirst(m.routes[0]!.layout!, 'NavBar')).not.toBeNull();
+    expect(findFirst(m.routes[0]!.layout!, 'StatusBar')).not.toBeNull();
+    expect(findFirst(m.routes[0]!.layout!, 'OctantHeader')).toBeNull();
   });
 
   it('issue detail manifest pairs close with reopen for reversibility', () => {
@@ -190,7 +194,7 @@ describe('demo-github manifests', () => {
         'KPIRow',
         'DetailView',
         'IssueQueue',
-        'RepoTable',
+        'Queue',
       ]);
       function walk(n: unknown): void {
         if (!n || typeof n !== 'object') return;

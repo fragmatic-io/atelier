@@ -17,7 +17,7 @@ goes in the commit body.
 
 ---
 
-## The ten principles
+## The eleven principles
 
 ### 1. Dynamic over static
 
@@ -113,6 +113,50 @@ capability dispatch with rollback, etc. If a demo could be implemented
 as a static React app with the same UX, it does not belong as a CIR
 demo.
 
+### 11. The marketplace is the product; custom bindings are a last resort
+
+The framework's promise is "give the LLM a rich enough primitive
+marketplace and it will compose any domain UI." That promise is only
+real if hosts can ship apps **without** writing per-host React for every
+domain shape. Each per-host `ComponentBinding` registered on top of
+`@cir/components`'s `COMPONENT_BINDINGS` is a local escape hatch — a
+place where the host has decided the LLM cannot be trusted to compose
+the shape from primitives.
+
+Most "custom bindings" are smell:
+
+- **Duplicates of baseline.** A `RepoTable` that wraps `<Table>` with
+  the same columns. A `RateLimitStatusBar` that wraps `<StatusBar>`. A
+  `ThreadView` that wraps `<ChatThread>`. Delete and use the baseline.
+- **Header / chrome.** `OctantHeader` / `MarigoldHeader` / `Wordmark`
+  are usually just `<Stack(Logo, NavBar, StatusBar)>`. Compose, don't
+  author.
+- **Domain shapes that the marketplace doesn't yet cover.** Inbox /
+  task / issue queues, product cards, conversation lists. The right
+  response is **promote the shape to baseline**, not entrench another
+  per-host binding. `Queue` and `Logo` were promoted in the marketplace
+  pivot exactly to collapse the inbox / task / wordmark patterns.
+
+The remaining defensible reasons for a custom binding:
+
+- **A genuine invariant the LLM cannot reliably hold** (e.g. "every
+  issue row MUST carry a hover-card author preview wired to the
+  presence service"). Even then, examine whether a `compositionRole` +
+  a slot contract would express the same constraint without inventing
+  a component.
+- **A capability that has no baseline analogue at all** (rare; usually
+  means a missing primitive).
+
+The `tests/marketplace-pressure.test.ts` gate caps each demo's custom
+binding count and ratchets it down. Every entry is documented as a
+known follow-up. Adding a new binding without first attempting (a) a
+baseline promotion or (b) a composition fails the gate. Lowering the
+ceiling by deleting a binding is the only way to grow the marketplace.
+
+A demo's custom-binding count is the single best smell test for whether
+the framework's marketplace promise is being kept. **Aurora ships zero.**
+Octant and Marigold are on the migration plan to follow.
+
 ---
 
 ## How to use this document in review
@@ -164,4 +208,5 @@ disguised as a showcase.
 Add to this list when you discover a new pattern that's at-odds with the
 thesis. Don't dilute it. The principles should stay falsifiable.
 
-Last touched: 2026-05-01 (Phase 1.5 — Dynamic UI Activation).
+Last touched: 2026-05-02 (Marketplace pivot — `<Queue>` and `<Logo>`
+promoted to baseline; principle #11 added).

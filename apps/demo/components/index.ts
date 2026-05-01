@@ -1,26 +1,49 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The CIR Authors
+/**
+ * Aurora demo — host-side React components.
+ *
+ * Marketplace pivot (this commit): Aurora ships **zero** manifest-referenced
+ * custom bindings. The four old domain bindings (`DecisionQueue`,
+ * `TaskQueue`, `ThreadView`, `UndoBar`) are gone:
+ *
+ *   - `DecisionQueue` / `TaskQueue` → `<Queue>` baseline + per-row `actions`
+ *     (declarative; runtime wires `onAction(actionId, item)` through the
+ *     dispatcher).
+ *   - `ThreadView` → pure `<Stack>` + `<NavBar>` + `<ButtonGroup>` +
+ *     `<ChatThread>` composition.
+ *   - `UndoBar` → `AmbientUndoBar` mounted at the React root (declared via
+ *     `UNDO_TOAST_AMBIENT_SATISFIER` on the policy context, which satisfies
+ *     `reversibility_surfaced` for every route the runtime serves).
+ *
+ * This file therefore exports **runtime-ambient** chrome (`Chrome`, the
+ * `<AmbientUndoBar>`, the optional `<CartAddButton>` widget) only.
+ * Manifest-referenced components live entirely in `@cir/components`. The
+ * `marketplace-pressure` eval gate enforces that count == 0 going forward.
+ */
 import type { ComponentBinding } from '@cir/runtime';
-import { DECISION_QUEUE_BINDING } from './DecisionQueue';
-import { TASK_QUEUE_BINDING } from './TaskQueue';
-import { THREAD_VIEW_BINDING } from './ThreadView';
-import { UNDO_BAR_BINDING } from './UndoBar';
 
-export { DecisionQueue, DECISION_QUEUE_BINDING } from './DecisionQueue';
-export { TaskQueue, TASK_QUEUE_BINDING } from './TaskQueue';
-export { ThreadView, THREAD_VIEW_BINDING } from './ThreadView';
-export { UndoBar, UNDO_BAR_BINDING } from './UndoBar';
-// Wave 7a / Int-4: optional optimistic-UI demo widget. Not wired into a
-// manifest route — hosts drop it anywhere under `<CirRuntime>`.
+// Wave 7a / Int-4 — optional optimistic-UI demo widget, never referenced
+// from a manifest. Hosts drop it anywhere under `<CirRuntime>`.
 export { CartAddButton, type CartAddButtonProps } from './CartAddButton';
+
 // Chrome — persistent shell (status pill + color-mode toggle + dev links)
 // mounted by `app/layout.tsx`. Not a `ComponentBinding`; it's a host-side
 // React tree, never referenced by a manifest.
 export { Chrome, applyColorMode, nextColorMode, readColorMode } from './Chrome';
 
-export const DEMO_BINDINGS: Record<string, ComponentBinding> = {
-  DecisionQueue: DECISION_QUEUE_BINDING,
-  TaskQueue: TASK_QUEUE_BINDING,
-  ThreadView: THREAD_VIEW_BINDING,
-  UndoBar: UNDO_BAR_BINDING,
-};
+// AmbientUndoBar — the runtime-ambient undo affordance. Mounted in
+// `cir-providers.tsx` outside the manifest tree. The companion
+// `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy context tells
+// the validator that `reversibility_surfaced` is satisfied app-wide.
+export { UndoBar as AmbientUndoBar } from './UndoBar';
+
+/**
+ * Aurora ships **zero** manifest-referenced custom bindings. The merge in
+ * `cir-providers.tsx` is `{ ...COMPONENT_BINDINGS, ...DEMO_BINDINGS }`;
+ * with this map empty, the runtime registry is precisely the framework
+ * baseline. Future custom bindings (only when a domain shape genuinely
+ * earns one — see `docs/ethos.md` principle #11) get added here and the
+ * `marketplace-pressure` eval gate is updated alongside.
+ */
+export const DEMO_BINDINGS: Record<string, ComponentBinding> = {};
