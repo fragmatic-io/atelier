@@ -15,6 +15,7 @@
 // Core types
 // -----------------------------------------------------------------------------
 export type {
+  AmbientPolicySatisfier,
   CompositionRole,
   NamedPolicy,
   Policy,
@@ -53,6 +54,13 @@ export {
   type CompositionRule,
   type CompositionRules,
 } from './baseline/composition_rules.js';
+export {
+  ambientCovers,
+  rateLimitChipSatisfier,
+  undoToastSatisfier,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+} from './baseline/ambient-satisfiers.js';
 
 // -----------------------------------------------------------------------------
 // Internal helpers (exported so downstream policy authors can reuse them)

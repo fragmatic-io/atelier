@@ -76,4 +76,53 @@ describe('reversibility_surfaced', () => {
     expect(taskDeleteWarn).toBeDefined();
     expect(taskDeleteWarn?.message).toContain('not reversible');
   });
+
+  // Phase 2 #5 — ambient satisfaction. Hosts that mount an `<UndoToast>` at
+  // the app root declare it via `ambient_policy_satisfiers`; the policy
+  // clears the obligation without finding an in-route undo affordance.
+  it('passes when ambient_policy_satisfiers covers all reversible capabilities', () => {
+    const ctx = baselineContext();
+    // Strip the in-tree UndoBar — the ambient satisfier must carry the
+    // obligation on its own.
+    ctx.manifest.routes[1]!.layout!.children = ctx.manifest.routes[1]!.layout!.children!.filter(
+      (c) => c.component !== 'UndoBar',
+    );
+    ctx.ambient_policy_satisfiers = [{ policyId: 'reversibility_surfaced', satisfies: 'all' }];
+    const result = reversibilitySurfaced.evaluate(ctx);
+    expect(result.violations.filter((v) => v.severity === 'error')).toHaveLength(0);
+  });
+
+  it('passes for ambient-covered capabilities while still flagging others', () => {
+    const ctx = baselineContext();
+    ctx.manifest.routes[1]!.layout!.children = ctx.manifest.routes[1]!.layout!.children!.filter(
+      (c) => c.component !== 'UndoBar',
+    );
+    ctx.ambient_policy_satisfiers = [
+      {
+        policyId: 'reversibility_surfaced',
+        // Cover only `thread.archive`; other reversibles still need an
+        // in-route affordance.
+        satisfies: [{ capabilityId: 'thread.archive' }],
+      },
+    ];
+    const result = reversibilitySurfaced.evaluate(ctx);
+    const errors = result.violations.filter((v) => v.severity === 'error');
+    // `thread.archive` should be cleared; the other four reversibles
+    // (task.create_from_thread, draft.create, task.complete, task.snooze)
+    // still flag.
+    expect(errors.find((v) => v.message.includes('thread.archive'))).toBeUndefined();
+    expect(errors.length).toBe(4);
+  });
+
+  it('ignores satisfiers declared for a different policy id', () => {
+    const ctx = baselineContext();
+    ctx.manifest.routes[1]!.layout!.children = ctx.manifest.routes[1]!.layout!.children!.filter(
+      (c) => c.component !== 'UndoBar',
+    );
+    ctx.ambient_policy_satisfiers = [
+      { policyId: 'rate_limited_actions_show_state', satisfies: 'all' },
+    ];
+    const result = reversibilitySurfaced.evaluate(ctx);
+    expect(result.ok).toBe(false);
+  });
 });

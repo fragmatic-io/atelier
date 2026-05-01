@@ -24,6 +24,7 @@ import type {
   ManifestResolver,
   TriggerSubscription,
 } from '@cir/runtime';
+import type { AmbientPolicySatisfier } from '@cir/policies';
 import type { BrandKit, IntentProfile } from '@cir/schemas';
 
 export interface CirRuntimeServices {
@@ -52,6 +53,26 @@ export interface CirRuntimeServices {
    * Track DS-A (Wave 11) wired this for `apps/demo`'s "Aurora" theme.
    */
   brandKit?: BrandKit;
+  /**
+   * Declarations that ambient runtime services satisfy named policy
+   * obligations (Phase 2 #5 / `docs/ethos.md` principle #4).
+   *
+   * The `<UndoToast>` mounted at the app root and the `<RateLimitChip>`
+   * rendered in the chrome are the canonical examples — they live in the
+   * rendered DOM regardless of which manifest is mounted, so making each
+   * route-level manifest also declare an in-tree anchor for them is
+   * redundant. Hosts list the satisfiers here; the policy validator
+   * consults the list before falling back to manifest-tree evidence.
+   *
+   * The satisfier list is **additive**: existing manifest-level evidence
+   * (an in-tree `<UndoToast>`, a `*.rate_limit` data binding) still
+   * satisfies the obligation. The new path simply gives hosts a way to
+   * say "the chrome already covers this — stop demanding a hidden anchor
+   * node in every manifest". Pre-built declarations live in
+   * `@cir/policies` (`UNDO_TOAST_AMBIENT_SATISFIER`,
+   * `RATE_LIMIT_CHIP_AMBIENT_SATISFIER`).
+   */
+  ambientPolicySatisfiers?: readonly AmbientPolicySatisfier[];
 }
 
 /**

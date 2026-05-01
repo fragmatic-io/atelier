@@ -3,34 +3,39 @@
 /**
  * Manifest ↔ baseline-policy contract for the dummyjson catalog demo.
  *
- * The brief's section 6 originally called out three policy violations the
- * demo had to fix: rate-limit quota indicator, reversibility (cart.remove
- * sibling to cart.add), and empty/loading/error slots on every data
- * binding. After the E-B refactor:
+ * Pre-Phase-2 the manifests carried two band-aid nodes solely to satisfy
+ * policy walkers: a hidden `<StatCard>` style of quota anchor, and an
+ * off-screen `<Stack>` of `<Button>`s for `cart.remove` / `cart.add` so
+ * `reversibility_surfaced` would find a rollback affordance. Phase 2 #5
+ * replaces both with **ambient policy satisfiers** declared at the
+ * services bag level (see `lib/cir-providers.tsx`):
  *
- *   - Quota indicator: lives in the header chrome as
- *     `<RateLimitChip>` (a custom binding). The
- *     `rate_limited_actions_show_state` policy walks the manifest looking
- *     for a state-bearing component on routes that bind a rate-limited
- *     capability — `<RateLimitChip>` plays that role here.
- *   - Reversibility: an inert `<Button>` carrying
- *     `dummyjson.cart.remove` is co-located with each route that exposes
- *     `dummyjson.cart.add` so `reversibility_surfaced` walks find the
- *     rollback action; the user-visible affordance is the inline undo
- *     toast raised by `<ProductGrid>` / `<CartItemList>`.
- *   - Empty/loading/error: each data binding still declares the three
- *     slots inline.
+ *   - `<MarigoldHeader>` carries the `*.rate_limit` data binding AND the
+ *     host declares the chip as an `AmbientPolicySatisfier` so the
+ *     `rate_limited_actions_show_state` policy is satisfied without an
+ *     in-tree quota anchor.
+ *   - `<ProductGrid>` / `<CartItemList>` raise an inline undo toast on
+ *     every reversible mutation; the host declares the ambient
+ *     `<UndoToast>` so `reversibility_surfaced` is satisfied without
+ *     in-tree rollback `<Button>`s.
  *
- * The big new wrinkle: `<ProductGrid>` is a custom binding declaring
- * `compositionRole: 'grid'` (see `lib/component-bindings.ts`). The policy
- * engine reads the `composition_roles` map off `PolicyContext` so it
- * treats `<ProductGrid>` like the baseline `<Grid>` for composition
+ * `<ProductGrid>` is a custom binding declaring `compositionRole: 'grid'`
+ * (see `lib/component-bindings.ts`). The policy engine reads the
+ * `composition_roles` map off `PolicyContext` so it treats
+ * `<ProductGrid>` like the baseline `<Grid>` for composition
  * allow-listing.
  */
 
 import { describe, expect, it } from 'vitest';
 import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
-import { BASELINE_POLICIES, composesAccordingTo, validateManifest } from '@cir/policies';
+import {
+  BASELINE_POLICIES,
+  composesAccordingTo,
+  validateManifest,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  type AmbientPolicySatisfier,
+} from '@cir/policies';
 import { DUMMYJSON_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
 import { browseManifest, cartManifest, checkoutManifest, productManifest } from '../lib/manifests';
@@ -76,6 +81,15 @@ const INTENT = {
   ],
 };
 
+// Mirror of `AMBIENT_POLICY_SATISFIERS` from `lib/cir-providers.tsx`.
+// Declaring the chrome rate-limit chip + ambient undo toast clears the
+// `rate_limited_actions_show_state` and `reversibility_surfaced`
+// obligations without any in-manifest anchor nodes.
+const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+];
+
 function validate(manifest: ReturnType<typeof browseManifest>) {
   return validateManifest(
     {
@@ -86,6 +100,7 @@ function validate(manifest: ReturnType<typeof browseManifest>) {
       pii_fields: PII,
       brand_kit: DUMMYJSON_BRAND_KIT,
       composition_roles: DEMO_DUMMYJSON_COMPOSITION_ROLES,
+      ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
     },
     {
       policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
@@ -120,40 +135,58 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
     expect(errors).toEqual([]);
   });
 
-  it('every cart.add binding has a sibling cart.remove rollback', () => {
+  // Phase 2 #5: the off-screen `<Stack>` of `<Button>` rollback anchors
+  // is gone. Reversibility is satisfied via the ambient `<UndoToast>`
+  // declared in `cir-providers.tsx` (and asserted indirectly by the
+  // policy run above — if the satisfier wiring were broken, the run
+  // would surface `reversibility_surfaced` errors).
+  it('does not need an in-tree rollback Button — ambient UndoToast covers reversibility', () => {
     const browse = browseManifest('comfortable');
     const product = productManifest('1', 'comfortable');
     const cart = cartManifest('comfortable');
 
-    const findNodesWithAction = (
-      root: unknown,
-      action: string,
-      out: Array<Record<string, unknown>> = [],
-    ): Array<Record<string, unknown>> => {
-      if (!root || typeof root !== 'object') return out;
+    const findFirst = (root: unknown, comp: string): Record<string, unknown> | null => {
+      if (!root || typeof root !== 'object') return null;
       const node = root as Record<string, unknown>;
-      const actions = node['actions'];
-      if (Array.isArray(actions) && actions.includes(action)) out.push(node);
+      if (node['component'] === comp) return node;
       const children = node['children'];
       if (Array.isArray(children)) {
-        for (const c of children) findNodesWithAction(c, action, out);
+        for (const c of children) {
+          const f = findFirst(c, comp);
+          if (f) return f;
+        }
       }
-      return out;
+      return null;
     };
 
+    // No `<Button>` carrying `cart.add` / `cart.remove` should remain in
+    // the manifest tree — the user-visible reversibility is the inline
+    // undo toast raised by the custom bindings.
     for (const m of [browse, product, cart]) {
-      const adds = findNodesWithAction(m.routes[0]!.layout, 'dummyjson.cart.add');
-      const removes = findNodesWithAction(m.routes[0]!.layout, 'dummyjson.cart.remove');
-      expect(adds.length).toBeGreaterThan(0);
-      expect(removes.length).toBeGreaterThan(0);
-      // The `reversibility_surfaced` policy is satisfied when a Button
-      // (or ActionMenu / IconButton) carrying the rollback action lives
-      // somewhere in the same route — we keep an inert anchor button
-      // co-located so the policy passes; the user-visible reversibility
-      // is the inline undo toast.
-      const hasButtonRollback = removes.some((n) => n['component'] === 'Button');
-      expect(hasButtonRollback).toBe(true);
+      const stripBtn = (root: unknown, action: string): Record<string, unknown> | null => {
+        if (!root || typeof root !== 'object') return null;
+        const node = root as Record<string, unknown>;
+        if (
+          node['component'] === 'Button' &&
+          Array.isArray(node['actions']) &&
+          (node['actions'] as string[]).includes(action)
+        ) {
+          return node;
+        }
+        const children = node['children'];
+        if (Array.isArray(children)) {
+          for (const c of children) {
+            const f = stripBtn(c, action);
+            if (f) return f;
+          }
+        }
+        return null;
+      };
+      expect(stripBtn(m.routes[0]!.layout, 'dummyjson.cart.add')).toBeNull();
+      expect(stripBtn(m.routes[0]!.layout, 'dummyjson.cart.remove')).toBeNull();
     }
+    // Sanity check — the chrome IS still mounted (the rate-limit chip).
+    expect(findFirst(browse.routes[0]!.layout, 'MarigoldHeader')).not.toBeNull();
   });
 
   it('rate-limit chip is present on every route exposing a rate-limited action', () => {

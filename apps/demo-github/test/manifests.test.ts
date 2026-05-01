@@ -18,7 +18,13 @@
 
 import { describe, expect, it } from 'vitest';
 import { ManifestSchema } from '@cir/schemas';
-import { BASELINE_POLICIES, validateManifest } from '@cir/policies';
+import {
+  BASELINE_POLICIES,
+  validateManifest,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  type AmbientPolicySatisfier,
+} from '@cir/policies';
 import { compositionRolesFromBindings } from '@cir/runtime';
 import {
   inboxManifest,
@@ -93,13 +99,18 @@ describe('demo-github manifests', () => {
     expect(manifestForRoute('/nope')).toBeNull();
   });
 
-  it('today manifest exposes a quota source so rate-limited actions show state', () => {
+  it('today manifest does not need an in-tree quota anchor (Phase 2 #5)', () => {
+    // Pre-Phase-2-#5 the manifest carried a hidden `<StatCard>` with
+    // `display: none` and a `github.api.rate_limit` data binding, solely
+    // to satisfy the `rate_limited_actions_show_state` policy walker.
+    // Quota is now declared as an `AmbientPolicySatisfier` on the
+    // services bag — `<OctantHeader>`'s rate-limit chip lives in the
+    // chrome on every route. The hidden anchor card is gone.
     const m = todayManifest();
-    const stat = findFirst(m.routes[0]!.layout!, 'StatCard');
-    expect(stat).not.toBeNull();
-    const data = stat!['data'] as { source: string } | undefined;
-    expect(data?.source).toBe('github.api.rate_limit');
-    expect(data?.source.endsWith('.rate_limit')).toBe(true);
+    expect(findFirst(m.routes[0]!.layout!, 'StatCard')).toBeNull();
+    // The chrome IS still mounted (it's `<OctantHeader>`), and the chip
+    // it renders is what actually shows the quota.
+    expect(findFirst(m.routes[0]!.layout!, 'OctantHeader')).not.toBeNull();
   });
 
   it('issue detail manifest pairs close with reopen for reversibility', () => {
@@ -131,6 +142,14 @@ describe('demo-github manifests', () => {
       inboxManifest(),
     ];
     const compositionRoles = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
+    // Mirror of `AMBIENT_POLICY_SATISFIERS` in `lib/cir-providers.tsx`.
+    // Without these, the policy walkers would still flag the missing
+    // in-tree quota anchor / rollback button — declaring the chrome's
+    // ambient services lets the policies clear those obligations.
+    const ambientSatisfiers: readonly AmbientPolicySatisfier[] = [
+      UNDO_TOAST_AMBIENT_SATISFIER,
+      RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+    ];
     for (const manifest of manifests) {
       const result = validateManifest(
         {
@@ -141,6 +160,7 @@ describe('demo-github manifests', () => {
           pii_fields: new Set(),
           brand_kit: DEMO_GITHUB_BRAND_KIT,
           composition_roles: compositionRoles,
+          ambient_policy_satisfiers: ambientSatisfiers,
         },
         { policies: BASELINE_POLICIES },
       );

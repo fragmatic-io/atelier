@@ -134,12 +134,14 @@ describe('manifestForRoute', () => {
     expect(findFirst(m.routes[0]!.layout!, 'StatCard')).toBeNull();
   });
 
-  it('reversibility anchor buttons are present but render off-screen', () => {
-    // The reversibility policy needs Button nodes carrying both
-    // `cart.add` and `cart.remove` in every route that exposes the cart
-    // pair. The user-visible reversibility is the inline undo toast;
-    // the anchors are flagged with `data-cir-policy-anchor=reversibility`
-    // and positioned off-screen.
+  it('does not need off-screen reversibility anchor buttons (Phase 2 #5)', () => {
+    // Pre-Phase-2-#5 the manifest carried a `<Stack>` of `<Button>`s for
+    // `cart.add` / `cart.remove` positioned off-screen with
+    // `data-cir-policy-anchor=reversibility`, solely to satisfy the
+    // `reversibility_surfaced` policy walker. Reversibility is now
+    // declared as an `AmbientPolicySatisfier` on the services bag (see
+    // `lib/cir-providers.tsx`), so the manifest should be free of those
+    // anchor buttons.
     const m = browseManifest('comfortable')!;
     const findAll = (root: unknown, comp: string, out: unknown[] = []): unknown[] => {
       if (!root || typeof root !== 'object') return out;
@@ -154,7 +156,7 @@ describe('manifestForRoute', () => {
     const removeBtn = buttons.find((b) =>
       (b['actions'] as string[])?.includes('dummyjson.cart.remove'),
     );
-    expect(addBtn).toBeDefined();
-    expect(removeBtn).toBeDefined();
+    expect(addBtn).toBeUndefined();
+    expect(removeBtn).toBeUndefined();
   });
 });

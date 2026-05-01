@@ -18,6 +18,33 @@ import type { BrandKit, Capability, IntentProfile, Manifest } from '@cir/schemas
 export type PolicySeverity = 'error' | 'warn';
 
 /**
+ * Declaration that an ambient runtime service (e.g. `<UndoToast>` mounted at
+ * the app root, a `<RateLimitChip>` rendered in the chrome) satisfies a
+ * named policy obligation. The host wires these into `PolicyContext` so the
+ * policy validator can clear the obligation without finding manifest-level
+ * evidence.
+ *
+ * See `docs/ethos.md` principle #4 — "Ambient runtime services that satisfy
+ * obligations should declare _which_ obligations they satisfy and let the
+ * validator see them." This is the wiring that makes that real.
+ *
+ * `satisfies: 'all'` clears the obligation for every capability the policy
+ * would otherwise check (e.g. an `<UndoToast>` mounted at app root covers
+ * every reversible capability). The array form scopes the satisfaction to
+ * a specific capability id list — useful when only one rate-limited
+ * capability is surfaced via the chrome chip.
+ */
+export interface AmbientPolicySatisfier {
+  /** The policy id this declaration covers (e.g. `reversibility_surfaced`). */
+  policyId: string;
+  /**
+   * Scope of satisfaction — either `'all'` (every capability the policy
+   * would normally check) or a specific list of capability ids.
+   */
+  satisfies: 'all' | readonly { capabilityId: string }[];
+}
+
+/**
  * Composition role a custom component plays for policy evaluation.
  *
  * Baseline catalog ids (`List`, `Table`, `Grid`) are always treated as their
@@ -93,6 +120,16 @@ export interface PolicyContext {
    * without an entry are unaffected. See `CompositionRole`.
    */
   composition_roles?: Readonly<Record<string, CompositionRole>> | undefined;
+  /**
+   * Optional list of ambient policy satisfiers — declarations that runtime
+   * services (e.g. an `<UndoToast>` ambient at the app root, a
+   * `<RateLimitChip>` in the chrome) cover specific policy obligations
+   * regardless of manifest-level evidence. Policies that consult this
+   * field today: `rate_limited_actions_show_state`, `reversibility_surfaced`.
+   * The mechanism is strictly additive — manifest-level evidence still
+   * satisfies the obligation; the satisfiers list is an alternative path.
+   */
+  ambient_policy_satisfiers?: readonly AmbientPolicySatisfier[] | undefined;
 }
 
 /** A pure-function policy. */

@@ -430,6 +430,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@cir/policies':
+        specifier: workspace:*
+        version: link:../policies
       '@cir/runtime':
         specifier: workspace:*
         version: link:../runtime

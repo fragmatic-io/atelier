@@ -78,34 +78,15 @@ function headerNode(activePath: string): LayoutNode {
   };
 }
 
-/**
- * Rate-limit-as-data binding the policy engine looks for in
- * `rate_limited_actions_show_state`. The header above already surfaces
- * the chip visually; this `<StatCard>` is a small invisible-by-design
- * sibling that satisfies the policy's "quota source somewhere on this
- * route" check. It never renders content because it sets `display:none`
- * via `props.style`.
- *
- * Why we keep it — the policy needs a `data` binding to
- * `github.api.rate_limit` regardless of what the chrome does. Decoupling
- * the policy obligation from the visual chip lets the chip be a pure
- * leaf component without forcing it to carry a manifest data binding.
- */
-function rateLimitQuotaNode(): LayoutNode {
-  return {
-    component: 'StatCard',
-    props: {
-      label: 'API rate limit',
-      hint: 'Remaining requests in the current window.',
-      variant: 'compact',
-      style: { display: 'none' },
-    },
-    data: {
-      source: 'github.api.rate_limit',
-    },
-    children: [],
-  };
-}
+// Pre-Phase-2-#5, this module exported a `rateLimitQuotaNode()` helper —
+// a `<StatCard>` with `display: none` carrying a `github.api.rate_limit`
+// data binding solely to satisfy the `rate_limited_actions_show_state`
+// policy walker. That node was a band-aid: the actual rate-limit chip
+// lives in `<OctantHeader>` and updates from `lib/github-client.ts`.
+// Phase 2 #5 lets the host declare the chip as an `AmbientPolicySatisfier`
+// in `cir-providers.tsx`, so the policy clears the obligation without an
+// in-manifest hidden card. The helper is gone; the manifests below are
+// the actual rendered tree.
 
 function emptyStateNode(title: string, body: string): LayoutNode {
   return {
@@ -153,7 +134,6 @@ export function todayManifest(): Manifest {
           props: { direction: 'vertical', gap: 'lg' },
           children: [
             headerNode('/today'),
-            rateLimitQuotaNode(),
             {
               component: 'Container',
               props: { maxWidth: 'lg' },
@@ -217,7 +197,6 @@ export function reposManifest(): Manifest {
           props: { direction: 'vertical', gap: 'lg' },
           children: [
             headerNode('/repos'),
-            rateLimitQuotaNode(),
             {
               component: 'Container',
               props: { maxWidth: 'lg' },
@@ -282,7 +261,6 @@ export function issueDetailManifest(id: string): Manifest {
           props: { direction: 'vertical', gap: 'lg' },
           children: [
             headerNode(''),
-            rateLimitQuotaNode(),
             {
               component: 'Container',
               props: { maxWidth: 'md' },
@@ -374,7 +352,6 @@ export function newIssueManifest(): Manifest {
           props: { direction: 'vertical', gap: 'lg' },
           children: [
             headerNode('/issue/new'),
-            rateLimitQuotaNode(),
             {
               component: 'Container',
               props: { maxWidth: 'sm' },
@@ -430,7 +407,6 @@ export function inboxManifest(): Manifest {
           props: { direction: 'vertical', gap: 'lg' },
           children: [
             headerNode('/inbox'),
-            rateLimitQuotaNode(),
             {
               component: 'Container',
               props: { maxWidth: 'lg' },

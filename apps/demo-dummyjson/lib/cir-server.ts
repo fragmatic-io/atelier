@@ -27,6 +27,9 @@ import {
   emptyLoadingErrorHandled,
   rateLimitedActionsShowState,
   reversibilitySurfaced,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  type AmbientPolicySatisfier,
 } from '@cir/policies';
 import { StreamingAuditSink } from '@cir/runtime';
 import { COMPOSITION_RULES } from '@cir/components/composition-rules';
@@ -35,6 +38,17 @@ import type { Density } from '@cir/components';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
 import { manifestForRoute } from './manifests.js';
+
+/**
+ * Ambient satisfiers (Phase 2 #5) — declarations of which runtime services
+ * cover which policy obligations. Mirrors `lib/cir-providers.tsx` so the
+ * LLM-side validation cascade and the client-side validation cascade
+ * agree on what is satisfied without manifest-level evidence.
+ */
+const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+];
 
 /**
  * Run composition + empty/loading/error policies on the LLM's output before
@@ -69,6 +83,15 @@ function validateManifestSemantics(manifest: Manifest): { errors: readonly strin
     components: {},
     rate_limited_capability_ids: rateLimitedIds,
     pii_fields: new Set<string>(),
+    intent: {
+      user_id: 'demo-user',
+      global_preferences: {},
+      granted_fields: [] as string[],
+    },
+    // Ambient satisfiers — chrome rate-limit chip + ambient undo toast.
+    // Mirrors `cir-providers.tsx`: lets the LLM omit per-route quota /
+    // rollback anchor nodes since the chrome already covers them.
+    ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
   };
   const errors: string[] = [];
   for (const policy of policies) {

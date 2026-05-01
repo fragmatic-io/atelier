@@ -45,6 +45,14 @@ function validateManifestComposition(manifest: Manifest): { errors: readonly str
     components: {},
     rate_limited_capability_ids: new Set<string>(),
     pii_fields: new Set<string>(),
+    // Required by `PolicyContext`. The two policies below
+    // (`composesAccordingTo`, `emptyLoadingErrorHandled`) do not read
+    // from `intent`, so the empty grants list here is fine.
+    intent: {
+      user_id: 'demo-github-user',
+      global_preferences: {},
+      granted_fields: [] as string[],
+    },
   };
   const errors: string[] = [];
   for (const policy of policies) {

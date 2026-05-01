@@ -66,4 +66,56 @@ describe('rate_limited_actions_show_state', () => {
     const result = rateLimitedActionsShowState.evaluate(ctx);
     expect(result.ok).toBe(true);
   });
+
+  // Phase 2 #5 — ambient satisfaction. Hosts that mount a chrome rate-limit
+  // chip declare it via `ambient_policy_satisfiers`; the policy clears the
+  // obligation without finding a `*.rate_limit` data binding in the tree.
+  it('passes when ambient_policy_satisfiers covers all rate-limited capabilities', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    ctx.ambient_policy_satisfiers = [
+      { policyId: 'rate_limited_actions_show_state', satisfies: 'all' },
+    ];
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(true);
+  });
+
+  it('passes when ambient_policy_satisfiers scopes coverage to the offending capability id', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    ctx.ambient_policy_satisfiers = [
+      {
+        policyId: 'rate_limited_actions_show_state',
+        satisfies: [{ capabilityId: 'thread.archive' }],
+      },
+    ];
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(true);
+  });
+
+  it('still flags actions not covered by the ambient satisfier list', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    ctx.ambient_policy_satisfiers = [
+      {
+        policyId: 'rate_limited_actions_show_state',
+        // Covers a different capability — does NOT cover `thread.archive`.
+        satisfies: [{ capabilityId: 'mail.send' }],
+      },
+    ];
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(false);
+    expect(result.violations[0]?.message).toContain('thread.archive');
+  });
+
+  it('ignores satisfiers declared for a different policy id', () => {
+    const ctx = baselineContext();
+    ctx.rate_limited_capability_ids = new Set(['thread.archive']);
+    ctx.ambient_policy_satisfiers = [
+      // Wrong policy — must not satisfy this one.
+      { policyId: 'reversibility_surfaced', satisfies: 'all' },
+    ];
+    const result = rateLimitedActionsShowState.evaluate(ctx);
+    expect(result.ok).toBe(false);
+  });
 });

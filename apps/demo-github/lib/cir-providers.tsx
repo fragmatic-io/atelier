@@ -48,7 +48,14 @@ import {
   type DataBinding,
 } from '@cir/react';
 import { CompositeDataResolver, MockDataResolver, RestDataResolver } from '@cir/data-resolvers';
-import { validateManifest, BASELINE_POLICIES, composesAccordingTo } from '@cir/policies';
+import {
+  validateManifest,
+  BASELINE_POLICIES,
+  composesAccordingTo,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  type AmbientPolicySatisfier,
+} from '@cir/policies';
 import type { IntentProfile, Manifest } from '@cir/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
@@ -124,6 +131,27 @@ interface BuiltServices {
   audit: StreamingAuditSink;
 }
 
+/**
+ * Ambient runtime services this app mounts that satisfy named policy
+ * obligations (Phase 2 #5 / `docs/ethos.md` principle #4):
+ *
+ *   - `<OctantHeader>` renders the rate-limit chip on every route, polling
+ *     the GitHub-client rate-limit snapshot — `<RateLimitStatusBar>`
+ *     ambient → `rate_limited_actions_show_state`.
+ *   - The manifest layouts include an in-tree `<UndoToast>` plus the
+ *     `<IssueQueue>` raises its own optimistic-archive toast. Mount-time
+ *     declaration here covers any reversible capability the dispatcher
+ *     fires while the app is mounted.
+ *
+ * Declaring these here removes the need for the in-manifest
+ * `rateLimitQuotaNode()` band-aid (the hidden `<StatCard>` we deleted in
+ * `lib/manifests.ts`).
+ */
+const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+];
+
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
   // Baseline catalog first; demo-specific bindings (IssueQueue, RepoTable,
   // OctantHeader, RateLimitStatusBar, Wordmark) are layered on top so the
@@ -187,6 +215,11 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           pii_fields: new Set(),
           brand_kit: DEMO_GITHUB_BRAND_KIT,
           composition_roles: compositionRoles,
+          // Ambient satisfiers — `<OctantHeader>` rate-limit chip + the
+          // ambient undo toast. Lets the policy validator clear
+          // obligations the rendered chrome already covers, removing the
+          // need for in-manifest hidden anchor nodes.
+          ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
         },
         {
           policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
@@ -218,6 +251,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
       audit,
       identity: { user_id: DEMO_USER_ID, app_id: DEMO_APP_ID },
       intent,
+      ambientPolicySatisfiers: AMBIENT_POLICY_SATISFIERS,
     },
     audit,
   };

@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@cir/policies": "workspace:*",
     "@cir/runtime": "workspace:*",
     "@cir/schemas": "workspace:*"
   },
