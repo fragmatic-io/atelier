@@ -150,6 +150,142 @@ export function buildPromptContext(input: CompileInput): BuiltPromptContext {
     lines.push(JSON.stringify(input.previousManifest, null, 2));
     lines.push('```');
     lines.push('');
+  } else {
+    // Cold compiles: prepend a complete few-shot example so the LLM has
+    // a concrete shape to mirror. The system prompt's example is shorter
+    // and gets cached aggressively; this version is per-call and grounds
+    // the response in a full route. See `docs/ethos.md` principles 1 & 5.
+    lines.push('## Few-shot — what a complete cold-compile output looks like');
+    lines.push(
+      'For a route in a github-style decision-queue app whose catalog includes ' +
+        'IssueQueue (compositionRole: list) and OctantHeader, a correct cold output looks like this. ' +
+        '**Match the depth and richness — never produce empty containers.**',
+    );
+    lines.push('```json');
+    lines.push(
+      JSON.stringify(
+        {
+          manifest_id: 'm_example001',
+          user_id: '<user_id from compile request>',
+          app_id: '<app_id from compile request>',
+          compiled_from: {
+            capability_version: '0.1.0',
+            skill_versions: { 'decision-queue': '0.1.0' },
+            component_catalog_version: '1.0.0',
+            intent_profile_version: 1,
+            compiler_model: 'gemini-2.5-pro',
+            compiled_at: '<current ISO 8601 timestamp>',
+          },
+          ttl: null,
+          invalidates_on: [
+            'capability_schema_change:github.issue.list:>=0.2.0',
+            'skill.version_changed:decision-queue',
+          ],
+          policies_satisfied: [
+            'reversibility_surfaced',
+            'rate_limited_actions_show_state',
+            'empty_loading_error_handled',
+          ],
+          routes: [
+            {
+              path: '<route from compile request>',
+              title: 'Today',
+              layout: {
+                component: 'Stack',
+                props: { direction: 'vertical', gap: 'lg' },
+                children: [
+                  {
+                    component: 'OctantHeader',
+                    props: { activePath: '<route>' },
+                    children: [],
+                  },
+                  {
+                    component: 'Container',
+                    props: { maxWidth: 'lg' },
+                    children: [
+                      {
+                        component: 'Stack',
+                        props: { direction: 'vertical', gap: 'md' },
+                        children: [
+                          {
+                            component: 'Markdown',
+                            props: { content: '# Today' },
+                            children: [],
+                          },
+                          {
+                            component: 'Markdown',
+                            props: {
+                              content:
+                                '8 issues need a decision. Top three are highlighted by salience. Archive any issue with a 5-second undo.',
+                            },
+                            children: [],
+                          },
+                          {
+                            component: 'IssueQueue',
+                            props: { emphasizeTopN: 3 },
+                            data: {
+                              source: 'github.issue.list',
+                              sort: 'salience desc',
+                              filter: 'state = "open" AND requires_decision = true',
+                              // The `empty_loading_error_handled` policy
+                              // requires every data-bound component to
+                              // declare these three slot nodes inline.
+                              empty_state: {
+                                component: 'EmptyState',
+                                props: {
+                                  title: 'Inbox zero',
+                                  body: 'No issues need a decision right now.',
+                                },
+                                children: [],
+                              },
+                              loading_state: {
+                                component: 'Skeleton',
+                                props: { rows: 4, variant: 'list' },
+                                children: [],
+                              },
+                              error_state: {
+                                component: 'Alert',
+                                props: {
+                                  severity: 'error',
+                                  title: 'Failed to load issues',
+                                  body: 'Could not reach the GitHub API. Check your token in /settings/github.',
+                                },
+                                children: [],
+                              },
+                            },
+                            actions: ['github.issue.archive', 'github.issue.close'],
+                            children: [],
+                          },
+                          {
+                            component: 'UndoToast',
+                            props: { duration_ms: 5000, variant: 'inline' },
+                            children: [],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              refresh: {
+                data: 'on_focus + 60s_interval',
+                structure: 'never_unless_invalidated',
+              },
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+    lines.push('```');
+    lines.push('');
+    lines.push(
+      'Apply the same shape to the route requested below: chrome header → ' +
+        'Container → Stack with [heading Markdown, subtitle Markdown, data-bound rich binding, ambient affordances]. ' +
+        'Use the catalog descriptions to pick the right rich binding.',
+    );
+    lines.push('');
   }
 
   lines.push(`## Your task`);

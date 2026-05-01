@@ -16,7 +16,7 @@
  */
 
 import { GoogleGenAI, type GenerateContentConfig } from '@google/genai';
-import { ManifestSchema, toJsonSchema, type Manifest } from '@cir/schemas';
+import { ManifestSchema, type Manifest } from '@cir/schemas';
 import { COMPILER_SYSTEM_PROMPT, COMPILER_SYSTEM_PROMPT_VERSION } from './prompts/system.js';
 import { buildPromptContext } from './prompts/builder.js';
 import {
@@ -82,26 +82,24 @@ export class GeminiCompiler implements CompilerService {
     const model = ctx.diff_mode ? this.#diffModel : this.#coldModel;
     const startedAt = Date.now();
 
-    // Manifest JSON Schema for structured output. Gemini accepts a subset of
-    // OpenAPI-flavored schema; zod-to-json-schema produces 2019-09 by default,
-    // which Gemini interprets adequately (it ignores unknown keywords).
-    const responseSchema = toJsonSchema(ManifestSchema, {
-      name: 'manifest',
-      target: 'jsonSchema7',
-    });
-
     let lastError: unknown;
     for (let attempt = 0; attempt <= this.#maxRetries; attempt++) {
       const userMessage =
         attempt === 0
           ? ctx.user
-          : `${ctx.user}\n\n## Previous attempt failed validation\n${formatValidationError(lastError)}\n\nFix and re-emit. Output ONLY the corrected manifest JSON.`;
+          : `${ctx.user}\n\n## PREVIOUS ATTEMPT FAILED VALIDATION — DO NOT REPEAT THE MISTAKE\n${formatValidationError(lastError)}\n\nThe error above means you produced a container with no children. **You MUST emit at least one child for every Stack / Container / Card / Tabs / Modal / Drawer in the layout.** Re-read the few-shot example in the prompt and mirror its depth. Output ONLY the corrected manifest JSON.`;
 
       const config: GenerateContentConfig = {
         systemInstruction: COMPILER_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
-        responseSchema,
-        // Cold compiles: a touch of variability. Diff mode: deterministic.
+        // Note: we deliberately do NOT pass `responseSchema`. The Manifest
+        // Zod schema declares `children` as optional; passing it as Gemini's
+        // response_schema lets the model take the path of least resistance
+        // and emit empty containers (technically schema-valid, semantically
+        // useless). Without the schema constraint, the model follows the
+        // few-shot example in the prompt more faithfully. We still validate
+        // post-parse via Zod + the host's `validate` hook, so bad outputs
+        // are caught and retried / cascaded. See ETHOS principles 1 & 5.
         temperature: ctx.diff_mode ? 0 : 0.2,
       };
       if (input.signal !== undefined) config.abortSignal = input.signal;

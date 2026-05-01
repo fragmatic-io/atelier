@@ -19,7 +19,7 @@ import {
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
-import { SequenceDetector, composesAccordingTo } from '@cir/policies';
+import { SequenceDetector, composesAccordingTo, emptyLoadingErrorHandled } from '@cir/policies';
 import { BehavioralTap, StreamingAuditSink } from '@cir/runtime';
 import { COMPOSITION_RULES } from '@cir/components/composition-rules';
 import type { Capability, ComponentDefinition, Manifest } from '@cir/schemas';
@@ -35,15 +35,23 @@ import { manifestForRoute } from './manifests.js';
  * composite falls through to the hand-written fallback.
  */
 function validateManifestComposition(manifest: Manifest): { errors: readonly string[] } {
-  const policy = composesAccordingTo(COMPOSITION_RULES);
-  const result = policy.evaluate({
+  // Run the policies the runtime renderer enforces post-render — but at
+  // compile time, so the LLM gets a chance to retry before its output
+  // reaches the renderer. See ETHOS principles 1 & 5.
+  const policies = [composesAccordingTo(COMPOSITION_RULES), emptyLoadingErrorHandled];
+  const ctx = {
     manifest,
     capabilities: CAPABILITIES,
     components: {},
-    rate_limited_capability_ids: new Set(),
-    pii_fields: new Set(),
-  });
-  return { errors: result.violations.map((v) => v.message) };
+    rate_limited_capability_ids: new Set<string>(),
+    pii_fields: new Set<string>(),
+  };
+  const errors: string[] = [];
+  for (const policy of policies) {
+    const result = policy.evaluate(ctx);
+    for (const v of result.violations) errors.push(v.message);
+  }
+  return { errors };
 }
 
 interface CirServer {
