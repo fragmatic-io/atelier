@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "profiles": {},
+  "grants": {
+    "g_b9c48aaa7c7b454c": {
+      "jti": "g_b9c48aaa7c7b454c",
+      "app_id": "cir.demo",
+      "user_id": "demo-user",
+      "scopes": ["lens.today", "lens.thread", "vocabulary.read"],
+      "iat": 1777605257,
+      "exp": 1777691657,
+      "purpose": "smoke test"
+    }
+  }
+}

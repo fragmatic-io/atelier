@@ -23,6 +23,9 @@ import {
   composesAccordingTo,
   manifestComponentContractSatisfied,
   validateManifest,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  type AmbientPolicySatisfier,
 } from '@cir/policies';
 import { compositionRolesFromBindings, manifestContractsFromBindings } from '@cir/runtime';
 import type { Manifest } from '@cir/schemas';
@@ -77,6 +80,16 @@ const MANIFEST_CONTRACTS = manifestContractsFromBindings({
   ...DEMO_GITHUB_BINDINGS,
 });
 
+// Mirror of `AMBIENT_POLICY_SATISFIERS` from `lib/cir-providers.tsx`.
+// `<OctantHeader>` carries the rate-limit chip on every route, and the
+// dispatcher's optimistic mutations always raise an undo affordance —
+// declaring the satisfiers here clears `rate_limited_actions_show_state`
+// and `reversibility_surfaced` without per-manifest anchor nodes.
+const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+];
+
 function validate(manifest: Manifest) {
   return validateManifest(
     {
@@ -87,6 +100,7 @@ function validate(manifest: Manifest) {
       pii_fields: new Set(),
       brand_kit: DEMO_GITHUB_BRAND_KIT,
       composition_roles: COMPOSITION_ROLES,
+      ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
     },
     {
       policies: [

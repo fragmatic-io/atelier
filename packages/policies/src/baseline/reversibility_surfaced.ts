@@ -12,6 +12,13 @@
  *    `warn`-severity violation so designers see it. The manifest still
  *    compiles — non-reversible mutations are not forbidden, just flagged.
  *
+ * **Ambient satisfaction** (Phase 2 #5 / `docs/ethos.md` principle #4): a
+ * host that mounts an `<UndoToast>` at the app root can declare it via
+ * `PolicyContext.ambient_policy_satisfiers`. The toast surfaces an undo
+ * affordance for any reversible capability the dispatcher fires while it
+ * is mounted; declaring it as a satisfier removes the need for an in-tree
+ * `<UndoToast>` / rollback `<Button>` per route.
+ *
  * Source spec: `/Users/vid/cir/docs/architecture.md` §"Policy engine":
  *
  *     for each non-trivial mutation:
@@ -23,6 +30,7 @@
 import type { LayoutNode, Manifest } from '@cir/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
+import { ambientCovers } from './ambient-satisfiers.js';
 import { DESTRUCTIVE_SIDE_EFFECTS } from './confirmation_required_for_destructive.js';
 
 const POLICY_ID = 'reversibility_surfaced';
@@ -95,15 +103,17 @@ export const reversibilitySurfaced: NamedPolicy = {
             return;
           }
           const hasUndo = routeLayout ? subtreeContainsUndoFor(rollback, routeLayout) : false;
-          if (!hasUndo) {
-            violations.push({
-              policy_id: POLICY_ID,
-              severity: 'error',
-              message: `Reversible action "${actionId}" has no undo affordance for rollback "${rollback}" in this route.`,
-              path: `${path}/actions/${actionIdx}`,
-              hint: `Add a Button/ActionMenu invoking "${rollback}", or an Undo/UndoBar/UndoToast component in the same route layout.`,
-            });
-          }
+          if (hasUndo) return;
+          // Ambient satisfaction — host declared an `<UndoToast>` at the
+          // app root that covers this capability. Skip the in-route check.
+          if (ambientCovers(ctx.ambient_policy_satisfiers, POLICY_ID, actionId)) return;
+          violations.push({
+            policy_id: POLICY_ID,
+            severity: 'error',
+            message: `Reversible action "${actionId}" has no undo affordance for rollback "${rollback}" in this route.`,
+            path: `${path}/actions/${actionIdx}`,
+            hint: `Add a Button/ActionMenu invoking "${rollback}", an Undo/UndoBar/UndoToast component in the same route layout, OR declare an ambient \`<UndoToast>\` via \`CirRuntimeServices.ambientPolicySatisfiers\`.`,
+          });
         } else if (isMutating) {
           violations.push({
             policy_id: POLICY_ID,

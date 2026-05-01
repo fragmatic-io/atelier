@@ -49,7 +49,14 @@ import {
   type DataBinding,
 } from '@cir/react';
 import { CompositeDataResolver, RestDataResolver } from '@cir/data-resolvers';
-import { validateManifest, BASELINE_POLICIES, composesAccordingTo } from '@cir/policies';
+import {
+  validateManifest,
+  BASELINE_POLICIES,
+  composesAccordingTo,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  type AmbientPolicySatisfier,
+} from '@cir/policies';
 import type { IntentProfile, Manifest } from '@cir/schemas';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
@@ -169,6 +176,26 @@ function buildActions(): MapActionRegistry {
   return actions;
 }
 
+/**
+ * Ambient runtime services this app mounts that satisfy named policy
+ * obligations (Phase 2 #5 / `docs/ethos.md` principle #4):
+ *
+ *   - `<MarigoldHeader>` renders the rate-limit chip on every route and
+ *     carries the `dummyjson.cart.add.rate_limit` data binding —
+ *     `<RateLimitChip>` ambient → `rate_limited_actions_show_state`.
+ *   - The `<ProductGrid>`, `<CartItemList>`, and `<ProductDetail>` custom
+ *     bindings raise an inline undo toast on every reversible mutation
+ *     (`cart.add`, `cart.remove`); the policy validator treats this as
+ *     an ambient `<UndoToast>` for `reversibility_surfaced`.
+ *
+ * Declaring these here removes the need for in-manifest "policy anchor"
+ * nodes — see `lib/manifests.ts` for the band-aid we deleted.
+ */
+const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+];
+
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
   // Baseline catalog first; demo-specific bindings (ProductGrid,
   // CartItemList, …) layer on top so manifests can reference them in
@@ -230,7 +257,11 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           // so the policy engine treats them like the matching baseline
           // List/Grid/Table component (e.g. `ProductGrid` → `Grid`).
           composition_roles: DEMO_DUMMYJSON_COMPOSITION_ROLES,
-          action_slots: actionSlots,
+          // Ambient satisfiers — chrome rate-limit chip + ambient undo
+          // toast. Lets the policy validator clear obligations for
+          // capabilities the rendered chrome already covers, without
+          // requiring per-manifest anchor nodes.
+          ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
         },
         {
           policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
@@ -262,6 +293,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
       audit,
       identity: { user_id: 'demo-user', app_id: 'cir.demo-dummyjson' },
       intent,
+      ambientPolicySatisfiers: AMBIENT_POLICY_SATISFIERS,
     },
     audit,
   };

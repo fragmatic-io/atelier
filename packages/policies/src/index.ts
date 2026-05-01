@@ -15,6 +15,7 @@
 // Core types
 // -----------------------------------------------------------------------------
 export type {
+  AmbientPolicySatisfier,
   CompositionRole,
   NamedPolicy,
   Policy,
@@ -45,6 +46,7 @@ export {
   DESTRUCTIVE_SIDE_EFFECTS,
 } from './baseline/confirmation_required_for_destructive.js';
 export { emptyLoadingErrorHandled } from './baseline/empty_loading_error_handled.js';
+export { manifestComponentContractSatisfied } from './baseline/manifest_component_contract_satisfied.js';
 export { noPiiInQueryStrings } from './baseline/no_pii_in_query_strings.js';
 export { rateLimitedActionsShowState } from './baseline/rate_limited_actions_show_state.js';
 export { reversibilitySurfaced } from './baseline/reversibility_surfaced.js';
@@ -55,9 +57,12 @@ export {
   type CompositionRules,
 } from './baseline/composition_rules.js';
 export {
-  manifestComponentContractSatisfied,
-  type ManifestComponentContracts,
-} from './baseline/manifest_component_contract_satisfied.js';
+  ambientCovers,
+  rateLimitChipSatisfier,
+  undoToastSatisfier,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+} from './baseline/ambient-satisfiers.js';
 
 // -----------------------------------------------------------------------------
 // Internal helpers (exported so downstream policy authors can reuse them)

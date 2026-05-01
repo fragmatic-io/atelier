@@ -1,0 +1,34 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vault",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["cir", "vault", "dev", "--port", "4001"],
+      "port": 4001
+    },
+    {
+      "name": "demo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@cir/demo", "dev"],
+      "port": 3000,
+      "env": { "NEXT_PUBLIC_VAULT_URL": "http://localhost:4001" }
+    },
+    {
+      "name": "demo-dummyjson",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@cir/demo-dummyjson", "dev"],
+      "port": 3001,
+      "autoPort": true,
+      "env": { "NEXT_PUBLIC_VAULT_URL": "http://localhost:4001" }
+    },
+    {
+      "name": "demo-github",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@cir/demo-github", "dev"],
+      "port": 3002,
+      "autoPort": true,
+      "env": { "NEXT_PUBLIC_VAULT_URL": "http://localhost:4001" }
+    }
+  ]
+}

@@ -18,6 +18,13 @@
  * specific (we don't enforce a `RateMeter` component because not every host
  * has one), but the presence of a quota-providing data source is required.
  *
+ * **Ambient satisfaction** (Phase 2 #5 / `docs/ethos.md` principle #4): a
+ * host that mounts a `<RateLimitChip>` (or equivalent) in the chrome can
+ * declare it via `PolicyContext.ambient_policy_satisfiers`. The chip lives
+ * on every route in the rendered DOM regardless of the manifest tree;
+ * declaring it as a satisfier eliminates the need for invisible quota
+ * "anchor" nodes in every route's manifest.
+ *
  * This is intentionally a `warn` rather than `error`: the heuristic is fuzzy
  * (a quota might be presented as a custom prop fed in from elsewhere). Better
  * to surface for designer review than reject the manifest.
@@ -26,6 +33,7 @@
 import type { LayoutNode } from '@cir/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
+import { ambientCovers } from './ambient-satisfiers.js';
 
 const POLICY_ID = 'rate_limited_actions_show_state';
 
@@ -78,15 +86,19 @@ export const rateLimitedActionsShowState: NamedPolicy = {
 
       if (selfOrSubtree || siblingsHaveQuota) return;
 
-      // No quota visible: report each rate-limited action so audit can pinpoint.
+      // No quota visible in the manifest tree: fall back to ambient
+      // satisfaction. A host with a `<RateLimitChip>` in the chrome
+      // declares it as an ambient satisfier; per-action coverage clears
+      // the obligation without an in-manifest quota node.
       node.actions.forEach((actionId, actionIdx) => {
         if (!limited.has(actionId)) return;
+        if (ambientCovers(ctx.ambient_policy_satisfiers, POLICY_ID, actionId)) return;
         violations.push({
           policy_id: POLICY_ID,
           severity: 'warn',
           message: `Rate-limited action "${actionId}" is exposed without a visible quota indicator.`,
           path: `${path}/actions/${actionIdx}`,
-          hint: 'Bind a sibling or ancestor component to a data source whose name ends with `.quota`, `.rate_limit`, or `.usage`.',
+          hint: 'Bind a sibling or ancestor component to a data source whose name ends with `.quota`, `.rate_limit`, or `.usage`, OR declare an ambient `<RateLimitChip>` via `CirRuntimeServices.ambientPolicySatisfiers`.',
         });
       });
     });

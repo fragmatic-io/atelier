@@ -11,17 +11,18 @@
  * grid at spacious. The renderer threads density into every layout
  * component below the route root.
  *
- * What changed in this rev (E-B):
+ * What changed in this rev (E-B → Phase 2 #5):
  *
  *   - `/browse`: the body is now a single `<ProductGrid>` (not a generic
  *     `<Grid>`) so cards render with image / brand / title / price / rating
  *     / "Add to cart" without any per-cell template needed in the manifest.
  *     The grid declares `compositionRole: 'grid'` via its binding, so the
  *     baseline `composes_*` policies still allow-list it.
- *   - The card-sized `<StatCard>` quota indicator and the orphan
- *     `<Stack>` of "Restore last removed" / "Undo last add" ghost buttons
- *     are gone. Reversibility surfaces via the in-grid undo toast; the
- *     quota chip lives in the header chrome (`<RateLimitChip>`).
+ *   - The off-screen `REVERSIBILITY_ANCHOR_NODE` (a hidden `<Stack>` of
+ *     "Restore last removed" / "Undo last add" ghost buttons) is **gone**.
+ *     Reversibility is surfaced ambiently by the `<UndoToast>` mounted at
+ *     the app root by `<CirProviders>`, declared as an
+ *     `AmbientPolicySatisfier` for `reversibility_surfaced`.
  *   - `/cart`: real `<CartItemList>` with line items, totals, and a
  *     designed empty state. No bulk-action ceremony.
  *   - `/product/[id]`: real `<ProductDetail>` (gallery + info + qty + add
@@ -33,12 +34,13 @@
  * Policy obligations the manifests still satisfy:
  *
  *   - `rate_limited_actions_show_state`: a `<RateLimitChip>` lives in the
- *     header on every route that exposes `dummyjson.cart.add` (so the
- *     custom binding plays the role of the old `<StatCard>`).
- *   - `reversibility_surfaced`: a hidden `<Button>` carrying
- *     `dummyjson.cart.remove` is co-located with each route that exposes
- *     `dummyjson.cart.add` so the policy walks find the rollback action.
- *     The on-screen affordance is the in-grid undo toast.
+ *     header on every route that exposes `dummyjson.cart.add`. The
+ *     `<MarigoldHeader>` binding carries the `dummyjson.cart.add.rate_limit`
+ *     data source so the policy walker is satisfied **and** the host
+ *     additionally declares the chip as an ambient satisfier in
+ *     `cir-providers.tsx` so future manifests do not need to re-declare it.
+ *   - `reversibility_surfaced`: satisfied by the ambient `<UndoToast>`
+ *     declared in `cir-providers.tsx`. No in-tree anchor required.
  *   - `empty_loading_error_handled`: each data binding declares
  *     `loading_state` / `empty_state` / `error_state`.
  */
@@ -103,58 +105,15 @@ function chromeHeader(activePath: string): LayoutNode {
   };
 }
 
-/**
- * Visually-inert rollback anchor. The `reversibility_surfaced` policy
- * walks every node carrying an action and verifies the same route has a
- * Button (or ActionMenu / IconButton) hosting the capability's rollback.
- * For the cart pair we need BOTH directions: `cart.add` rolls back to
- * `cart.remove`, and `cart.remove` rolls back to `cart.add`. We keep two
- * tiny anchor buttons in the layout so the policy passes — they render
- * visually inert (off-screen, aria-hidden) because the actual user-visible
- * reversibility is the inline undo toast that `<ProductGrid>` /
- * `<ProductDetail>` / `<CartItemList>` raise when an action fires.
- *
- * `data-cir-policy-anchor` makes the intent explicit for anyone reading
- * the rendered DOM.
- */
-const REVERSIBILITY_ANCHOR_NODE = {
-  component: 'Stack',
-  props: {
-    direction: 'horizontal' as const,
-    gap: 'xs' as const,
-    'aria-hidden': true,
-    'data-cir-policy-anchor': 'reversibility',
-    style: {
-      position: 'absolute',
-      left: -9999,
-      top: -9999,
-      opacity: 0,
-      pointerEvents: 'none',
-    },
-  },
-  children: [
-    {
-      component: 'Button',
-      actions: ['dummyjson.cart.remove'],
-      props: {
-        variant: 'ghost' as const,
-        size: 'sm' as const,
-        label: 'Undo last add',
-      },
-      children: [],
-    },
-    {
-      component: 'Button',
-      actions: ['dummyjson.cart.add'],
-      props: {
-        variant: 'ghost' as const,
-        size: 'sm' as const,
-        label: 'Restore last removed',
-      },
-      children: [],
-    },
-  ],
-};
+// Pre-Phase-2-#5, this module exported a `REVERSIBILITY_ANCHOR_NODE` —
+// an off-screen `<Stack>` of `<Button>`s carrying `cart.add` / `cart.remove`
+// just to satisfy the `reversibility_surfaced` policy walker. That node
+// was a band-aid: `<ProductGrid>` / `<CartItemList>` already raise an
+// inline undo toast, AND the runtime mounts a global `<UndoToast>` at
+// the app root. Phase 2 #5 lets the host declare those services as
+// `AmbientPolicySatisfier`s in `cir-providers.tsx`, so the policy clears
+// the obligation without an in-manifest anchor. The constant is gone;
+// the manifests below are the actual rendered tree.
 
 const PAGE_HEADER_NODE = (title: string, subtitle: string) => ({
   component: 'Stack',
@@ -251,7 +210,6 @@ export function browseManifest(density: Density): Manifest {
                   '30 products across smartphones, laptops, fragrances, skincare, groceries. Switch density at /settings/lens.',
                 ),
                 productGridNode,
-                REVERSIBILITY_ANCHOR_NODE,
               ],
             },
           ],
@@ -336,7 +294,9 @@ export function browseManifestRowBinding(density: Density): Manifest {
                   '30 products. The grid is the baseline `<Grid>` binding; rows are rendered by `<ProductCard>` via `row_binding` — no wrapper component required.',
                 ),
                 gridNode,
-                REVERSIBILITY_ANCHOR_NODE,
+                // Phase 2 #5: REVERSIBILITY_ANCHOR_NODE removed — runtime
+                // services declare ambient `reversibility_surfaced` via
+                // `<UndoToast>`. See `cir-providers.tsx`.
               ],
             },
           ],
@@ -422,7 +382,6 @@ export function productManifest(id: string, density: Density): Manifest {
                   props: { variant: 'tinted', density },
                   children: [],
                 },
-                REVERSIBILITY_ANCHOR_NODE,
               ],
             },
           ],
@@ -482,7 +441,6 @@ export function cartManifest(density: Density): Manifest {
                   props: { density },
                   children: [],
                 },
-                REVERSIBILITY_ANCHOR_NODE,
               ],
             },
           ],

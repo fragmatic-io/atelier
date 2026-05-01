@@ -28,6 +28,9 @@ import {
   manifestComponentContractSatisfied,
   rateLimitedActionsShowState,
   reversibilitySurfaced,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  type AmbientPolicySatisfier,
 } from '@cir/policies';
 import { StreamingAuditSink, manifestContractsFromBindings } from '@cir/runtime';
 import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
@@ -38,27 +41,21 @@ import { CAPABILITIES } from './capabilities.js';
 import { manifestForRoute } from './manifests.js';
 
 /**
- * Per-binding manifest contract map for the policy. Drawn from the
- * baseline `COMPONENT_BINDINGS` only — the demo's custom bindings ship
- * inside `lib/component-bindings.ts`, which transitively pulls in
- * client-side React components (`@/components/*.tsx`). Importing it here
- * would push those into the server compile path and break the SSR / test
- * resolution of the cir-server module. The custom bindings can declare
- * their own `manifestContract` later — once they do, the renderer's
- * registry on the React side enforces it; the SSR validate hook focuses
- * on the baseline catalog here.
- *
- * Bindings without a `manifestContract` are silently skipped (the policy
- * is strictly additive).
+ * Ambient satisfiers (Phase 2 #5) — declarations of which runtime services
+ * cover which policy obligations. Mirrors `lib/cir-providers.tsx` so the
+ * LLM-side validation cascade and the client-side validation cascade
+ * agree on what is satisfied without manifest-level evidence.
  */
-const MANIFEST_CONTRACTS = manifestContractsFromBindings(COMPONENT_BINDINGS);
+const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
+];
 
 /**
- * Run composition + empty/loading/error + per-binding manifest contract
- * policies on the LLM's output before the manifest reaches the renderer.
- * The Gemini validate hook treats any violation as a
- * `CompilerOutputError`, which the composite cascades on. See
- * `docs/ethos.md` principles 1, 4, 5, 7.
+ * Run composition + empty/loading/error policies on the LLM's output before
+ * the manifest reaches the renderer. The Gemini validate hook treats any
+ * violation as a `CompilerOutputError`, which the composite cascades on.
+ * See `docs/ethos.md` principles 1, 4, 5.
  */
 function validateManifestSemantics(manifest: Manifest): { errors: readonly string[] } {
   const policies = [
@@ -88,6 +85,15 @@ function validateManifestSemantics(manifest: Manifest): { errors: readonly strin
     components: {},
     rate_limited_capability_ids: rateLimitedIds,
     pii_fields: new Set<string>(),
+    intent: {
+      user_id: 'demo-user',
+      global_preferences: {},
+      granted_fields: [] as string[],
+    },
+    // Ambient satisfiers — chrome rate-limit chip + ambient undo toast.
+    // Mirrors `cir-providers.tsx`: lets the LLM omit per-route quota /
+    // rollback anchor nodes since the chrome already covers them.
+    ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
   };
   const errors: string[] = [];
   for (const policy of policies) {
