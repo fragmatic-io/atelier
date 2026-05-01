@@ -181,11 +181,14 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
     ).not.toBeNull();
   });
 
-  it('every data-bound node declares loading + empty + error states', () => {
-    // Includes the new `compositionRole: 'grid'` custom binding
-    // (`ProductGrid`) — the policy treats it like the baseline `Grid`,
-    // so this assertion keeps the contract honest for custom components
-    // too.
+  it('every data-bound node declares a DISTINCTIVE empty_state inline (Phase 2 #4)', () => {
+    // Phase 2 #4 — Resolver fallback contract. The render walker supplies
+    // a baseline loading + error state at runtime, so the manifest is no
+    // longer obliged to author them. Distinctive empties (the cart's
+    // "Your cart is empty" voice, the product detail's "not found" branch,
+    // the recommendations' "browse more to seed picks" copy) still have
+    // to be authored — they are product-meaningful copy the LLM cannot
+    // synthesise from a generic default.
     const dataBound = new Set([
       'List',
       'Table',
@@ -216,20 +219,13 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       const comp = node['component'] as string | undefined;
       const data = node['data'] as Record<string, unknown> | undefined;
       if (comp && dataBound.has(comp) && data) {
-        for (const slot of ['loading_state', 'empty_state', 'error_state'] as const) {
-          if (data[slot] === undefined) {
-            const handlers: Record<string, string[]> = {
-              loading_state: ['Spinner', 'Skeleton', 'Progress'],
-              empty_state: ['EmptyState'],
-              error_state: ['Alert', 'ErrorState'],
-            };
-            const siblings = (parent?.['children'] as unknown[] | undefined) ?? [];
-            const handled = siblings.some((s) => {
-              const sib = s as Record<string, unknown>;
-              return sib !== node && handlers[slot]!.includes(sib['component'] as string);
-            });
-            if (!handled) missing.push(`${route}: ${comp} missing ${slot}`);
-          }
+        if (data['empty_state'] === undefined) {
+          const siblings = (parent?.['children'] as unknown[] | undefined) ?? [];
+          const handled = siblings.some((s) => {
+            const sib = s as Record<string, unknown>;
+            return sib !== node && sib['component'] === 'EmptyState';
+          });
+          if (!handled) missing.push(`${route}: ${comp} missing empty_state`);
         }
       }
       const children = node['children'];

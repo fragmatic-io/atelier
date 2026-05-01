@@ -32,8 +32,19 @@
  * source that can legitimately return zero rows") and the wider production-
  * concerns doc.
  *
- * Severity: `error`. Manifests with data-bound components missing any of the
- * three states fail validation; the compiler retries.
+ * Severity (Phase 2 #4 — resolver fallback contract):
+ *   - Default `info`. The render walker supplies an `<EmptyState>` /
+ *     `<Skeleton>` / `<Alert>` default at runtime when the manifest omits a
+ *     slot, so the missing slot is no longer fatal — it is a remediation
+ *     prompt for authors who want a custom empty-zero / loading / error UI.
+ *   - `error` for components whose `ComponentBinding.requiresExplicitStateSlots`
+ *     is true (threaded through `PolicyContext.requires_explicit_state_slots`).
+ *     This is the strict opt-in for bindings whose visual identity falls
+ *     apart with the generic defaults.
+ *
+ * Per-violation severity is set on the violation itself; the policy's own
+ * `severity` field reports the strictest case (`error`) for back-compat with
+ * audit tooling.
  */
 
 import type { LayoutNode } from '@cir/schemas';
@@ -170,13 +181,17 @@ function stateIsHandled(
 export const emptyLoadingErrorHandled: NamedPolicy = {
   id: POLICY_ID,
   description:
-    'Every data-bound component (List, Table, Grid, KPIRow, DetailView, Chart, Calendar, Kanban, Timeline, Gallery, Tree) declares empty, loading, and error states.',
+    'Every data-bound component (List, Table, Grid, KPIRow, DetailView, Chart, Calendar, Kanban, Timeline, Gallery, Tree) declares empty, loading, and error states. The renderer supplies defaults; bindings that need custom slots opt in via requiresExplicitStateSlots.',
   applies_to: 'manifest',
+  // The policy's own severity reports the strictest case it can emit. Most
+  // violations are `info` (the renderer supplies a default); bindings that
+  // opt into `requiresExplicitStateSlots` keep the original `error`.
   severity: 'error',
   evaluate(ctx): PolicyResult {
     const violations: PolicyViolation[] = [];
 
     const roles = ctx.composition_roles;
+    const strictSet = ctx.requires_explicit_state_slots;
 
     walkManifest(ctx.manifest, (node, path, ancestors) => {
       // Baseline ids OR a host-registered binding whose role is data-bound.
@@ -188,22 +203,35 @@ export const emptyLoadingErrorHandled: NamedPolicy = {
       if (!node.data) return; // No data binding — no obligation.
 
       const parent = ancestors.length > 0 ? ancestors[ancestors.length - 1] : undefined;
+      const strict = strictSet?.has(node.component) === true;
 
       for (const kind of ['empty', 'loading', 'error'] as const) {
         if (stateIsHandled(node, parent, kind)) continue;
         const spec = STATES[kind];
+        // Strict bindings keep the hard `error` (the renderer cannot supply a
+        // default that fits this binding's visual identity). Otherwise the
+        // resolver pipeline supplies a baseline default at runtime, so the
+        // missing slot is only an `info` nudge for authors who want a custom
+        // empty-zero / loading / error UI.
+        const severity: 'error' | 'info' = strict ? 'error' : 'info';
+        const message = strict
+          ? `${node.component} at ${path} has data binding but no ${spec.label} (binding opts into strict empty/loading/error slots).`
+          : `${node.component} at ${path} has data binding but no ${spec.label}; the resolver will supply a default. Provide a custom slot to override.`;
         violations.push({
           policy_id: POLICY_ID,
-          severity: 'error',
-          message: `${node.component} at ${path} has data binding but no ${spec.label}.`,
+          severity,
+          message,
           path,
           hint: `Add data.${spec.bindingField}, props.${spec.propNames[0] ?? spec.label}, or a sibling ${[...spec.siblingHandlers].join(' / ')} component.`,
         });
       }
     });
 
+    // `ok` follows the global rule: only `error` violations block. `info`
+    // ones are advisory and never gate compilation.
+    const hasError = violations.some((v) => v.severity === 'error');
     return {
-      ok: violations.length === 0,
+      ok: !hasError,
       violations,
     };
   },

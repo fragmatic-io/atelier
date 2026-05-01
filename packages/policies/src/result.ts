@@ -14,8 +14,15 @@
 
 import type { BrandKit, Capability, IntentProfile, Manifest } from '@cir/schemas';
 
-/** Severity of a policy violation. `error` blocks; `warn` records but permits. */
-export type PolicySeverity = 'error' | 'warn';
+/**
+ * Severity of a policy violation.
+ *  - `error`: blocks compilation; the compiler retries until satisfied.
+ *  - `warn`:  records to audit but permits.
+ *  - `info`:  non-blocking advisory. Used when the runtime supplies a
+ *    sensible default and the policy only nudges authors toward an explicit
+ *    override (Phase 2 #4 — resolver fallback contract).
+ */
+export type PolicySeverity = 'error' | 'warn' | 'info';
 
 /**
  * Composition role a custom component plays for policy evaluation.
@@ -93,6 +100,19 @@ export interface PolicyContext {
    * without an entry are unaffected. See `CompositionRole`.
    */
   composition_roles?: Readonly<Record<string, CompositionRole>> | undefined;
+  /**
+   * Phase 2 #4 — Resolver fallback contract.
+   *
+   * Set of component IDs whose bindings opt INTO the strict
+   * empty/loading/error state-slot check. Bindings in this set continue to
+   * raise an `error`-severity violation when the manifest omits a slot
+   * (matching pre-Phase-2-#4 behavior). Bindings outside it raise an
+   * `info`-severity hint instead — the renderer is expected to supply a
+   * default `<EmptyState>` / `<Skeleton>` / `<Alert>` at runtime. Bindings
+   * declare the opt-in via `ComponentBinding.requiresExplicitStateSlots`
+   * (`@cir/runtime`); hosts thread the resulting set through here.
+   */
+  requires_explicit_state_slots?: ReadonlySet<string> | undefined;
 }
 
 /** A pure-function policy. */

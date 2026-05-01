@@ -39,8 +39,11 @@
  *     `dummyjson.cart.remove` is co-located with each route that exposes
  *     `dummyjson.cart.add` so the policy walks find the rollback action.
  *     The on-screen affordance is the in-grid undo toast.
- *   - `empty_loading_error_handled`: each data binding declares
- *     `loading_state` / `empty_state` / `error_state`.
+ *   - `empty_loading_error_handled` (Phase 2 #4 — resolver fallback):
+ *     loading and error fall through to the resolver default supplied by
+ *     the React render walker; only distinctive empties (the cart's "Your
+ *     cart is empty" voice, the product detail's "not found" branch, the
+ *     recommendations' "browse more to seed picks" copy) stay inline.
  */
 
 import type { LayoutNode, Manifest } from '@cir/schemas';
@@ -173,25 +176,14 @@ const PAGE_HEADER_NODE = (title: string, subtitle: string) => ({
   ],
 });
 
-const SKELETON_CARD_NODE = {
-  component: 'Skeleton',
-  props: { shape: 'card' as const, count: 6 },
-  children: [],
-};
-const SKELETON_LIST_NODE = {
-  component: 'Skeleton',
-  props: { shape: 'row' as const, count: 4 },
-  children: [],
-};
-const ERROR_NODE = {
-  component: 'Alert',
-  props: {
-    variant: 'error' as const,
-    title: 'Couldn’t reach DummyJSON',
-    body: 'Check your connection and retry.',
-  },
-  children: [],
-};
+/**
+ * Distinctive empty-state nodes. Phase 2 #4 — only routes whose empty state
+ * carries product-meaningful copy still author one. Loading and error
+ * defaults come from the resolver pipeline (a `<Skeleton shape="table-row">`
+ * and an `<Alert severity="error" title="Failed to load">`); the previous
+ * inline `SKELETON_CARD_NODE` / `SKELETON_LIST_NODE` / `ERROR_NODE` were
+ * indistinguishable from those defaults and have been removed.
+ */
 
 // Densities -> manifest-id suffix that satisfies `^m_[a-z0-9]{8,}$`.
 const DENSITY_TAG: Readonly<Record<Density, string>> = Object.freeze({
@@ -206,16 +198,15 @@ export function browseManifest(density: Density): Manifest {
     data: {
       source: 'dummyjson.product.list',
       sort: 'rating desc',
-      loading_state: SKELETON_CARD_NODE,
+      // Distinctive empty: "Nothing here yet" with a filter-tweak prompt.
       empty_state: {
         component: 'EmptyState',
         props: {
           title: 'Nothing here yet',
-          body: 'Adjust the filters or clear the search to see more results.',
+          description: 'Adjust the filters or clear the search to see more results.',
         },
         children: [],
       },
-      error_state: ERROR_NODE,
     },
     actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
     props: {
@@ -297,16 +288,15 @@ export function productManifest(id: string, density: Density): Manifest {
                   data: {
                     source: 'dummyjson.product.list',
                     filter: `id = ${id}`,
-                    loading_state: SKELETON_CARD_NODE,
+                    // Distinctive: a "not found in catalog" branch.
                     empty_state: {
                       component: 'EmptyState',
                       props: {
                         title: 'Product not found',
-                        body: 'That id isn’t in the catalog. Try /browse.',
+                        description: 'That id isn’t in the catalog. Try /browse.',
                       },
                       children: [],
                     },
-                    error_state: ERROR_NODE,
                   },
                   actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
                   props: { density },
@@ -322,16 +312,15 @@ export function productManifest(id: string, density: Density): Manifest {
                   data: {
                     source: 'dummyjson.product.recommendations',
                     filter: `product_id = ${id}`,
-                    loading_state: SKELETON_LIST_NODE,
+                    // Distinctive: nudge the user to browse more.
                     empty_state: {
                       component: 'EmptyState',
                       props: {
                         title: 'No recommendations yet',
-                        body: 'Browse a few more products to seed personalised picks.',
+                        description: 'Browse a few more products to seed personalised picks.',
                       },
                       children: [],
                     },
-                    error_state: ERROR_NODE,
                   },
                   actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
                   props: { variant: 'tinted', density },
@@ -382,16 +371,16 @@ export function cartManifest(density: Density): Manifest {
                   data: {
                     source: 'dummyjson.cart.list',
                     filter: 'user_id = 1',
-                    loading_state: SKELETON_LIST_NODE,
+                    // Distinctive: the cart's "Your cart is empty" voice.
                     empty_state: {
                       component: 'EmptyState',
                       props: {
                         title: 'Your cart is empty',
-                        body: 'Browse the catalog and tap “Add to cart” — items show up here with a 5s undo toast.',
+                        description:
+                          'Browse the catalog and tap “Add to cart” — items show up here with a 5s undo toast.',
                       },
                       children: [],
                     },
-                    error_state: ERROR_NODE,
                   },
                   actions: ['dummyjson.cart.remove', 'dummyjson.cart.add'],
                   props: { density },

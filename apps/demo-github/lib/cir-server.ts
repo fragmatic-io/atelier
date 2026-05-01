@@ -49,7 +49,13 @@ function validateManifestComposition(manifest: Manifest): { errors: readonly str
   const errors: string[] = [];
   for (const policy of policies) {
     const result = policy.evaluate(ctx);
-    for (const v of result.violations) errors.push(v.message);
+    // Phase 2 #4 — only `error`/`warn` violations gate the LLM's retry loop.
+    // `info` advisories (e.g. "the resolver will supply a default empty
+    // state") are fine to leave on the table; the runtime fills them in.
+    for (const v of result.violations) {
+      if (v.severity === 'info') continue;
+      errors.push(v.message);
+    }
   }
   return { errors };
 }

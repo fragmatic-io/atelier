@@ -54,6 +54,18 @@ export interface ComponentBinding {
    * the purposes of the composition policies. See `CompositionRole`.
    */
   compositionRole?: CompositionRole;
+  /**
+   * Phase 2 #4 — Resolver fallback contract. When `true`, the
+   * `empty_loading_error_handled` policy keeps its strict (`error`-severity)
+   * check for this binding: the manifest MUST declare empty/loading/error
+   * slots inline. Bindings that opt OUT of the resolver-supplied defaults
+   * (e.g. a component whose visual identity falls apart with the generic
+   * `<EmptyState>` / `<Skeleton>` / `<Alert>` defaults) set this so the LLM
+   * is still prompted for custom state nodes. Default is `false`: the policy
+   * downgrades to `info` severity because the resolver pipeline supplies
+   * sensible defaults at render time.
+   */
+  requiresExplicitStateSlots?: boolean;
 }
 
 export interface ComponentRegistry {
@@ -118,6 +130,26 @@ export function compositionRolesFromBindings(
   const out: Record<string, CompositionRole> = {};
   for (const [id, binding] of Object.entries(bindings)) {
     if (binding.compositionRole !== undefined) out[id] = binding.compositionRole;
+  }
+  return out;
+}
+
+/**
+ * Build the set of component IDs whose bindings opt into the strict
+ * empty/loading/error state-slot check. Used by the
+ * `empty_loading_error_handled` policy: bindings in the returned set still
+ * fail validation when the manifest omits an inline slot, while bindings
+ * outside it surface only an `info` hint (the renderer supplies a default).
+ *
+ * Mirrors `compositionRolesFromBindings`. Convenience for hosts that pass
+ * the set into `PolicyContext.requires_explicit_state_slots`.
+ */
+export function requiresExplicitStateSlotsFromBindings(
+  bindings: Readonly<Record<string, ComponentBinding>>,
+): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const [id, binding] of Object.entries(bindings)) {
+    if (binding.requiresExplicitStateSlots === true) out.add(id);
   }
   return out;
 }

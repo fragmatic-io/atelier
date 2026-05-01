@@ -106,6 +106,7 @@ export {
   compositionRolesFromBindings,
   EMPTY_REGISTRY,
   MapComponentRegistry,
+  requiresExplicitStateSlotsFromBindings,
   type ComponentBinding,
   type ComponentRegistry,
   type CompositionRole,

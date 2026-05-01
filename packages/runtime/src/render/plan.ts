@@ -80,10 +80,24 @@ function buildRenderNode(node: LayoutNode, registry: ComponentRegistry): RenderN
   };
   if (binding) out.binding = binding;
   if (node.data) {
-    const data: RenderNode['data'] = { source: node.data.source };
+    const data: NonNullable<RenderNode['data']> = { source: node.data.source };
     if (node.data.filter !== undefined) data.filter = node.data.filter;
     if (node.data.sort !== undefined) data.sort = node.data.sort;
     if (node.data.group_by !== undefined) data.group_by = node.data.group_by;
+    // Forward empty/loading/error state slots as nested RenderNodes so the
+    // adapter can render them in place of the data-bound component when the
+    // resolver returns empty / loading / error. The slots themselves are
+    // recursively planned through the registry (they may name their own
+    // components — `EmptyState`, `Skeleton`, `Alert`, ...).
+    if (node.data.empty_state !== undefined) {
+      data.empty_state = buildRenderNode(node.data.empty_state, registry);
+    }
+    if (node.data.loading_state !== undefined) {
+      data.loading_state = buildRenderNode(node.data.loading_state, registry);
+    }
+    if (node.data.error_state !== undefined) {
+      data.error_state = buildRenderNode(node.data.error_state, registry);
+    }
     out.data = data;
   }
   if (node.actions && node.actions.length > 0) out.actions = [...node.actions];

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import './setup.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { buildRenderPlan } from '@cir/runtime';
 import { MapComponentRegistry } from '@cir/runtime/testing';
 import { RenderNode, __resetMissingBindingWarnings } from '../src/render/render-node.js';
@@ -132,6 +132,160 @@ describe('RenderNode', () => {
     );
     expect(getByTestId('wrap')).toBeTruthy();
     expect(getByTestId('leaf')).toBeTruthy();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Phase 2 #4 — Resolver fallback contract.
+  // ---------------------------------------------------------------------------
+
+  it('renders the resolver-default empty state when data resolves to []', async () => {
+    function Listy(): React.ReactElement {
+      return <div data-testid="row">component-rendered</div>;
+    }
+    function EmptyState({
+      title,
+      description,
+    }: {
+      title?: string;
+      description?: string;
+    }): React.ReactElement {
+      return (
+        <div data-testid="default-empty">
+          {title}|{description}
+        </div>
+      );
+    }
+    const registry = new MapComponentRegistry({
+      Stack: {
+        id: 'Stack',
+        factory: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+      },
+      Listy: { id: 'Listy', factory: Listy },
+      EmptyState: { id: 'EmptyState', factory: EmptyState },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Stack',
+            children: [{ component: 'Listy', data: { source: 'thread.list' } }],
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({ componentRegistry: registry });
+    const { container, queryByTestId } = render(
+      <CirRuntime services={services} dataResolver={() => []}>
+        <RenderNode node={plan.root} />
+      </CirRuntime>,
+    );
+    await waitFor(() => {
+      const wrapper = container.querySelector('[data-cir-default-state="empty"]');
+      expect(wrapper).not.toBeNull();
+    });
+    // Component itself never rendered — replaced by the default empty.
+    expect(queryByTestId('row')).toBeNull();
+    expect(queryByTestId('default-empty')?.textContent).toBe('No items|Nothing to show yet.');
+  });
+
+  it('honors a host-provided resolverDefaults override', async () => {
+    function Listy(): React.ReactElement {
+      return <div data-testid="row">x</div>;
+    }
+    function HostEmpty({ note }: { note?: string }): React.ReactElement {
+      return <div data-testid="host-empty">{note}</div>;
+    }
+    const registry = new MapComponentRegistry({
+      Stack: {
+        id: 'Stack',
+        factory: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+      },
+      Listy: { id: 'Listy', factory: Listy },
+      HostEmpty: { id: 'HostEmpty', factory: HostEmpty },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Stack',
+            children: [{ component: 'Listy', data: { source: 'thread.list' } }],
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({ componentRegistry: registry });
+    services.resolverDefaults = {
+      empty: {
+        component: 'HostEmpty',
+        props: { note: 'host says nothing here' },
+        children: [],
+      },
+    };
+    const { container, getByTestId } = render(
+      <CirRuntime services={services} dataResolver={() => []}>
+        <RenderNode node={plan.root} />
+      </CirRuntime>,
+    );
+    await waitFor(() => expect(getByTestId('host-empty')).toBeTruthy());
+    expect(getByTestId('host-empty').textContent).toBe('host says nothing here');
+    expect(container.querySelector('[data-cir-default-state="empty"]')).not.toBeNull();
+  });
+
+  it('renders the manifest-declared empty_state slot in preference to the default', async () => {
+    function Listy(): React.ReactElement {
+      return <div data-testid="row">x</div>;
+    }
+    function CustomEmpty({ tag }: { tag?: string }): React.ReactElement {
+      return <div data-testid="custom-empty">{tag}</div>;
+    }
+    const registry = new MapComponentRegistry({
+      Stack: {
+        id: 'Stack',
+        factory: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+      },
+      Listy: { id: 'Listy', factory: Listy },
+      CustomEmpty: { id: 'CustomEmpty', factory: CustomEmpty },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Stack',
+            children: [
+              {
+                component: 'Listy',
+                data: {
+                  source: 'thread.list',
+                  empty_state: {
+                    component: 'CustomEmpty',
+                    props: { tag: 'inbox-zero' },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({ componentRegistry: registry });
+    const { container, getByTestId } = render(
+      <CirRuntime services={services} dataResolver={() => []}>
+        <RenderNode node={plan.root} />
+      </CirRuntime>,
+    );
+    await waitFor(() => expect(getByTestId('custom-empty')).toBeTruthy());
+    // Author-supplied slot — no resolver-default wrapper.
+    expect(container.querySelector('[data-cir-default-state]')).toBeNull();
+    expect(getByTestId('custom-empty').textContent).toBe('inbox-zero');
   });
 
   it('renders fallback children recursively when binding missing', () => {

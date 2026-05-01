@@ -24,7 +24,11 @@
 // Provider + context
 // -----------------------------------------------------------------------------
 export { CirRuntime, type CirRuntimeProps } from './context/runtime-provider.js';
-export { type CirRuntimeServices } from './context/runtime-context.js';
+export {
+  BASELINE_RESOLVER_DEFAULTS,
+  type CirResolverDefaults,
+  type CirRuntimeServices,
+} from './context/runtime-context.js';
 
 // -----------------------------------------------------------------------------
 // Route + error boundary

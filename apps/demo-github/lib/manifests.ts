@@ -25,10 +25,14 @@
  * and `<StatCard>` blocks that were stacking visual weight at the top of
  * every page.
  *
- * Every data-bound component carries empty/loading/error states either
- * inline (the custom bindings render their own branches) OR via
- * sibling handler nodes the runtime fans into. The
- * `empty_loading_error_handled` policy is satisfied either way.
+ * Empty / loading / error states (Phase 2 #4 — resolver fallback contract):
+ * the runtime supplies sensible defaults so the manifest only declares an
+ * inline slot when the route wants a distinctive copy (e.g. `/today` and
+ * `/inbox`'s "Inbox zero" empty state). The previous boilerplate
+ * `loadingNode()` + `errorAlertNode()` siblings are gone — they were
+ * duplicating the resolver default. The `empty_loading_error_handled`
+ * policy is now an `info`-severity advisory; the manifest still satisfies
+ * it via the inline distinctive empties.
  */
 
 import type { LayoutNode, Manifest } from '@cir/schemas';
@@ -107,30 +111,18 @@ function rateLimitQuotaNode(): LayoutNode {
   };
 }
 
+/**
+ * Distinctive empty-state node. Phase 2 #4 — only routes whose empty state
+ * carries product-meaningful copy (`/today`, `/inbox`'s "Inbox zero" voice)
+ * still author one. The other routes inherit the resolver default supplied
+ * by the React render walker. Loading and error defaults always come from
+ * the resolver (no per-route copy was distinctive enough to justify the
+ * duplication).
+ */
 function emptyStateNode(title: string, body: string): LayoutNode {
   return {
     component: 'EmptyState',
-    props: { title, body },
-    children: [],
-  };
-}
-
-function loadingNode(): LayoutNode {
-  return {
-    component: 'Skeleton',
-    props: { rows: 4, variant: 'list' },
-    children: [],
-  };
-}
-
-function errorAlertNode(): LayoutNode {
-  return {
-    component: 'Alert',
-    props: {
-      severity: 'error',
-      title: 'Failed to load',
-      body: 'Could not reach the GitHub API. Check your token in /settings/github.',
-    },
+    props: { title, description: body },
     children: [],
   };
 }
@@ -170,18 +162,16 @@ export function todayManifest(): Manifest {
                     source: 'github.issue.list',
                     filter: 'state = "open" AND requires_decision = true',
                     sort: 'salience desc',
+                    // Distinctive empty: keep the "Inbox zero" voice. Loading
+                    // and error fall through to the resolver default.
+                    empty_state: emptyStateNode(
+                      'Inbox zero',
+                      'No issues need a decision right now.',
+                    ),
                   },
                   actions: ['github.issue.archive', 'github.issue.close'],
                   children: [],
                 },
-                // Empty / loading / error siblings — `<IssueQueue>` renders
-                // its own branches inline, but these sibling nodes satisfy
-                // the `empty_loading_error_handled` policy via slot 3
-                // (sibling handler) and give the manifest a portable
-                // declarative shape.
-                emptyStateNode('Inbox zero', 'No issues need a decision right now.'),
-                loadingNode(),
-                errorAlertNode(),
                 // Reversibility — `UndoToast` is the ambient affordance the
                 // `reversibility_surfaced` policy explicitly accepts.
                 {
@@ -237,13 +227,15 @@ export function reposManifest(): Manifest {
                   data: {
                     source: 'github.repo.list',
                     sort: 'stargazers_count desc',
+                    // Distinctive empty: prompt the user to connect a token.
+                    empty_state: emptyStateNode(
+                      'No repositories',
+                      'Connect a GitHub token to load your repos.',
+                    ),
                   },
                   actions: ['github.issue.create'],
                   children: [],
                 },
-                emptyStateNode('No repositories', 'Connect a GitHub token to load your repos.'),
-                loadingNode(),
-                errorAlertNode(),
                 // Ambient reversibility affordance for issue.create.
                 {
                   component: 'UndoToast',
@@ -299,6 +291,11 @@ export function issueDetailManifest(id: string): Manifest {
                   data: {
                     source: 'github.issue.get',
                     filter: `number = ${id}`,
+                    // Distinctive: a "not found" voice for a deleted issue.
+                    empty_state: emptyStateNode(
+                      'Issue not found',
+                      'The referenced issue may have been deleted.',
+                    ),
                   },
                   actions: ['github.issue.close'],
                   children: [],
@@ -343,9 +340,6 @@ export function issueDetailManifest(id: string): Manifest {
                   props: { duration_ms: 5000, variant: 'inline' },
                   children: [],
                 },
-                emptyStateNode('Issue not found', 'The referenced issue may have been deleted.'),
-                loadingNode(),
-                errorAlertNode(),
               ],
             },
           ],
@@ -446,13 +440,15 @@ export function inboxManifest(): Manifest {
                     source: 'github.issue.list',
                     filter: 'state = "open" AND mentioned_me = true',
                     sort: 'updated_at desc',
+                    // Distinctive: keep the "Inbox zero" voice.
+                    empty_state: emptyStateNode(
+                      'Inbox zero',
+                      'You are caught up. Last sync just now.',
+                    ),
                   },
                   actions: ['github.issue.archive'],
                   children: [],
                 },
-                emptyStateNode('Inbox zero', 'You are caught up. Last sync just now.'),
-                loadingNode(),
-                errorAlertNode(),
                 {
                   component: 'UndoToast',
                   props: { duration_ms: 5000, variant: 'inline' },

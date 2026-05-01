@@ -24,7 +24,28 @@ import type {
   ManifestResolver,
   TriggerSubscription,
 } from '@cir/runtime';
-import type { BrandKit, IntentProfile } from '@cir/schemas';
+import type { BrandKit, IntentProfile, LayoutNode } from '@cir/schemas';
+
+/**
+ * Phase 2 #4 — Resolver fallback contract.
+ *
+ * Default state slot nodes the render walker substitutes when a data-bound
+ * node's manifest does NOT declare the corresponding `data.empty_state` /
+ * `data.loading_state` / `data.error_state`. Per `docs/ethos.md` principle
+ * #9 (Resolver supplies fallbacks), manifests opt OUT (or override) — they
+ * do not opt IN.
+ *
+ * Each slot is authored as a `LayoutNode` (the same shape manifests use) so
+ * hosts can per-app customize the default copy / surface. The walker takes
+ * the chosen node, runs it through the component registry, and renders it
+ * carrying `data-cir-default-state="empty|loading|error"` so tests and
+ * audit tooling can detect a default vs. an explicit override.
+ */
+export interface CirResolverDefaults {
+  empty?: LayoutNode;
+  loading?: LayoutNode;
+  error?: LayoutNode;
+}
 
 export interface CirRuntimeServices {
   resolver: ManifestResolver;
@@ -52,7 +73,48 @@ export interface CirRuntimeServices {
    * Track DS-A (Wave 11) wired this for `apps/demo`'s "Aurora" theme.
    */
   brandKit?: BrandKit;
+  /**
+   * Per-host overrides for the resolver fallback contract (Phase 2 #4).
+   * When unset, the render walker uses `BASELINE_RESOLVER_DEFAULTS` —
+   * `<EmptyState title="No items" .../>`, `<Skeleton variant="row" .../>`,
+   * `<Alert severity="error" title="Failed to load" .../>`. Hosts shipping
+   * a distinctive empty / loading / error language pass their own nodes
+   * here so every data-bound component on the app inherits it.
+   */
+  resolverDefaults?: CirResolverDefaults;
 }
+
+/**
+ * Baseline default state slot nodes the render walker substitutes when the
+ * host did NOT provide `services.resolverDefaults`. Centralized so unit
+ * tests can assert against the canonical defaults without depending on a
+ * specific host wiring.
+ *
+ * The `body` / `description` copy is intentionally generic — apps that want
+ * a distinctive voice (e.g. github's "Inbox zero" message) override per
+ * route by declaring the slot inline on `data.empty_state`.
+ */
+export const BASELINE_RESOLVER_DEFAULTS: Required<CirResolverDefaults> = Object.freeze({
+  empty: {
+    component: 'EmptyState',
+    props: { title: 'No items', description: 'Nothing to show yet.' },
+    children: [],
+  },
+  loading: {
+    component: 'Skeleton',
+    props: { shape: 'table-row', count: 4 },
+    children: [],
+  },
+  error: {
+    component: 'Alert',
+    props: {
+      severity: 'error',
+      title: 'Failed to load',
+      // The body string is rendered as Alert children below the title.
+    },
+    children: [],
+  },
+});
 
 /**
  * Internal context. Hooks call `useCir()` which throws when this is null —

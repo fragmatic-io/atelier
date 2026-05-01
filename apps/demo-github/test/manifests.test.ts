@@ -152,16 +152,43 @@ describe('demo-github manifests', () => {
     }
   });
 
-  it('every data-bound list/table has empty + loading + error siblings', () => {
+  it('every data-bound list/table declares a DISTINCTIVE empty state inline (Phase 2 #4)', () => {
+    // Phase 2 #4 — Resolver fallback contract. The runtime supplies sensible
+    // loading / error defaults at render time, so manifests no longer have
+    // to author them. Every github demo route, however, ships a distinctive
+    // empty-state copy ("Inbox zero", "No repositories", "Issue not found",
+    // etc.) — that copy is opt-in per route via `data.empty_state`.
     const manifests = [todayManifest(), reposManifest(), inboxManifest(), issueDetailManifest('1')];
     for (const m of manifests) {
       const layout = m.routes[0]!.layout!;
-      const empty = findFirst(layout, 'EmptyState');
-      const loading = findFirst(layout, 'Skeleton');
-      const error = findFirst(layout, 'Alert');
-      expect(empty, `${m.manifest_id} empty`).not.toBeNull();
-      expect(loading, `${m.manifest_id} loading`).not.toBeNull();
-      expect(error, `${m.manifest_id} error`).not.toBeNull();
+      // Walk every node; any data binding on a data-bound component MUST
+      // carry an inline `empty_state` slot whose component is `EmptyState`.
+      const dataBoundIds = new Set([
+        'List',
+        'Table',
+        'Grid',
+        'KPIRow',
+        'DetailView',
+        'IssueQueue',
+        'RepoTable',
+      ]);
+      function walk(n: unknown): void {
+        if (!n || typeof n !== 'object') return;
+        const obj = n as Record<string, unknown>;
+        const component = obj['component'] as string | undefined;
+        const data = obj['data'] as Record<string, unknown> | undefined;
+        if (component !== undefined && dataBoundIds.has(component) && data !== undefined) {
+          const slot = data['empty_state'] as Record<string, unknown> | undefined;
+          expect(slot, `${m.manifest_id} ${component} empty_state`).toBeDefined();
+          expect(slot?.['component'], `${m.manifest_id} ${component} empty_state.component`).toBe(
+            'EmptyState',
+          );
+        }
+        if (Array.isArray(obj['children'])) {
+          for (const c of obj['children']) walk(c);
+        }
+      }
+      walk(layout);
     }
   });
 });

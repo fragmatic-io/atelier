@@ -24,10 +24,13 @@ export const PolicySchema = z.object({
    */
   applies_to: z.enum(['manifest', 'action', 'data']),
   /**
-   * Severity — `error` blocks the operation, `warn` records to audit but
-   * permits it.
+   * Severity. `error` blocks the operation; `warn` records to audit but
+   * permits it; `info` (Phase 2 #4) is a non-blocking advisory the audit
+   * surfaces as a remediation prompt — used when the runtime supplies a
+   * sensible default and the policy only nudges authors toward a custom
+   * override.
    */
-  severity: z.enum(['error', 'warn']),
+  severity: z.enum(['error', 'warn', 'info']),
 });
 
 export type Policy = z.infer<typeof PolicySchema>;
