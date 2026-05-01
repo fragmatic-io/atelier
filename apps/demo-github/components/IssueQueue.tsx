@@ -77,7 +77,8 @@ function MentionAware({ body }: { body: string }) {
         >
           <a
             href={`/issue/${String(issue.number)}`}
-            className="text-fuchsia-600 hover:underline"
+            className="cir-mono hover:underline"
+            style={{ color: 'var(--cir-color-accent)' }}
             data-cir-mention
           >
             #{issue.number}
@@ -255,12 +256,23 @@ export function IssueQueue({ initialIssues }: IssueQueueProps): React.JSX.Elemen
                       <a
                         href={`/issue/${String(issue.number)}`}
                         className="hover:underline"
+                        style={{ color: 'var(--cir-color-fg)' }}
                         data-cir-issue-link
                       >
-                        <span className="text-gray-500">#{issue.number}</span> {issue.title}
+                        <span className="cir-mono" style={{ color: 'var(--cir-color-fg-muted)' }}>
+                          #{issue.number}
+                        </span>{' '}
+                        {issue.title}
                       </a>
                       {issue.assigned_to_me ? (
-                        <span className="text-xs px-1.5 py-0.5 bg-fuchsia-100 text-fuchsia-800 rounded">
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded cir-mono"
+                          style={{
+                            background:
+                              'color-mix(in srgb, var(--cir-color-brand) 12%, transparent)',
+                            color: 'var(--cir-color-brand)',
+                          }}
+                        >
                           you
                         </span>
                       ) : null}
@@ -303,7 +315,12 @@ export function IssueQueue({ initialIssues }: IssueQueueProps): React.JSX.Elemen
         <button
           type="button"
           onClick={undoArchive}
-          className="fixed bottom-6 right-6 z-50 bg-fuchsia-600 text-white px-3 py-1 rounded shadow"
+          className="fixed bottom-6 right-6 z-50 px-3 py-1 rounded"
+          style={{
+            background: 'var(--cir-color-brand)',
+            color: 'var(--cir-color-brand-fg)',
+            boxShadow: 'var(--cir-shadow-popover)',
+          }}
         >
           Undo archive
         </button>

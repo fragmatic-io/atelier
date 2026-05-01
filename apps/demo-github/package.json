@@ -8,7 +8,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: no-op (apps/* is linted by root eslint config which ignores apps; per-app lint is intentionally empty)'",
+    "test": "vitest run"
   },
   "dependencies": {
     "@cir/compiler": "workspace:*",

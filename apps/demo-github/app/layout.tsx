@@ -5,31 +5,78 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { CirProviders } from '@/lib/cir-providers';
+import { Wordmark } from '@/components/Wordmark';
+import { RateLimitStatusBar } from '@/components/RateLimitStatusBar';
+import { DEMO_GITHUB_BRAND_KIT } from '@/lib/brand-kit';
 
 export const metadata: Metadata = {
-  title: 'CIR demo — GitHub reviewer queue',
+  title: 'Octant — CIR demo',
   description:
-    'Real-mutations showcase: optimistic archive, verbal-required bulk close, hover-card mention previews against the GitHub REST API.',
+    'Real-mutations issue triage showcase: optimistic archive, verbal-required bulk close, hover-card mention previews against the GitHub REST API.',
 };
+
+/**
+ * Inline color-mode bootstrap. Reads the OS `prefers-color-scheme` and
+ * any persisted intent override (`localStorage['cir-color-mode']`),
+ * then sets `data-color-mode` on `<html>` before first paint so the
+ * CSS-variable layer in `globals.css` resolves to the right palette.
+ *
+ * The intent runtime takes over after hydration — this script just
+ * prevents a flash on cold load. We deliberately avoid calling
+ * `window` outside `try` because of the standard "render-on-server"
+ * gotcha.
+ */
+const COLOR_MODE_BOOTSTRAP = `
+(function () {
+  try {
+    var stored = window.localStorage.getItem('cir-color-mode');
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var mode = stored === 'light' || stored === 'dark'
+      ? stored
+      : (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-color-mode', mode);
+  } catch (_) {
+    document.documentElement.setAttribute('data-color-mode', 'light');
+  }
+})();
+`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-brand-kit={DEMO_GITHUB_BRAND_KIT.id}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_BOOTSTRAP }} />
+      </head>
       <body>
-        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
-          <div className="max-w-screen-lg mx-auto flex items-center justify-between gap-3">
-            <Link href="/today" className="font-semibold text-gray-900 dark:text-gray-50">
-              CIR · GitHub reviewer
+        <header className="octant-chrome">
+          <div className="octant-chrome-inner">
+            <Link
+              href="/today"
+              aria-label="Octant — go to Today"
+              style={{ color: 'var(--cir-color-fg)', display: 'inline-flex' }}
+            >
+              <Wordmark height={24} />
             </Link>
-            <nav className="flex gap-3 text-sm">
+            <nav>
               <Link href="/today">Today</Link>
               <Link href="/repos">Repos</Link>
               <Link href="/inbox">Inbox</Link>
               <Link href="/issue/new">New</Link>
-              <Link href="/settings/github">Settings</Link>
+              <Link href="/settings/github" className="octant-token-cta">
+                Sign in with token
+              </Link>
             </nav>
           </div>
         </header>
+        <div
+          style={{
+            maxWidth: 1280,
+            margin: '0 auto',
+            padding: '12px var(--cir-space-lg) 0',
+          }}
+        >
+          <RateLimitStatusBar />
+        </div>
         <CirProviders>{children}</CirProviders>
       </body>
     </html>

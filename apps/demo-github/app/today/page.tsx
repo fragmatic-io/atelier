@@ -15,18 +15,19 @@
 
 import { Stack } from '@cir/components';
 import { IssueQueue } from '@/components/IssueQueue';
-import { RateLimitStatusBar } from '@/components/RateLimitStatusBar';
 
 export default function TodayPage(): React.JSX.Element {
   return (
     <main className="max-w-screen-lg mx-auto px-4 py-6">
       <Stack direction="vertical" gap="lg">
-        <RateLimitStatusBar />
         <h1 className="text-xl font-semibold">Today</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm" style={{ color: 'var(--cir-color-fg-muted)' }}>
           Issues sorted by salience. The top three get hierarchy emphasis; archive is optimistic
-          with a 5-second undo. Hover any <span className="text-fuchsia-600">#NNN</span> reference
-          for a card preview.
+          with a 5-second undo. Hover any{' '}
+          <span className="cir-mono" style={{ color: 'var(--cir-color-accent)' }}>
+            #NNN
+          </span>{' '}
+          reference for a card preview.
         </p>
         <IssueQueue />
       </Stack>

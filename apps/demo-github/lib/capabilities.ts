@@ -133,4 +133,96 @@ export const CAPABILITIES: Record<string, Capability> = {
     reversible: true,
     rollback: 'github.issue.bulk_reopen',
   },
+  // Rollback / inverse capabilities so reversibility_surfaced has a target
+  // to point at and confirmation_required_for_destructive can resolve them.
+  'github.issue.reopen': {
+    id: 'github.issue.reopen',
+    kind: 'action',
+    version: '0.1.0',
+    input: {
+      owner: 'string',
+      repo: 'string',
+      issue_number: 'number',
+    },
+    output: { number: 'number', state: 'string', reopened_at: 'datetime' },
+    side_effects: ['mutates:github_issues'],
+    permissions: ['github:write'],
+    confirmation: 'none',
+    rate_limit: '30/min/user',
+    reversible: true,
+    rollback: 'github.issue.close',
+  },
+  'github.issue.unarchive': {
+    id: 'github.issue.unarchive',
+    kind: 'action',
+    version: '0.1.0',
+    input: { owner: 'string', repo: 'string', issue_number: 'number' },
+    output: { unarchived_at: 'datetime' },
+    side_effects: ['mutates:client_view_state'],
+    permissions: ['github:read'],
+    confirmation: 'none',
+    reversible: true,
+    rollback: 'github.issue.archive',
+  },
+  'github.issue.bulk_reopen': {
+    id: 'github.issue.bulk_reopen',
+    kind: 'action',
+    version: '0.1.0',
+    input: { issue_ids: 'array<string>' },
+    output: { reopened_count: 'number' },
+    side_effects: ['mutates:github_issues'],
+    permissions: ['github:write'],
+    confirmation: 'modal',
+    rate_limit: '5/min/user',
+    reversible: true,
+    rollback: 'github.issue.bulk_close',
+  },
+  // Rate-limit visibility — the chip on every route binds this so
+  // rate_limited_actions_show_state passes. Output mirrors GitHub's
+  // X-RateLimit-* response headers so the proxy can populate it.
+  'github.api.rate_limit': {
+    id: 'github.api.rate_limit',
+    kind: 'data',
+    version: '0.1.0',
+    input: {},
+    output: {
+      remaining: 'number',
+      limit: 'number',
+      reset_at: 'datetime',
+    },
+    side_effects: ['reads:github_meta'],
+    permissions: ['github:read'],
+    confirmation: 'none',
+    reversible: true,
+  },
+  // Aggregate counts surfaced in <KPIRow> on /today. Read-only.
+  'github.issue.summary': {
+    id: 'github.issue.summary',
+    kind: 'data',
+    version: '0.1.0',
+    input: {},
+    output: {
+      open_issues: 'number',
+      assigned_to_me: 'number',
+      high_priority: 'number',
+    },
+    side_effects: ['reads:github_issues'],
+    permissions: ['github:read'],
+    confirmation: 'none',
+    reversible: true,
+  },
+  // Per-issue events surfaced in <Timeline> on the detail route.
+  'github.issue.events': {
+    id: 'github.issue.events',
+    kind: 'data',
+    version: '0.1.0',
+    input: { owner: 'string', repo: 'string', number: 'number' },
+    output: {
+      events: 'array<event>',
+    },
+    side_effects: ['reads:github_issues'],
+    permissions: ['github:read'],
+    confirmation: 'none',
+    reversible: true,
+  },
 };

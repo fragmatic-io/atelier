@@ -1,6 +1,170 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) 2026 The CIR Authors */
+
+/*
+ * Octant — the demo-github visual identity.
+ *
+ * Token wiring is a one-way projection from the BrandKit (lib/brand-kit.ts)
+ * into CSS custom properties. We mirror everything under `--cir-*` so the
+ * `@cir/components` library and the app's chrome all key off the same
+ * variables. Light is the default; dark is selected by the
+ * `[data-color-mode='dark']` attribute on `<html>` (the OS preference flips
+ * it on first paint via the inline script in `app/layout.tsx`).
+ *
+ * Both modes are first-class. Light uses `#ffffff` canvases over a slightly
+ * tinted `#f6f8fa` muted surface; dark inverts to `#0d1117` with `#161b22`
+ * cards. Borders are crisp `#d0d7de` light / `#30363d` dark.
+ *
+ * Mono is reserved for code refs, shas, and issue ids — anything the user
+ * pattern-matches. The `code, .cir-mono` rule below catches the inline
+ * pattern used across the app.
+ */
+
 @import 'tailwindcss';
 
-/* Component styling hooks — uses data-cir-component attrs from @cir/components */
+/* ---------------------------------------------------------------------- */
+/* Tokens                                                                  */
+/* ---------------------------------------------------------------------- */
+
+:root,
+html[data-color-mode='light'] {
+  /* Brand */
+  --cir-color-brand: #1f883d;
+  --cir-color-brand-fg: #ffffff;
+  --cir-color-accent: #0969da;
+  /* Surfaces */
+  --cir-color-bg: #ffffff;
+  --cir-color-bg-card: #f6f8fa;
+  --cir-color-bg-muted: #eaeef2;
+  --cir-color-border: #d0d7de;
+  --cir-color-border-muted: #d8dee4;
+  /* Foreground */
+  --cir-color-fg: #1f2328;
+  --cir-color-fg-muted: #656d76;
+  --cir-color-fg-subtle: #8c959f;
+  /* Semantic */
+  --cir-color-success: #1a7f37;
+  --cir-color-warning: #9a6700;
+  --cir-color-danger: #cf222e;
+  /* Elevation (light) */
+  --cir-shadow-resting: none;
+  --cir-shadow-hover: 0 1px 0 rgba(31, 35, 40, 0.04), 0 1px 2px rgba(31, 35, 40, 0.06);
+  --cir-shadow-popover: 0 3px 6px rgba(140, 149, 159, 0.15), 0 8px 24px rgba(66, 74, 83, 0.12);
+  --cir-shadow-modal: 0 8px 24px rgba(140, 149, 159, 0.2);
+  --cir-shadow-commandbar: 0 16px 32px rgba(31, 35, 40, 0.24);
+  /* Focus ring */
+  --cir-focus-ring: 0 0 0 3px rgba(9, 105, 218, 0.3);
+}
+
+html[data-color-mode='dark'] {
+  --cir-color-brand: #2ea043;
+  --cir-color-brand-fg: #ffffff;
+  --cir-color-accent: #58a6ff;
+  --cir-color-bg: #0d1117;
+  --cir-color-bg-card: #161b22;
+  --cir-color-bg-muted: #21262d;
+  --cir-color-border: #30363d;
+  --cir-color-border-muted: #21262d;
+  --cir-color-fg: #e6edf3;
+  --cir-color-fg-muted: #7d8590;
+  --cir-color-fg-subtle: #6e7681;
+  --cir-color-success: #3fb950;
+  --cir-color-warning: #d29922;
+  --cir-color-danger: #f85149;
+  --cir-shadow-resting: none;
+  --cir-shadow-hover: 0 0 0 1px rgba(240, 246, 252, 0.06), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --cir-shadow-popover: 0 0 0 1px rgba(240, 246, 252, 0.08), 0 8px 24px rgba(0, 0, 0, 0.6);
+  --cir-shadow-modal: 0 0 0 1px rgba(240, 246, 252, 0.1), 0 12px 32px rgba(0, 0, 0, 0.7);
+  --cir-shadow-commandbar: 0 0 0 1px rgba(240, 246, 252, 0.12), 0 24px 48px rgba(0, 0, 0, 0.8);
+  --cir-focus-ring: 0 0 0 3px rgba(88, 166, 255, 0.4);
+}
+
+:root {
+  /* Radius */
+  --cir-radius-xs: 3px;
+  --cir-radius-sm: 4px;
+  --cir-radius-md: 6px;
+  --cir-radius-lg: 8px;
+  /* Spacing */
+  --cir-space-xs: 4px;
+  --cir-space-sm: 8px;
+  --cir-space-md: 12px;
+  --cir-space-lg: 16px;
+  --cir-space-xl: 24px;
+  --cir-space-2xl: 32px;
+  /* Motion */
+  --cir-motion-fast: 80ms;
+  --cir-motion-normal: 120ms;
+  --cir-motion-slow: 200ms;
+  --cir-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Fonts */
+  --cir-font-sans:
+    Inter, 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --cir-font-mono:
+    'IBM Plex Mono', 'GitHub Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', monospace;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Page chrome                                                             */
+/* ---------------------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--cir-color-bg);
+  color: var(--cir-color-fg);
+  font-family: var(--cir-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--cir-color-accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/*
+ * Mono everywhere code refs land. Issue ids (`#CIR-123`), shas (`a1b2c3d`),
+ * inline `<code>` blocks all read mono. Authors who want sans inside a
+ * mono surface drop `.cir-sans`.
+ */
+code,
+kbd,
+samp,
+pre,
+.cir-mono {
+  font-family: var(--cir-font-mono);
+  font-size: 0.92em;
+}
+
+.cir-sans {
+  font-family: var(--cir-font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cir-color-accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Component styling hooks — keys off `data-cir-component` attrs          */
+/* ---------------------------------------------------------------------- */
+
 [data-cir-component='Stack'] {
   display: flex;
 }
@@ -11,20 +175,33 @@
   flex-direction: row;
 }
 [data-cir-component='Stack'][data-gap='sm'] {
-  gap: 8px;
+  gap: var(--cir-space-sm);
 }
 [data-cir-component='Stack'][data-gap='md'] {
-  gap: 16px;
+  gap: var(--cir-space-md);
 }
 [data-cir-component='Stack'][data-gap='lg'] {
-  gap: 24px;
+  gap: var(--cir-space-lg);
 }
 
 [data-cir-component='Card'] {
-  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+  background: var(--cir-color-bg-card);
+  border: 1px solid var(--cir-color-border);
+  border-radius: var(--cir-radius-md);
+  box-shadow: var(--cir-shadow-resting);
+  padding: var(--cir-space-lg);
 }
+
 [data-cir-component='Container'] {
-  @apply mx-auto px-4 py-6;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--cir-space-lg);
+  padding-right: var(--cir-space-lg);
+  padding-top: var(--cir-space-xl);
+  padding-bottom: var(--cir-space-xl);
+}
+[data-cir-component='Container'][data-max-width='sm'] {
+  max-width: 640px;
 }
 [data-cir-component='Container'][data-max-width='md'] {
   max-width: 960px;
@@ -34,60 +211,134 @@
 }
 
 [data-cir-component='Button'] {
-  @apply rounded px-3 py-1.5 text-sm font-medium transition-colors;
+  border-radius: var(--cir-radius-sm);
+  padding: 5px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 1px solid var(--cir-color-border);
+  transition:
+    background-color var(--cir-motion-fast) var(--cir-motion-ease),
+    border-color var(--cir-motion-fast) var(--cir-motion-ease);
 }
 [data-cir-component='Button'][data-variant='primary'] {
-  @apply bg-fuchsia-600 text-white hover:bg-fuchsia-700;
+  background: var(--cir-color-brand);
+  color: var(--cir-color-brand-fg);
+  border-color: rgba(31, 35, 40, 0.15);
+}
+[data-cir-component='Button'][data-variant='primary']:hover {
+  filter: brightness(0.95);
 }
 [data-cir-component='Button'][data-variant='secondary'] {
-  @apply bg-gray-200 text-gray-900 hover:bg-gray-300;
+  background: var(--cir-color-bg-card);
+  color: var(--cir-color-fg);
+}
+[data-cir-component='Button'][data-variant='secondary']:hover {
+  background: var(--cir-color-bg-muted);
 }
 [data-cir-component='Button'][data-variant='destructive'] {
-  @apply bg-red-600 text-white hover:bg-red-700;
+  background: var(--cir-color-danger);
+  color: #ffffff;
+  border-color: rgba(31, 35, 40, 0.15);
 }
 [data-cir-component='Button'][data-variant='ghost'] {
-  @apply bg-transparent text-gray-700 hover:bg-gray-100;
+  background: transparent;
+  border-color: transparent;
+  color: var(--cir-color-fg-muted);
+}
+[data-cir-component='Button'][data-variant='ghost']:hover {
+  background: var(--cir-color-bg-muted);
 }
 
 /* Hierarchy treatment (P-9): top 3 issues on /today get the hero accent. */
 [data-cir-component='List'] [data-emphasis='hero'] {
-  @apply border-l-4 border-fuchsia-500 bg-fuchsia-50/40 font-semibold;
+  border-left: 3px solid var(--cir-color-brand);
+  background: color-mix(in srgb, var(--cir-color-brand) 6%, transparent);
+  font-weight: 600;
 }
 [data-cir-component='List'] [data-emphasis='comfortable'] {
-  @apply text-gray-600;
+  color: var(--cir-color-fg-muted);
 }
 
 /* Optimistic archive — fade transition. */
 [data-cir-component='List'] [data-archived='true'] {
-  @apply opacity-30 line-through;
-  transition: opacity 0.2s ease-out;
+  opacity: 0.3;
+  text-decoration: line-through;
+  transition: opacity var(--cir-motion-slow) var(--cir-motion-ease);
 }
 
 /* Status bar — operational/degraded/incident pill colours. */
+[data-cir-component='StatusBar'] {
+  border-radius: var(--cir-radius-md);
+  padding: var(--cir-space-sm) var(--cir-space-md);
+  font-size: 12px;
+  border: 1px solid var(--cir-color-border);
+}
 [data-cir-component='StatusBar'][data-status='operational'] {
-  @apply bg-green-100 text-green-900;
+  background: color-mix(in srgb, var(--cir-color-success) 12%, var(--cir-color-bg));
+  color: var(--cir-color-success);
+  border-color: color-mix(in srgb, var(--cir-color-success) 30%, transparent);
 }
 [data-cir-component='StatusBar'][data-status='degraded'] {
-  @apply bg-amber-100 text-amber-900;
+  background: color-mix(in srgb, var(--cir-color-warning) 12%, var(--cir-color-bg));
+  color: var(--cir-color-warning);
+  border-color: color-mix(in srgb, var(--cir-color-warning) 30%, transparent);
 }
 [data-cir-component='StatusBar'][data-status='incident'] {
-  @apply bg-red-100 text-red-900;
+  background: color-mix(in srgb, var(--cir-color-danger) 12%, var(--cir-color-bg));
+  color: var(--cir-color-danger);
+  border-color: color-mix(in srgb, var(--cir-color-danger) 30%, transparent);
 }
 
-body {
-  @apply bg-gray-50 text-gray-900 antialiased;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    sans-serif;
+/* ---------------------------------------------------------------------- */
+/* App-level chrome (header, wordmark, rate-limit chip)                    */
+/* ---------------------------------------------------------------------- */
+
+.octant-chrome {
+  background: var(--cir-color-bg);
+  border-bottom: 1px solid var(--cir-color-border);
+  padding: var(--cir-space-md) var(--cir-space-lg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    @apply bg-gray-950 text-gray-100;
-  }
-  [data-cir-component='Card'] {
-    @apply bg-gray-900 border-gray-800;
-  }
+.octant-chrome-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cir-space-md);
+}
+
+.octant-chrome nav {
+  display: flex;
+  gap: var(--cir-space-md);
+  font-size: 13px;
+  align-items: center;
+}
+
+.octant-chrome nav a {
+  color: var(--cir-color-fg-muted);
+  padding: 4px 8px;
+  border-radius: var(--cir-radius-sm);
+}
+.octant-chrome nav a:hover {
+  color: var(--cir-color-fg);
+  background: var(--cir-color-bg-muted);
+  text-decoration: none;
+}
+
+.octant-token-cta {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: var(--cir-radius-sm);
+  border: 1px solid var(--cir-color-border);
+  color: var(--cir-color-fg);
+  background: var(--cir-color-bg-card);
+}
+.octant-token-cta:hover {
+  background: var(--cir-color-bg-muted);
+  text-decoration: none;
 }

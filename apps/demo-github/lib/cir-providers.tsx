@@ -156,7 +156,14 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           intent: {
             user_id: DEMO_USER_ID,
             global_preferences: {},
-            granted_fields: ['github.issue.list.*', 'github.issue.get.*', 'github.repo.list.*'],
+            granted_fields: [
+              'github.issue.list.*',
+              'github.issue.get.*',
+              'github.issue.events.*',
+              'github.issue.summary.*',
+              'github.repo.list.*',
+              'github.api.rate_limit.*',
+            ],
           },
           rate_limited_capability_ids: new Set([
             'github.issue.create',

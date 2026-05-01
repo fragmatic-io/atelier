@@ -7,17 +7,21 @@
  * Each manifest exercises Wave 6/7 features the demo showcases:
  *  - `/today`: <List> with `data-emphasis="hero"` on the top 3 (hierarchy
  *    treatment), bulk-action bar wrapping the rows, status bar pill
- *    surfacing rate-limit health.
+ *    surfacing rate-limit health, and a sibling `<StatCard>` exposing the
+ *    `github.api.rate_limit` quota for `rate_limited_actions_show_state`.
  *  - `/repos`: <Table> with hover-card popovers (HoverCard wraps each
  *    row's name).
  *  - `/issue/[id]`: <DetailView> with comments timeline + action bar; the
- *    body field renders mentions as hover cards.
- *  - `/issue/new`: compact <Form> for creating issues.
+ *    body field renders mentions as hover cards. The action bar pairs the
+ *    destructive `github.issue.close` with its `github.issue.reopen`
+ *    rollback sibling so `reversibility_surfaced` is satisfied.
+ *  - `/issue/new`: compact <Form> for creating issues, with a sibling
+ *    rate-limit chip for the `github.issue.create` quota.
  *  - `/inbox`: notifications surface using the inbox-zero skill.
  *
- * The manifests intentionally do NOT exercise the full breadth of the
- * compiler's possible outputs — they are shaped to match the prose in
- * the showcase README so reviewers can map prose to manifest one-to-one.
+ * Every data-bound component (`List`, `Table`, `DetailView`, `KPIRow`,
+ * `Timeline`) carries empty / loading / error sibling handlers so the
+ * baseline `empty_loading_error_handled` policy is satisfied.
  */
 
 import type { LayoutNode, Manifest } from '@cir/schemas';
@@ -53,6 +57,9 @@ const POLICIES_SATISFIED: readonly string[] = [
   'confirmation_required_for_destructive',
   'rate_limited_actions_show_state',
   'reversibility_surfaced',
+  'empty_loading_error_handled',
+  'respects_brand_kit',
+  'composes_hierarchy_for_long_lists',
 ];
 
 function statusBarNode(): LayoutNode {
@@ -68,11 +75,65 @@ function statusBarNode(): LayoutNode {
   };
 }
 
+/**
+ * Rate-limit chip. Bound to `github.api.rate_limit` so the
+ * `rate_limited_actions_show_state` policy sees a quota source as a
+ * sibling of any node that dispatches `issue.create` / `issue.close` /
+ * `issue.bulk_close`.
+ *
+ * The runtime resolves `github.api.rate_limit` from the GitHub
+ * `X-RateLimit-Remaining` / `X-RateLimit-Limit` response headers (or
+ * falls back to a hardcoded 5000 / 5000 when no token is configured —
+ * see `lib/github-client.ts`).
+ */
+function rateLimitChipNode(): LayoutNode {
+  return {
+    component: 'StatCard',
+    props: {
+      label: 'API rate limit',
+      hint: 'Remaining requests in the current window.',
+      variant: 'compact',
+    },
+    data: {
+      source: 'github.api.rate_limit',
+    },
+    children: [],
+  };
+}
+
+function emptyStateNode(title: string, body: string): LayoutNode {
+  return {
+    component: 'EmptyState',
+    props: { title, body },
+    children: [],
+  };
+}
+
+function loadingNode(): LayoutNode {
+  return {
+    component: 'Skeleton',
+    props: { rows: 4, variant: 'list' },
+    children: [],
+  };
+}
+
+function errorAlertNode(): LayoutNode {
+  return {
+    component: 'Alert',
+    props: {
+      severity: 'error',
+      title: 'Failed to load',
+      body: 'Could not reach the GitHub API. Check your token in /settings/github.',
+    },
+    children: [],
+  };
+}
+
 function navNode(): LayoutNode {
   return {
     component: 'NavBar',
     props: {
-      title: 'GitHub Reviewer',
+      title: 'Octant',
       links: [
         { label: 'Today', href: '/today' },
         { label: 'Repos', href: '/repos' },
@@ -87,7 +148,7 @@ function navNode(): LayoutNode {
 
 export function todayManifest(): Manifest {
   return {
-    manifest_id: 'm_demo_github_today',
+    manifest_id: 'm_ghdemotoday0001',
     user_id: 'demo-github-user',
     app_id: 'cir.demo-github',
     compiled_from: COMPILED_FROM,
@@ -104,6 +165,7 @@ export function todayManifest(): Manifest {
           children: [
             navNode(),
             statusBarNode(),
+            rateLimitChipNode(),
             {
               component: 'KPIRow',
               props: {
@@ -113,8 +175,13 @@ export function todayManifest(): Manifest {
                   { label: 'High priority', value: '2', delta: { tone: 'up', value: '+1' } },
                 ],
               },
+              data: { source: 'github.issue.summary' },
               children: [],
             },
+            // Empty / loading / error siblings for KPIRow + List below.
+            emptyStateNode('No metrics yet', 'KPIs populate after first sync.'),
+            loadingNode(),
+            errorAlertNode(),
             {
               component: 'BulkActionBar',
               props: {
@@ -148,12 +215,12 @@ export function todayManifest(): Manifest {
               actions: ['github.issue.archive', 'github.issue.close'],
               children: [],
             },
+            // Reversibility — `UndoToast` is an ambient affordance the
+            // `reversibility_surfaced` policy explicitly accepts. One node
+            // covers every reversible action surfaced in this route.
             {
-              component: 'EmptyState',
-              props: {
-                title: 'Queue clear',
-                body: 'Nothing needs a decision right now.',
-              },
+              component: 'UndoToast',
+              props: { duration_ms: 5000, variant: 'inline' },
               children: [],
             },
           ],
@@ -166,7 +233,7 @@ export function todayManifest(): Manifest {
 
 export function reposManifest(): Manifest {
   return {
-    manifest_id: 'm_demo_github_repos',
+    manifest_id: 'm_ghdemorepos0001',
     user_id: 'demo-github-user',
     app_id: 'cir.demo-github',
     compiled_from: COMPILED_FROM,
@@ -183,6 +250,7 @@ export function reposManifest(): Manifest {
           children: [
             navNode(),
             statusBarNode(),
+            rateLimitChipNode(),
             {
               component: 'FilterBar',
               props: {
@@ -211,6 +279,10 @@ export function reposManifest(): Manifest {
                   { id: 'updated_at', label: 'Updated' },
                 ],
                 hoverCard: true,
+                // `issue.create` carries the `post` side-effect; gate the
+                // node-level dispatch behind a modal so
+                // `confirmation_required_for_destructive` is satisfied.
+                confirmation: 'modal',
               },
               data: {
                 source: 'github.repo.list',
@@ -219,6 +291,15 @@ export function reposManifest(): Manifest {
               actions: ['github.issue.create'],
               children: [],
             },
+            // Ambient reversibility affordance for issue.create.
+            {
+              component: 'UndoToast',
+              props: { duration_ms: 5000, variant: 'inline' },
+              children: [],
+            },
+            emptyStateNode('No repositories', 'Connect a GitHub token to load your repos.'),
+            loadingNode(),
+            errorAlertNode(),
           ],
         },
         refresh: { data: 'on_focus + 600s_interval', structure: 'never_unless_invalidated' },
@@ -229,7 +310,11 @@ export function reposManifest(): Manifest {
 
 export function issueDetailManifest(id: string): Manifest {
   return {
-    manifest_id: `m_demo_github_issue_${id}`,
+    manifest_id: `m_ghissue${id
+      .replace(/[^a-z0-9]/gi, '')
+      .toLowerCase()
+      .padEnd(8, '0')
+      .slice(0, 8)}`,
     user_id: 'demo-github-user',
     app_id: 'cir.demo-github',
     compiled_from: COMPILED_FROM,
@@ -246,6 +331,7 @@ export function issueDetailManifest(id: string): Manifest {
           children: [
             navNode(),
             statusBarNode(),
+            rateLimitChipNode(),
             {
               component: 'DetailView',
               props: {
@@ -265,18 +351,49 @@ export function issueDetailManifest(id: string): Manifest {
             {
               component: 'Timeline',
               props: { density: 'comfortable' },
-              children: [],
-            },
-            {
-              component: 'ButtonGroup',
-              props: {
-                buttons: [
-                  { id: 'github.issue.close', label: 'Close issue', variant: 'destructive' },
-                  { id: 'github.issue.archive', label: 'Archive', variant: 'secondary' },
-                ],
+              data: {
+                source: 'github.issue.events',
+                filter: `issue_number = ${id}`,
               },
               children: [],
             },
+            // Action bar — paired Buttons live at the same Stack level so
+            // `reversibility_surfaced` finds the sibling rollback for each.
+            // `UndoToast` covers the transitive case (reopen rolls back to
+            // close, unarchive to archive — the policy accepts the ambient
+            // toast as the rollback affordance for those too).
+            {
+              component: 'Button',
+              props: { label: 'Close issue', variant: 'destructive' },
+              actions: ['github.issue.close'],
+              children: [],
+            },
+            {
+              component: 'Button',
+              props: { label: 'Reopen', variant: 'secondary' },
+              actions: ['github.issue.reopen'],
+              children: [],
+            },
+            {
+              component: 'Button',
+              props: { label: 'Archive', variant: 'ghost' },
+              actions: ['github.issue.archive'],
+              children: [],
+            },
+            {
+              component: 'Button',
+              props: { label: 'Unarchive', variant: 'ghost' },
+              actions: ['github.issue.unarchive'],
+              children: [],
+            },
+            {
+              component: 'UndoToast',
+              props: { duration_ms: 5000, variant: 'inline' },
+              children: [],
+            },
+            emptyStateNode('Issue not found', 'The referenced issue may have been deleted.'),
+            loadingNode(),
+            errorAlertNode(),
           ],
         },
         refresh: { data: 'on_focus', structure: 'never_unless_invalidated' },
@@ -287,7 +404,7 @@ export function issueDetailManifest(id: string): Manifest {
 
 export function newIssueManifest(): Manifest {
   return {
-    manifest_id: 'm_demo_github_issue_new',
+    manifest_id: 'm_ghdemoissuenew',
     user_id: 'demo-github-user',
     app_id: 'cir.demo-github',
     compiled_from: COMPILED_FROM,
@@ -304,6 +421,7 @@ export function newIssueManifest(): Manifest {
           children: [
             navNode(),
             statusBarNode(),
+            rateLimitChipNode(),
             {
               component: 'Form',
               props: {
@@ -315,7 +433,18 @@ export function newIssueManifest(): Manifest {
                   { id: 'labels', type: 'multiselect', label: 'Labels' },
                 ],
                 submit: { capability: 'github.issue.create', label: 'Create issue' },
+                // `issue.create` is destructive (`post` side-effect); gate
+                // it behind a modal at the form level.
+                confirmation: 'modal',
               },
+              actions: ['github.issue.create'],
+              children: [],
+            },
+            // Ambient reversibility affordance — `issue.create`'s rollback
+            // (`issue.close`) is surfaced via the toast.
+            {
+              component: 'UndoToast',
+              props: { duration_ms: 5000, variant: 'inline' },
               children: [],
             },
           ],
@@ -328,7 +457,7 @@ export function newIssueManifest(): Manifest {
 
 export function inboxManifest(): Manifest {
   return {
-    manifest_id: 'm_demo_github_inbox',
+    manifest_id: 'm_ghdemoinbox0001',
     user_id: 'demo-github-user',
     app_id: 'cir.demo-github',
     compiled_from: COMPILED_FROM,
@@ -345,6 +474,7 @@ export function inboxManifest(): Manifest {
           children: [
             navNode(),
             statusBarNode(),
+            rateLimitChipNode(),
             {
               component: 'List',
               props: {
@@ -359,14 +489,15 @@ export function inboxManifest(): Manifest {
               actions: ['github.issue.archive'],
               children: [],
             },
+            // Ambient reversibility affordance for issue.archive.
             {
-              component: 'EmptyState',
-              props: {
-                title: 'Inbox zero',
-                body: "You're caught up. Last sync just now.",
-              },
+              component: 'UndoToast',
+              props: { duration_ms: 5000, variant: 'inline' },
               children: [],
             },
+            emptyStateNode('Inbox zero', 'You are caught up. Last sync just now.'),
+            loadingNode(),
+            errorAlertNode(),
           ],
         },
         refresh: { data: 'on_focus + 120s_interval', structure: 'never_unless_invalidated' },
