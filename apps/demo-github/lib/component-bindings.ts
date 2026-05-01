@@ -3,8 +3,8 @@
 /**
  * Octant demo — host-side `ComponentBinding`s.
  *
- * Marketplace pivot (this commit): four custom bindings retired by
- * collapsing onto baseline composition.
+ * Marketplace pivot complete: Octant now ships **zero** manifest-referenced
+ * custom bindings, joining Aurora at zero. Five customs were retired:
  *
  *   - `RepoTable` → baseline `<Table>` (columns declared in the manifest).
  *   - `RateLimitStatusBar` → baseline `<StatusBar>` bound to
@@ -12,40 +12,24 @@
  *   - `OctantHeader` → `<Stack>` of `<Logo>` (octagon glyph + wordmark) +
  *     `<NavBar>` + `<StatusBar>`. Pure baseline composition.
  *   - `Wordmark` → `<Logo>` baseline (glyph + wordmark lockup).
+ *   - `IssueQueue` → baseline `<Queue>` with declarative per-row `actions`
+ *     and per-item `emphasis: 'high'` for salient rows. The bespoke
+ *     hover-card mention previews + multi-select are deferred — see the
+ *     commit body for the trade-off rationale (`docs/ethos.md` principle
+ *     #11 explicitly endorses accepting plainer baseline rendering over
+ *     entrenching a per-host binding).
  *
- * What stays (one custom binding):
- *
- *   - `IssueQueue` — the rich queue surface with optimistic archive,
- *     hover-card mentions, salience hierarchy, and bulk actions. The
- *     marketplace plan calls for collapsing this onto `<Queue>` in a
- *     follow-up commit (it's the proof-point use case for the new
- *     baseline primitive); keeping it here for now so the github demo's
- *     interaction model is preserved while we soak the migration on
- *     Aurora first.
- *
- * The runtime registers `IssueQueue` alongside `COMPONENT_BINDINGS` (the
- * baseline catalog) AND `cir-providers.tsx` derives the
- * `composition_roles` map for `validateManifest()` from these bindings via
- * `compositionRolesFromBindings()`.
+ * Manifest-referenced components live entirely in `@cir/components`; the
+ * `marketplace-pressure` eval gate enforces that count == 0 going forward.
  */
 
 import type { ComponentBinding } from '@cir/runtime';
-import { IssueQueue } from '../components/IssueQueue';
-
-export const IssueQueueBinding: ComponentBinding = {
-  id: 'IssueQueue',
-  factory: IssueQueue as ComponentBinding['factory'],
-  compositionRole: 'list',
-};
 
 /**
  * Custom bindings the demo registers on top of `COMPONENT_BINDINGS`.
- * Spread into `MapComponentRegistry` after the baseline so manifests can
- * reference any of these names in `LayoutNode.component`.
- *
- * The `marketplace-pressure` eval gate caps this set's size so future
- * regressions ("just add another custom") are surfaced.
+ * Empty post-marketplace-pivot — the runtime registry IS precisely the
+ * framework baseline. Future custom bindings (only when a domain shape
+ * genuinely earns one — see `docs/ethos.md` principle #11) get added here
+ * and the `marketplace-pressure` eval gate is updated alongside.
  */
-export const DEMO_GITHUB_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({
-  IssueQueue: IssueQueueBinding,
-});
+export const DEMO_GITHUB_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({});

@@ -117,6 +117,17 @@ describe('demo-github manifests', () => {
     expect(findFirst(m.routes[0]!.layout!, 'OctantHeader')).toBeNull();
   });
 
+  it('today + inbox manifests use baseline <Queue>; IssueQueue is gone (marketplace pivot)', () => {
+    // Marketplace pivot — Octant ships zero custom bindings. The two
+    // queue-shaped routes (`/today`, `/inbox`) reference the baseline
+    // `<Queue>` primitive directly, not the retired `<IssueQueue>` custom.
+    for (const m of [todayManifest(), inboxManifest()]) {
+      const layout = m.routes[0]!.layout!;
+      expect(findFirst(layout, 'Queue'), `${m.manifest_id} has <Queue>`).not.toBeNull();
+      expect(findFirst(layout, 'IssueQueue'), `${m.manifest_id} no <IssueQueue>`).toBeNull();
+    }
+  });
+
   it('issue detail manifest pairs close with reopen for reversibility', () => {
     const m = issueDetailManifest('42');
     const layout = m.routes[0]!.layout!;
@@ -187,15 +198,7 @@ describe('demo-github manifests', () => {
       const layout = m.routes[0]!.layout!;
       // Walk every node; any data binding on a data-bound component MUST
       // carry an inline `empty_state` slot whose component is `EmptyState`.
-      const dataBoundIds = new Set([
-        'List',
-        'Table',
-        'Grid',
-        'KPIRow',
-        'DetailView',
-        'IssueQueue',
-        'Queue',
-      ]);
+      const dataBoundIds = new Set(['List', 'Table', 'Grid', 'KPIRow', 'DetailView', 'Queue']);
       function walk(n: unknown): void {
         if (!n || typeof n !== 'object') return;
         const obj = n as Record<string, unknown>;

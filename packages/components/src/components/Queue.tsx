@@ -21,6 +21,10 @@
  *   - `groupBy(item)` + `groupLabels` + `groupOrder` — optional grouping (the
  *     pattern `TaskQueue` used for due-date buckets)
  *   - empty / loading / error states are first-class — no host plumbing
+ *   - per-item flags `pinned: true` and `emphasis: '<tag>'` surface on the row
+ *     as `data-pinned="true"` / `data-emphasis="<tag>"` so a host stylesheet
+ *     can tint salient rows without a custom binding (the data resolver picks
+ *     which rows carry the flag — Queue is the agnostic surface)
  *
  * Composition role: `'list'` in policy terms (long-list-hierarchy obligations
  * apply, e.g. virtualization above a threshold once Vis-2 / S-2 land).
@@ -272,12 +276,23 @@ export function Queue<T = unknown>({
       entry.item !== null &&
       'pinned' in entry.item &&
       (entry.item as { pinned?: unknown }).pinned === true;
+    // Per-item salience tag. Mirrors the `pinned` pattern: items can carry an
+    // `emphasis` field (any string — typical values: 'high', 'hero',
+    // 'comfortable') that surfaces as `data-emphasis` on the row so host
+    // stylesheets can tint without a custom binding. Decided by the data
+    // resolver / manifest, not by Queue itself.
+    let emphasis: string | undefined;
+    if (typeof entry.item === 'object' && entry.item !== null && 'emphasis' in entry.item) {
+      const e = (entry.item as { emphasis?: unknown }).emphasis;
+      if (typeof e === 'string' && e.length > 0) emphasis = e;
+    }
     const busy = busyId === entry.id;
     return (
       <li
         key={entry.id}
         data-cir-part="queue-row"
         data-pinned={isPinned ? 'true' : 'false'}
+        {...(emphasis !== undefined ? { 'data-emphasis': emphasis } : {})}
         data-busy={busy ? 'true' : 'false'}
         style={rowStyle}
       >

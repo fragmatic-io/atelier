@@ -172,17 +172,17 @@ function buildServer(): CirServer {
 
   // Components catalog summary — what the compiler is allowed to reference.
   //
-  // Marketplace pivot: four custom bindings retired this commit.
+  // Marketplace pivot complete: Octant ships **zero** custom bindings.
+  // Five customs were retired across the migration:
   //   - `RepoTable` → baseline `<Table>` (manifest declares columns).
   //   - `RateLimitStatusBar` → baseline `<StatusBar>` bound to
   //     `github.api.rate_limit`.
   //   - `OctantHeader` → `<Stack>` of `<Logo>` + `<NavBar>` + `<StatusBar>`.
   //   - `Wordmark` → `<Logo>` baseline (glyph + wordmark lockup).
-  //
-  // What stays: `IssueQueue` (the rich queue surface — collapsed onto
-  // `<Queue>` in a follow-up commit, after the new baseline primitive
-  // soaks on Aurora). The catalog description nudges the LLM to use
-  // `<IssueQueue>` for decision queues until that migration completes.
+  //   - `IssueQueue` → baseline `<Queue>` (declarative `actions` + per-item
+  //     `emphasis: 'high'` salience tagging via the data resolver). Plainer
+  //     row rendering vs the bespoke hover-card / mono-ref / chip layout is
+  //     the documented trade-off — see commit body.
   //
   // Per `docs/ethos.md` principle #11 (marketplace is the product;
   // custom bindings are a last resort), every entry carries a
@@ -240,7 +240,7 @@ function buildServer(): CirServer {
     {
       id: 'List',
       description:
-        'Generic semantic <ul>. For decision queues / mention queues in this demo, prefer `IssueQueue` which carries the rich row UX (hover-card mentions, salience emphasis, optimistic archive, multi-select).',
+        'Generic semantic <ul>. For decision queues / mention queues, prefer `<Queue>` which carries declarative per-row actions, optimistic-hide on dispatch, salience emphasis (per-item `emphasis: "high"`), and first-class empty/loading/error states.',
     },
     {
       id: 'DetailView',
@@ -303,14 +303,7 @@ function buildServer(): CirServer {
     {
       id: 'Queue',
       description:
-        'Generic "items requiring action" baseline. For Octant prefer `<IssueQueue>` (richer hover-card mentions + salience) until the post-pivot migration consolidates onto `<Queue>`.',
-    },
-    // Last remaining custom binding — collapsing onto baseline `<Queue>`
-    // is a follow-up commit (see ETHOS principle #11).
-    {
-      id: 'IssueQueue',
-      description:
-        'Rich decision queue for `/today`-style routes. Renders fixture-bound issues as cards with: bold title, mono `repo#NNN` reference, green `you`/`team` assignee chip, body with inline link-blue mono `#NNN` mention refs (hover-card on each), ghost Archive button, multi-select checkboxes. Top three rows get green left-border salience emphasis. Pair with ambient `<UndoToast>` so optimistic archive is reversible. PREFER this over `<List>` / `<Queue>` when the route is a decision queue.',
+        'Generic "items requiring action" baseline. PREFER for issue / decision / mention queues bound to `github.issue.list` (or any "list of items needing a per-row capability"). Carries declarative per-row `actions: [{id, label, variant, confirmInline?}]`, optimistic-hide on success, optional grouping, first-class empty/loading/error, and per-item `emphasis: "<tag>"` that surfaces as `data-emphasis` for salience styling. Replaces the retired `<IssueQueue>` host binding — Octant now ships zero customs.',
     },
   ];
   const components: ComponentDefinition[] = baseline.map((c) => ({

@@ -140,14 +140,15 @@ interface BuiltServices {
  *     `<Logo>` + `<NavBar>`) is bound to `github.api.rate_limit` and lives
  *     on every route — `RATE_LIMIT_CHIP_AMBIENT_SATISFIER` clears
  *     `rate_limited_actions_show_state` for every rate-limited capability.
- *   - The manifest layouts include an in-tree `<UndoToast>` plus the
- *     `<IssueQueue>` raises its own optimistic-archive toast. Mount-time
- *     declaration here covers any reversible capability the dispatcher
- *     fires while the app is mounted.
+ *   - The manifest layouts include an in-tree `<UndoToast>`. The baseline
+ *     `<Queue>` primitive emits an inline feedback flash on dispatch;
+ *     reversibility for optimistic archive is covered by the ambient
+ *     `<UndoToast>` declared here.
  *
- * Marketplace pivot: the four custom chrome bindings (`OctantHeader`,
- * `Wordmark`, `RateLimitStatusBar`, `RepoTable`) are gone — manifests
- * compose `<Stack(Logo, NavBar, StatusBar)>` directly.
+ * Marketplace pivot complete: Octant ships zero custom bindings (joining
+ * Aurora). The five retired customs (`OctantHeader`, `Wordmark`,
+ * `RateLimitStatusBar`, `RepoTable`, `IssueQueue`) are gone — manifests
+ * compose baseline primitives directly.
  */
 const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
   UNDO_TOAST_AMBIENT_SATISFIER,
@@ -155,20 +156,19 @@ const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
 ];
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
-  // Baseline catalog first; the remaining demo-specific binding
-  // (`IssueQueue`) is layered on top so manifests can reference it. Four
-  // others (`RepoTable`, `OctantHeader`, `RateLimitStatusBar`, `Wordmark`)
-  // were retired in the marketplace pivot — manifests compose baseline
-  // `<Table>` / `<Stack(Logo, NavBar, StatusBar)>` instead.
+  // Baseline catalog only — Octant joins Aurora at zero custom bindings.
+  // `DEMO_GITHUB_BINDINGS` is empty post-marketplace-pivot; the spread is
+  // kept symmetrical so a future custom (only when a domain shape genuinely
+  // earns one) drops in without restructuring the registry build.
   const registry = new MapComponentRegistry({
     ...COMPONENT_BINDINGS,
     ...DEMO_GITHUB_BINDINGS,
   });
 
-  // Composition roles surfaced through `PolicyContext.composition_roles`
-  // so the long-list-hierarchy and empty/loading/error policies treat
-  // role-tagged custom bindings (e.g. `<IssueQueue compositionRole="list">`)
-  // as equivalent to their baseline counterparts.
+  // Composition roles surfaced through `PolicyContext.composition_roles`.
+  // With zero customs the resulting map is empty (no-op) — kept here so
+  // future role-tagged customs flow through without policy plumbing
+  // changes.
   const compositionRoles = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
   // Action slots map for the `actions_match_action_slots` baseline policy.
   // Includes both baseline (Button, etc.) + demo-specific bindings so the
@@ -261,10 +261,11 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
           pii_fields: new Set(),
           brand_kit: DEMO_GITHUB_BRAND_KIT,
           composition_roles: compositionRoles,
-          // Ambient satisfiers — `<OctantHeader>` rate-limit chip + the
-          // ambient undo toast. Lets the policy validator clear
-          // obligations the rendered chrome already covers, removing the
-          // need for in-manifest hidden anchor nodes.
+          // Ambient satisfiers — the manifest's `<StatusBar>` rate-limit
+          // chip (composed under the chrome stack) + the ambient undo
+          // toast. Lets the policy validator clear obligations the
+          // rendered chrome already covers, removing the need for
+          // in-manifest hidden anchor nodes.
           ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
         },
         {

@@ -5,19 +5,19 @@
  * compiler delegates to `manifestForRoute()` when no LLM is configured.
  *
  * Each manifest exercises Wave 6/7 features the demo showcases:
- *  - `/today`: `<IssueQueue>` — the rich queue surface with optimistic
- *    archive, hover-card mentions, salience hierarchy, and bulk actions.
- *    Registered with `compositionRole: 'list'` so the policy engine treats
- *    it as equivalent to a `<List>` for the long-list and
- *    empty/loading/error obligations.
- *  - `/repos`: `<RepoTable>` — dense table with hover-card previews on
- *    each row's name and inline `Create issue` deep-links.
- *    `compositionRole: 'table'`.
+ *  - `/today`: baseline `<Queue>` bound to `github.issue.list`, with
+ *    declarative per-row `actions` (Archive ghost + Close destructive with
+ *    inline confirm) and an ambient `<UndoToast>` for reversibility. Top
+ *    salient rows surface as `data-emphasis="high"` via the resolver tagging
+ *    the items. The previous `<IssueQueue>` custom binding was retired in
+ *    the marketplace pivot — Octant now ships zero customs.
+ *  - `/repos`: baseline `<Table>` with declared columns + per-row
+ *    `Create issue` capability binding.
  *  - `/issue/[id]`: `<DetailView>` with comments timeline + paired
  *    close/reopen buttons (the latter satisfies `reversibility_surfaced`).
  *  - `/issue/new`: `<Form>` for creating issues, with the rate-limit chip
  *    in the header.
- *  - `/inbox`: `<List>` filtered to mentions, with optimistic archive +
+ *  - `/inbox`: `<Queue>` filtered to mentions, with optimistic archive +
  *    `<UndoToast>`.
  *
  * The chrome — wordmark + nav + small rate-limit chip — is rendered by
@@ -167,12 +167,25 @@ export function todayManifest(): Manifest {
               props: { maxWidth: 'lg' },
               children: [
                 {
-                  component: 'IssueQueue',
+                  // Marketplace pivot: the rich queue surface is now the
+                  // baseline `<Queue>` primitive, bound to `github.issue.list`
+                  // and dispatching declarative per-row capabilities. The old
+                  // `<IssueQueue>` custom is gone — Octant ships zero customs.
+                  // Top salient rows (the data resolver / fixture tags up to
+                  // three with `emphasis: 'high'`) get `data-emphasis="high"`
+                  // on the row; host CSS can tint accordingly.
+                  component: 'Queue',
                   props: {
-                    heading: 'Today',
-                    subtitle:
-                      '8 issues need a decision. Top three are highlighted by salience. Archive any issue with a 5-second undo.',
-                    emphasizeTopN: 3,
+                    title: 'Today',
+                    actions: [
+                      { id: 'github.issue.archive', label: 'Archive', variant: 'ghost' },
+                      {
+                        id: 'github.issue.close',
+                        label: 'Close',
+                        variant: 'destructive',
+                        confirmInline: 'Confirm close?',
+                      },
+                    ],
                   },
                   data: {
                     source: 'github.issue.list',
@@ -185,6 +198,9 @@ export function todayManifest(): Manifest {
                       'No issues need a decision right now.',
                     ),
                   },
+                  // Runtime resolver action list (separate from the Queue
+                  // `props.actions` button declarations) — the dispatcher
+                  // walks this to wire `onAction(actionId, item)`.
                   actions: ['github.issue.archive', 'github.issue.close'],
                   children: [],
                 },
@@ -450,11 +466,14 @@ export function inboxManifest(): Manifest {
               props: { maxWidth: 'lg' },
               children: [
                 {
-                  component: 'IssueQueue',
+                  // Marketplace pivot: see `/today` above. The inbox is the
+                  // same baseline `<Queue>` shape, just bound to a different
+                  // filter on `github.issue.list`. Single declarative action
+                  // (Archive); the close affordance is `/today`-only.
+                  component: 'Queue',
                   props: {
-                    heading: 'Inbox',
-                    subtitle: 'Issues that mention you, sorted by recency.',
-                    emphasizeTopN: 3,
+                    title: 'Inbox',
+                    actions: [{ id: 'github.issue.archive', label: 'Archive', variant: 'ghost' }],
                   },
                   data: {
                     source: 'github.issue.list',

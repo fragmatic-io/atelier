@@ -178,6 +178,26 @@ describe('Queue', () => {
     expect(pinned?.textContent).toContain('Bravo');
   });
 
+  it('surfaces per-item `emphasis` as data-emphasis on the row (mirrors pinned)', () => {
+    // Marketplace-pivot affordance: rows opt into a salience tag via an
+    // `emphasis` field on the item, the same shape `pinned` uses. The data
+    // resolver / manifest decides which rows carry the flag — Queue stays
+    // agnostic. Replaces the per-host `<IssueQueue emphasizeTopN={3}>`
+    // pattern that drove the Octant→Queue migration.
+    const items = [
+      { id: 'a', title: 'Alpha', emphasis: 'hero' },
+      { id: 'b', title: 'Bravo', emphasis: 'hero' },
+      { id: 'c', title: 'Charlie' },
+    ];
+    const { container } = render(<Queue items={items} />);
+    const heroes = container.querySelectorAll('[data-cir-part="queue-row"][data-emphasis="hero"]');
+    expect(heroes.length).toBe(2);
+    expect(heroes[0]?.textContent).toContain('Alpha');
+    const plain = container.querySelectorAll('[data-cir-part="queue-row"]:not([data-emphasis])');
+    expect(plain.length).toBe(1);
+    expect(plain[0]?.textContent).toContain('Charlie');
+  });
+
   it('disables action buttons during the in-flight action', async () => {
     let resolve!: () => void;
     const pending = new Promise<void>((r) => {

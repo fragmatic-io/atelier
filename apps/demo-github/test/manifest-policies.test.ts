@@ -81,10 +81,11 @@ const MANIFEST_CONTRACTS = manifestContractsFromBindings({
 });
 
 // Mirror of `AMBIENT_POLICY_SATISFIERS` from `lib/cir-providers.tsx`.
-// `<OctantHeader>` carries the rate-limit chip on every route, and the
-// dispatcher's optimistic mutations always raise an undo affordance —
-// declaring the satisfiers here clears `rate_limited_actions_show_state`
-// and `reversibility_surfaced` without per-manifest anchor nodes.
+// The chrome `<StatusBar>` (composed under `<Stack(Logo, NavBar, StatusBar)>`)
+// carries the rate-limit chip on every route, and the dispatcher's
+// optimistic mutations always raise an undo affordance — declaring the
+// satisfiers here clears `rate_limited_actions_show_state` and
+// `reversibility_surfaced` without per-manifest anchor nodes.
 const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
   UNDO_TOAST_AMBIENT_SATISFIER,
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
@@ -142,10 +143,10 @@ describe('demo-github manifest pipeline ↔ BASELINE_POLICIES', () => {
   });
 
   it('every component referenced by the manifests is either a baseline binding or a registered demo binding', () => {
-    // Mirror the registry the runtime builds in `cir-providers.tsx`. The
-    // demo layers three custom bindings (IssueQueue, RateLimitStatusBar,
-    // Wordmark) on top of `COMPONENT_BINDINGS`. The test below proves
-    // that nothing the manifests reference falls through the runtime's
+    // Mirror the registry the runtime builds in `cir-providers.tsx`. Post
+    // marketplace pivot the demo layers ZERO custom bindings on top of
+    // `COMPONENT_BINDINGS`. The test below proves that nothing the
+    // manifests reference falls through the runtime's
     // `<div data-cir-fallback>` path silently — except the small set of
     // intentional gaps documented inline.
     const known = new Set<string>([

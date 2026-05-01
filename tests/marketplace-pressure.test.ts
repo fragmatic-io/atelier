@@ -50,7 +50,7 @@ import { describe, expect, it } from 'vitest';
  */
 const MAX_CUSTOM_BINDINGS: Readonly<Record<string, number>> = Object.freeze({
   'apps/demo': 0,
-  'apps/demo-github': 1,
+  'apps/demo-github': 0,
   'apps/demo-dummyjson': 5,
 });
 
@@ -62,12 +62,7 @@ const MAX_CUSTOM_BINDINGS: Readonly<Record<string, number>> = Object.freeze({
  */
 const KNOWN_DOMAIN_CUSTOMS_FOLLOW_UP: Readonly<Record<string, readonly string[]>> = Object.freeze({
   'apps/demo': [],
-  'apps/demo-github': [
-    // Collapses onto baseline `<Queue>` once the IssueQueue UX (hover-card
-    // mentions + salience-based emphasis) is generalised into Queue's
-    // renderItem contract. Marketplace plan §C.
-    'IssueQueue',
-  ],
+  'apps/demo-github': [],
   'apps/demo-dummyjson': [
     // Domain-shape commerce primitives. ProductGrid collapses onto
     // `<Grid>` + `<Card>` composition; ProductDetail onto
@@ -198,10 +193,16 @@ describe('marketplace pressure', () => {
     });
   }
 
-  it('the proof-point demo (apps/demo / Aurora) ships zero custom bindings', () => {
-    const aurora = DEMOS.find((d) => d.name === 'apps/demo')!;
-    const text = readFileSync(resolve(REPO_ROOT, aurora.source), 'utf8');
-    const ids = parseBindingIds(text, aurora.exportName);
-    expect(ids).toEqual([]);
+  it('Aurora and Octant both ship zero custom bindings (the marketplace-pivot proof)', () => {
+    // Two of the three demos hit zero customs after the pivot — Aurora led
+    // the migration, Octant followed by collapsing `<IssueQueue>` onto
+    // baseline `<Queue>` (per `docs/ethos.md` principle #11). DummyJSON's
+    // commerce primitives are the next migration target.
+    for (const demoName of ['apps/demo', 'apps/demo-github']) {
+      const demo = DEMOS.find((d) => d.name === demoName)!;
+      const text = readFileSync(resolve(REPO_ROOT, demo.source), 'utf8');
+      const ids = parseBindingIds(text, demo.exportName);
+      expect(ids, `${demoName} ships zero custom bindings`).toEqual([]);
+    }
   });
 });

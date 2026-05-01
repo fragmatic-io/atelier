@@ -9,12 +9,13 @@
  * The page is a thin shell over `<CirRoute>`. The runtime resolves the
  * manifest declared in `lib/manifests.ts#todayManifest` (via
  * `manifestForRoute('/today')`), validates it against the baseline policy
- * set, and walks the layout tree with `<RenderNode>`. Custom components
- * (`IssueQueue`, `RateLimitStatusBar`, `Wordmark`) are registered as
- * `ComponentBinding`s in `lib/component-bindings.ts` so manifests can
- * reference them by name alongside the baseline catalog.
+ * set, and walks the layout tree with `<RenderNode>`. The manifest's
+ * `<Queue>` (baseline) is bound to `github.issue.list` and dispatches
+ * archive / close through the action registry — no host-side React for
+ * the queue surface any more (the `<IssueQueue>` custom retired in the
+ * marketplace pivot, leaving Octant at zero custom bindings).
  *
- * Pre-conversion this file imported `<IssueQueue>` directly as JSX, which
+ * Pre-MD-C this file imported `<IssueQueue>` directly as JSX, which
  * undermined the CIR thesis: every page is a manifest the runtime renders.
  * See MD-C in `/Users/vid/cir/docs/wave-progress.md` for the rationale.
  */
