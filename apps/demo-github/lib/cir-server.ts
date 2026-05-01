@@ -12,7 +12,7 @@
 
 import {
   CompositeCompiler,
-  FallbackCompiler,
+  GenericFallbackCompiler,
   GeminiCompiler,
   MemoryManifestStore,
   ServerManifestResolver,
@@ -133,11 +133,11 @@ function buildServer(): CirServer {
   const apiKey = process.env['GEMINI_API_KEY'];
   const geminiAvailable = !!apiKey && apiKey.length > 10;
 
-  const fallback = new FallbackCompiler({
-    id: 'fallback-hand-written',
-    lookup: (route) => manifestForRoute(route),
-  });
-
+  // Phase 3 polish — the demo relies on the framework's
+  // `GenericFallbackCompiler` for last-resort behavior; `manifestForRoute`
+  // is retained ONLY as the source of `fewShotExample` (host-supplied
+  // grounding for Gemini) and as fixture for tests. The compile chain
+  // no longer serves hand-written manifests at runtime.
   const compilers: CompilerService[] = [];
   if (geminiAvailable) {
     compilers.push(
@@ -153,7 +153,7 @@ function buildServer(): CirServer {
       }),
     );
   }
-  compilers.push(fallback);
+  compilers.push(new GenericFallbackCompiler());
 
   const compiler = new CompositeCompiler(compilers, {
     onCascade: (from, err) => {

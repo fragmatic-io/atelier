@@ -15,7 +15,7 @@
 
 import {
   CompositeCompiler,
-  FallbackCompiler,
+  GenericFallbackCompiler,
   GeminiCompiler,
   MemoryManifestStore,
   ServerManifestResolver,
@@ -152,11 +152,14 @@ function buildServer(): CirServer {
   // requests pick up immediately. Never mutated by `lookup` itself.
   const current = { density: 'comfortable' as Density };
 
-  const fallback = new FallbackCompiler({
-    id: 'fallback-hand-written',
-    lookup: (route) => manifestForRoute(route, current.density),
-  });
-
+  // Phase 3 polish — the demo no longer ships its own per-route fallback.
+  // The framework's `GenericFallbackCompiler` synthesizes a humble valid
+  // manifest when Gemini is unavailable. Per `docs/ethos.md` principle #1,
+  // the demo should rely on the LLM end-to-end, not fall back to
+  // hand-written content that masks LLM failures. `lib/manifests.ts` is
+  // retained ONLY as the source of `fewShotExample` (host-supplied
+  // grounding for the LLM) and as fixture for tests — it is no longer
+  // wired into the compile chain.
   const compilers: CompilerService[] = [];
   if (geminiAvailable) {
     compilers.push(
@@ -168,7 +171,7 @@ function buildServer(): CirServer {
       }),
     );
   }
-  compilers.push(fallback);
+  compilers.push(new GenericFallbackCompiler());
 
   const compiler = new CompositeCompiler(compilers, {
     onCascade: (from, err) => {

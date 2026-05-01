@@ -37,6 +37,7 @@ export {
 // Compilers
 export { GeminiCompiler, type GeminiCompilerOptions } from './gemini-compiler.js';
 export { FallbackCompiler, type FallbackCompilerOptions } from './fallback-compiler.js';
+export { GenericFallbackCompiler, genericFallbackManifest } from './generic-fallback.js';
 export { CompositeCompiler, type CompositeCompilerOptions } from './composite-compiler.js';
 
 // Intent profile compiler (onboarding)
