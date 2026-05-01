@@ -4,33 +4,23 @@
 'use client';
 
 /**
- * `/today` — the decision queue. The route renders a chrome of
- * status / KPI / queue and embeds the `IssueQueue` component which
- * carries the optimistic-archive, hover-card, and bulk-action
- * affordances.
+ * `/today` — the decision queue, rendered through the manifest pipeline.
  *
- * The `/today` queue is the showcase's biggest moment — see
- * `apps/demo-github/README.md` for the walkthrough.
+ * The page is a thin shell over `<CirRoute>`. The runtime resolves the
+ * manifest declared in `lib/manifests.ts#todayManifest` (via
+ * `manifestForRoute('/today')`), validates it against the baseline policy
+ * set, and walks the layout tree with `<RenderNode>`. Custom components
+ * (`IssueQueue`, `RateLimitStatusBar`, `Wordmark`) are registered as
+ * `ComponentBinding`s in `lib/component-bindings.ts` so manifests can
+ * reference them by name alongside the baseline catalog.
+ *
+ * Pre-conversion this file imported `<IssueQueue>` directly as JSX, which
+ * undermined the CIR thesis: every page is a manifest the runtime renders.
+ * See MD-C in `/Users/vid/cir/docs/wave-progress.md` for the rationale.
  */
 
-import { Stack } from '@cir/components';
-import { IssueQueue } from '@/components/IssueQueue';
+import { CirRoute } from '@cir/react';
 
 export default function TodayPage(): React.JSX.Element {
-  return (
-    <main className="max-w-screen-lg mx-auto px-4 py-6">
-      <Stack direction="vertical" gap="lg">
-        <h1 className="text-xl font-semibold">Today</h1>
-        <p className="text-sm" style={{ color: 'var(--cir-color-fg-muted)' }}>
-          Issues sorted by salience. The top three get hierarchy emphasis; archive is optimistic
-          with a 5-second undo. Hover any{' '}
-          <span className="cir-mono" style={{ color: 'var(--cir-color-accent)' }}>
-            #NNN
-          </span>{' '}
-          reference for a card preview.
-        </p>
-        <IssueQueue />
-      </Stack>
-    </main>
-  );
+  return <CirRoute path="/today" />;
 }

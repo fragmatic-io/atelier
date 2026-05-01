@@ -86,6 +86,9 @@ function buildServer(): CirServer {
   });
 
   // Components catalog summary — what the compiler is allowed to reference.
+  // Includes the baseline catalog plus the demo's three custom bindings
+  // (IssueQueue, RateLimitStatusBar, Wordmark) so the compiler can
+  // legitimately produce manifests that reference them by name.
   const baseline = [
     'Stack',
     'Card',
@@ -103,9 +106,11 @@ function buildServer(): CirServer {
     'List',
     'DetailView',
     'StatusBar',
+    'StatCard',
     'KPIRow',
     'Form',
     'Toast',
+    'UndoToast',
     'BulkActionBar',
     'HoverCard',
     'NavBar',
@@ -114,6 +119,10 @@ function buildServer(): CirServer {
     'FilterBar',
     'Timeline',
     'ButtonGroup',
+    // Custom demo bindings.
+    'IssueQueue',
+    'RateLimitStatusBar',
+    'Wordmark',
   ];
   const components: ComponentDefinition[] = baseline.map((id) => ({
     id,

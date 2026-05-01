@@ -52,9 +52,16 @@ function isPinned(item: unknown): boolean {
 }
 
 export interface ListProps<T> {
-  items: readonly T[];
-  renderItem: (item: T, index: number) => ReactNode;
+  items?: readonly T[];
+  renderItem?: (item: T, index: number) => ReactNode;
   empty?: ReactNode;
+  /**
+   * Manifest-friendly alias for `items`. When the manifest renderer
+   * resolves a `data` binding, it passes the array as `data`. We accept
+   * either: explicit `items` wins, otherwise fall back to `data` if it
+   * is array-shaped, otherwise empty.
+   */
+  data?: unknown;
   bordered?: boolean;
   /** Personalisation density. Renderer fills from intent profile when unset. */
   density?: Density;
@@ -97,10 +104,11 @@ export interface ListProps<T> {
 }
 
 export function List<T>({
-  items,
+  items: itemsProp,
   renderItem,
   empty,
   bordered,
+  data,
   density = DEFAULT_DENSITY,
   variant = 'ghost',
   className,
@@ -114,6 +122,30 @@ export function List<T>({
   bulkActions,
   onBulkAction,
 }: ListProps<T>): ReactNode {
+  // Resolve items: explicit `items` prop wins; else accept `data` if it
+  // is an array (the manifest renderer threads resolved data this way);
+  // else empty so the component never crashes on `length`.
+  const items: readonly T[] =
+    itemsProp ?? (Array.isArray(data) ? (data as readonly T[]) : ([] as readonly T[]));
+  // Default renderer: when the manifest doesn't supply `renderItem`,
+  // print a best-effort label so the row is visible. Hosts that need
+  // rich rows pass their own `renderItem`.
+  const renderItemFn: (item: T, index: number) => ReactNode =
+    renderItem ??
+    ((item) => {
+      if (item === null || item === undefined) return null;
+      if (typeof item === 'string' || typeof item === 'number') return String(item);
+      if (typeof item === 'object') {
+        const o = item as Record<string, unknown>;
+        return (
+          (o.title as string | undefined) ??
+          (o.name as string | undefined) ??
+          (o.label as string | undefined) ??
+          JSON.stringify(item)
+        );
+      }
+      return String(item);
+    });
   // Anchor for Shift+Click range-select. Persisted across renders so the
   // user can extend the range from any prior click. Reset on `clear`.
   const anchorRef = useRef<string | null>(null);
@@ -222,7 +254,7 @@ export function List<T>({
             /* handled via onClick to access shiftKey */
           }}
         />
-        {renderItem(item, i)}
+        {renderItemFn(item, i)}
       </li>
     );
   };
@@ -256,7 +288,7 @@ export function List<T>({
             <span data-pin-indicator="true" aria-hidden="true">
               {PIN_GLYPH}
             </span>
-            {renderItem(item, i)}
+            {renderItemFn(item, i)}
           </li>
         );
       })}
@@ -275,7 +307,7 @@ export function List<T>({
         }
         return (
           <li key={i} data-cir-part="list-item" style={itemStyle}>
-            {renderItem(item, i)}
+            {renderItemFn(item, i)}
           </li>
         );
       })}
@@ -307,7 +339,8 @@ export function List<T>({
 }
 List.displayName = 'List';
 export function listTextRender(props: ListProps<unknown>): string {
-  return `[List: ${String(props.items.length)} items]`;
+  const len = props.items?.length ?? (Array.isArray(props.data) ? props.data.length : 0);
+  return `[List: ${String(len)} items]`;
 }
 export const ListBinding: ComponentBinding = {
   id: 'List',

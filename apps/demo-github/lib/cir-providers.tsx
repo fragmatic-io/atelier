@@ -51,6 +51,7 @@ import { validateManifest, BASELINE_POLICIES, composesAccordingTo } from '@cir/p
 import type { IntentProfile, Manifest } from '@cir/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
+import { DEMO_GITHUB_BINDINGS } from './component-bindings.js';
 import { FIXTURE_ISSUES, FIXTURE_REPOS } from './github-fixtures.js';
 import { loadGitHubToken, loadIntentProfile, DEMO_USER_ID, DEMO_APP_ID } from './intent-store.js';
 
@@ -123,7 +124,13 @@ interface BuiltServices {
 }
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
-  const registry = new MapComponentRegistry({ ...COMPONENT_BINDINGS });
+  // Baseline catalog first; demo-specific bindings (IssueQueue,
+  // RateLimitStatusBar, Wordmark) are layered on top so the manifest can
+  // reference any of them in `LayoutNode.component`.
+  const registry = new MapComponentRegistry({
+    ...COMPONENT_BINDINGS,
+    ...DEMO_GITHUB_BINDINGS,
+  });
 
   const actions = new MapActionRegistry();
   const wireAction =
