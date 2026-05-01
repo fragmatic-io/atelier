@@ -39,7 +39,13 @@ import {
 import { manifestContractsFromBindings } from '@cir/runtime';
 import { DUMMYJSON_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
-import { browseManifest, cartManifest, checkoutManifest, productManifest } from '../lib/manifests';
+import {
+  browseManifest,
+  browseManifestRowBinding,
+  cartManifest,
+  checkoutManifest,
+  productManifest,
+} from '../lib/manifests';
 import type { Density } from '@cir/components';
 
 /**
@@ -257,6 +263,36 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       walk(checkoutManifest(density).routes[0]!.layout, `checkout@${density}`, missing);
     }
     expect(missing).toEqual([]);
+  });
+
+  // Phase 2 #3 — the alternate `/browse` manifest uses `<Grid row_binding>`
+  // instead of the `<ProductGrid>` wrapper. It must satisfy the same
+  // baseline policies (no error-severity violations) and crucially must
+  // satisfy `composes_hierarchy_for_long_lists` via the row_binding path
+  // (rich rows substitute for `density:'compact'` / `emphasizeTopN` /
+  // KPIRow). The wrapper-tax demo (browseManifest) leaves
+  // `<ProductGrid>` registered for the LLM compiler; this test guards
+  // the no-wrapper alternative.
+  it('Phase 2 #3 — alternate row_binding manifest passes baseline policies', () => {
+    const errors: string[] = [];
+    const warns: string[] = [];
+    for (const density of DENSITIES) {
+      const m = browseManifestRowBinding(density);
+      const res = validate(m);
+      for (const v of res.violations) {
+        const line = `[${v.policy_id}] ${v.message}`;
+        if (v.severity === 'error') errors.push(`browse-rb@${density}: ${line}`);
+        else warns.push(`browse-rb@${density}: ${line}`);
+      }
+    }
+    if (errors.length > 0) {
+      throw new Error(`Baseline errors:\n  ${errors.join('\n  ')}`);
+    }
+    expect(errors).toEqual([]);
+    // No `composes_hierarchy_for_long_lists` warns either — the row_binding
+    // is the satisfying clause.
+    const hierarchyWarns = warns.filter((w) => w.includes('composes_hierarchy_for_long_lists'));
+    expect(hierarchyWarns).toEqual([]);
   });
 
   it('ProductGrid is recognised as a Grid via composition_roles', () => {

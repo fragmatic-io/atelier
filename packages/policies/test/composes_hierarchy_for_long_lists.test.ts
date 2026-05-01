@@ -175,6 +175,21 @@ describe('composes_hierarchy_for_long_lists', () => {
     expect(result.violations).toHaveLength(0);
   });
 
+  it('passes when the binding declares a row_binding (rich rows substitute for hierarchy)', () => {
+    // Phase 2 #3 — a baseline `<Grid row_binding="ProductCard">` is the
+    // alternative to the `compositionRole` escape hatch. The row factory
+    // carries the hierarchy treatment internally, so the long-list policy
+    // is satisfied without `density:'compact'` / `emphasizeTopN` / KPIRow.
+    const layout: LayoutNode = {
+      component: 'Grid',
+      data: { source: 'thread.list' },
+      row_binding: 'ProductCard',
+    };
+    const result = composesHierarchyForLongLists.evaluate(ctxFor(layout));
+    expect(result.ok).toBe(true);
+    expect(result.violations).toHaveLength(0);
+  });
+
   it('does NOT apply to a custom binding without a registered composition role', () => {
     // Backwards compatibility: bindings without a role are unaffected.
     const layout: LayoutNode = {

@@ -45,6 +45,13 @@ export interface GridProps<T extends GridItem = GridItem> {
    * alongside `selectable`, each item renders as one cell with a checkbox.
    */
   items?: readonly T[];
+  /**
+   * Manifest-friendly alias for `items`. When the manifest renderer resolves
+   * a `data` binding it threads the resolved array as `data`. Explicit
+   * `items` wins; otherwise we accept `data` if it is array-shaped.
+   * Mirrors the same fallback `<List>` ships (Phase 2 #3).
+   */
+  data?: unknown;
   /** Renders the visible content of a single grid cell. Required when `items` is supplied. */
   renderItem?: (item: T, index: number) => ReactNode;
   /**
@@ -73,7 +80,8 @@ export function Grid<T extends GridItem = GridItem>({
   variant = 'ghost',
   className,
   children,
-  items,
+  items: itemsProp,
+  data,
   renderItem,
   selectable = false,
   idOf,
@@ -92,8 +100,24 @@ export function Grid<T extends GridItem = GridItem>({
     gap: `${String(gapPx)}px`,
   };
 
+  // Resolve items: explicit `items` wins; else accept `data` if array-shaped
+  // (the manifest renderer threads resolved data this way when `row_binding`
+  // is set). When neither is supplied we fall back to legacy `children` mode.
+  const items: readonly T[] | undefined =
+    itemsProp ?? (Array.isArray(data) ? (data as readonly T[]) : undefined);
+
   // Selection wiring (only meaningful when `items` + `selectable`).
-  const idResolver: (item: T, index: number) => string = idOf ?? ((item: T): string => item.id);
+  // Default idOf reads `item.id` (string or number); falls back to the
+  // index so manifest-supplied data with non-string ids (or no id at all)
+  // doesn't crash the React-key derivation.
+  const idResolver: (item: T, index: number) => string =
+    idOf ??
+    ((item: T, index: number): string => {
+      const candidate = (item as { id?: unknown } | null | undefined)?.id;
+      if (typeof candidate === 'string') return candidate;
+      if (typeof candidate === 'number') return String(candidate);
+      return String(index);
+    });
   const effectiveSelected = selectedIds ?? localSelected;
   const usingItems = Array.isArray(items) && typeof renderItem === 'function';
   const itemList: readonly T[] = items ?? [];

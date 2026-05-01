@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest';
 import { ManifestSchema } from '@cir/schemas';
 import {
   browseManifest,
+  browseManifestRowBinding,
   cartManifest,
   checkoutManifest,
   manifestForRoute,
@@ -156,5 +157,37 @@ describe('manifestForRoute', () => {
     );
     expect(addBtn).toBeDefined();
     expect(removeBtn).toBeDefined();
+  });
+});
+
+describe('browseManifestRowBinding (Phase 2 #3)', () => {
+  it('mounts a baseline `<Grid>` (not the `<ProductGrid>` wrapper) on /browse', () => {
+    const m = browseManifestRowBinding('comfortable');
+    const grid = findFirst(m.routes[0]!.layout!, 'Grid');
+    expect(grid).not.toBeNull();
+    expect(findFirst(m.routes[0]!.layout!, 'ProductGrid')).toBeNull();
+  });
+
+  it('names ProductCard as the row factory via `row_binding`', () => {
+    const m = browseManifestRowBinding('comfortable');
+    const grid = findFirst(m.routes[0]!.layout!, 'Grid');
+    expect(grid?.['row_binding']).toBe('ProductCard');
+    expect((grid?.['data'] as { source: string }).source).toBe('dummyjson.product.list');
+  });
+
+  it('validates against ManifestSchema in every density', () => {
+    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
+      const m = browseManifestRowBinding(density);
+      expect(ManifestSchema.safeParse(m).success).toBe(true);
+    }
+  });
+
+  it('encodes a column hint per density (compact=1, spacious=2, comfortable=3)', () => {
+    const expected = { compact: 1, comfortable: 3, spacious: 2 } as const;
+    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
+      const m = browseManifestRowBinding(density);
+      const grid = findFirst(m.routes[0]!.layout!, 'Grid');
+      expect((grid!['props'] as { columns: number }).columns).toBe(expected[density]);
+    }
   });
 });

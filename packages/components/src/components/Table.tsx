@@ -55,8 +55,29 @@ export type TableRowSpec = Record<string, ReactNode> & {
 };
 
 export interface TableProps {
-  columns: readonly TableColumn[];
-  rows: readonly TableRowSpec[];
+  /**
+   * Column descriptors. Required for the default cell renderer; with a
+   * `renderItem` row factory the columns may be empty (the factory owns
+   * the row's `<td>` layout).
+   */
+  columns?: readonly TableColumn[];
+  /** Tabular row specs. Required unless `data` (manifest-driven) is supplied. */
+  rows?: readonly TableRowSpec[];
+  /**
+   * Manifest-friendly alias for `rows`. When the manifest renderer resolves
+   * a `data` binding it threads the resolved array as `data`. Explicit
+   * `rows` wins; otherwise we accept `data` if it is array-shaped. Mirrors
+   * the same fallback `<List>` ships (Phase 2 #3).
+   */
+  data?: unknown;
+  /**
+   * Per-row factory. When supplied, the Table renders one `<tr>` per row
+   * by calling `renderItem(row, index)` instead of the column-mapped
+   * default. The runtime adapter populates this from `LayoutNode.row_binding`
+   * (Phase 2 #3) — the resolved binding's factory receives the row item as
+   * `props.data`. Hosts can also pass an explicit closure.
+   */
+  renderItem?: (row: TableRowSpec, index: number) => ReactNode;
   empty?: ReactNode;
   caption?: string;
   /** Personalisation density. Renderer fills from intent profile when unset. */
@@ -96,8 +117,10 @@ function isPinnedRow(row: TableRowSpec): boolean {
 }
 
 export function Table({
-  columns,
-  rows,
+  columns: columnsProp,
+  rows: rowsProp,
+  data,
+  renderItem,
   empty,
   caption,
   density = DEFAULT_DENSITY,
@@ -115,6 +138,12 @@ export function Table({
 }: TableProps): ReactNode {
   const anchorRef = useRef<string | null>(null);
   const [localSelected, setLocalSelected] = useState<ReadonlySet<string>>(() => new Set<string>());
+  // Resolve rows: explicit `rows` wins; else accept `data` if array-shaped
+  // (the manifest renderer threads resolved data through `data` when a
+  // `row_binding` is set on the node).
+  const rows: readonly TableRowSpec[] =
+    rowsProp ?? (Array.isArray(data) ? (data as readonly TableRowSpec[]) : []);
+  const columns: readonly TableColumn[] = columnsProp ?? [];
   if (rows.length === 0) {
     return (
       <div
@@ -267,23 +296,36 @@ export function Table({
               aria-label={ariaLabel}
             >
               {selectable ? checkboxCell(id, i, pinnedCellStyle) : null}
-              {columns.map((c, ci) => (
-                <td key={c.key} style={pinnedCellStyle}>
-                  {ci === 0 ? (
-                    <span data-pin-indicator="true" aria-hidden="true">
-                      {PIN_GLYPH}{' '}
-                    </span>
-                  ) : null}
-                  {row[c.key] ?? ''}
+              {renderItem ? (
+                <td
+                  key="cir-row-factory"
+                  colSpan={Math.max(columns.length, 1)}
+                  style={pinnedCellStyle}
+                >
+                  <span data-pin-indicator="true" aria-hidden="true">
+                    {PIN_GLYPH}{' '}
+                  </span>
+                  {renderItem(row, i)}
                 </td>
-              ))}
+              ) : (
+                columns.map((c, ci) => (
+                  <td key={c.key} style={pinnedCellStyle}>
+                    {ci === 0 ? (
+                      <span data-pin-indicator="true" aria-hidden="true">
+                        {PIN_GLYPH}{' '}
+                      </span>
+                    ) : null}
+                    {row[c.key] ?? ''}
+                  </td>
+                ))
+              )}
             </tr>
           );
         })}
         {hasPinned && showPinnedSeparator ? (
           <tr key="cir-pinned-separator" aria-hidden="true" data-cir-part="pinned-separator">
             <td
-              colSpan={columns.length + (selectable ? 1 : 0)}
+              colSpan={Math.max(columns.length, 1) + (selectable ? 1 : 0)}
               className={pinnedSeparatorClass[pinnedSeparatorVariant]}
               style={{ padding: 0, height: 0 }}
             />
@@ -295,11 +337,22 @@ export function Table({
           return (
             <tr key={i} data-selected={selectable ? (checked ? 'true' : 'false') : undefined}>
               {selectable ? checkboxCell(id, i, cellStyle) : null}
-              {columns.map((c) => (
-                <td key={c.key} style={cellStyle}>
-                  {row[c.key] ?? ''}
+              {renderItem ? (
+                <td
+                  key="cir-row-factory"
+                  colSpan={Math.max(columns.length, 1)}
+                  style={cellStyle}
+                  data-cir-part="table-row-factory"
+                >
+                  {renderItem(row, i)}
                 </td>
-              ))}
+              ) : (
+                columns.map((c) => (
+                  <td key={c.key} style={cellStyle}>
+                    {row[c.key] ?? ''}
+                  </td>
+                ))
+              )}
             </tr>
           );
         })}
@@ -329,6 +382,9 @@ export function Table({
 }
 Table.displayName = 'Table';
 export function tableTextRender(props: TableProps): string {
-  return `[Table: ${String(props.columns.length)} cols × ${String(props.rows.length)} rows]`;
+  const cols = props.columns?.length ?? 0;
+  const rows =
+    props.rows?.length ?? (Array.isArray(props.data) ? (props.data as unknown[]).length : 0);
+  return `[Table: ${String(cols)} cols × ${String(rows)} rows]`;
 }
 export const TableBinding: ComponentBinding = { id: 'Table', factory: Table };

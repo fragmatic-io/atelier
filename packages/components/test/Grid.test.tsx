@@ -62,6 +62,41 @@ describe('Grid', () => {
     const grid = container.querySelector('[data-cir-component="Grid"]') as HTMLElement;
     expect(grid.getAttribute('data-density')).toBe('comfortable');
   });
+  // -- Phase 2 #3 — manifest-driven data + renderItem path --
+  it('accepts `data` array as a fallback for `items` (manifest renderer path)', () => {
+    const data = [
+      { id: 'a', label: 'Alpha' },
+      { id: 'b', label: 'Bravo' },
+    ];
+    const { container } = render(
+      <Grid data={data} renderItem={(it) => <span>{String(it['label'])}</span>} />,
+    );
+    const cells = container.querySelectorAll('[data-cir-part="grid-item"]');
+    expect(cells.length).toBe(2);
+    expect(cells[0]?.textContent).toBe('Alpha');
+    expect(cells[1]?.textContent).toBe('Bravo');
+  });
+  it('explicit `items` wins over `data`', () => {
+    const items = [{ id: '1', label: 'one' }];
+    const data = [{ id: 'X', label: 'X' }];
+    const { container } = render(
+      <Grid items={items} data={data} renderItem={(it) => <span>{String(it['label'])}</span>} />,
+    );
+    const cells = container.querySelectorAll('[data-cir-part="grid-item"]');
+    expect(cells.length).toBe(1);
+    expect(cells[0]?.textContent).toBe('one');
+  });
+  it('falls back to index keys when items lack `id`', () => {
+    const data = [{ title: 'a' }, { title: 'b' }];
+    // No idOf, items have no `id`. Should not crash; key derived from index.
+    const { container } = render(
+      <Grid
+        data={data}
+        renderItem={(it) => <span>{String((it as unknown as { title: string }).title)}</span>}
+      />,
+    );
+    expect(container.querySelectorAll('[data-cir-part="grid-item"]').length).toBe(2);
+  });
   it('shrinks the gap at compact density', () => {
     const { container, rerender } = render(
       <Grid gap="md" density="comfortable">

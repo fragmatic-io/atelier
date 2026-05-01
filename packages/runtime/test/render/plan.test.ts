@@ -105,6 +105,25 @@ describe('buildRenderPlan', () => {
     expect(plan.root.actions).toBeUndefined();
   });
 
+  it('passes through row_binding as plan.rowBinding (Phase 2 #3)', () => {
+    const m = fixtureManifest();
+    m.routes.push({
+      path: '/rowbind',
+      layout: {
+        component: 'Grid',
+        data: { source: 'product.list' },
+        row_binding: 'ProductCard',
+      },
+    });
+    const plan = buildRenderPlan(m, '/rowbind', EMPTY_REGISTRY);
+    expect(plan.root.rowBinding).toBe('ProductCard');
+  });
+
+  it('omits rowBinding on the plan when the manifest does not set row_binding', () => {
+    const plan = buildRenderPlan(fixtureManifest(), '/today', EMPTY_REGISTRY);
+    expect(plan.root.rowBinding).toBeUndefined();
+  });
+
   it('errors carry the routePath', () => {
     try {
       buildRenderPlan(fixtureManifest(), '/nope', EMPTY_REGISTRY);

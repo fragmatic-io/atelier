@@ -16,6 +16,13 @@
  *      top N items via a hierarchy treatment the renderer applies.
  *   3. Wrap the binding in a `Stack` with a `<KPIRow>` summary above — the
  *      KPIRow surfaces the salient signals before the long list renders.
+ *   4. Reference a manifest-resolved row factory via `row_binding: 'X'` —
+ *      the row component (e.g. `<ProductCard>`) carries the hierarchy
+ *      itself (image + price emphasis + secondary metadata), so the row
+ *      composition substitutes for the structural emphasis primitives.
+ *      This is the alternative to the `compositionRole` escape hatch on
+ *      custom container bindings: a baseline `<Grid>` can satisfy the
+ *      policy by naming a rich row in the manifest.
  *
  * Manifests that satisfy NONE of these get a `warn`-level violation. The
  * severity is `warn` (not `error`) because the cardinality check is
@@ -87,6 +94,18 @@ function declaresEmphasis(node: LayoutNode): boolean {
 }
 
 /**
+ * True if the node references a manifest-resolved row factory. A rich row
+ * binding (e.g. `<ProductCard>`) carries the hierarchy treatment internally
+ * — emphasis price, image, secondary metadata — so a baseline `<Grid>` /
+ * `<List>` / `<Table>` with `row_binding` set is structurally equivalent
+ * to a custom binding declaring a `compositionRole`. Either path satisfies
+ * the policy; this one keeps the container generic.
+ */
+function declaresRowBinding(node: LayoutNode): boolean {
+  return typeof node.row_binding === 'string' && node.row_binding.length > 0;
+}
+
+/**
  * True if `node` lives under a `Stack` whose siblings include a `KPIRow`.
  * We treat any `KPIRow` child of the nearest `Stack` ancestor as "summary
  * above" for the purposes of this heuristic. `node` itself is not
@@ -139,7 +158,11 @@ export const composesHierarchyForLongLists: NamedPolicy = {
       const longEnough = card === undefined ? true : card > HIERARCHY_THRESHOLD;
       if (!longEnough) return;
 
-      const ok = isCompact(node) || declaresEmphasis(node) || summarisedByKPIRow(ancestors);
+      const ok =
+        isCompact(node) ||
+        declaresEmphasis(node) ||
+        declaresRowBinding(node) ||
+        summarisedByKPIRow(ancestors);
       if (ok) return;
 
       violations.push({
@@ -147,7 +170,7 @@ export const composesHierarchyForLongLists: NamedPolicy = {
         severity: 'warn',
         message: `${node.component} at ${path} binds a long-cardinality list (capability "${sourceId}" declares salience_default) but lacks hierarchy treatment.`,
         path,
-        hint: "Set props.density: 'compact', add props.emphasizeTopN >= 1, or wrap the binding in a Stack with a sibling KPIRow.",
+        hint: "Set props.density: 'compact', add props.emphasizeTopN >= 1, set row_binding to a rich row component, or wrap the binding in a Stack with a sibling KPIRow.",
       });
     });
 

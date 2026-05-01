@@ -87,6 +87,16 @@ export interface ComponentDataBinding {
  * `ComponentDataBindingSchema` are mutually recursive — a binding's
  * `empty_state` / `loading_state` / `error_state` slots are themselves
  * `LayoutNode`s — so both schemas are wrapped in `z.lazy(...)`.
+ *
+ * `row_binding` (Phase 2 #3) — a component-id reference resolved against
+ * the runtime registry at render time. When set on a data-bound node
+ * (`<List>`, `<Grid>`, `<Table>`, or any custom binding declaring
+ * `compositionRole: 'list' | 'grid' | 'table'`), the renderer threads the
+ * resolved factory as the `renderItem` prop, with each row item passed as
+ * `props.data` to the row factory. This replaces the wrapper-tax pattern
+ * (`<ProductGrid>` hardcoding `<ProductCard>` as its row) — manifests can
+ * now say `<Grid row_binding="ProductCard" data={{ source: '...' }}>`
+ * directly.
  */
 export interface LayoutNode {
   component: string; // ComponentId at runtime
@@ -95,6 +105,12 @@ export interface LayoutNode {
   children?: LayoutNode[] | undefined;
   /** Free-form prop bag. The component's `props_schema` is the type-level contract. */
   props?: Record<string, unknown> | undefined;
+  /**
+   * Component id of a row factory used by data-bound collection components.
+   * Resolved against the runtime registry by the adapter and threaded as
+   * `renderItem`. The row factory receives the row item as `props.data`.
+   */
+  row_binding?: string | undefined;
 }
 
 export const ComponentDataBindingSchema: z.ZodType<ComponentDataBinding> = z.lazy(() =>
@@ -116,6 +132,7 @@ export const LayoutNodeSchema: z.ZodType<LayoutNode> = z.lazy(() =>
     actions: z.array(CapabilityId).optional(),
     children: z.array(LayoutNodeSchema).optional(),
     props: z.record(z.string(), z.unknown()).optional(),
+    row_binding: ComponentId.optional(),
   }),
 );
 

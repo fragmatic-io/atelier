@@ -40,5 +40,14 @@ export interface RenderNode {
   actions?: readonly string[];
   /** Free-form props bag from the manifest (passed through). */
   props?: Readonly<Record<string, unknown>>;
+  /**
+   * Component id of a row factory for data-bound collections. Pass-through
+   * of `LayoutNode.row_binding`; the adapter resolves it against the same
+   * registry it used to find `binding` and threads the resolved factory as
+   * the host component's `renderItem` prop. Each row item is passed as
+   * `props.data` to the row factory. See `docs/ethos.md` §"Composition,
+   * not invention".
+   */
+  rowBinding?: string;
   children: readonly RenderNode[];
 }

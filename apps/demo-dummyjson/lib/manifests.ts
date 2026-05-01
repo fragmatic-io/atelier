@@ -265,6 +265,91 @@ export function browseManifest(density: Density): Manifest {
   };
 }
 
+/**
+ * Alternate `/browse` manifest demonstrating Phase 2 #3 — the
+ * **manifest-referenced row-renderer binding**. Where `browseManifest`
+ * mounts a custom `<ProductGrid>` (a wrapper that hardcodes `<ProductCard>`
+ * as its row), this builder uses the baseline `<Grid>` and names
+ * `<ProductCard>` directly via `row_binding`. The runtime resolves the
+ * row factory through the registry and threads it as `renderItem`. The
+ * rendered DOM is materially the same as the wrapper-tax version (cards
+ * with image, brand, price, rating, add-to-cart) without forcing a
+ * per-demo `<ProductGrid>` wrapper.
+ *
+ * Kept alongside `browseManifest` (rather than replacing it) so the LLM
+ * compiler retains the wrapper as a vocabulary entry — the compiler can
+ * still reach for `<ProductGrid>` when its catalog summary names that
+ * binding. The `row_binding` form is the path that does NOT require the
+ * wrapper to exist, and is the preferred shape going forward (per
+ * `docs/ethos.md` principle #3 — composition, not invention).
+ */
+export function browseManifestRowBinding(density: Density): Manifest {
+  const gridNode: LayoutNode = {
+    component: 'Grid',
+    data: {
+      source: 'dummyjson.product.list',
+      sort: 'rating desc',
+      loading_state: SKELETON_CARD_NODE,
+      empty_state: {
+        component: 'EmptyState',
+        props: {
+          title: 'Nothing here yet',
+          body: 'Adjust the filters or clear the search to see more results.',
+        },
+        children: [],
+      },
+      error_state: ERROR_NODE,
+    },
+    actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
+    // Phase 2 #3 — name the row factory by id. The runtime adapter
+    // resolves it against the registry and threads it as `renderItem`.
+    row_binding: 'ProductCard',
+    props: {
+      density,
+      columns: density === 'compact' ? 1 : density === 'spacious' ? 2 : 3,
+    },
+    children: [],
+  };
+  return {
+    manifest_id: `m_brwrb${DENSITY_TAG[density]}001`,
+    user_id: 'demo-user',
+    app_id: 'cir.demo-dummyjson',
+    compiled_from: COMPILED_FROM,
+    ttl: null,
+    invalidates_on: INVALIDATES_ON,
+    policies_satisfied: POLICIES_SATISFIED,
+    routes: [
+      {
+        path: '/browse',
+        title: 'Browse',
+        layout: {
+          component: 'Container',
+          props: { maxWidth: 'lg' as const, density },
+          children: [
+            {
+              component: 'Stack',
+              props: { direction: 'vertical' as const, gap: 'lg' as const, density },
+              children: [
+                chromeHeader('/browse'),
+                PAGE_HEADER_NODE(
+                  'Browse',
+                  '30 products. The grid is the baseline `<Grid>` binding; rows are rendered by `<ProductCard>` via `row_binding` — no wrapper component required.',
+                ),
+                gridNode,
+                REVERSIBILITY_ANCHOR_NODE,
+              ],
+            },
+          ],
+        },
+        refresh: {
+          data: 'on_focus + 600s_interval',
+          structure: 'on_intent_change:density',
+        },
+      },
+    ],
+  };
+}
+
 export function productManifest(id: string, density: Density): Manifest {
   // Sanitise `id` for the manifest id format (`^m_[a-z0-9]{8,}$`).
   const safeId = id

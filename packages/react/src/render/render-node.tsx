@@ -175,12 +175,28 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
     props['error'] = error;
   }
 
-  // Capability dispatch (ethos principle #8). When the binding declares
-  // ordered `actionSlots`, map each `node.actions[i]` to `actionSlots[i]`
-  // — components see normal, DOM-safe React props (`onPrimaryAction`).
-  // When `actionSlots` is absent we fall back to the legacy
-  // capability-id-as-prop path so existing custom bindings keep working,
-  // and emit a one-shot console.warn so the author knows to migrate.
+  // Manifest-referenced row factory (Phase 2 #3). The runtime resolves
+  // `node.rowBinding` against the same registry and threads the resulting
+  // factory as `renderItem` so List/Grid/Table can iterate rows without a
+  // host-supplied closure. Explicit `renderItem` in props wins.
+  if (node.rowBinding !== undefined && props['renderItem'] === undefined) {
+    const rowBinding = services.registry.get(node.rowBinding);
+    if (rowBinding) {
+      const RowFactory = rowBinding.factory as ComponentType<Record<string, unknown>>;
+      props['renderItem'] = (item: unknown, index: number): ReactElement =>
+        createElement(RowFactory, { data: item, index, key: index });
+    } else {
+      warnMissingBinding(node.rowBinding);
+    }
+  }
+
+  // Capability dispatch (Phase 2 #2, ethos principle #8). When the binding
+  // declares ordered `actionSlots`, map each `node.actions[i]` to
+  // `actionSlots[i]` — components see normal, DOM-safe React props
+  // (`onPrimaryAction`). When `actionSlots` is absent we fall back to the
+  // legacy capability-id-as-prop path so existing custom bindings keep
+  // working, and emit a one-shot console.warn so the author knows to
+  // migrate.
   const actions = node.actions ?? [];
   if (actions.length > 0) {
     const slots = node.binding.actionSlots;

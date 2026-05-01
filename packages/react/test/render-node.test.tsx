@@ -6,6 +6,7 @@ import { buildRenderPlan } from '@cir/runtime';
 import { MapComponentRegistry } from '@cir/runtime/testing';
 import { RenderNode, __resetMissingBindingWarnings } from '../src/render/render-node.js';
 import { CirRuntime } from '../src/context/runtime-provider.js';
+import { DataResolverContext } from '../src/data/data-resolver.js';
 import { buildTestServices } from '../src/testing/build-test-services.js';
 import { archiveCapability, makeManifest } from './fixtures.js';
 
@@ -228,6 +229,101 @@ describe('RenderNode', () => {
     );
     expect(getByTestId('wrap')).toBeTruthy();
     expect(getByTestId('leaf')).toBeTruthy();
+  });
+
+  it('resolves row_binding via registry and threads renderItem (Phase 2 #3)', () => {
+    // Row factory receives `props.data` per row.
+    function ProductCard(props: Record<string, unknown>): React.ReactElement {
+      const data = props['data'] as { id: number; title: string } | undefined;
+      return <div data-testid={`row-${String(data?.id)}`}>{data?.title ?? '<no-data>'}</div>;
+    }
+    // Host component declares an items mode keyed off `data` (mirrors what
+    // `<List>` / `<Grid>` ship). It calls the runtime-supplied `renderItem`.
+    function Collection(props: Record<string, unknown>): React.ReactElement {
+      const items = (props['data'] as readonly unknown[] | undefined) ?? [];
+      const renderItem = props['renderItem'] as
+        | ((item: unknown, i: number) => React.ReactNode)
+        | undefined;
+      return (
+        <ul data-testid="collection">
+          {items.map((it, i) => (
+            <li key={i}>{renderItem ? renderItem(it, i) : null}</li>
+          ))}
+        </ul>
+      );
+    }
+    const registry = new MapComponentRegistry({
+      Collection: { id: 'Collection', factory: Collection },
+      ProductCard: { id: 'ProductCard', factory: ProductCard },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Collection',
+            data: { source: 'product.list' },
+            row_binding: 'ProductCard',
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({ componentRegistry: registry });
+    const products = [
+      { id: 1, title: 'Phone' },
+      { id: 2, title: 'Laptop' },
+    ];
+    const { findByTestId } = render(
+      <CirRuntime services={services}>
+        <DataResolverContext.Provider value={() => Promise.resolve(products)}>
+          <RenderNode node={plan.root} />
+        </DataResolverContext.Provider>
+      </CirRuntime>,
+    );
+    return findByTestId('row-1').then((el) => {
+      expect(el.textContent).toBe('Phone');
+      return findByTestId('row-2').then((el2) => {
+        expect(el2.textContent).toBe('Laptop');
+      });
+    });
+  });
+
+  it('warns and skips when row_binding cannot be resolved', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    function Collection(props: Record<string, unknown>): React.ReactElement {
+      const renderItem = props['renderItem'];
+      return <ul data-renderitem={typeof renderItem}></ul>;
+    }
+    const registry = new MapComponentRegistry({
+      Collection: { id: 'Collection', factory: Collection },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Collection',
+            data: { source: 'product.list' },
+            row_binding: 'NotRegistered',
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({ componentRegistry: registry });
+    const { container } = render(
+      <CirRuntime services={services}>
+        <DataResolverContext.Provider value={() => Promise.resolve([])}>
+          <RenderNode node={plan.root} />
+        </DataResolverContext.Provider>
+      </CirRuntime>,
+    );
+    expect(container.querySelector('ul')?.getAttribute('data-renderitem')).toBe('undefined');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('NotRegistered'));
+    warn.mockRestore();
   });
 
   it('renders fallback children recursively when binding missing', () => {

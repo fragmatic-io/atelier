@@ -57,6 +57,43 @@ describe('Table', () => {
     const { container } = render(<Table columns={COLS} rows={[{ name: 'a', age: 1 }]} />);
     expect(container.querySelector('table')?.getAttribute('data-density')).toBe('comfortable');
   });
+  // -- Phase 2 #3 — manifest-driven data + renderItem path --
+  it('accepts `data` array as a fallback for `rows` (manifest renderer path)', () => {
+    const data = [
+      { name: 'Ada', age: 30 },
+      { name: 'Bea', age: 28 },
+    ];
+    const { container } = render(<Table columns={COLS} data={data} />);
+    expect(container.querySelectorAll('tbody tr').length).toBe(2);
+  });
+  it('explicit `rows` wins over `data`', () => {
+    const rows = [{ name: 'Ada', age: 1 }];
+    const data = [
+      { name: 'X', age: 99 },
+      { name: 'Y', age: 100 },
+    ];
+    const { container } = render(<Table columns={COLS} rows={rows} data={data} />);
+    expect(container.querySelectorAll('tbody tr').length).toBe(1);
+    expect(container.querySelector('tbody tr')?.textContent).toContain('Ada');
+  });
+  it('renders `renderItem` factory output inside a single colspan cell when supplied', () => {
+    const rows = [
+      { name: 'Ada', age: 30 },
+      { name: 'Bea', age: 28 },
+    ];
+    const { container } = render(
+      <Table
+        columns={COLS}
+        rows={rows}
+        renderItem={(row) => <div data-testid={`r-${row['name'] as string}`}>{row['name']}</div>}
+      />,
+    );
+    // Each <tr> has a single factory cell instead of one cell per column.
+    const factoryCells = container.querySelectorAll('td[data-cir-part="table-row-factory"]');
+    expect(factoryCells.length).toBe(2);
+    expect(container.querySelector('[data-testid="r-Ada"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="r-Bea"]')).not.toBeNull();
+  });
   it('shrinks cell padding at compact density', () => {
     const { container, rerender } = render(
       <Table columns={COLS} rows={[{ name: 'a', age: 1 }]} density="comfortable" />,

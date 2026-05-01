@@ -88,5 +88,6 @@ function buildRenderNode(node: LayoutNode, registry: ComponentRegistry): RenderN
   }
   if (node.actions && node.actions.length > 0) out.actions = [...node.actions];
   if (node.props) out.props = { ...node.props };
+  if (node.row_binding !== undefined) out.rowBinding = node.row_binding;
   return out;
 }
