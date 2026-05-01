@@ -51,6 +51,7 @@
  */
 
 import { z } from 'zod';
+import { CompileBudgetSchema } from './intent.js';
 
 const TokenScale = z.record(z.string(), z.string());
 
@@ -214,5 +215,20 @@ export const BrandKitSchema = z.object({
   iconography: BrandIconographySchema.optional(),
   /** Optional accessibility minimums. See `BrandAccessibilitySchema`. */
   accessibility: BrandAccessibilitySchema.optional(),
+  /**
+   * Optional host-level compile cost budget. Acts as the **safety net** —
+   * a per-app ceiling that no user can blow past, regardless of what their
+   * `IntentProfile.compile_budget` allows.
+   *
+   * When both intent AND BrandKit declare a budget, the **stricter** value
+   * wins per dimension (the runtime computes a min over each axis). Intent
+   * is the user's declared limit; BrandKit is the host's hard ceiling. Most
+   * commercial deployments configure both: a generous BrandKit cap that
+   * catches runaway loops, plus tighter per-user intent budgets for free /
+   * pro / enterprise tiers.
+   *
+   * See `mergeCompileBudgets` in `@cir/compiler` for the merge semantics.
+   */
+  compile_budget: CompileBudgetSchema.optional(),
 });
 export type BrandKit = z.infer<typeof BrandKitSchema>;

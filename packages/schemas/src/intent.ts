@@ -112,6 +112,15 @@ export const CompileBudgetSchema = z.object({
   /** Hard cap on compile invocations per UTC hour (rate limit). */
   max_calls_per_hour: z.number().int().nonnegative().optional(),
   /**
+   * Soft cap on tokens any single compile may consume. The wrapper
+   * (`BudgetMeteredCompiler`) cannot pre-empt the LLM mid-call, so this is
+   * checked AFTER the compile returns. Exceeding it logs a warning via
+   * `onExceeded` (and emits `compile.budget_exceeded` with
+   * `code: 'tokens_per_call'`) but does not retroactively reject the
+   * manifest. Use it to detect prompt-budget regressions early.
+   */
+  max_tokens_per_call: z.number().int().nonnegative().optional(),
+  /**
    * What to do when the budget is exhausted.
    * - `'fall_through'`: skip this compiler and try the next one in the
    *   composite (preserves availability with a degraded result).

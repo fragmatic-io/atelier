@@ -21,12 +21,61 @@
  *   const store = new MemoryManifestStore();
  *   const resolver = new ServerManifestResolver({ compiler, store });
  *
+ * ## Compile cost budgets (Wave 10 S-6)
+ *
+ * For commercial deployments, wrap each LLM-backed child compiler in a
+ * `BudgetMeteredCompiler` so per-user spend is bounded. The wrapper reads
+ * the budget from `IntentProfile.compile_budget` and/or
+ * `BrandKit.compile_budget` (host wires it explicitly — see
+ * `mergeCompileBudgets` for the stricter-wins merge).
+ *
+ *   import {
+ *     CompositeCompiler, GeminiCompiler, GenericFallbackCompiler,
+ *     BudgetMeteredCompiler, InMemoryBudgetCounter, mergeCompileBudgets,
+ *   } from '@cir/compiler';
+ *
+ *   const counter = new InMemoryBudgetCounter();   // dev; Redis in prod
+ *   const budget = mergeCompileBudgets(
+ *     intent.compile_budget,
+ *     brandKit.compile_budget,
+ *   );
+ *
+ *   const gemini = new GeminiCompiler({ apiKey: process.env.GEMINI_API_KEY! });
+ *   const meteredGemini = budget
+ *     ? new BudgetMeteredCompiler({ inner: gemini, counter, budget,
+ *         onExceeded: (r) => console.warn('[budget]', r) })
+ *     : gemini;
+ *
+ *   const compiler = new CompositeCompiler(
+ *     [meteredGemini, new GenericFallbackCompiler()],
+ *     { onCascade: (from, err) => console.warn('cascade', from, err) },
+ *   );
+ *
+ * When the metered Gemini compiler throws `BudgetExceededError` (because
+ * the user has hit their cap), `CompositeCompiler` catches it and advances
+ * to `GenericFallbackCompiler`. The resolver's existing audit pipeline
+ * records `manifest.compiled` with `compiler_model: 'fallback-generic'`,
+ * which is the dashboard's signal that the LLM tier was skipped due to
+ * budget. No new audit event is needed.
+ *
+ * The fallback path is intentional: a budget-exhausted user still sees an
+ * app (just one rendered by the deterministic compiler). Hosts that want
+ * to surface "you've hit your limit" instead can set
+ * `compile_budget.on_exhausted = 'fail'` on the intent profile, which
+ * elevates the breach to `CompilerBudgetExhaustedError` at the composite
+ * level. `BudgetMeteredCompiler` itself always throws `BudgetExceededError`
+ * — the `on_exhausted` policy is enforced one layer up by
+ * `CompositeCompiler` via its built-in `BudgetMeter` integration.
+ *
  * See `/Users/vid/cir/docs/architecture.md` §"Compiler service in detail"
- * for the prompt structure and the diff-mode contract.
+ * for the prompt structure and the diff-mode contract; see
+ * `/Users/vid/cir/docs/token-economics.md` for the cost model that
+ * motivates per-user budgets.
  */
 
 // Core types
 export {
+  CompilerBudgetExhaustedError,
   CompilerOutputError,
   CompilerUnavailableError,
   type CompileInput,
@@ -38,7 +87,27 @@ export {
 export { GeminiCompiler, type GeminiCompilerOptions } from './gemini-compiler.js';
 export { FallbackCompiler, type FallbackCompilerOptions } from './fallback-compiler.js';
 export { GenericFallbackCompiler, genericFallbackManifest } from './generic-fallback.js';
-export { CompositeCompiler, type CompositeCompilerOptions } from './composite-compiler.js';
+export {
+  CompositeCompiler,
+  type BudgetEventPayload,
+  type BudgetExceededEventPayload,
+  type BudgetUsedEventPayload,
+  type CompositeCompilerOptions,
+} from './composite-compiler.js';
+
+// Budget metering (Wave 10 S-6)
+export {
+  BudgetMeter,
+  BudgetMeteredCompiler,
+  InMemoryBudgetCounter,
+  mergeCompileBudgets,
+  type BudgetCheckResult,
+  type BudgetCounter,
+  type BudgetExceededReason,
+  type BudgetMeteredCompilerOptions,
+  type BudgetMeterOptions,
+  type BudgetState,
+} from './budget-meter.js';
 
 // Intent profile compiler (onboarding)
 export {
@@ -69,6 +138,7 @@ export { RedisManifestStore, type RedisManifestStoreOptions } from './redis-mani
 export {
   BudgetExceededError,
   ServerManifestResolver,
+  type BudgetExceededCode,
   type ResolveResult,
   type ServerAuditEmitter,
   type ServerManifestResolverOptions,

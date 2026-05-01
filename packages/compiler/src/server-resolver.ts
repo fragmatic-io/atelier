@@ -62,15 +62,39 @@ export interface TokenBudgetCounter {
   add(user_id: string, tokens: number): Promise<void>;
 }
 
+/**
+ * Discriminator for `BudgetExceededError` so callers / dashboards can
+ * attribute a block to the specific budget axis that fired.
+ *
+ * - `'tokens_per_day'`: `max_tokens_per_day` (or the resolver-level
+ *   `perUserDailyTokens`) was reached.
+ * - `'calls_per_hour'`: `max_calls_per_hour` was reached.
+ * - `'tokens_per_call'`: a single compile returned more tokens than
+ *   `max_tokens_per_call` allowed. This is reported AFTER the call (the
+ *   wrapper logs a warning via `onExceeded` rather than throwing — the
+ *   manifest is already in hand so refusing it would just waste the spend).
+ */
+export type BudgetExceededCode = 'tokens_per_day' | 'calls_per_hour' | 'tokens_per_call';
+
 export class BudgetExceededError extends Error {
+  /**
+   * Which budget axis fired. `'tokens_per_day'` is the legacy default for
+   * the resolver-level guard (see `ServerManifestResolverOptions.budget`)
+   * since that path only enforces the daily token cap. The compiler-layer
+   * `BudgetMeteredCompiler` always sets a specific code.
+   */
+  readonly code: BudgetExceededCode;
+
   constructor(
     message: string,
     readonly user_id: string,
     readonly consumed: number,
     readonly cap: number,
+    code: BudgetExceededCode = 'tokens_per_day',
   ) {
     super(message);
     this.name = 'BudgetExceededError';
+    this.code = code;
   }
 }
 
@@ -148,6 +172,7 @@ export class ServerManifestResolver {
           input.user_id,
           used,
           this.#budget.perUserDailyTokens,
+          'tokens_per_day',
         );
       }
     }

@@ -14,14 +14,17 @@
  */
 
 import {
+  BudgetMeteredCompiler,
   CompositeCompiler,
   GenericFallbackCompiler,
   GeminiCompiler,
+  InMemoryBudgetCounter,
   MemoryManifestStore,
   ServerManifestResolver,
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
+import type { CompileBudget } from '@cir/schemas';
 import { SequenceDetector } from '@cir/policies';
 import { BehavioralTap, StreamingAuditSink } from '@cir/runtime';
 import type { Capability, ComponentDefinition } from '@cir/schemas';
@@ -73,14 +76,48 @@ function buildServer(): CirServer {
   // The compile chain is `[Gemini, GenericFallbackCompiler]`; the host's
   // `lib/fake-manifests.ts` is a baseline-only reference exercised by
   // tests, not served at runtime.
+  // Wave 10 S-6 — optional compile-cost budget enforcement. Off by default
+  // so the existing default boot is unchanged. When `CIR_COMPILE_BUDGET_ENABLED`
+  // is set, the LLM-backed Gemini compiler is wrapped in a
+  // `BudgetMeteredCompiler`. If a user blows past their budget the
+  // CompositeCompiler cascades to `GenericFallbackCompiler` and the audit
+  // event records `compiler_model: 'fallback-generic'` — no separate
+  // budget-blocked event is emitted.
+  //
+  // The budget shape below is illustrative — real deployments would source
+  // it from `intent.compile_budget` and/or `brandKit.compile_budget` per
+  // request and merge with `mergeCompileBudgets`. The demo's seed (here)
+  // is a process-wide cap because the demo doesn't yet model per-user
+  // intent profiles at the server level.
+  const budgetEnabled = process.env['CIR_COMPILE_BUDGET_ENABLED'] === '1';
+  const demoBudget: CompileBudget | undefined = budgetEnabled
+    ? {
+        max_tokens_per_day: Number(process.env['CIR_COMPILE_BUDGET_TOKENS_PER_DAY'] ?? 50_000),
+        max_calls_per_hour: Number(process.env['CIR_COMPILE_BUDGET_CALLS_PER_HOUR'] ?? 30),
+        on_exhausted: 'fall_through',
+      }
+    : undefined;
+  const budgetCounter = budgetEnabled ? new InMemoryBudgetCounter() : undefined;
+
   const compilers: CompilerService[] = [];
   if (geminiAvailable) {
+    const gemini: CompilerService = new GeminiCompiler({
+      apiKey: apiKey!,
+      coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
+      diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
+    });
     compilers.push(
-      new GeminiCompiler({
-        apiKey: apiKey!,
-        coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
-        diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
-      }),
+      demoBudget && budgetCounter
+        ? new BudgetMeteredCompiler({
+            inner: gemini,
+            counter: budgetCounter,
+            budget: demoBudget,
+            onExceeded: (reason) => {
+              // eslint-disable-next-line no-console
+              console.warn(`[cir] compile budget breached (${reason.code}): ${reason.message}`);
+            },
+          })
+        : gemini,
     );
   }
   compilers.push(new GenericFallbackCompiler());

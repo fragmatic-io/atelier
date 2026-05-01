@@ -102,6 +102,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "max_tokens_per_call": {
+          "type": "integer",
+          "minimum": 0
+        },
         "on_exhausted": {
           "type": "string",
           "enum": [
