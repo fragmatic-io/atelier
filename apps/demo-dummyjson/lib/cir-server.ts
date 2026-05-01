@@ -179,10 +179,37 @@ function buildServer(): CirServer {
 
   const store = new MemoryManifestStore({ maxEntries: 200 });
 
+  // Phase 3 polish: density-keyed cache. The default `buildKey` doesn't
+  // include lens density, so a `LensSwitcher` flip persists in
+  // localStorage but the cached manifest serves the prior variant. We
+  // override `buildKey` to fold the active density into the cache key
+  // (via `intent_profile_version`) so a lens change is a guaranteed
+  // miss → fresh compile → user sees the layout reshape.
   const resolver = new ServerManifestResolver({
     compiler,
     store,
     audit: (e) => audit.emit(e),
+    buildKey: (input) => {
+      let capabilityVersion: string | undefined;
+      for (const c of Object.values(input.capabilities)) {
+        if (c.version && (!capabilityVersion || c.version > capabilityVersion)) {
+          capabilityVersion = c.version;
+        }
+      }
+      return {
+        user_id: input.user_id,
+        app_id: input.app_id,
+        route: input.route,
+        capability_version: capabilityVersion,
+        // Density gets folded into intent_profile_version so the cache
+        // treats `comfortable` / `compact` / `spacious` as different
+        // manifests for the same route. The encoding is opaque to the
+        // cache — only equality matters.
+        intent_profile_version:
+          current.density === 'compact' ? 1 : current.density === 'spacious' ? 3 : 2,
+        brand_kit_version: input.brandKit?.version,
+      };
+    },
   });
 
   // Components catalog summary — what the compiler is allowed to reference.
