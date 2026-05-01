@@ -384,6 +384,122 @@ describe('RenderNode', () => {
     expect(getByTestId('custom-empty').textContent).toBe('inbox-zero');
   });
 
+  it('renders the manifest-declared loading_state slot in place of the data-bound component', async () => {
+    // Wave 7 / P-8 — `loading_state` is a first-class slot. While the
+    // resolver promise is pending, the walker substitutes the slot's
+    // LayoutNode in place of the Listy component. No `data-cir-default-state`
+    // wrapper because the manifest supplied the slot explicitly.
+    function Listy(): React.ReactElement {
+      return <div data-testid="row">x</div>;
+    }
+    function CustomLoading({ tag }: { tag?: string }): React.ReactElement {
+      return <div data-testid="custom-loading">{tag}</div>;
+    }
+    const registry = new MapComponentRegistry({
+      Stack: {
+        id: 'Stack',
+        factory: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+      },
+      Listy: { id: 'Listy', factory: Listy },
+      CustomLoading: { id: 'CustomLoading', factory: CustomLoading },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Stack',
+            children: [
+              {
+                component: 'Listy',
+                data: {
+                  source: 'thread.list',
+                  loading_state: {
+                    component: 'CustomLoading',
+                    props: { tag: 'fetching-decisions' },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({ componentRegistry: registry });
+    // A pending resolver — never resolves so the loading branch wins.
+    const pending = new Promise<unknown>(() => {});
+    const { container, getByTestId, queryByTestId } = render(
+      <CirRuntime services={services} dataResolver={() => pending}>
+        <RenderNode node={plan.root} />
+      </CirRuntime>,
+    );
+    await waitFor(() => expect(getByTestId('custom-loading')).toBeTruthy());
+    expect(getByTestId('custom-loading').textContent).toBe('fetching-decisions');
+    // Component itself never rendered — replaced by the loading slot.
+    expect(queryByTestId('row')).toBeNull();
+    // Author-supplied slot — no `data-cir-default-state` wrapper.
+    expect(container.querySelector('[data-cir-default-state]')).toBeNull();
+  });
+
+  it('renders the manifest-declared error_state slot when the resolver rejects', async () => {
+    // Wave 7 / P-8 — `error_state` is a first-class slot. When the resolver
+    // promise rejects, the walker substitutes the slot's LayoutNode in place
+    // of the data-bound component.
+    function Listy(): React.ReactElement {
+      return <div data-testid="row">x</div>;
+    }
+    function CustomError({ tag }: { tag?: string }): React.ReactElement {
+      return <div data-testid="custom-error">{tag}</div>;
+    }
+    const registry = new MapComponentRegistry({
+      Stack: {
+        id: 'Stack',
+        factory: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+      },
+      Listy: { id: 'Listy', factory: Listy },
+      CustomError: { id: 'CustomError', factory: CustomError },
+    });
+    const manifest = makeManifest({
+      routes: [
+        {
+          path: '/today',
+          title: 'Today',
+          layout: {
+            component: 'Stack',
+            children: [
+              {
+                component: 'Listy',
+                data: {
+                  source: 'thread.list',
+                  error_state: {
+                    component: 'CustomError',
+                    props: { tag: 'decisions-broken' },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const plan = buildRenderPlan(manifest, '/today', registry);
+    const services = buildTestServices({ componentRegistry: registry });
+    const { container, getByTestId, queryByTestId } = render(
+      <CirRuntime
+        services={services}
+        dataResolver={() => Promise.reject(new Error('upstream offline'))}
+      >
+        <RenderNode node={plan.root} />
+      </CirRuntime>,
+    );
+    await waitFor(() => expect(getByTestId('custom-error')).toBeTruthy());
+    expect(getByTestId('custom-error').textContent).toBe('decisions-broken');
+    expect(queryByTestId('row')).toBeNull();
+    expect(container.querySelector('[data-cir-default-state]')).toBeNull();
+  });
+
   it('renders fallback children recursively when binding missing', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const registry = new MapComponentRegistry();

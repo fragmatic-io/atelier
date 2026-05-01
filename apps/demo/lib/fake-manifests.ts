@@ -138,6 +138,14 @@ export function todayManifest(): Manifest {
                 // Decision queue — Queue baseline, bound to thread.list with
                 // declarative per-row actions. Replaces the old DecisionQueue
                 // custom binding.
+                //
+                // Wave 7 / P-8 — exercises the new `loading_state` /
+                // `empty_state` / `error_state` slots on the `data` binding.
+                // The render walker substitutes these `LayoutNode`s in place
+                // of the Queue while the resolver is loading, returns zero
+                // rows, or errors; without them the framework's
+                // `BASELINE_RESOLVER_DEFAULTS` (`<Skeleton>`, `<EmptyState>`,
+                // `<Alert>`) would render instead.
                 {
                   component: 'Queue',
                   props: {
@@ -154,6 +162,27 @@ export function todayManifest(): Manifest {
                   data: {
                     source: 'thread.list',
                     filter: 'requires_decision = true',
+                    loading_state: {
+                      component: 'Skeleton',
+                      props: { shape: 'card-row', count: 3 },
+                      children: [],
+                    },
+                    empty_state: {
+                      component: 'EmptyState',
+                      props: {
+                        title: 'Inbox zero',
+                        description: 'No decisions waiting today. Check back after lunch.',
+                      },
+                      children: [],
+                    },
+                    error_state: {
+                      component: 'Alert',
+                      props: {
+                        severity: 'error',
+                        title: 'Couldn’t load decisions',
+                      },
+                      children: [],
+                    },
                   },
                   actions: ['task.create_from_thread', 'thread.archive'],
                   children: [],

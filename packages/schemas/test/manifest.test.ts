@@ -134,6 +134,88 @@ describe('ManifestSchema', () => {
     };
     expect(() => ManifestSchema.parse(m)).not.toThrow();
   });
+
+  it('accepts a data binding with all three state slots (empty/loading/error)', () => {
+    // Wave 7 / P-8 — `loading_state` and `error_state` are formal slots on a
+    // `data` binding alongside the long-standing `empty_state`. Each is a full
+    // `LayoutNode` so it can name any component the registry resolves.
+    const m = {
+      manifest_id: 'm_p8slots01',
+      user_id: 'vid',
+      app_id: 'app',
+      compiled_from: {
+        capability_version: '1.0.0',
+        skill_versions: {},
+        component_catalog_version: '1.0.0',
+        intent_profile_version: 1,
+        compiler_model: 'claude',
+        compiled_at: '2026-04-29T12:00:00Z',
+      },
+      invalidates_on: [],
+      routes: [
+        {
+          path: '/today',
+          layout: {
+            component: 'List',
+            data: {
+              source: 'thread.list',
+              empty_state: {
+                component: 'EmptyState',
+                props: { title: 'Inbox zero', body: 'You are caught up.' },
+              },
+              loading_state: { component: 'Skeleton', props: { shape: 'row', count: 3 } },
+              error_state: {
+                component: 'Alert',
+                props: { severity: 'error', title: 'Could not load' },
+              },
+            },
+          },
+        },
+      ],
+      policies_satisfied: [],
+    };
+    const parsed = ManifestSchema.parse(m);
+    const layout = parsed.routes[0]?.layout;
+    expect(layout?.data?.empty_state?.component).toBe('EmptyState');
+    expect(layout?.data?.loading_state?.component).toBe('Skeleton');
+    expect(layout?.data?.error_state?.component).toBe('Alert');
+  });
+
+  it('rejects a data binding whose loading_state is not a LayoutNode', () => {
+    // Wave 7 / P-8 — slots are LayoutNodes, not free-form objects. A payload
+    // missing `component` (required on every LayoutNode) must fail at the
+    // schema layer (ETHOS principle 7: schema-validated contracts).
+    const bad = {
+      manifest_id: 'm_p8badslo1',
+      user_id: 'vid',
+      app_id: 'app',
+      compiled_from: {
+        capability_version: '1.0.0',
+        skill_versions: {},
+        component_catalog_version: '1.0.0',
+        intent_profile_version: 1,
+        compiler_model: 'claude',
+        compiled_at: '2026-04-29T12:00:00Z',
+      },
+      invalidates_on: [],
+      routes: [
+        {
+          path: '/today',
+          layout: {
+            component: 'List',
+            data: {
+              source: 'thread.list',
+              // Not a LayoutNode — missing required `component` field.
+              loading_state: { props: { shape: 'row' } },
+            },
+          },
+        },
+      ],
+      policies_satisfied: [],
+    };
+    const result = ManifestSchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('TurnDeltaSchema', () => {

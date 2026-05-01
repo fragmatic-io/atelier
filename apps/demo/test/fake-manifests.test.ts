@@ -83,6 +83,25 @@ describe('todayManifest', () => {
       expect(components, `retired custom ${retired} should not appear`).not.toContain(retired);
     }
   });
+
+  it('decisions Queue declares all three P-8 state slots on its data binding', () => {
+    // Wave 7 / P-8 — the demo's flagship Queue showcases the new
+    // `loading_state` / `empty_state` / `error_state` slots end to end. The
+    // render walker substitutes these LayoutNodes in place of the Queue when
+    // the resolver reports loading / empty / error; without them the
+    // framework's `BASELINE_RESOLVER_DEFAULTS` fire instead.
+    const m = todayManifest();
+    const stack = findFirst(m.routes[0]!.layout!, 'Stack')!;
+    const decisions = (stack.children ?? []).find((c) => c.component === 'Queue')!;
+    const data = decisions.data as Record<string, unknown> | undefined;
+    expect(data).toBeDefined();
+    const loading = data?.['loading_state'] as { component?: string } | undefined;
+    const empty = data?.['empty_state'] as { component?: string } | undefined;
+    const errored = data?.['error_state'] as { component?: string } | undefined;
+    expect(loading?.component).toBe('Skeleton');
+    expect(empty?.component).toBe('EmptyState');
+    expect(errored?.component).toBe('Alert');
+  });
 });
 
 describe('threadManifest', () => {

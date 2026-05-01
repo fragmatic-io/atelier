@@ -8,6 +8,24 @@
  * a blank rectangle on cold load (or stays blank when zero rows come back) is
  * worse than the framework's default UI — it looks broken.
  *
+ * Wave 7 / P-8 — empty / loading / error are now first-class composition
+ * slots:
+ *   - **Schema** (`packages/schemas/src/manifest.ts`): `data.empty_state`,
+ *     `data.loading_state`, `data.error_state` are formal `LayoutNode` slots
+ *     on `ComponentDataBinding`. Manifests opt in only when they need a
+ *     distinctive surface; the resolver pipeline supplies a sensible default
+ *     for every state otherwise (ethos principle #9).
+ *   - **Runtime**: the React render walker (`packages/react/src/render/
+ *     render-node.tsx`) substitutes the manifest's slot — or a host /
+ *     framework default — in place of the data-bound component when the
+ *     resolver reports `loading | error | empty`. See
+ *     `BASELINE_RESOLVER_DEFAULTS` for the framework defaults
+ *     (`<EmptyState>` / `<Skeleton>` / `<Alert>`).
+ *   - **Policy** (this file): walks the manifest, surfaces an `info`
+ *     advisory for every data-bound node that does not declare a custom
+ *     slot, and an `error` for bindings that opt into strict state handling
+ *     via `requiresExplicitStateSlots`.
+ *
  * The policy walks every `LayoutNode`. For each node whose component is in the
  * data-bound allow-list (`List`, `Table`, `Grid`, `KPIRow`, `DetailView`,
  * `Chart`, `Calendar`, `Kanban`, `Timeline`, `Gallery`, `Tree`) and whose node
@@ -26,6 +44,12 @@
  *        appearing as a sibling of the data-bound node. This covers the
  *        common pattern of a `<Stack>` wrapping a `<List>` and an
  *        `<EmptyState>` together — the runtime cross-fades on load state.
+ *
+ * If none of the three apply, the policy falls through to the resolver-default
+ * path: the React render walker substitutes `BASELINE_RESOLVER_DEFAULTS[kind]`
+ * (or the host's `services.resolverDefaults.{empty,loading,error}` override)
+ * at render time, tagged with `data-cir-default-state`. The advisory is the
+ * remediation prompt for authors who want a per-route distinctive surface.
  *
  * Source spec: `/Users/vid/cir/skills/empty-state-prose.skill.md` ("every
  * `<List>` / `<Grid>` / `<Table>` / `<DetailView>` that binds to a data
