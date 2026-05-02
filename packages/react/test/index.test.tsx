@@ -19,6 +19,10 @@ describe('@atelier/react public surface', () => {
     expect(typeof react.useReactConfirmation).toBe('function');
     expect(typeof react.EmptyDataResolver).toBe('function');
     expect(react.DataResolverContext).toBeTruthy();
+    // Wave 7 / P-7 — motion hooks.
+    expect(typeof react.useReducedMotion).toBe('function');
+    expect(typeof react.useViewTransition).toBe('function');
+    expect(typeof react.useTransition).toBe('function');
   });
 
   it('does NOT export RenderNode publicly', () => {

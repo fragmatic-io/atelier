@@ -64,6 +64,14 @@ export {
   createUndoToastEmitter,
   type UseUndoToastEmitter,
 } from './hooks/use-undo-toast-emitter.js';
+// Wave 7 / P-7 — motion hooks. Pair with `@atelier/runtime`'s motion module.
+export { useReducedMotion } from './hooks/use-reduced-motion.js';
+export { useViewTransition } from './hooks/use-view-transition.js';
+export {
+  useTransition,
+  type UseTransitionOptions,
+  type UseTransitionResult,
+} from './hooks/use-transition.js';
 
 // -----------------------------------------------------------------------------
 // Data resolver protocol

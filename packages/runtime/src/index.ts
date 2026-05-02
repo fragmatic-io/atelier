@@ -135,6 +135,24 @@ export { buildRenderPlan, RouteNotFoundError, RouteNotRenderableError } from './
 export type { RenderNode, RenderPlan } from './render/plan-types.js';
 
 // -----------------------------------------------------------------------------
+// Motion (Wave 7 / P-7)
+// -----------------------------------------------------------------------------
+export {
+  MOTION_DEFAULTS,
+  REDUCED_MOTION_QUERY,
+  durationFor,
+  isReducedMotion,
+  readMotionTokens,
+  viewTransition,
+  type MotionDurations,
+  type MotionEasing,
+  type MotionEasings,
+  type MotionSpeed,
+  type MotionTokens,
+  type TransitionPhase,
+} from './motion/index.js';
+
+// -----------------------------------------------------------------------------
 // Audit
 // -----------------------------------------------------------------------------
 export { ConsoleAuditSink, NoopAuditSink, type AuditSink } from './audit/emit.js';

@@ -41,6 +41,14 @@ describe('@atelier/runtime public surface', () => {
     // Audit
     expect(runtime.NoopAuditSink).toBeTruthy();
     expect(runtime.ConsoleAuditSink).toBeTruthy();
+
+    // Motion (Wave 7 / P-7)
+    expect(runtime.MOTION_DEFAULTS).toBeTruthy();
+    expect(runtime.REDUCED_MOTION_QUERY).toBe('(prefers-reduced-motion: reduce)');
+    expect(typeof runtime.readMotionTokens).toBe('function');
+    expect(typeof runtime.durationFor).toBe('function');
+    expect(typeof runtime.isReducedMotion).toBe('function');
+    expect(typeof runtime.viewTransition).toBe('function');
   });
 
   it('testing subpath exposes test helpers', () => {
