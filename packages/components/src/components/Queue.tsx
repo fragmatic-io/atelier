@@ -20,7 +20,6 @@
  *     `item.title` / `item.name` / `item.subject` / a JSON fallback
  *   - `groupBy(item)` + `groupLabels` + `groupOrder` — optional grouping (the
  *     pattern `TaskQueue` used for due-date buckets)
- *   - empty / loading / error states are first-class — no host plumbing
  *   - per-item flags `pinned: true` and `emphasis: '<tag>'` surface on the row
  *     as `data-pinned="true"` / `data-emphasis="<tag>"` so a host stylesheet
  *     can tint salient rows without a custom binding (the data resolver picks
@@ -32,6 +31,14 @@
  * Manifest authors compose Queue inside any layout container the route uses;
  * the framework's `composes_according_to_rules` policy treats it as a leaf
  * (its rows come from the `data` binding, not manifest children).
+ *
+ * Wave 7 / P-8 (closing) — Queue renders the populated case only. Loading /
+ * error / empty are walker-side substitutions: the manifest declares
+ * `data.loading_state` / `data.error_state` / `data.empty_state` and the
+ * `<RenderNode>` walker swaps the slot in before constructing this component
+ * (or falls through to `BASELINE_RESOLVER_DEFAULTS` when no slot is declared).
+ * Hosts that need direct host-side React composition compose `<Skeleton>` /
+ * `<Alert>` / `<EmptyState>` themselves.
  */
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
@@ -87,12 +94,6 @@ export interface QueueProps<T = unknown> {
   groupOrder?: readonly string[];
   /** Per-item optimistic hide on a successful action. Useful for archive/complete. Default true. */
   optimisticHide?: boolean;
-  /** Custom empty surface. Default reads `'No items'`. */
-  empty?: ReactNode;
-  /** Renderer-threaded loading state from a `data` binding. */
-  loading?: boolean;
-  /** Renderer-threaded error state from a `data` binding. */
-  error?: unknown;
   density?: Density;
   variant?: QueueVariant;
   className?: string;
@@ -154,9 +155,6 @@ export function Queue<T = unknown>({
   groupLabels,
   groupOrder,
   optimisticHide = true,
-  empty,
-  loading,
-  error,
   density = DEFAULT_DENSITY,
   variant = 'ghost',
   className,
@@ -181,56 +179,15 @@ export function Queue<T = unknown>({
     }, 2000);
   };
 
-  if (loading === true) {
-    return (
-      <div
-        data-cir-component="Queue"
-        data-cir-loading="true"
-        data-density={density}
-        data-variant={variant}
-        className={cn(contentVariantClass[variant], className)}
-        role="status"
-        aria-live="polite"
-      >
-        Loading…
-      </div>
-    );
-  }
-
-  if (error !== undefined && error !== null) {
-    return (
-      <div
-        data-cir-component="Queue"
-        data-cir-error="true"
-        data-density={density}
-        data-variant={variant}
-        className={cn(contentVariantClass[variant], className)}
-        role="alert"
-      >
-        {errorMessage(error) || 'Failed to load.'}
-      </div>
-    );
-  }
-
-  // Apply optimistic-hide overlay.
+  // Apply optimistic-hide overlay. Wave 7 / P-8 (closing) — Queue no longer
+  // hand-rolls a loading / error / empty branch; the walker substitutes the
+  // appropriate state slot before this component is constructed. When every
+  // row has been optimistically hidden post-render the component still emits
+  // the populated <section> (with no <li> rows) — the walker doesn't
+  // re-evaluate state after the component mounts.
   const visibleItems = items
     .map((item, i) => ({ item, i, id: idOf(item, i) }))
     .filter(({ id }) => !hidden.has(id));
-
-  if (visibleItems.length === 0) {
-    return (
-      <div
-        data-cir-component="Queue"
-        data-cir-empty="true"
-        data-density={density}
-        data-variant={variant}
-        className={cn(contentVariantClass[variant], className)}
-      >
-        {title !== undefined ? <div data-cir-part="queue-title">{title}</div> : null}
-        <div data-cir-part="queue-empty">{empty ?? 'No items'}</div>
-      </div>
-    );
-  }
 
   const rowPad = DENSITY_ROW_PADDING_PX[density];
   const rowStyle: CSSProperties = {
@@ -440,9 +397,6 @@ export const QueueBinding: ComponentBinding = {
       groupLabels: 'object',
       groupOrder: 'array',
       optimisticHide: 'boolean',
-      empty: 'react-node',
-      loading: 'boolean',
-      error: 'unknown',
       density: 'string',
       variant: 'string',
       className: 'string',

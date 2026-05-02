@@ -20,6 +20,14 @@
  * AND the selection is non-empty, the List auto-mounts a `<BulkActionBar>`
  * via portal at bottom-center. Backwards compat: lists without `selectable`
  * behave identically to pre-Int-9 builds.
+ *
+ * Wave 7 / P-8 (closing) — List renders the populated case only. Loading /
+ * error / empty are walker-side substitutions: the manifest declares
+ * `data.loading_state` / `data.error_state` / `data.empty_state` and the
+ * `<RenderNode>` walker swaps the slot in before constructing this component
+ * (or falls through to `BASELINE_RESOLVER_DEFAULTS` when no slot is declared).
+ * Hosts that need direct host-side React composition compose `<Skeleton>` /
+ * `<Alert>` / `<EmptyState>` themselves.
  */
 import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
@@ -54,7 +62,6 @@ function isPinned(item: unknown): boolean {
 export interface ListProps<T> {
   items?: readonly T[];
   renderItem?: (item: T, index: number) => ReactNode;
-  empty?: ReactNode;
   /**
    * Manifest contract slot for the resolver-supplied data array. When the
    * manifest renderer resolves a `data` binding, it threads the result
@@ -108,7 +115,6 @@ export interface ListProps<T> {
 export function List<T>({
   items: itemsProp,
   renderItem,
-  empty,
   bordered,
   data,
   density = DEFAULT_DENSITY,
@@ -154,19 +160,10 @@ export function List<T>({
   // Local fallback selection when the host did NOT pass `selectedIds`.
   // Keeps the component usable as an uncontrolled primitive in demos.
   const [localSelected, setLocalSelected] = useState<ReadonlySet<string>>(() => new Set<string>());
-  if (items.length === 0) {
-    return (
-      <div
-        data-cir-component="List"
-        data-cir-empty="true"
-        data-density={density}
-        data-variant={variant}
-        className={cn(contentVariantClass[variant], className)}
-      >
-        {empty ?? null}
-      </div>
-    );
-  }
+  // Wave 7 / P-8 (closing) — List no longer hand-rolls an empty branch; the
+  // walker substitutes `data.empty_state` (or `BASELINE_RESOLVER_DEFAULTS.empty`)
+  // before this component is constructed. With no rows we still render an
+  // empty <ul> so the component never crashes when used outside the walker.
   const rowPad = DENSITY_ROW_PADDING_PX[density];
   const itemStyle: CSSProperties = {
     paddingTop: `${String(rowPad)}px`,
@@ -354,7 +351,6 @@ export const ListBinding: ComponentBinding = {
       items: 'array',
       data: 'unknown',
       renderItem: 'function',
-      empty: 'react-node',
       bordered: 'boolean',
       density: 'string',
       variant: 'string',
@@ -368,9 +364,6 @@ export const ListBinding: ComponentBinding = {
       onSelectionChange: 'function',
       bulkActions: 'array',
       onBulkAction: 'function',
-      // Loading / error props are wired by the renderer from data bindings.
-      loading: 'boolean',
-      error: 'unknown',
     },
   },
 };

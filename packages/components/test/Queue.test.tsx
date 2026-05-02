@@ -46,24 +46,6 @@ describe('Queue', () => {
     expect(screen.getByText('Decisions')).toBeTruthy();
   });
 
-  it('renders the empty surface when no items match', () => {
-    render(<Queue items={[]} empty="Inbox zero" />);
-    expect(screen.getByText('Inbox zero')).toBeTruthy();
-  });
-
-  it('renders loading state via aria-live=polite', () => {
-    const { container } = render(<Queue loading />);
-    const node = container.querySelector('[data-cir-loading="true"]');
-    expect(node).toBeTruthy();
-    expect(node?.getAttribute('aria-live')).toBe('polite');
-  });
-
-  it('renders error message in role=alert', () => {
-    const { container } = render(<Queue error={new Error('Boom')} />);
-    const node = container.querySelector('[role="alert"]');
-    expect(node?.textContent).toContain('Boom');
-  });
-
   it('renders one button per declared action with capability id on data-action-id', () => {
     render(
       <Queue

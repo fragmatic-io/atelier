@@ -21,10 +21,17 @@
  * selected, indeterminate when only some are. With `bulkActions`, a
  * floating `<BulkActionBar>` auto-mounts at bottom-center while the
  * selection is non-empty.
+ *
+ * Wave 7 / P-8 (closing) — Table renders the populated case only. Loading /
+ * error / empty are walker-side substitutions: the manifest declares
+ * `data.loading_state` / `data.error_state` / `data.empty_state` and the
+ * `<RenderNode>` walker swaps the slot in before constructing this component
+ * (or falls through to `BASELINE_RESOLVER_DEFAULTS` when no slot is declared).
+ * Hosts that need direct host-side React composition compose `<Skeleton>` /
+ * `<Alert>` / `<EmptyState>` themselves.
  */
 import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
-import { EmptyState } from './EmptyState.js';
 import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
 import {
   cn,
@@ -78,7 +85,6 @@ export interface TableProps {
    * `props.data`. Hosts can also pass an explicit closure.
    */
   renderItem?: (row: TableRowSpec, index: number) => ReactNode;
-  empty?: ReactNode;
   caption?: string;
   /** Personalisation density. Renderer fills from intent profile when unset. */
   density?: Density;
@@ -110,8 +116,6 @@ export interface TableProps {
   onBulkAction?: (actionId: string) => void;
 }
 
-const DEFAULT_EMPTY = <EmptyState title="No data" />;
-
 function isPinnedRow(row: TableRowSpec): boolean {
   return row[PINNED_KEY] === true;
 }
@@ -121,7 +125,6 @@ export function Table({
   rows: rowsProp,
   data,
   renderItem,
-  empty,
   caption,
   density = DEFAULT_DENSITY,
   variant = 'ghost',
@@ -144,19 +147,11 @@ export function Table({
   const rows: readonly TableRowSpec[] =
     rowsProp ?? (Array.isArray(data) ? (data as readonly TableRowSpec[]) : []);
   const columns: readonly TableColumn[] = columnsProp ?? [];
-  if (rows.length === 0) {
-    return (
-      <div
-        data-cir-component="Table"
-        data-cir-empty="true"
-        data-density={density}
-        data-variant={variant}
-        className={cn(contentVariantClass[variant], className)}
-      >
-        {empty ?? DEFAULT_EMPTY}
-      </div>
-    );
-  }
+  // Wave 7 / P-8 (closing) — Table no longer hand-rolls an empty branch; the
+  // walker substitutes `data.empty_state` (or `BASELINE_RESOLVER_DEFAULTS.empty`)
+  // before this component is constructed. With no rows we still render the
+  // populated <table> shell (header + empty <tbody>) so the component never
+  // crashes when used outside the walker.
   const cellPad = DENSITY_ROW_PADDING_PX[density];
   const cellStyle: CSSProperties = {
     paddingTop: `${String(cellPad)}px`,

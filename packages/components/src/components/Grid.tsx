@@ -34,6 +34,14 @@
  * The runtime threads `onAction(actionId, item)` onto each rendered Card
  * via the Grid's `actionSlots: ['onAction']` so per-item dispatch works
  * without per-tile wiring.
+ *
+ * Wave 7 / P-8 (closing) — Grid renders the populated case only. Loading /
+ * error / empty are walker-side substitutions: the manifest declares
+ * `data.loading_state` / `data.error_state` / `data.empty_state` and the
+ * `<RenderNode>` walker swaps the slot in before constructing this component
+ * (or falls through to `BASELINE_RESOLVER_DEFAULTS` when no slot is declared).
+ * Hosts that need direct host-side React composition compose `<Skeleton>` /
+ * `<Alert>` / `<EmptyState>` themselves.
  */
 import {
   cloneElement,

@@ -20,15 +20,6 @@ describe('Table', () => {
     expect(container.querySelectorAll('th').length).toBe(2);
     expect(container.querySelectorAll('tbody tr').length).toBe(2);
   });
-  it('renders the caption when provided', () => {
-    render(<Table columns={COLS} rows={[]} caption="People" />);
-    // No caption when rows empty (falls back to EmptyState).
-    expect(screen.queryByText('People')).toBeNull();
-  });
-  it('renders the default EmptyState when rows is empty', () => {
-    render(<Table columns={COLS} rows={[]} />);
-    expect(screen.getByText('No data')).toBeTruthy();
-  });
   it('binding id matches', () => {
     expect(TableBinding.id).toBe('Table');
   });

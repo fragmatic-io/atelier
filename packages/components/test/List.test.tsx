@@ -12,10 +12,6 @@ describe('List', () => {
     const { container } = render(<List items={items} renderItem={(x) => <span>{x}</span>} />);
     expect(container.querySelectorAll('li').length).toBe(3);
   });
-  it('renders empty slot when items is empty', () => {
-    render(<List items={[]} renderItem={() => null} empty={<span>none</span>} />);
-    expect(screen.getByText('none')).toBeTruthy();
-  });
   it('reflects bordered as data attr', () => {
     const { container } = render(<List items={['a']} bordered renderItem={() => null} />);
     expect(container.querySelector('ul')?.getAttribute('data-bordered')).toBe('true');
