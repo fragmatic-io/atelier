@@ -225,3 +225,22 @@ export {
 // JSON Schema codegen
 // -----------------------------------------------------------------------------
 export { toJsonSchema, type ToJsonSchemaOptions } from './json-schema.js';
+
+// -----------------------------------------------------------------------------
+// Marketplace primitives — Wave 8 / V-6
+// `cir://author/persona@version` addressing + ed25519-signed bundle envelope.
+// See `/Users/vid/cir/docs/vault-protocol.md` §"Marketplace endpoints".
+// -----------------------------------------------------------------------------
+export {
+  MarketplaceAddressSchema,
+  MarketplaceAuthor,
+  MarketplaceKeyId,
+  MarketplacePersona,
+  SignedBundleSchema,
+  canonicalJsonStringify,
+  formatMarketplaceAddress,
+  parseMarketplaceAddress,
+  signingInputForBundle,
+  type MarketplaceAddress,
+  type SignedBundle,
+} from './marketplace.js';

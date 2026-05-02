@@ -26,6 +26,11 @@ import {
 } from './scopes.js';
 import type { GrantRecord, VaultStorage } from './storage.js';
 import { handleConsentRequest } from './consent.js';
+import {
+  MemoryMarketplaceStorage,
+  handleMarketplaceRequest,
+  type MarketplaceStorage,
+} from './marketplace.js';
 
 /**
  * Shape of the `system.security_revocation` trigger we emit on revoke.
@@ -58,6 +63,14 @@ export interface VaultServerOptions {
   maxTokenTtlSeconds?: number;
   /** Optional trigger emitter; called on revoke. */
   onRevoked?: TriggerEmitter;
+  /**
+   * Marketplace bundle storage (Wave 8 / V-6). Optional — when omitted, an
+   * in-memory store is created so tests and the dev server keep working
+   * without separate wiring. Production deployments pass a file-backed
+   * adapter (`JsonFileMarketplaceStorage`) rooted on the same disk as the
+   * vault state file.
+   */
+  marketplaceStorage?: MarketplaceStorage;
   /**
    * Optional clock override for tests. Returns Unix seconds.
    * Defaults to `() => Math.floor(Date.now() / 1000)`.
@@ -109,6 +122,7 @@ export class VaultService {
   readonly defaultTokenTtlSeconds: number;
   readonly maxTokenTtlSeconds: number;
   readonly onRevoked: TriggerEmitter | undefined;
+  readonly marketplaceStorage: MarketplaceStorage;
   readonly now: () => number;
 
   constructor(opts: VaultServerOptions) {
@@ -118,6 +132,7 @@ export class VaultService {
     this.defaultTokenTtlSeconds = opts.defaultTokenTtlSeconds ?? DEFAULT_TTL;
     this.maxTokenTtlSeconds = opts.maxTokenTtlSeconds ?? MAX_TTL;
     this.onRevoked = opts.onRevoked;
+    this.marketplaceStorage = opts.marketplaceStorage ?? new MemoryMarketplaceStorage();
     this.now = opts.now ?? (() => Math.floor(Date.now() / 1000));
   }
 
@@ -229,6 +244,11 @@ export async function handleVaultRequest(
   //    match a consent route, so the rest of the dispatcher takes over.
   const consentResponse = handleConsentRequest(service, req);
   if (consentResponse !== null) return consentResponse;
+
+  // 0a) Marketplace endpoints — Wave 8 / V-6. Publish + fetch a signed
+  //     bundle. Returns null when no marketplace route matched.
+  const marketplaceResponse = handleMarketplaceRequest(service.marketplaceStorage, req);
+  if (marketplaceResponse !== null) return marketplaceResponse;
 
   // 1) JWKS — public, unauthenticated.
   if (req.method === 'GET' && req.path === '/.well-known/jwks.json') {

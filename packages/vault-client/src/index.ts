@@ -32,3 +32,23 @@ export {
 } from './storage.js';
 
 export { JwksCache, decodeJwt, type JwksCacheOptions, type DecodedJwt } from './jwks-cache.js';
+
+// -----------------------------------------------------------------------------
+// Marketplace — Wave 8 / V-6
+// `cir://author/persona@version` addressing + ed25519 signing + TOFU trust.
+// See `/Users/vid/cir/docs/vault-protocol.md` §"Marketplace endpoints".
+// -----------------------------------------------------------------------------
+export {
+  InMemoryTrustedKeyStore,
+  LocalStorageTrustedKeyStore,
+  MarketplaceClient,
+  MarketplaceError,
+  MarketplaceTrustError,
+  SignatureMismatchError,
+  computeKeyId as computeMarketplaceKeyId,
+  defaultTrustedKeyStore,
+  type MarketplaceClientOptions,
+  type MarketplaceKeyMaterial,
+  type PublishResult,
+  type TrustedKeyStore,
+} from './marketplace.js';

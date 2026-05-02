@@ -67,3 +67,13 @@ export {
   type VaultKeyPair,
   type VerifiedJwt,
 } from './signing.js';
+
+export {
+  JsonFileMarketplaceStorage,
+  MemoryMarketplaceStorage,
+  computeKeyId,
+  handleMarketplaceRequest,
+  parseFetchPath,
+  verifyBundleSignature,
+  type MarketplaceStorage,
+} from './marketplace.js';

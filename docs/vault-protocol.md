@@ -257,6 +257,92 @@ Steps 1–4 are deterministic and run client-side too in `@cir/vault-client`. Th
 
 ---
 
+## Marketplace endpoints
+
+> Status: v0 (Wave 8 / track V-6 MVP). Adds `cir://author/persona@version` addressing, ed25519-signed bundles, and a TOFU trust model on top of the existing vault. Review-flow UI, search/discovery, and compiler integration (C-Phase-5 RAG) are deferred to follow-ups.
+
+The marketplace is the user-facing distribution surface for recipes, personas, and capability bundles. Authors publish signed payloads against a `cir://` address; consumers fetch + locally verify before installing. The vault is the trust root: it stores the signed bundle and re-serves it verbatim, never re-signing.
+
+### `cir://` addressing
+
+```
+cir://<author>/<persona>@<version>[?signed_by=<key_id>]
+```
+
+| segment      | shape                                       | semantics                                                   |
+| ------------ | ------------------------------------------- | ----------------------------------------------------------- |
+| `<author>`   | `[a-z0-9][a-z0-9._-]{0,127}`                | The publishing vault account id.                            |
+| `<persona>`  | `[a-z0-9][a-z0-9._-]{0,127}`                | The bundle name (recipe / persona / capability set).        |
+| `<version>`  | semver 2.0.0                                | Exact match required at fetch time.                         |
+| `?signed_by` | 16-char lowercase hex (sha256-truncated fp) | Optional explicit pin to a specific public-key fingerprint. |
+
+Reference parser: `parseMarketplaceAddress` in `@cir/schemas/src/marketplace.ts`. The companion serialiser is `formatMarketplaceAddress`. Both round-trip exactly.
+
+### `POST /vault/marketplace/publish`
+
+Submit a signed bundle. The vault verifies the embedded signature against the embedded `public_key`, confirms the `key_id` is the canonical fingerprint of that key, and stores the bundle if both check out. Re-publishing the same `<author>/<persona>@<version>` overwrites the prior bundle (immutability per-version is a follow-up; today we trust the signed timestamp to disambiguate stale fetches).
+
+```
+POST /vault/marketplace/publish
+Content-Type: application/json
+
+{
+  "address": { "scheme": "cir", "author": "acme", "persona": "email-triage", "version": "1.0.0" },
+  "payload": { "recipe": "...arbitrary JSON..." },
+  "timestamp": "2026-05-02T12:00:00.000Z",
+  "signature": "<base64 ed25519 over canonical JSON of {address,payload,timestamp}>",
+  "public_key": "<base64 raw 32-byte ed25519 public key>",
+  "key_id": "<first 16 hex chars of sha256(public_key)>"
+}
+```
+
+Response on success: `201 Created` with `{ address, key_id }`. On a malformed body: `400 { error: 'malformed bundle', issues: [...] }`. On a bad signature: `400 { error: 'signature verification failed', reason: '...' }`.
+
+### `GET /vault/marketplace/<author>/<persona>@<version>`
+
+Returns the stored signed bundle verbatim. The client re-verifies the signature locally before trusting the payload; the vault's role is durable storage + re-serving, not a re-attestation surface.
+
+```
+GET /vault/marketplace/acme/email-triage@1.0.0
+```
+
+Response on success: `200 OK` with the full `SignedBundle` JSON. On miss: `404 { error: 'bundle not found', address: 'cir://...' }`. On a malformed path: `400 { error: 'malformed marketplace address in path' }`.
+
+### Signing — canonical JSON
+
+The signature covers the canonical JSON of `{ address, payload, timestamp }`. Canonical here means **sorted-key** at every depth so two semantically-identical objects always serialise to byte-identical inputs. The reference encoder (`canonicalJsonStringify` in `@cir/schemas/src/marketplace.ts`) is ~20 lines; do not pull in `json-stable-stringify`.
+
+The `address` passed to the signer omits any optional `?signed_by=` pin. That parameter is a fetch-time pin, not a property of the bundle — two addresses that differ only in `signed_by` produce identical bundle bytes.
+
+### TOFU (trust on first use)
+
+Clients maintain a per-author cache of `key_id` fingerprints. The first fetch from each author records the observed fingerprint; subsequent fetches must match.
+
+```
+on fetch(address):
+  bundle = GET /vault/marketplace/<author>/<persona>@<version>
+  if !verify_signature(bundle): throw SignatureMismatchError
+  if address.signed_by:
+    if address.signed_by != bundle.key_id: throw MarketplaceTrustError
+    return bundle.payload  # pinned — bypass TOFU cache
+  known = trustedKeys.get(author)
+  if known is undefined:
+    trustedKeys.set(author, bundle.key_id)   # first contact
+  elif known != bundle.key_id:
+    throw MarketplaceTrustError(known, observed)
+  return bundle.payload
+```
+
+Reference implementation: `MarketplaceClient` in `@cir/vault-client/src/marketplace.ts`. Two trusted-key store implementations ship: `InMemoryTrustedKeyStore` (Node default) and `LocalStorageTrustedKeyStore` (browser default). Hosts that need persistence in Node — or stricter posture (e.g. fail closed on first use) — pass their own implementation of the `TrustedKeyStore` interface.
+
+A key change is **not** automatically accepted; the application surfaces both fingerprints to the user (the error carries `knownKeyId` and `observedKeyId`) and the user calls `trustedKeys.set(author, observedKeyId)` to accept. Browser-side TOFU UI is a follow-up.
+
+### Demo toggle
+
+The reference demo (`apps/demo`) gates marketplace boot behind `CIR_MARKETPLACE_ENABLED=1`. Default boot is unchanged. When the flag is set, `getCirServer()` exposes a `marketplace` surface the integration smoke can drive.
+
+---
+
 ## Discovery
 
 A future `/.well-known/cir.json` extension may advertise the user's preferred vault as `{ "vault_url": "https://vault.example" }`. Today the demo hard-codes `NEXT_PUBLIC_VAULT_URL=http://localhost:4001` and the discovery hook is roadmap.
