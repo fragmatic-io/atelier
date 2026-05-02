@@ -78,6 +78,15 @@ export {
   type ConfirmationRequest,
 } from './actions/confirm.js';
 export { UndoStack, type UndoEntry, type UndoExecutionContext } from './actions/undo.js';
+export {
+  withUndo,
+  recordingEmitter,
+  type UndoHandle,
+  type UndoToastEmitter,
+  type UndoToastNotice,
+  type WithUndoOptions,
+  type WrappedDispatcher,
+} from './actions/with-undo.js';
 
 // -----------------------------------------------------------------------------
 // Triggers (subscription, in-memory bus, cache invalidation)

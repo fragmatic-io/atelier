@@ -102,6 +102,19 @@ export const displayVariantClass: Readonly<Record<DisplayVariant, string>> = Obj
 });
 
 // -----------------------------------------------------------------------------
+// Toast variants — superset of the Display variants plus `'undo'`. Wave 11 /
+// Int-8 ships the `'undo'` variant: a dark surface with a countdown progress
+// bar and a paired `Undo` button. The dark surface mirrors Linear's "Action
+// undone" toast — high-contrast on top of any route.
+// -----------------------------------------------------------------------------
+export type ToastVariant = DisplayVariant | 'undo';
+
+export const toastVariantClass: Readonly<Record<ToastVariant, string>> = Object.freeze({
+  ...displayVariantClass,
+  undo: 'bg-gray-900 text-white border border-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:border-gray-300',
+});
+
+// -----------------------------------------------------------------------------
 // MetaBadge variants — small inline status pill (count, label, severity, or
 // "live"/"unread" indicator). Reuses `displayVariantClass` for info/success/
 // warning/error severities; `default` is a neutral gray pill, and `live`

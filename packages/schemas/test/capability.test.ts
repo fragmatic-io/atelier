@@ -185,4 +185,106 @@ describe('CapabilitySchema', () => {
       expect(issue).toBeDefined();
     }
   });
+
+  // ---------------------------------------------------------------------------
+  // Wave 11 / Int-8 — `undoable` flag + `undo_window_ms`
+  // ---------------------------------------------------------------------------
+
+  it('accepts undoable: true with an integer undo_window_ms', () => {
+    const cap = {
+      id: 'thread.archive',
+      kind: 'action',
+      version: '1.0.0',
+      input: { thread_id: 'string' },
+      output: {},
+      side_effects: ['archive'],
+      permissions: ['thread:write'],
+      confirmation: 'none',
+      reversible: true,
+      rollback: 'thread.unarchive',
+      undoable: true,
+      undo_window_ms: 5000,
+    };
+    const parsed = CapabilitySchema.parse(cap);
+    expect(parsed.undoable).toBe(true);
+    expect(parsed.undo_window_ms).toBe(5000);
+  });
+
+  it('treats undoable + undo_window_ms as optional', () => {
+    const cap = {
+      id: 'thread.archive',
+      kind: 'action',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['archive'],
+      permissions: ['thread:write'],
+      confirmation: 'inline',
+      reversible: true,
+      rollback: 'thread.unarchive',
+    };
+    const parsed = CapabilitySchema.parse(cap);
+    expect(parsed.undoable).toBeUndefined();
+    expect(parsed.undo_window_ms).toBeUndefined();
+  });
+
+  it('rejects a non-boolean undoable value', () => {
+    const bad = {
+      id: 'thread.archive',
+      kind: 'action',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['archive'],
+      permissions: ['thread:write'],
+      confirmation: 'inline',
+      reversible: true,
+      rollback: 'thread.unarchive',
+      undoable: 'yes',
+    };
+    const result = CapabilitySchema.safeParse(bad);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.join('.') === 'undoable');
+      expect(issue).toBeDefined();
+    }
+  });
+
+  it('rejects a non-integer undo_window_ms', () => {
+    const bad = {
+      id: 'thread.archive',
+      kind: 'action',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['archive'],
+      permissions: ['thread:write'],
+      confirmation: 'inline',
+      reversible: true,
+      rollback: 'thread.unarchive',
+      undoable: true,
+      undo_window_ms: 5000.5,
+    };
+    const result = CapabilitySchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a zero / negative undo_window_ms', () => {
+    const bad = {
+      id: 'thread.archive',
+      kind: 'action',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['archive'],
+      permissions: ['thread:write'],
+      confirmation: 'inline',
+      reversible: true,
+      rollback: 'thread.unarchive',
+      undoable: true,
+      undo_window_ms: 0,
+    };
+    const result = CapabilitySchema.safeParse(bad);
+    expect(result.success).toBe(false);
+  });
 });

@@ -12,6 +12,14 @@
  * context tells `reversibility_surfaced` the obligation is covered for
  * every reversible action the runtime fires — regardless of route.
  *
+ * Wave 11 / Int-8 — superseded as the PRIMARY undo path by the
+ * `<Toast variant="undo">` emitter wired through `withUndo()` middleware
+ * in `cir-providers.tsx`. The toast surfaces a 5-second window with a
+ * countdown bar per dispatch (Linear's pattern). This component remains
+ * mounted as a STACK-BASED FALLBACK — covers the case where the user
+ * dismissed the toast but still wants to walk back through the undo
+ * stack. Both paths satisfy the `UNDO_TOAST_AMBIENT_SATISFIER`.
+ *
  * Behavior: a fixed footer with one "Undo last action" button. Clicking
  * pops the dispatcher's undo stack and dispatches the rollback capability.
  * `dispatcher.canUndo()` is polled lazily on focus / on each click; in a

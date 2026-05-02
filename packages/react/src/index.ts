@@ -59,6 +59,11 @@ export {
   type UseUndoableDispatchResult,
   type UndoToastState,
 } from './hooks/use-undoable-dispatch.js';
+export {
+  useUndoToastEmitter,
+  createUndoToastEmitter,
+  type UseUndoToastEmitter,
+} from './hooks/use-undo-toast-emitter.js';
 
 // -----------------------------------------------------------------------------
 // Data resolver protocol

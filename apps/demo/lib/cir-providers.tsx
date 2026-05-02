@@ -30,6 +30,7 @@ import {
   SseTriggerTransport,
   StreamingAuditSink,
   wireTriggerInvalidation,
+  withUndo,
   type ActionExecutionContext,
   type ConfirmationCallback,
 } from '@cir/runtime';
@@ -43,6 +44,7 @@ import {
   CirRuntime,
   CompileBadge,
   DebugPanel,
+  createUndoToastEmitter,
   useReactConfirmation,
   type DataBinding,
 } from '@cir/react';
@@ -160,6 +162,12 @@ const iconResolver = new LucideIconResolver({
 interface BuiltServices {
   services: CirServices;
   audit: StreamingAuditSink;
+  /**
+   * The `<Sink>` for the Wave 11 / Int-8 undo-toast emitter. Mounted next
+   * to `<Portal />` in `CirProviders` so the wrapped dispatcher's notices
+   * land on a `<Toast variant="undo">` instance per dispatch.
+   */
+  UndoSink: React.FC;
 }
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
@@ -177,9 +185,13 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
       return postAction(capabilityId, input);
     };
   actions.register('thread.archive', wireAction('thread.archive'));
+  actions.register('thread.unarchive', wireAction('thread.unarchive'));
   actions.register('task.complete', wireAction('task.complete'));
+  actions.register('task.reopen', wireAction('task.reopen'));
   actions.register('task.snooze', wireAction('task.snooze'));
+  actions.register('task.unsnooze', wireAction('task.unsnooze'));
   actions.register('task.create_from_thread', wireAction('task.create_from_thread'));
+  actions.register('task.delete', wireAction('task.delete'));
 
   // Manifest fetcher → /api/manifest. Resolver validates via policy engine.
   const fetcher = new ManifestFetcher({ baseUrl: '/api' });
@@ -229,11 +241,29 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
   const bus = new InMemoryTriggerBus();
   wireTriggerInvalidation({ bus, cache });
 
-  const dispatcher = new ActionDispatcher({
+  const innerDispatcher = new ActionDispatcher({
     capabilities: CAPABILITIES,
     registry: actions,
     confirm,
     audit,
+  });
+
+  // Wave 11 / Int-8 — undo-toast emitter wired to the inner dispatcher.
+  // The emitter is bound to the inner so `dispatcher.undoFromToken()` finds
+  // the open token (the wrapped dispatcher proxies through, but binding
+  // directly to the inner skips one hop). The `<Sink>` mounts in
+  // `CirProviders` next to `<Portal />`.
+  const { emitter: undoEmitter, Sink: UndoSink } = createUndoToastEmitter(innerDispatcher);
+
+  // The dispatcher Aurora exposes through `useCir()` is the wrapped one:
+  // every successful undoable dispatch fans a notice out to the emitter.
+  // The legacy ambient `<UndoBar>` continues to work — it consumes the
+  // dispatcher's undo stack (`canUndo()` / `undo()`), independent of the
+  // toast path. Hosts can keep both during the cutover.
+  const dispatcher = withUndo({
+    inner: innerDispatcher,
+    capabilities: CAPABILITIES,
+    emitter: undoEmitter,
   });
 
   // Wave 6 / P-1: thread the persisted intent profile into the services bag
@@ -257,6 +287,7 @@ function buildServices(confirm: ConfirmationCallback): BuiltServices {
       brandKit: DEMO_BRAND_KIT,
     },
     audit,
+    UndoSink,
   };
 }
 
@@ -264,7 +295,7 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
   const { confirm, Portal } = useReactConfirmation();
   // Memoize so React strict mode and re-renders don't rebuild the cache.
   const built = useMemo(() => buildServices(confirm), [confirm]);
-  const { services, audit } = built;
+  const { services, audit, UndoSink } = built;
 
   // Connect the SSE transport on mount; tear down on unmount. The transport
   // bridges /api/triggers/stream events into the local bus, which the cache
@@ -302,11 +333,21 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
         <CirRuntime services={services} dataResolver={dataResolver}>
           {children}
           {/*
+            Wave 11 / Int-8 — ambient undo-toast sink. The wrapped
+            dispatcher's `withUndo()` middleware fans every successful
+            undoable dispatch into `<Toast variant="undo">` instances
+            mounted here. This is the new primary undo affordance —
+            Linear-style 5-second window with a countdown bar.
+          */}
+          <UndoSink />
+          {/*
             Ambient undo bar — mounted INSIDE <CirRuntime> so it can read the
             dispatcher via `useCir()`, but OUTSIDE the manifest tree so it's
-            not a manifest-referenced custom binding. The companion
-            `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy context
-            tells `reversibility_surfaced` the obligation is covered.
+            not a manifest-referenced custom binding. Kept as a fallback
+            affordance for stack-based undo (`dispatcher.undo()` /
+            `canUndo()` — covers actions that committed before the toast
+            was dismissed). The `UNDO_TOAST_AMBIENT_SATISFIER` declaration
+            on the policy context covers the obligation either way.
           */}
           <AmbientUndoBar />
         </CirRuntime>
