@@ -88,8 +88,8 @@ async function importShiki(): Promise<ShikiModule> {
   // Cast via `unknown` because the real Shiki types use `BundledTheme` /
   // `BundledLanguage` literal unions; we duck-type to plain strings so the
   // optional peer dep stays optional. Runtime shape matches.
-  const mod = await import(/* @vite-ignore */ 'shiki');
-  return mod as unknown as ShikiModule;
+  const mod: unknown = await import(/* @vite-ignore */ 'shiki');
+  return mod as ShikiModule;
 }
 
 /**
