@@ -1,1 +1,13 @@
+# Pre-commit hook.
+#
+# Op-debt note (Wave 11 batch — multi-agent worktree learning): when
+# multiple agents work in linked worktrees that share the same `.git`,
+# `lint-staged`'s `git stash --include-untracked` can sweep in OTHER
+# worktrees' untracked files. The agent then commits a polluted index
+# unless it manually unstages.
+#
+# Mitigation today: agents should `git status` before staging and
+# explicitly `git add <paths>` rather than `git add -A`. Long-term fix
+# would be lint-staged supporting per-worktree stash isolation, OR
+# agents using non-linked worktrees (separate `.git`).
 pnpm exec lint-staged

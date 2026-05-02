@@ -37,6 +37,16 @@ export default {
         'apps',
         'demo',
         'cli',
+        // Wave 11 Int-3 added @atelier/keyboard; Vis-3 added the icon
+        // resolver; both surface through the React adapter and components
+        // packages, but `keyboard` and `react` are themselves valid scopes.
+        'keyboard',
+        'react',
+        'data-resolvers',
+        'capability-resolver',
+        'vault-server',
+        'vault-client',
+        'marketing',
       ],
     ],
     'subject-case': [2, 'never', ['upper-case', 'pascal-case', 'start-case']],
