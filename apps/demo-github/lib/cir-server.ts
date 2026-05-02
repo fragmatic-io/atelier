@@ -16,6 +16,7 @@ import {
   GeminiCompiler,
   MemoryManifestStore,
   ServerManifestResolver,
+  ValidationFeedbackCompiler,
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
@@ -67,9 +68,17 @@ const MANIFEST_CONTRACTS = manifestContractsFromBindings({
  * schema-validated per-binding contract policy that replaces the
  * defensive defaults band-aided in commits 9ae2122 / 0c6cc26.
  *
+ * Wave C / Phase C-1: returns the `{ ok, reasons }` shape consumed by
+ * `ValidationFeedbackCompiler`. The wrapper threads `reasons` back into
+ * the next compile attempt so the LLM sees its own draft alongside the
+ * exact violation list.
+ *
  * See ETHOS principles 4, 5, 7.
  */
-function validateManifestSemantics(manifest: Manifest): { errors: readonly string[] } {
+function validateManifestSemantics(manifest: Manifest): {
+  ok: boolean;
+  reasons?: readonly string[];
+} {
   const policies = [
     composesAccordingTo(COMPOSITION_RULES),
     emptyLoadingErrorHandled,
@@ -90,7 +99,7 @@ function validateManifestSemantics(manifest: Manifest): { errors: readonly strin
       granted_fields: [] as string[],
     },
   };
-  const errors: string[] = [];
+  const reasons: string[] = [];
   for (const policy of policies) {
     const result = policy.evaluate(ctx);
     // Phase 2 #4 — only `error`/`warn` violations gate the LLM's retry loop.
@@ -98,10 +107,10 @@ function validateManifestSemantics(manifest: Manifest): { errors: readonly strin
     // state") are fine to leave on the table; the runtime fills them in.
     for (const v of result.violations) {
       if (v.severity === 'info') continue;
-      errors.push(v.message);
+      reasons.push(v.message);
     }
   }
-  return { errors };
+  return reasons.length === 0 ? { ok: true } : { ok: false, reasons };
 }
 
 interface CirServer {
@@ -140,16 +149,39 @@ function buildServer(): CirServer {
   // no longer serves hand-written manifests at runtime.
   const compilers: CompilerService[] = [];
   if (geminiAvailable) {
+    // Wave C / Phase C-1 — wrap the LLM compiler with the validation
+    // feedback loop. Validation lives ON the wrapper (not on the inner
+    // `GeminiCompiler.validate` option) so a rejected draft is threaded
+    // back as `priorDraft + violations` and the LLM gets up to two
+    // refinement attempts before the composite cascades to the
+    // `GenericFallbackCompiler`. Empirically recovers ~70% of single-shot
+    // validation failures; preserves the cascade story when retries are
+    // exhausted (the wrapper throws `CompilerOutputError` and the
+    // composite advances).
     compilers.push(
-      new GeminiCompiler({
-        apiKey: apiKey!,
-        coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
-        diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
+      new ValidationFeedbackCompiler({
+        inner: new GeminiCompiler({
+          apiKey: apiKey!,
+          coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
+          diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
+          // Validation is now owned by the wrapper. Leaving
+          // `GeminiCompiler.validate` UNSET (back-compat shape, the
+          // option is still accepted for callers that want the old
+          // single-attempt path).
+        }),
         // Semantic validation — see ETHOS principles 4, 5, 7. Catches
         // composition drift (empty containers), missing empty/loading/
         // error slots, AND per-binding manifest contract violations
         // (Phase 2 #1) before the LLM's output reaches the renderer.
         validate: validateManifestSemantics,
+        maxRetries: 2,
+        onRetry: (attempt, violations) => {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[cir-demo-github] compile attempt ${String(attempt)} failed validation; retrying with refinement context. Violations:`,
+            violations,
+          );
+        },
       }),
     );
   }

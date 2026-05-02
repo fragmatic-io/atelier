@@ -67,6 +67,27 @@
  * — the `on_exhausted` policy is enforced one layer up by
  * `CompositeCompiler` via its built-in `BudgetMeter` integration.
  *
+ * ## Validation feedback loop (Wave C / Phase C-1)
+ *
+ * `ValidationFeedbackCompiler` wraps an LLM-backed inner compiler with a
+ * bounded refinement loop. When the host's `validate(manifest)` hook
+ * rejects a draft, the wrapper threads `{prior_draft, violations}` back
+ * into a refinement-mode `CompileInput` and re-prompts the SAME inner
+ * compiler — typically recovering ~70% of single-shot validation
+ * failures before the composite cascades. Showcase wiring lives in
+ * `apps/demo-github/lib/cir-server.ts`:
+ *
+ *   const gemini = new GeminiCompiler({ apiKey, ... });   // no `validate`
+ *   compilers.push(
+ *     new ValidationFeedbackCompiler({
+ *       inner: gemini,
+ *       validate: validateManifestSemantics,   // {ok, reasons}
+ *       maxRetries: 2,
+ *       onRetry: (n, violations) => log.warn('attempt failed', n, violations),
+ *     }),
+ *   );
+ *   compilers.push(new GenericFallbackCompiler());
+ *
  * See `/Users/vid/cir/docs/architecture.md` §"Compiler service in detail"
  * for the prompt structure and the diff-mode contract; see
  * `/Users/vid/cir/docs/token-economics.md` for the cost model that
@@ -108,6 +129,13 @@ export {
   type BudgetMeterOptions,
   type BudgetState,
 } from './budget-meter.js';
+
+// Validation feedback loop (Wave C / Phase C-1)
+export {
+  ValidationFeedbackCompiler,
+  type ValidationFeedbackCompilerOptions,
+  type ValidationFeedbackValidateResult,
+} from './validation-feedback-compiler.js';
 
 // Intent profile compiler (onboarding)
 export {

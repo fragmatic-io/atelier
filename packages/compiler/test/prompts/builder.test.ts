@@ -153,6 +153,40 @@ describe('buildPromptContext', () => {
     expect(ctx.user).toContain('signal=`unread`');
   });
 
+  it('emits a REFINEMENT MODE block when priorDraft + violations are supplied (Wave C / Phase C-1)', () => {
+    const priorDraft = fixtureManifest({ manifest_id: 'm_priordft0' });
+    const ctx = buildPromptContext(
+      fixtureCompileInput({
+        priorDraft,
+        violations: ['Stack requires at least 1 child; got 0', 'Missing empty_state slot'],
+      }),
+    );
+    expect(ctx.refinement_mode).toBe(true);
+    expect(ctx.user).toContain('REFINEMENT MODE');
+    // The exact violations are listed verbatim so the LLM patches each.
+    expect(ctx.user).toContain('Stack requires at least 1 child');
+    expect(ctx.user).toContain('Missing empty_state slot');
+    // The previous draft is rendered as JSON for direct inspection.
+    expect(ctx.user).toContain('m_priordft0');
+    // The "Your task" line is refinement-aware.
+    expect(ctx.user).toContain('previous attempt');
+    expect(ctx.user).toContain('failed validation');
+  });
+
+  it('refinement_mode is false when priorDraft is set but violations is empty', () => {
+    // Defensive: the wrapper might still call us with an empty violations
+    // array if a buggy validate hook returned `ok: false` with no reasons.
+    // We degrade gracefully — no REFINEMENT MODE block emitted.
+    const ctx = buildPromptContext(
+      fixtureCompileInput({
+        priorDraft: fixtureManifest(),
+        violations: [],
+      }),
+    );
+    expect(ctx.refinement_mode).toBe(false);
+    expect(ctx.user).not.toContain('REFINEMENT MODE');
+  });
+
   it('compresses skills to high-signal fields only — no markdown body', () => {
     const skill = fixtureSkill();
     const ctx = buildPromptContext(fixtureCompileInput({ skills: { 'email-triage': skill } }));

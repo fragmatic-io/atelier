@@ -23,6 +23,13 @@ export interface BuiltPromptContext {
   user: string;
   /** Whether the input contained a previous manifest (diff mode). */
   diff_mode: boolean;
+  /**
+   * Wave C / Phase C-1 — true when the input carried `priorDraft` +
+   * `violations`, so the compiler routed via the refinement-prompt branch.
+   * Wrapping compilers can use this to choose the cheaper diff-tier model
+   * for refinement attempts.
+   */
+  refinement_mode: boolean;
 }
 
 export function buildPromptContext(input: CompileInput): BuiltPromptContext {
@@ -140,6 +147,38 @@ export function buildPromptContext(input: CompileInput): BuiltPromptContext {
     lines.push('');
   }
 
+  // Wave C / Phase C-1 — refinement mode. When a wrapping
+  // `ValidationFeedbackCompiler` is retrying after policy validation rejected
+  // the previous attempt, both `priorDraft` AND `violations` are present.
+  // Surface them in their own section so the LLM sees its own draft alongside
+  // the exact failure list. We render this BEFORE the diff-mode block so it
+  // takes precedence in the LLM's attention; refinement is the highest-signal
+  // shaping context we can give it.
+  const refinementMode =
+    input.priorDraft !== undefined && input.violations !== undefined && input.violations.length > 0;
+  if (refinementMode) {
+    lines.push(`## REFINEMENT MODE — your previous attempt failed validation; patch the draft`);
+    lines.push(
+      'You produced the manifest below. The host policy validator rejected it ' +
+        'with the violations listed. Read each violation carefully, patch the ' +
+        'draft to satisfy ALL of them at once, and return the corrected ' +
+        'manifest. Preserve every part of the draft that is NOT implicated ' +
+        'by a violation — only change what the violations call out. Output ' +
+        'the FULL corrected manifest JSON, not a diff.',
+    );
+    lines.push('');
+    lines.push('### Violations to fix');
+    for (const v of input.violations ?? []) {
+      lines.push(`- ${v}`);
+    }
+    lines.push('');
+    lines.push('### Your previous draft (the one that failed validation)');
+    lines.push('```json');
+    lines.push(JSON.stringify(input.priorDraft, null, 2));
+    lines.push('```');
+    lines.push('');
+  }
+
   // Diff mode — include previous manifest verbatim.
   const diffMode = input.previousManifest !== undefined;
   if (diffMode) {
@@ -195,13 +234,21 @@ export function buildPromptContext(input: CompileInput): BuiltPromptContext {
   }
 
   lines.push(`## Your task`);
-  lines.push(
-    diffMode
-      ? `The trigger above invalidated the previous manifest. Produce a NEW manifest for route "${input.route}" that addresses the trigger's effect. Preserve unrelated structure verbatim. Output the full new manifest JSON, not a diff.`
-      : `Produce a manifest for route "${input.route}" matching the user's intent and brand kit. Output ONLY the manifest JSON.`,
-  );
+  if (refinementMode) {
+    lines.push(
+      `Your previous attempt for route "${input.route}" failed validation (see "REFINEMENT MODE" above). Patch the draft so EVERY listed violation is resolved. Output the FULL corrected manifest JSON.`,
+    );
+  } else if (diffMode) {
+    lines.push(
+      `The trigger above invalidated the previous manifest. Produce a NEW manifest for route "${input.route}" that addresses the trigger's effect. Preserve unrelated structure verbatim. Output the full new manifest JSON, not a diff.`,
+    );
+  } else {
+    lines.push(
+      `Produce a manifest for route "${input.route}" matching the user's intent and brand kit. Output ONLY the manifest JSON.`,
+    );
+  }
 
-  return { user: lines.join('\n'), diff_mode: diffMode };
+  return { user: lines.join('\n'), diff_mode: diffMode, refinement_mode: refinementMode };
 }
 
 /**

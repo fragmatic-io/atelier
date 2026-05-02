@@ -81,6 +81,32 @@ export interface CompileInput {
    * are per-host.
    */
   fewShotExample?: Manifest;
+  /**
+   * Wave C / Phase C-1 — refinement input.
+   *
+   * When a wrapping `ValidationFeedbackCompiler` is retrying after policy
+   * validation rejected a previous attempt, it threads the rejected
+   * manifest back through `CompileInput.priorDraft` so the inner compiler
+   * can inspect what it produced. Pair with `violations` (below) which
+   * carries the human-readable list of policy reasons that fired against
+   * `priorDraft`.
+   *
+   * The prompt builder folds these into a "Previous attempt" + "Fix the
+   * violations" section so the LLM sees its own draft alongside the
+   * exact failure list — a much higher-quality retry signal than the
+   * single-pass cold prompt or the existing in-`GeminiCompiler`
+   * one-retry path that only carries the error message text.
+   *
+   * Compilers that don't understand refinement mode are free to ignore
+   * these fields — they degrade to a normal cold compile.
+   */
+  priorDraft?: Manifest | undefined;
+  /**
+   * Wave C / Phase C-1 — human-readable policy violations from the
+   * previous attempt. See `priorDraft` for the full contract; the two
+   * fields are always set together by `ValidationFeedbackCompiler`.
+   */
+  violations?: readonly string[] | undefined;
 }
 
 export interface CompileResult {

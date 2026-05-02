@@ -79,7 +79,10 @@ export class GeminiCompiler implements CompilerService {
 
   async compile(input: CompileInput): Promise<CompileResult> {
     const ctx = buildPromptContext(input);
-    const model = ctx.diff_mode ? this.#diffModel : this.#coldModel;
+    // Refinement attempts (Wave C / Phase C-1) reuse the diff-tier model: it's
+    // faster + cheaper, and the refinement prompt already carries the prior
+    // draft as ground truth — exactly the diff-mode shape.
+    const model = ctx.diff_mode || ctx.refinement_mode ? this.#diffModel : this.#coldModel;
     const startedAt = Date.now();
 
     let lastError: unknown;
