@@ -29,8 +29,8 @@
  * Hosts that need direct host-side React composition compose `<Skeleton>` /
  * `<Alert>` / `<EmptyState>` themselves.
  */
-import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import type { ComponentBinding } from '@atelier/runtime';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { durationFor, type ComponentBinding } from '@atelier/runtime';
 import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
 import {
   cn,
@@ -110,6 +110,15 @@ export interface ListProps<T> {
   bulkActions?: readonly BulkAction[];
   /** Click handler for a bulk action. Receives the action's id (= capability id). */
   onBulkAction?: (actionId: string) => void;
+  /**
+   * Wave 11 / Int-1 — when true, rows whose id was not in the previous
+   * render carry `data-cir-new="true"` for `durationFor('normal')` ms.
+   * Pair with the host's `cir-row-appear` keyframe (see
+   * `apps/demo/app/globals.css`) for an opacity ramp on append.
+   * Defaults to false. Honours `prefers-reduced-motion` (the keyframe
+   * collapses to 0ms when the OS preference is set).
+   */
+  animateRowAppear?: boolean;
 }
 
 export function List<T>({
@@ -129,6 +138,7 @@ export function List<T>({
   onSelectionChange,
   bulkActions,
   onBulkAction,
+  animateRowAppear = false,
 }: ListProps<T>): ReactNode {
   // Resolve items: explicit `items` prop wins; else accept `data` if it
   // is an array (the manifest renderer threads resolved data this way);
@@ -190,6 +200,46 @@ export function List<T>({
   const idResolver = idOf ?? ((_item: T, index: number): string => String(index));
   const effectiveSelected = selectedIds ?? localSelected;
   const allIds = items.map((item, i) => idResolver(item, i));
+
+  // Wave 11 / Int-1 — row-appear tracking. Compare current ids against
+  // the previous render's id set; rows whose id was absent get
+  // `data-cir-new="true"` for one render so the host's keyframe fires.
+  // Stored in state (not a ref) so the cleanup `useEffect` re-render
+  // strips the attribute after `durationFor('normal')` ms.
+  const prevIdsRef = useRef<ReadonlySet<string>>(new Set<string>());
+  const [newIds, setNewIds] = useState<ReadonlySet<string>>(() => new Set<string>());
+  useEffect(() => {
+    if (!animateRowAppear) {
+      // When the opt-in is off we never read these maps; reset to keep
+      // the working set tiny if a host toggles the prop later.
+      prevIdsRef.current = new Set<string>(allIds);
+      return;
+    }
+    const prev = prevIdsRef.current;
+    const fresh = new Set<string>();
+    for (const id of allIds) {
+      if (!prev.has(id)) fresh.add(id);
+    }
+    prevIdsRef.current = new Set<string>(allIds);
+    if (fresh.size === 0) return;
+    setNewIds(fresh);
+    // Strip the attribute after the keyframe completes so subsequent
+    // renders re-key the keyframe cleanly when the same id appears
+    // again later.
+    const ms = durationFor('normal');
+    if (ms <= 0) {
+      setNewIds(new Set<string>());
+      return;
+    }
+    const t = setTimeout(() => {
+      setNewIds(new Set<string>());
+    }, ms);
+    return (): void => {
+      clearTimeout(t);
+    };
+    // `allIds` is recomputed every render — the join is the seam that
+    // triggers the comparison only when the id sequence actually changes.
+  }, [animateRowAppear, allIds.join(' ')]);
   const emitSelection = (next: ReadonlySet<string>): void => {
     if (onSelectionChange) onSelectionChange(next);
     else setLocalSelected(next);
@@ -231,11 +281,13 @@ export function List<T>({
   ): ReactNode => {
     const id = idResolver(item, i);
     const checked = effectiveSelected.has(id);
+    const isNew = animateRowAppear && newIds.has(id);
     return (
       <li
         key={i}
         data-cir-part="list-item"
         data-selected={checked ? 'true' : 'false'}
+        {...(isNew ? { 'data-cir-new': 'true' } : {})}
         style={style}
         {...extraProps}
       >
@@ -277,11 +329,14 @@ export function List<T>({
             'aria-label': ariaLabel,
           });
         }
+        const id = idResolver(item, i);
+        const isNew = animateRowAppear && newIds.has(id);
         return (
           <li
             key={i}
             data-cir-part="list-item"
             data-pinned="true"
+            {...(isNew ? { 'data-cir-new': 'true' } : {})}
             aria-label={ariaLabel}
             style={pinnedStyle}
           >
@@ -305,8 +360,15 @@ export function List<T>({
         if (selectable) {
           return renderSelectableLi(item, i, itemStyle, {});
         }
+        const id = idResolver(item, i);
+        const isNew = animateRowAppear && newIds.has(id);
         return (
-          <li key={i} data-cir-part="list-item" style={itemStyle}>
+          <li
+            key={i}
+            data-cir-part="list-item"
+            {...(isNew ? { 'data-cir-new': 'true' } : {})}
+            style={itemStyle}
+          >
             {renderItemFn(item, i)}
           </li>
         );
@@ -365,6 +427,7 @@ export const ListBinding: ComponentBinding = {
       onSelectionChange: 'function',
       bulkActions: 'array',
       onBulkAction: 'function',
+      animateRowAppear: 'boolean',
     },
   },
 };

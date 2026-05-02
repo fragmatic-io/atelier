@@ -30,8 +30,8 @@
  * Composition role: leaf — no children. The pill's content comes from
  * props, not from manifest children.
  */
-import type { CSSProperties, ReactNode } from 'react';
-import type { ComponentBinding } from '@atelier/runtime';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { durationFor, type ComponentBinding } from '@atelier/runtime';
 import { cn, iconSizePx, metaBadgeVariantClass, type MetaBadgeVariant } from './_variants.js';
 import { Icon } from './Icon.js';
 import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';
@@ -89,6 +89,24 @@ export function MetaBadge({
   const hasContent = content.length > 0;
   const hasIcon = icon !== undefined;
 
+  // Wave 11 / Int-1 — count-pulse: emit `data-cir-pulse="true"` for one motion
+  // cycle when `count` increments. CSS rule on `[data-cir-pulse="true"]` runs
+  // the `cir-count-pulse` keyframe (see demo globals.css). Reduced-motion
+  // hosts get the data attr but the keyframe duration collapses to 0ms.
+  const lastCountRef = useRef<number | undefined>(count);
+  const [pulsing, setPulsing] = useState(false);
+  useEffect(() => {
+    if (typeof count !== 'number') return undefined;
+    const prev = lastCountRef.current;
+    lastCountRef.current = count;
+    if (typeof prev !== 'number' || count <= prev) return undefined;
+    const ms = durationFor('normal');
+    if (ms <= 0) return undefined;
+    setPulsing(true);
+    const t = setTimeout(() => setPulsing(false), ms);
+    return (): void => clearTimeout(t);
+  }, [count]);
+
   // No content, no dot, no icon → render nothing rather than an empty host
   // span. (Authors that want an icon-only chip get it because `hasIcon`
   // keeps the badge alive.)
@@ -111,6 +129,7 @@ export function MetaBadge({
       data-cir-component="MetaBadge"
       data-variant={variant}
       data-dot={dot ? 'true' : 'false'}
+      {...(pulsing ? { 'data-cir-pulse': 'true' } : {})}
       className={cn(metaBadgeVariantClass[variant], className)}
       style={pillStyle}
     >

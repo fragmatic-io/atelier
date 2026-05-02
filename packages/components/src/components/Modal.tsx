@@ -11,16 +11,17 @@
  * exposes the phase via `data-transition-phase` for host CSS to pick up
  * a scale / opacity recipe. Defaults to off for back-compat — existing
  * tests assert that `data-size` / `data-variant` are unchanged.
+ *
+ * Wave 11 / Int-1: refactored onto the shared `_transition.ts` phase
+ * machine that Drawer / HoverCard / Toast also consume. Scale 0.95 → 1
+ * transform + Vis-7 `data-elevation` + Vis-6 `data-cir-density`
+ * preserved verbatim. New `duration?: 'fast' | 'normal' | 'slow' | number`
+ * prop joins `animated`.
  */
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import {
-  durationFor,
-  isReducedMotion,
-  readMotionTokens,
-  type ComponentBinding,
-  type TransitionPhase,
-} from '@atelier/runtime';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, elevationClass, layoutVariantClass, type LayoutVariant } from './_variants.js';
+import { useComponentTransition, type TransitionDuration } from './_transition.js';
 
 export type ModalSize = 'sm' | 'md' | 'lg';
 export type ModalVariant = LayoutVariant;
@@ -39,6 +40,12 @@ export interface ModalProps {
    * Defaults to false for back-compat. Honours `prefers-reduced-motion`.
    */
   animated?: boolean;
+  /**
+   * Wave 11 / Int-1 — duration override. Names from the brand kit
+   * scale (`'fast' | 'normal' | 'slow'`) OR raw ms. Defaults to
+   * `'normal'` (160ms in the Atelier defaults).
+   */
+  duration?: TransitionDuration;
 }
 
 const SIZE_PX: Readonly<Record<ModalSize, string>> = Object.freeze({
@@ -46,71 +53,6 @@ const SIZE_PX: Readonly<Record<ModalSize, string>> = Object.freeze({
   md: '560px',
   lg: '880px',
 });
-
-/**
- * Local phase machine — Modal can't pull in `@atelier/react`'s
- * `useTransition` because `@atelier/components` does not depend on the
- * React adapter (it sits underneath). The hook lives in `@atelier/react`
- * for app code; this inlining keeps the dependency direction clean.
- */
-function useModalTransition(
-  open: boolean,
-  enabled: boolean,
-): {
-  phase: TransitionPhase['phase'];
-  style: CSSProperties;
-} {
-  const [phase, setPhase] = useState<TransitionPhase['phase']>(() =>
-    open ? (enabled ? 'entering' : 'entered') : 'exited',
-  );
-  const lastOpenRef = useRef<boolean>(open);
-
-  useEffect(() => {
-    if (!enabled) {
-      setPhase(open ? 'entered' : 'exited');
-      lastOpenRef.current = open;
-      return;
-    }
-    const ms = isReducedMotion() ? 0 : durationFor('normal');
-    if (open && !lastOpenRef.current) {
-      setPhase('entering');
-      lastOpenRef.current = true;
-      const t = setTimeout(() => setPhase('entered'), ms);
-      return () => clearTimeout(t);
-    }
-    if (!open && lastOpenRef.current) {
-      setPhase('exiting');
-      lastOpenRef.current = false;
-      const t = setTimeout(() => setPhase('exited'), ms);
-      return () => clearTimeout(t);
-    }
-    if (open && phase === 'entering') {
-      const t = setTimeout(() => setPhase('entered'), ms);
-      return () => clearTimeout(t);
-    }
-    return;
-    // Phase intentionally excluded — same rationale as in
-    // `useTransition`: this is a prop-flip effect, not a phase tick.
-  }, [open, enabled]);
-
-  if (!enabled) {
-    return { phase, style: {} };
-  }
-  const tokens = readMotionTokens();
-  const reduced = isReducedMotion();
-  const ms = reduced ? 0 : tokens.duration.normal;
-  const easing = phase === 'exiting' ? tokens.easing.in : tokens.easing.out;
-  const opacity = phase === 'entered' ? 1 : 0;
-  const transform = phase === 'entered' ? 'scale(1)' : 'scale(0.95)';
-  const style: CSSProperties = reduced
-    ? { opacity: phase === 'entered' ? 1 : 0 }
-    : {
-        opacity,
-        transform,
-        transition: `opacity ${ms}ms ${easing}, transform ${ms}ms ${easing}`,
-      };
-  return { phase, style };
-}
 
 export function Modal({
   open,
@@ -121,9 +63,25 @@ export function Modal({
   className,
   children,
   animated = false,
+  duration,
 }: ModalProps): ReactNode {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-  const { phase, style: motionStyle } = useModalTransition(open, animated);
+  const {
+    phase,
+    style: motionStyle,
+    reducedMotion,
+  } = useComponentTransition({
+    in: open,
+    enabled: animated,
+    ...(duration !== undefined ? { duration } : {}),
+  });
+  // Per-component motion grammar — scale-in transform is layered on top
+  // of the shared opacity/transition style. Reduced-motion gates the
+  // transform off so the same code path works under that preference.
+  const transformStyle: CSSProperties =
+    animated && !reducedMotion
+      ? { transform: phase === 'entered' ? 'scale(1)' : 'scale(0.95)' }
+      : {};
   // The dialog must stay mounted through the exit animation, so we use
   // the phase machine's view of "is anything visible" rather than `open`.
   const showDialog = animated ? phase !== 'exited' : open;
@@ -168,7 +126,7 @@ export function Modal({
       {...(animated ? { 'data-transition-phase': phase, 'data-animated': 'true' } : {})}
       aria-labelledby="cir-modal-title"
       className={cn(layoutVariantClass[variant], elevationClass.modal, className)}
-      style={{ ...baseStyle, ...motionStyle }}
+      style={{ ...baseStyle, ...motionStyle, ...transformStyle }}
       onClick={(e): void => {
         if (e.target === dialogRef.current) onClose();
       }}

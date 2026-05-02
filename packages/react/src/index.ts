@@ -73,6 +73,13 @@ export {
   type UseTransitionResult,
 } from './hooks/use-transition.js';
 
+// Wave 11 / Int-1 — data-update animation hooks. Pair with the
+// row-appear / count-pulse keyframes scaffolded into the host's
+// `globals.css` (see Int-1 CSS in `apps/demo/app/globals.css`).
+export { useDataPulse } from './hooks/use-data-pulse.js';
+export { useShimmerOnChange } from './hooks/use-shimmer-on-change.js';
+export { useTweenNumber } from './hooks/use-tween-number.js';
+
 // Wave 11 / Nav-4 — drilldown breadcrumb trail with optional URL sync.
 // Pair with `<Breadcrumb trail={…} onNavigate={…}>` from `@atelier/components`.
 export {

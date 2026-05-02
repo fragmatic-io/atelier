@@ -40,8 +40,8 @@
  * Hosts that need direct host-side React composition compose `<Skeleton>` /
  * `<Alert>` / `<EmptyState>` themselves.
  */
-import { useState, type CSSProperties, type ReactNode } from 'react';
-import type { ComponentBinding } from '@atelier/runtime';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { durationFor, type ComponentBinding } from '@atelier/runtime';
 import {
   cn,
   contentVariantClass,
@@ -97,6 +97,13 @@ export interface QueueProps<T = unknown> {
   density?: Density;
   variant?: QueueVariant;
   className?: string;
+  /**
+   * Wave 11 / Int-1 — when true, rows whose id was not in the previous
+   * render carry `data-cir-new="true"` for `durationFor('normal')` ms.
+   * Pair with the host's `cir-row-appear` keyframe in `globals.css`.
+   * Defaults to false. Honours `prefers-reduced-motion`.
+   */
+  animateRowAppear?: boolean;
 }
 
 const PIN_GLYPH = '\u{1F4CC}';
@@ -158,6 +165,7 @@ export function Queue<T = unknown>({
   density = DEFAULT_DENSITY,
   variant = 'ghost',
   className,
+  animateRowAppear = false,
 }: QueueProps<T>): ReactNode {
   const items: readonly T[] =
     itemsProp ?? (Array.isArray(data) ? (data as readonly T[]) : ([] as readonly T[]));
@@ -188,6 +196,39 @@ export function Queue<T = unknown>({
   const visibleItems = items
     .map((item, i) => ({ item, i, id: idOf(item, i) }))
     .filter(({ id }) => !hidden.has(id));
+
+  // Wave 11 / Int-1 — row-appear tracking. Mirrors `<List>`. Compares
+  // current visible ids against the previous render; rows whose id was
+  // absent get `data-cir-new="true"` for `durationFor('normal')` ms so
+  // the host's `cir-row-appear` keyframe fires.
+  const prevIdsRef = useRef<ReadonlySet<string>>(new Set<string>());
+  const [newIds, setNewIds] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const visibleIds = visibleItems.map(({ id }) => id);
+  useEffect(() => {
+    if (!animateRowAppear) {
+      prevIdsRef.current = new Set<string>(visibleIds);
+      return;
+    }
+    const prev = prevIdsRef.current;
+    const fresh = new Set<string>();
+    for (const id of visibleIds) {
+      if (!prev.has(id)) fresh.add(id);
+    }
+    prevIdsRef.current = new Set<string>(visibleIds);
+    if (fresh.size === 0) return;
+    setNewIds(fresh);
+    const ms = durationFor('normal');
+    if (ms <= 0) {
+      setNewIds(new Set<string>());
+      return;
+    }
+    const t = setTimeout(() => {
+      setNewIds(new Set<string>());
+    }, ms);
+    return (): void => {
+      clearTimeout(t);
+    };
+  }, [animateRowAppear, visibleIds.join(' ')]);
 
   const rowPad = DENSITY_ROW_PADDING_PX[density];
   const rowStyle: CSSProperties = {
@@ -244,12 +285,14 @@ export function Queue<T = unknown>({
       if (typeof e === 'string' && e.length > 0) emphasis = e;
     }
     const busy = busyId === entry.id;
+    const isNew = animateRowAppear && newIds.has(entry.id);
     return (
       <li
         key={entry.id}
         data-cir-part="queue-row"
         data-pinned={isPinned ? 'true' : 'false'}
         {...(emphasis !== undefined ? { 'data-emphasis': emphasis } : {})}
+        {...(isNew ? { 'data-cir-new': 'true' } : {})}
         data-busy={busy ? 'true' : 'false'}
         style={rowStyle}
       >
@@ -401,6 +444,7 @@ export const QueueBinding: ComponentBinding = {
       density: 'string',
       variant: 'string',
       className: 'string',
+      animateRowAppear: 'boolean',
     },
   },
 };

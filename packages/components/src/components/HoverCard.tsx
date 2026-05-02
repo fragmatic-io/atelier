@@ -50,6 +50,7 @@ import {
 import { createPortal } from 'react-dom';
 import type { ComponentBinding } from '@atelier/runtime';
 import { cn, elevationClass, hoverCardVariantClass, type HoverCardVariant } from './_variants.js';
+import { useComponentTransition, type TransitionDuration } from './_transition.js';
 
 export type HoverCardSide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -84,6 +85,14 @@ export interface HoverCardProps {
    * label" host signal (distinct from the default).
    */
   ariaLabel?: string;
+  /**
+   * Wave 11 / Int-1 — opacity-fade duration for the card body. Defaults
+   * to `'fast'` (100ms in the Atelier defaults), matching the
+   * pre-Int-1 ad-hoc 100-120ms feel. The OUTER hover detection timings
+   * (`openDelay` / `closeDelay`) are independent — those govern when
+   * the card opens; this governs how it appears once open.
+   */
+  duration?: TransitionDuration;
 }
 
 interface Position {
@@ -99,15 +108,6 @@ interface ChildProps {
   onFocus?: (e: React.FocusEvent<HTMLElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLElement>) => void;
   'aria-describedby'?: string;
-}
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-  try {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -180,6 +180,7 @@ export function HoverCard({
   variant = 'default',
   className,
   ariaLabel,
+  duration = 'fast',
 }: HoverCardProps): ReactNode {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -308,15 +309,22 @@ export function HoverCard({
     };
   }, [clearOpenTimer, clearCloseTimer]);
 
+  // Wave 11 / Int-1 — opacity ramp via the shared phase machine. The
+  // outer 350ms-open / 150ms-close timing controls when the card mounts;
+  // the phase machine controls how it appears once mounted. Hook is
+  // called BEFORE any conditional return so React's hook order is stable.
+  const { style: motionStyle } = useComponentTransition({
+    in: open,
+    duration,
+    enabled: true,
+  });
+
   if (!isValidElement(children)) {
     return children;
   }
 
   const childProps = children.props as ChildProps;
-  const reduceMotion = prefersReducedMotion();
-  const transitionStyle: CSSProperties = reduceMotion
-    ? {}
-    : { transition: 'opacity 120ms ease-in' };
+  const transitionStyle: CSSProperties = motionStyle;
 
   const cloned = cloneElement(children, {
     ref: (node: HTMLElement | null): void => {

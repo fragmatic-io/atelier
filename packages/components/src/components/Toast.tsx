@@ -23,11 +23,18 @@
  *    dismissal vs. expiry separately. Optional; falls back to `onClose`.
  *  - `dismissible` — whether to render the close affordance. Default true.
  *  - `actionLabel` — text on the Undo button. Default `Undo`.
+ *
+ * Wave 11 / Int-1 — opt-in entry/exit transition. When `animated` is set,
+ * the toast slides up from `translateY(8px)` with an opacity ramp on entry,
+ * and reverses on close. Defaults to off for back-compat. Distinct from
+ * the undo countdown — the countdown drives the progress bar, the
+ * transition drives the open/close visual.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import type { AlertSeverity } from './Alert.js';
 import { cn, toastVariantClass, type ToastVariant } from './_variants.js';
+import { useComponentTransition, type TransitionDuration } from './_transition.js';
 
 export type { ToastVariant };
 
@@ -49,6 +56,18 @@ export interface ToastProps {
   dismissible?: boolean;
   /** Wave 11 / Int-8 — label on the Undo button. Default `Undo`. */
   actionLabel?: string;
+  /**
+   * Wave 11 / Int-1 — when true, the toast animates entry (slide up
+   * from `translateY(8px)` + opacity 0 → 1) and exit (reverse). Defaults
+   * to false for back-compat. Honours `prefers-reduced-motion`.
+   * Distinct from the `undo` countdown timer.
+   */
+  animated?: boolean;
+  /**
+   * Wave 11 / Int-1 — entry/exit duration override. Names from the
+   * brand kit scale OR raw ms. Defaults to `'normal'`.
+   */
+  transitionDuration?: TransitionDuration;
 }
 
 export function Toast({
@@ -64,6 +83,8 @@ export function Toast({
   onDismiss,
   dismissible = true,
   actionLabel = 'Undo',
+  animated = false,
+  transitionDuration,
 }: ToastProps): ReactNode {
   const v: ToastVariant = variant ?? severity ?? 'info';
   const isUndo = v === 'undo';
@@ -71,6 +92,18 @@ export function Toast({
   // capability-declared window), not the generic `duration`. For other
   // variants, fall through to the historical `duration` contract.
   const effectiveDuration = isUndo ? (windowMs ?? 5000) : duration;
+
+  // Wave 11 / Int-1 — entry/exit transition. Independent of the undo
+  // countdown; this controls the open/close visual lifecycle.
+  const {
+    phase,
+    style: motionStyle,
+    reducedMotion,
+  } = useComponentTransition({
+    in: open,
+    enabled: animated,
+    ...(transitionDuration !== undefined ? { duration: transitionDuration } : {}),
+  });
 
   // Countdown state — driven off a tick interval so the progress bar
   // animates smoothly. We compare against a start-time ref so React
@@ -118,8 +151,20 @@ export function Toast({
     };
   }, [open, effectiveDuration, isUndo, onClose, onDismiss]);
 
-  if (!open) return null;
+  // The toast must stay mounted through the exit animation when animated.
+  const visible = animated ? phase !== 'exited' : open;
+  if (!visible) return null;
   const role = v === 'error' || v === 'warning' ? 'alert' : 'status';
+  // Per-component motion grammar: slide-up-from-bottom transform layered
+  // on top of the shared opacity/transition style.
+  const transformStyle: CSSProperties =
+    animated && !reducedMotion
+      ? { transform: phase === 'entered' ? 'translateY(0)' : 'translateY(8px)' }
+      : {};
+  const combinedMotionStyle: CSSProperties = animated ? { ...motionStyle, ...transformStyle } : {};
+  const animatedAttrs: Readonly<Record<string, string>> = animated
+    ? { 'data-transition-phase': phase, 'data-animated': 'true' }
+    : {};
 
   if (isUndo) {
     const pct =
@@ -133,12 +178,19 @@ export function Toast({
         data-cir-component="Toast"
         data-severity={v}
         data-variant={v}
+        {...animatedAttrs}
         className={cn(
           toastVariantClass[v],
           'rounded-md shadow-lg flex items-stretch overflow-hidden',
           className,
         )}
-        style={{ position: 'fixed', right: '16px', bottom: '16px', minWidth: '280px' }}
+        style={{
+          position: 'fixed',
+          right: '16px',
+          bottom: '16px',
+          minWidth: '280px',
+          ...combinedMotionStyle,
+        }}
       >
         <div className="flex-1 flex flex-col">
           <div className="flex items-center gap-3 px-4 py-3">
@@ -193,8 +245,9 @@ export function Toast({
       data-cir-component="Toast"
       data-severity={v}
       data-variant={v}
+      {...animatedAttrs}
       className={cn(toastVariantClass[v], className)}
-      style={{ position: 'fixed', right: '16px', bottom: '16px' }}
+      style={{ position: 'fixed', right: '16px', bottom: '16px', ...combinedMotionStyle }}
     >
       {message}
     </output>
