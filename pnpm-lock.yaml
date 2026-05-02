@@ -238,6 +238,9 @@ importers:
 
   apps/demo-github:
     dependencies:
+      '@cir/capability-resolver':
+        specifier: workspace:*
+        version: link:../../packages/capability-resolver
       '@cir/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
@@ -262,6 +265,9 @@ importers:
       '@cir/vault-client':
         specifier: workspace:*
         version: link:../../packages/vault-client
+      '@google/genai':
+        specifier: ^1.50.1
+        version: 1.50.1
       next:
         specifier: ^15.1.0
         version: 15.5.15(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -315,6 +321,22 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/capability-resolver:
+    dependencies:
+      '@cir/compiler':
+        specifier: workspace:*
+        version: link:../compiler
+      '@cir/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)(lightningcss@1.32.0)
 
   packages/cli:
     dependencies:

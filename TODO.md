@@ -15,14 +15,14 @@
 | **M**   | Marketplace pivot — promote `<Queue>` / `<Logo>` / `<MetaBadge>` to baseline; collapse 15 customs across 3 demos to **0**; ETHOS principle #11; eval gate      | ✅ **shipped** | —                   | done       | —              |
 | **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                          | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
 | **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture; **C-1 ✅ shipped**) | 🟡 partial     | HIGH                | 3 wk left  | M              |
-| **7**   | Personalisation — P-3, P-4, P-7, P-9 (P-1 / P-8 / DD shipped)                                                                                                  | 🟡 in flight   | mixed               | 4 wk       | C-Phase-1      |
+| **7**   | Personalisation — P-3, P-4, P-7 (P-1 / P-8 / P-9 / DD shipped)                                                                                                 | 🟡 in flight   | mixed               | 3 wk       | C-Phase-1      |
 | **10**  | Scale tracks — S-1, S-2, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-6 ✅ shipped                                                                                    | 📅 planned     | mixed               | 8 wk       | C-Phase-2      |
 | **8**   | Vault marketplace — V-6 (V-1, V-3 ✅ shipped)                                                                                                                  | 📅 planned     | MEDIUM              | 4-6 wk     | C, 7           |
 | **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items; Vis-2, Int-4, Int-13, Cnt-8 ✅ shipped)                                                           | 📅 partial     | varies              | 6-10 mo    | C, P-7, S-3    |
 | **12+** | Multi-platform + marketing — N-1..N-5 (**N-4 ✅ shipped**)                                                                                                     | 🟡 partial     | LOWER               | 12-16 wk   | M (now proven) |
 | **Op**  | Operational + hardening debt — small, bounded items, do anytime                                                                                                | 📅 open        | LOWER               | <1 wk each | —              |
 
-**Recommended sequence (next):** **C-Phase-2 (tools, 2 wk)** → S-1 (when first host hits >150 capabilities) → P-9 (reintroduce salience as policy) → Vis-3 (icon resolver) → 11.x polish picks → V-6 (marketplace) → balance of 11 / 12.
+**Recommended sequence (next):** **C-Phase-2 (tools, 2 wk)** → S-1 (when first host hits >150 capabilities) → Vis-3 (icon resolver) → 11.x polish picks → V-6 (marketplace) → balance of 11 / 12. _(P-9 ✅ landed.)_
 
 _Already shipped (in order): R → C-Phase-1 → N-4 → marketplace pivot (Wave M) + adjacent (P-8, S-6) before that._
 
@@ -145,7 +145,7 @@ Today's failure modes that get worse at scale:
 - [ ] **P-4** — Engagement signals back into compiler (component.viewed / dismissed / bounced + per-user aggregator). 1 wk.
 - [ ] **P-7** — Motion / view-transitions / animation layer (foundation for Wave 11 Int-1). 1.5 wk.
 - [x] **P-8** — Empty / loading / error first-class composition policy. `7589281` + `1bc2174`.
-- [ ] **P-9** — Information hierarchy (capability `salience_default`, intent `priority_rules`, salience-aware skills). 1 wk. **Direct continuation of M** — the marketplace pivot stripped `IssueQueue.emphasizeTopN`; bringing salience back as a first-class policy is the principled re-introduction.
+- [x] **P-9** — Information hierarchy. Categorical `Capability.salience_level` + intent `priority_overrides` + `resolveSalience` helper + `salienceResolved` advisory policy + `salience-aware-rendering` skill + data-resolver auto-emphasis (`withHighSalienceEmphasis`) + compiler-prompt nudges (legacy + tool-using). Showcase: github demo's `issue.list` / `issue.close` / `issue.archive` carry `salience_level: 'high'`. **Direct continuation of M** — principled re-introduction of the salience signal stripped during the marketplace pivot.
 - [x] **DD** — Full personalisation chain integration eval. Shipped at `evals/end-to-end/personalisation-chain.eval.ts`.
 
 ---

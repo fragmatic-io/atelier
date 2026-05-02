@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@cir/capability-resolver": "workspace:*",
     "@cir/compiler": "workspace:*",
     "@cir/components": "workspace:*",
     "@cir/data-resolvers": "workspace:*",
@@ -21,6 +22,7 @@
     "@cir/runtime": "workspace:*",
     "@cir/schemas": "workspace:*",
     "@cir/vault-client": "workspace:*",
+    "@google/genai": "^1.50.1",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
