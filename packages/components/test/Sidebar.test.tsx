@@ -3,7 +3,9 @@
 // Copyright (c) 2026 The Atelier Authors
 import './setup.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { InMemoryKeyboardRegistry, type KeyboardServices } from '@atelier/keyboard';
+import { KeyboardProvider } from '../src/keyboard/index.js';
 import { Sidebar, SidebarBinding } from '../src/components/Sidebar.js';
 
 const ITEMS = [
@@ -266,5 +268,267 @@ describe('Sidebar — Wave 7b collapsible behaviour', () => {
     const aside = container.querySelector('[data-cir-component="Sidebar"]');
     expect(aside?.getAttribute('data-variant')).toBe('inverse');
     expect(aside?.className).toContain('bg-gray-900');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Wave 11 / Nav-2 — namespaced storageKey + tree memory + keyboard registry
+// -----------------------------------------------------------------------------
+
+const TREE_ITEMS = [
+  { id: 'home', label: 'Home', href: '/' },
+  {
+    id: 'docs',
+    label: 'Docs',
+    href: '/docs',
+    children: [{ id: 'getting-started', label: 'Getting started', href: '/docs/start' }],
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    href: '/settings',
+    children: [
+      { id: 'profile', label: 'Profile', href: '/settings/profile' },
+      { id: 'team', label: 'Team', href: '/settings/team' },
+    ],
+  },
+];
+
+describe('Sidebar — Wave 11 / Nav-2 storageKey + tree memory', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('storageKey persists collapse state under <key>.collapsed', () => {
+    const { container } = render(
+      <Sidebar items={TREE_ITEMS} collapsible storageKey="aurora.sidebar" />,
+    );
+    expect(window.localStorage.getItem('aurora.sidebar.collapsed')).toBeNull();
+    fireEvent.click(container.querySelector('[data-cir-part="sidebar-toggle"]')!);
+    expect(window.localStorage.getItem('aurora.sidebar.collapsed')).toBe('1');
+    fireEvent.click(container.querySelector('[data-cir-part="sidebar-toggle"]')!);
+    expect(window.localStorage.getItem('aurora.sidebar.collapsed')).toBe('0');
+  });
+
+  it('reads <storageKey>.collapsed on mount', () => {
+    window.localStorage.setItem('aurora.sidebar.collapsed', '1');
+    const { container } = render(
+      <Sidebar items={TREE_ITEMS} collapsible storageKey="aurora.sidebar" />,
+    );
+    expect(
+      container.querySelector('[data-cir-component="Sidebar"]')?.getAttribute('data-collapsed'),
+    ).toBe('true');
+  });
+
+  it('storageKey wins over a legacy persistKey when both are passed', () => {
+    window.localStorage.setItem('legacy.key', '0');
+    window.localStorage.setItem('new.key.collapsed', '1');
+    const { container } = render(
+      <Sidebar items={TREE_ITEMS} collapsible persistKey="legacy.key" storageKey="new.key" />,
+    );
+    expect(
+      container.querySelector('[data-cir-component="Sidebar"]')?.getAttribute('data-collapsed'),
+    ).toBe('true');
+  });
+
+  it('renders a chevron toggle for items with children', () => {
+    const { container } = render(<Sidebar items={TREE_ITEMS} />);
+    const toggles = container.querySelectorAll('[data-cir-part="sidebar-node-toggle"]');
+    // `home` has no children, so 2 toggles for `docs` + `settings`.
+    expect(toggles.length).toBe(2);
+  });
+
+  it('chevron toggle hides the children list and updates aria-expanded', () => {
+    const { container } = render(<Sidebar items={TREE_ITEMS} />);
+    const docsToggle = container.querySelector(
+      '[data-cir-part="sidebar-node-toggle"][data-node-id="docs"]',
+    );
+    expect(docsToggle?.getAttribute('aria-expanded')).toBe('true');
+    expect(container.querySelector('#cir-sidebar-children-docs')).toBeTruthy();
+    fireEvent.click(docsToggle!);
+    expect(docsToggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector('#cir-sidebar-children-docs')).toBeNull();
+  });
+
+  it('persists the expanded set to <storageKey>.expanded', () => {
+    const { container } = render(<Sidebar items={TREE_ITEMS} storageKey="aurora.sidebar" />);
+    fireEvent.click(
+      container.querySelector('[data-cir-part="sidebar-node-toggle"][data-node-id="docs"]')!,
+    );
+    const stored = window.localStorage.getItem('aurora.sidebar.expanded');
+    expect(stored).not.toBeNull();
+    const parsed = JSON.parse(stored!) as string[];
+    expect(parsed).toContain('settings');
+    expect(parsed).not.toContain('docs');
+  });
+
+  it('reads <storageKey>.expanded on mount, ignoring children whose id is absent', () => {
+    window.localStorage.setItem('aurora.sidebar.expanded', JSON.stringify(['settings']));
+    const { container } = render(<Sidebar items={TREE_ITEMS} storageKey="aurora.sidebar" />);
+    expect(container.querySelector('#cir-sidebar-children-docs')).toBeNull();
+    expect(container.querySelector('#cir-sidebar-children-settings')).toBeTruthy();
+  });
+
+  it('falls back to default expanded when expanded JSON is corrupt', () => {
+    window.localStorage.setItem('aurora.sidebar.expanded', 'not-json');
+    const { container } = render(
+      <Sidebar items={TREE_ITEMS} storageKey="aurora.sidebar" defaultExpanded={['docs']} />,
+    );
+    expect(container.querySelector('#cir-sidebar-children-docs')).toBeTruthy();
+    expect(container.querySelector('#cir-sidebar-children-settings')).toBeNull();
+  });
+
+  it('controlled `expanded` prop fires onExpandedChange and is authoritative', () => {
+    const onExpandedChange = vi.fn();
+    const { container } = render(
+      <Sidebar items={TREE_ITEMS} expanded={['docs']} onExpandedChange={onExpandedChange} />,
+    );
+    expect(container.querySelector('#cir-sidebar-children-docs')).toBeTruthy();
+    expect(container.querySelector('#cir-sidebar-children-settings')).toBeNull();
+    fireEvent.click(
+      container.querySelector('[data-cir-part="sidebar-node-toggle"][data-node-id="settings"]')!,
+    );
+    expect(onExpandedChange).toHaveBeenCalledWith(['docs', 'settings']);
+  });
+
+  it('collapsing the sidebar hides chevrons but preserves the expanded set', () => {
+    const { container } = render(
+      <Sidebar items={TREE_ITEMS} collapsible storageKey="aurora.sidebar" />,
+    );
+    fireEvent.click(
+      container.querySelector('[data-cir-part="sidebar-node-toggle"][data-node-id="docs"]')!,
+    );
+    fireEvent.click(container.querySelector('[data-cir-part="sidebar-toggle"]')!);
+    expect(container.querySelectorAll('[data-cir-part="sidebar-node-toggle"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-cir-part="sidebar-children"]').length).toBe(0);
+    fireEvent.click(container.querySelector('[data-cir-part="sidebar-toggle"]')!);
+    expect(container.querySelector('#cir-sidebar-children-docs')).toBeNull();
+    expect(container.querySelector('#cir-sidebar-children-settings')).toBeTruthy();
+  });
+
+  it('collapseHotkey alias toggles via keyboard when collapsible', () => {
+    const { container } = render(<Sidebar items={TREE_ITEMS} collapsible collapseHotkey={'\\'} />);
+    fireEvent.keyDown(document, { key: '\\' });
+    expect(
+      container.querySelector('[data-cir-component="Sidebar"]')?.getAttribute('data-collapsed'),
+    ).toBe('true');
+  });
+
+  it('collapseHotkey wins over toggleShortcut when both are passed', () => {
+    const { container } = render(
+      <Sidebar items={TREE_ITEMS} collapsible toggleShortcut="]" collapseHotkey={'\\'} />,
+    );
+    fireEvent.keyDown(document, { key: ']' });
+    expect(
+      container.querySelector('[data-cir-component="Sidebar"]')?.getAttribute('data-collapsed'),
+    ).toBe('false');
+    fireEvent.keyDown(document, { key: '\\' });
+    expect(
+      container.querySelector('[data-cir-component="Sidebar"]')?.getAttribute('data-collapsed'),
+    ).toBe('true');
+  });
+
+  it('persists across remounts via storageKey', () => {
+    const { container, unmount } = render(
+      <Sidebar items={TREE_ITEMS} collapsible storageKey="aurora.sidebar" />,
+    );
+    // Toggle the `docs` chevron BEFORE collapsing the rail — once the
+    // sidebar is collapsed the chevrons are gone.
+    fireEvent.click(
+      container.querySelector('[data-cir-part="sidebar-node-toggle"][data-node-id="docs"]')!,
+    );
+    fireEvent.click(container.querySelector('[data-cir-part="sidebar-toggle"]')!);
+    unmount();
+
+    const second = render(<Sidebar items={TREE_ITEMS} collapsible storageKey="aurora.sidebar" />);
+    expect(
+      second.container
+        .querySelector('[data-cir-component="Sidebar"]')
+        ?.getAttribute('data-collapsed'),
+    ).toBe('true');
+    // Expand and check that `docs` stayed closed.
+    fireEvent.click(second.container.querySelector('[data-cir-part="sidebar-toggle"]')!);
+    expect(second.container.querySelector('#cir-sidebar-children-docs')).toBeNull();
+    expect(second.container.querySelector('#cir-sidebar-children-settings')).toBeTruthy();
+  });
+});
+
+describe('Sidebar — Wave 11 / Nav-2 keyboard registry integration', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  function makeKeyboardServices(): KeyboardServices {
+    return { registry: new InMemoryKeyboardRegistry() };
+  }
+
+  it('registers `sidebar.toggle` when wrapped in <KeyboardProvider> and collapsible', () => {
+    const services = makeKeyboardServices();
+    render(
+      <KeyboardProvider services={services} disableEventListener>
+        <Sidebar items={TREE_ITEMS} collapsible storageKey="aurora.sidebar" />
+      </KeyboardProvider>,
+    );
+    const action = services.registry.list().find((a) => a.id === 'sidebar.toggle');
+    expect(action).toBeDefined();
+    expect(action?.hotkey).toBe('[');
+    expect(action?.scope).toBe('global');
+  });
+
+  it('does NOT publish a hotkey for sidebar.toggle when not collapsible', () => {
+    const services = makeKeyboardServices();
+    render(
+      <KeyboardProvider services={services} disableEventListener>
+        <Sidebar items={TREE_ITEMS} />
+      </KeyboardProvider>,
+    );
+    const action = services.registry.list().find((a) => a.id === 'sidebar.toggle');
+    expect(action).toBeDefined();
+    expect(action?.hotkey).toBeUndefined();
+  });
+
+  it('invoking sidebar.toggle through the registry flips collapse state', () => {
+    const services = makeKeyboardServices();
+    const { container } = render(
+      <KeyboardProvider services={services} disableEventListener>
+        <Sidebar items={TREE_ITEMS} collapsible storageKey="aurora.sidebar" />
+      </KeyboardProvider>,
+    );
+    const action = services.registry.list().find((a) => a.id === 'sidebar.toggle');
+    expect(
+      container.querySelector('[data-cir-component="Sidebar"]')?.getAttribute('data-collapsed'),
+    ).toBe('false');
+    act(() => {
+      // `invoke` may be sync or async — its return is discarded by the
+      // registry. Mark the call explicitly void so the linter doesn't
+      // flag a floating promise.
+      void action?.invoke();
+    });
+    expect(
+      container.querySelector('[data-cir-component="Sidebar"]')?.getAttribute('data-collapsed'),
+    ).toBe('true');
+  });
+
+  it('respects collapseHotkey when registering the action', () => {
+    const services = makeKeyboardServices();
+    render(
+      <KeyboardProvider services={services} disableEventListener>
+        <Sidebar items={TREE_ITEMS} collapsible collapseHotkey={'\\'} />
+      </KeyboardProvider>,
+    );
+    const action = services.registry.list().find((a) => a.id === 'sidebar.toggle');
+    expect(action?.hotkey).toBe('\\');
+  });
+
+  it('no-ops when no <KeyboardProvider> is in scope', () => {
+    expect(() => {
+      render(<Sidebar items={TREE_ITEMS} collapsible />);
+    }).not.toThrow();
   });
 });

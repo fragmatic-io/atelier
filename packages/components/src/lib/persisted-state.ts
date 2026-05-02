@@ -60,3 +60,58 @@ export function writePersistedBool(key: string, value: boolean): void {
     // Quota / SecurityError / disabled storage — nothing useful to do.
   }
 }
+
+/**
+ * Wave 11 / Nav-2 — read a JSON-encoded value from `localStorage[key]`,
+ * falling back to `fallback` when the key is absent, the value is corrupt,
+ * or storage is unavailable.
+ *
+ * Used by `<Sidebar storageKey>` to persist the per-node expanded set as
+ * an array of ids (`["docs","settings"]`). Kept as plain JSON rather than
+ * a custom encoding so devtools surface the value legibly and so future
+ * helpers in this file (table column visibility, density-per-route) can
+ * share the same shape without inventing a parser.
+ *
+ * Why two helpers
+ * ---------------
+ * `readPersistedBool` / `writePersistedBool` ship a hand-encoded
+ * `'1'`/`'0'` shape (smaller, devtools-grep-friendly). For richer payloads
+ * the `'1'`/`'0'` trick stops working, so this pair adds a JSON-typed
+ * round-trip while keeping every component in `@atelier/components`
+ * decoupled from `@atelier/react`'s `usePersistedState` hook (which is
+ * the host-facing surface for the same concern). Hosts that want
+ * cross-tab sync, vault tier, or session/local toggle reach for the
+ * `@atelier/react` hook; baseline components reach for these helpers.
+ */
+export function readPersistedJson<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const ls = window.localStorage;
+    if (ls === null || ls === undefined) return fallback;
+    const raw = ls.getItem(key);
+    if (raw === null) return fallback;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return fallback;
+    }
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Write a JSON-encoded value to `localStorage[key]`. Silent no-op when
+ * storage is unavailable or throws (quota, SecurityError, disabled
+ * storage in Safari private mode).
+ */
+export function writePersistedJson<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const ls = window.localStorage;
+    if (ls === null || ls === undefined) return;
+    ls.setItem(key, JSON.stringify(value));
+  } catch {
+    // Quota / SecurityError / disabled storage — nothing useful to do.
+  }
+}

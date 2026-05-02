@@ -82,6 +82,18 @@ export {
   type TrailSegment,
 } from './hooks/use-trail.js';
 
+// Wave 11 / Nav-2 — generic persisted-state hook (session / local / vault).
+// Powers `<Sidebar storageKey="…">` collapse + tree memory and is the
+// reusable primitive for Int-11's view-state middleware when that lands.
+export {
+  usePersistedState,
+  PersistedVaultContext,
+  type PersistedScope,
+  type PersistedSetter,
+  type PersistedStateOptions,
+  type PersistedVaultClient,
+} from './hooks/use-persisted-state.js';
+
 // -----------------------------------------------------------------------------
 // Data resolver protocol
 // -----------------------------------------------------------------------------
