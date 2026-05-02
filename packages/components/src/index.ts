@@ -186,6 +186,10 @@ export type { NavBarProps, NavItem } from './components/NavBar.js';
 export { Breadcrumb, BreadcrumbBinding } from './components/Breadcrumb.js';
 export type { BreadcrumbProps, BreadcrumbItem } from './components/Breadcrumb.js';
 
+// Wave 11 / Nav-4 — drilldown trail (URL-shareable). Pair the data shape with
+// `<Breadcrumb trail={…} onNavigate={…}>` and `useTrail()` from `@atelier/react`.
+export { serializeTrail, parseTrail, type TrailSegment } from './breadcrumb/trail.js';
+
 export { Pagination, PaginationBinding } from './components/Pagination.js';
 export type { PaginationProps } from './components/Pagination.js';
 

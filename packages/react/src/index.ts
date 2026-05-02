@@ -73,6 +73,15 @@ export {
   type UseTransitionResult,
 } from './hooks/use-transition.js';
 
+// Wave 11 / Nav-4 — drilldown breadcrumb trail with optional URL sync.
+// Pair with `<Breadcrumb trail={…} onNavigate={…}>` from `@atelier/components`.
+export {
+  useTrail,
+  type UseTrailOptions,
+  type UseTrailResult,
+  type TrailSegment,
+} from './hooks/use-trail.js';
+
 // -----------------------------------------------------------------------------
 // Data resolver protocol
 // -----------------------------------------------------------------------------
