@@ -54,6 +54,9 @@ apps/*/.next/
 apps/*/next-env.d.ts
 apps/*/.turbo/
 
+# Astro marketing site (apps/marketing)
+apps/*/.astro/
+
 # Playwright
 apps/*/test-results/
 apps/*/playwright-report/

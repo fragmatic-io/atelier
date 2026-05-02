@@ -50,6 +50,8 @@
     "components:check": "tsx --tsconfig packages/components/tsconfig.json scripts/sync-component-registry.ts --check",
     "cir": "tsx packages/cli/src/index.ts",
     "demo": "tsx scripts/dev-demo.ts",
+    "marketing:dev": "pnpm --filter @cir/marketing dev",
+    "marketing:build": "pnpm --filter @cir/marketing build",
     "schemas:dump": "cir-schemas dump --out .well-known/schemas",
     "validate:data": "cir-schemas validate-data",
     "evals": "cir-evals run",

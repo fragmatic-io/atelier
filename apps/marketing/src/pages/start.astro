@@ -1,0 +1,91 @@
+---
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const link = (path: string) => `${base}${path}`;
+---
+
+<BaseLayout
+  title="Quick start"
+  description="From git clone to a personalised UI in 10 minutes."
+  pageKey="start"
+>
+  <h1>Quick start</h1>
+  <p class="lead">
+    Ten minutes from <code>git clone</code> to a personalised UI rendered from a compiled manifest.
+    The demo boots end-to-end without an LLM key — the
+    <code>FallbackCompiler</code> ships hand-written manifests so every code path runs offline.
+  </p>
+
+  <h2>1. Clone and install</h2>
+  <pre><code>{`git clone https://github.com/fragmatic-io/cir.git
+cd cir
+pnpm install                                              # ≈ 60s`}</code></pre>
+
+  <h2>2. (Optional) seed an API key</h2>
+  <p>
+    Without a key, the <code>FallbackCompiler</code> renders the demo. With one, the
+    <code>GeminiCompiler</code> takes over and you watch tokens tick in the audit stream.
+  </p>
+  <pre><code>{`cp apps/demo/.env.local.example apps/demo/.env.local
+# add GEMINI_API_KEY=... if you have one`}</code></pre>
+
+  <h2>3. Boot the demo</h2>
+  <pre><code>{`pnpm demo
+# vault: http://localhost:4001  (consent UI lives here)
+# demo:  http://localhost:3000  (lands on /onboarding for a clean profile)`}</code></pre>
+  <p>
+    <code>pnpm demo</code> is the orchestration script — it spawns
+    <code>cir vault dev</code> (the intent vault server) and <code>next dev</code> with prefixed log
+    streams. First-boot path:
+    <strong>/onboarding → vault consent UI → token minted → /today rendered with intent-honoured
+      manifest.</strong>
+  </p>
+
+  <h2>4. See the manifest compile</h2>
+  <p>In a second terminal, tail the audit stream and watch every compile, policy validation, and dispatched action:</p>
+  <pre><code>{`pnpm cir dev --tail-only
+# tails /api/cir/audit/stream`}</code></pre>
+
+  <p>
+    Trigger an SSE recompile from a third shell to see invalidation and re-render at runtime:
+  </p>
+  <pre><code>{`curl -XPOST http://localhost:3000/api/triggers/publish \\
+  -H 'content-type: application/json' \\
+  -d '{"type":"user.recompile_route","user_id":"demo-user","manifest_id":"m_demo_today","route":"/today"}'`}</code></pre>
+
+  <h2>5. Write a recipe</h2>
+  <p>
+    Recipes (<code>recipes/&lt;name&gt;.json</code>) declare the persona's intent surfaces, granted
+    capabilities, candidate skills, and policy obligations. The recipe is what humans author. The
+    manifest is what the LLM produces from it.
+  </p>
+  <pre><code>{`pnpm cir compile fixtures/intent.json \\
+  --capabilities capabilities/ \\
+  --components components/registry.json
+pnpm cir inspect manifests/m_xyz.json`}</code></pre>
+
+  <h2>6. Verify the whole tree</h2>
+  <pre><code>{`pnpm validate                 # license + typecheck + lint + format + tests
+pnpm test                     # vitest (2002+ tests at HEAD)
+pnpm exec cir-evals run       # eval suite`}</code></pre>
+
+  <hr />
+  <p>
+    More detail: <a
+      href="https://github.com/fragmatic-io/cir/blob/main/docs/quick-reference.md"
+      rel="noopener"
+      target="_blank">docs/quick-reference.md</a
+    >
+    ·
+    <a
+      href="https://github.com/fragmatic-io/cir/blob/main/apps/demo/README.md"
+      rel="noopener"
+      target="_blank">apps/demo/README.md</a
+    >
+    ·
+    <a href={link('/architecture')}>architecture diagram</a>.
+  </p>
+</BaseLayout>

@@ -1,0 +1,108 @@
+---
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+interface Demo {
+  name: string;
+  brand: string;
+  domain: string;
+  blurb: string;
+  readme: string;
+  highlight: string;
+}
+
+const demos: Demo[] = [
+  {
+    name: 'Aurora',
+    brand: 'apps/demo',
+    domain: 'Decisions · tasks · email triage',
+    blurb:
+      'The personalisation showcase. LLM-assisted onboarding, intent profile editing, dark mode toggle, optimistic UI, undo toasts. Different lens density triggers a recompile that swaps Grid for List for Grid columns=2.',
+    readme: 'https://github.com/fragmatic-io/cir/blob/main/apps/demo/README.md',
+    highlight: 'First demo to ship at zero customs.',
+  },
+  {
+    name: 'Octant',
+    brand: 'apps/demo-github',
+    domain: 'PR review · issue triage',
+    blurb:
+      'Real-mutations issue queue. Optimistic archive, undo within 5s, hierarchy treatment for assigned-to-me, hover cards on #issue references, verbal-required bulk close. IDE-adjacent dark+light first-class.',
+    readme: 'https://github.com/fragmatic-io/cir/blob/main/apps/demo-github/README.md',
+    highlight: 'Zero customs after Stack(Logo, NavBar, StatusBar) chrome composition.',
+  },
+  {
+    name: 'Marigold',
+    brand: 'apps/demo-dummyjson',
+    domain: 'Commerce · catalog · cart',
+    blurb:
+      'E-commerce catalog with lens-switching (compact / cozy / spacious), bulk cart actions, hover-card product previews. Same /browse route renders three distinct manifests from a single intent signal — the compiler and runtime do the rest.',
+    readme: 'https://github.com/fragmatic-io/cir/blob/main/apps/demo-dummyjson/README.md',
+    highlight: 'Zero customs after Grid + Gallery + Card + Queue promotions.',
+  },
+];
+---
+
+<BaseLayout
+  title="Demos"
+  description="Three reference apps. Different domains. Zero custom React components."
+  pageKey="demos"
+>
+  <h1>Demos</h1>
+  <p class="lead">
+    Three reference apps live in the repo. Different domains. Different brand kits. Different
+    interaction patterns. <strong>Zero custom React components</strong> across all three after the
+    Wave M marketplace pivot.
+  </p>
+
+  <div class="zero-strip" role="group" aria-label="Custom-binding count per demo">
+    <div class="headline">Custom-binding count</div>
+    <div class="counts">
+      <div class="count"><strong>0</strong> Aurora</div>
+      <div class="count"><strong>0</strong> Octant</div>
+      <div class="count"><strong>0</strong> Marigold</div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    {
+      demos.map((d) => (
+        <article class="card">
+          <h3>{d.name}</h3>
+          <p style="font-family: var(--mono); font-size: 0.78rem; color: var(--fg-subtle); letter-spacing: 0.05em; text-transform: uppercase;">
+            {d.brand} · {d.domain}
+          </p>
+          <p>{d.blurb}</p>
+          <div class="meta">
+            <span class="badge">Zero custom components</span>
+          </div>
+          <p style="margin-top: 0.85rem; font-size: 0.85rem; color: var(--fg-subtle);">
+            {d.highlight}
+          </p>
+          <p style="margin-top: 0.5rem;">
+            <a href={d.readme} rel="noopener noreferrer" target="_blank">
+              README →
+            </a>
+          </p>
+        </article>
+      ))
+    }
+  </div>
+
+  <h2>Why this matters</h2>
+  <p>
+    Each per-host <code>ComponentBinding</code> registered on top of <code>@cir/components</code>'s
+    baseline catalog is a local escape hatch — a place where the host has decided the LLM cannot be
+    trusted to compose the shape from primitives. The marketplace pivot collapsed 17 customs
+    across the three demos to 0 by promoting the recurring shapes (<code>Queue</code>, <code
+      >Logo</code
+    >, <code>MetaBadge</code>, data-aware <code>Grid</code> + <code>Card</code> + <code
+      >Gallery</code
+    >) to baseline.
+  </p>
+  <p>
+    The <code>tests/marketplace-pressure.test.ts</code> gate caps each demo's custom binding count
+    and ratchets it down. Lowering the ceiling by deleting a binding is the only way to grow the
+    marketplace.
+  </p>
+</BaseLayout>

@@ -20,5 +20,8 @@ packages/schemas/test/golden
 # Next.js build output
 apps/*/.next
 
+# Astro build cache (apps/marketing)
+apps/*/.astro
+
 # Agent worktree checkouts
 .claude/worktrees

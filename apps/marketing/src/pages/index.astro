@@ -1,0 +1,84 @@
+---
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const link = (path: string) => `${base}${path}`;
+---
+
+<BaseLayout title="CIR" pageKey="home">
+  <section class="hero">
+    <p class="tagline">Capability · Intent · Render</p>
+    <h1>UI as a runtime artifact.</h1>
+    <p class="lead">
+      The compiler builds the manifest. The renderer walks it. The marketplace ships the parts.
+      Software ships <strong>capabilities and skills</strong>; users keep <strong>intent</strong>;
+      agents emit <strong>UI as ephemeral output</strong> — cached, versioned, recomputed only on
+      trigger.
+    </p>
+    <div class="cta-row">
+      <a class="btn primary" href={link('/ethos')}>Read the ETHOS →</a>
+      <a class="btn" href={link('/start')}>Quick start</a>
+      <a class="btn" href="https://github.com/fragmatic-io/cir" rel="noopener" target="_blank"
+        >GitHub →</a
+      >
+    </div>
+
+    <div class="three-line" aria-label="Three artifacts">
+      <div>
+        <strong>Capability</strong>
+        <span>Typed actions + data + skills. Public, signed, versioned.</span>
+      </div>
+      <div>
+        <strong>Intent</strong>
+        <span>Lenses, vocabulary, rules. Private, durable, user-owned.</span>
+      </div>
+      <div>
+        <strong>Render</strong>
+        <span>Manifest tree. Walked by a dumb client. Disposable.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <h2>The marketplace pivot</h2>
+      <span class="small">Wave M · 2026-05-02</span>
+    </div>
+    <p>
+      The framework's promise is simple: give the LLM a rich-enough primitive marketplace and it
+      will compose any domain UI. <strong>Three reference apps. Different domains. Zero custom
+        React components.</strong> Promote the shape to baseline; don't entrench another per-host
+      binding.
+    </p>
+
+    <div class="zero-strip" role="group" aria-label="Custom-binding count per demo">
+      <div class="headline">Zero custom bindings across all three demos</div>
+      <div class="counts">
+        <div class="count"><strong>0</strong> Aurora</div>
+        <div class="count"><strong>0</strong> Octant</div>
+        <div class="count"><strong>0</strong> Marigold</div>
+      </div>
+    </div>
+
+    <p style="margin-top: 1.5rem;">
+      A demo's custom-binding count is the single best smell test for whether the framework's
+      marketplace promise is being kept. The
+      <a href={link('/ethos')}>ETHOS principle #11</a> codifies why; the
+      <a href={link('/demos')}>demos page</a> shows what shipped.
+    </p>
+  </section>
+
+  <section>
+    <h2>Compile rarely. Render constantly.</h2>
+    <p>
+      One LLM call on the cold path (≈ 5–20k tokens). Zero LLM calls on the hot path. Triggers —
+      capability bumped, intent changed, component removed, user-requested recompile — are the only
+      things that invalidate. Everything else is a pure function of <code>(manifest, data)</code>.
+    </p>
+    <p>
+      <a href={link('/architecture')}>See the architecture →</a>
+    </p>
+  </section>
+</BaseLayout>

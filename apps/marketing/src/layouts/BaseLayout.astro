@@ -1,0 +1,85 @@
+---
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The CIR Authors
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  pageKey?: 'home' | 'ethos' | 'start' | 'architecture' | 'demos';
+}
+
+const { title, description, pageKey } = Astro.props;
+const fullTitle = title === 'CIR' ? 'CIR — Capability · Intent · Render' : `${title} — CIR`;
+const desc =
+  description ??
+  'CIR — Capability · Intent · Render. A production architecture for dynamic software interfaces. UI as a runtime artifact.';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const link = (path: string) => `${base}${path}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={desc} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" type="image/svg+xml" href={link('/favicon.svg')} />
+    <title>{fullTitle}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="brand" href={link('/')} aria-label="CIR home">
+          <span class="dot" aria-hidden="true"></span>
+          <span>cir</span>
+        </a>
+        <nav class="primary" aria-label="Primary">
+          <a href={link('/')} aria-current={pageKey === 'home' ? 'page' : undefined}>Home</a>
+          <a href={link('/ethos')} aria-current={pageKey === 'ethos' ? 'page' : undefined}>Ethos</a>
+          <a href={link('/start')} aria-current={pageKey === 'start' ? 'page' : undefined}
+            >Quick start</a
+          >
+          <a
+            href={link('/architecture')}
+            aria-current={pageKey === 'architecture' ? 'page' : undefined}>Architecture</a
+          >
+          <a href={link('/demos')} aria-current={pageKey === 'demos' ? 'page' : undefined}>Demos</a>
+          <a
+            href="https://github.com/fragmatic-io/cir"
+            rel="noopener noreferrer"
+            target="_blank"
+            aria-label="CIR on GitHub">GitHub →</a
+          >
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <span>MIT licensed · The CIR Authors</span>
+        <span>
+          Security:
+          <a href="mailto:v@fragmatic.io">v@fragmatic.io</a>
+          {' '}·{' '}
+          <a
+            href="https://github.com/fragmatic-io/cir/security/advisories"
+            rel="noopener noreferrer"
+            target="_blank">private advisory</a
+          >
+        </span>
+        <a href="https://github.com/fragmatic-io/cir" rel="noopener noreferrer" target="_blank"
+          >github.com/fragmatic-io/cir</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>
