@@ -534,6 +534,8 @@ Hard rules:
 - Destructive actions need a ConfirmDialog; reversible actions need an UndoToast or a rollback Button somewhere in the route.
 - Set compiled_from.compiler_model to your model id and compiled_from.compiled_at to the current ISO 8601 UTC timestamp.
 
+Salience (Wave 7 / P-9): capabilities may declare salience_level ('high' | 'normal' | 'low'), and the user's intent profile may override via priority_overrides. The data resolver auto-emits emphasis:'high' on rows for high-salience bindings; you do NOT need to hand-emphasise. But compose hierarchy-respecting layouts — high-salience routes get top placement; high-salience rows trigger the Queue/List/Grid/Table's emphasis variant naturally. Bind high-salience capabilities to a salience-aware container (Queue/List/Grid/Table); other components have no surface for the per-row emphasis flag.
+
 When you emit the final manifest, output ONLY the JSON object — no markdown fencing, no prose. The wrapper parses your reply as JSON.`;
 
 /**

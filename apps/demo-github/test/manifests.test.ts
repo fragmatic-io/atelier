@@ -17,9 +17,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { ManifestSchema } from '@cir/schemas';
+import { ManifestSchema, type IntentProfile } from '@cir/schemas';
 import {
   BASELINE_POLICIES,
+  resolveSalience,
+  salienceResolved,
   validateManifest,
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
@@ -184,6 +186,46 @@ describe('demo-github manifests', () => {
         console.error(manifest.manifest_id, result.violations);
       }
       expect(result.ok, `${manifest.manifest_id} baseline`).toBe(true);
+    }
+  });
+
+  it('P-9 — issue.list / issue.close / issue.archive carry salience_level: "high"', () => {
+    expect(CAPABILITIES['github.issue.list']?.salience_level).toBe('high');
+    expect(CAPABILITIES['github.issue.close']?.salience_level).toBe('high');
+    expect(CAPABILITIES['github.issue.archive']?.salience_level).toBe('high');
+    // Sanity: rate-limit / read-only metadata stays at the default level.
+    expect(CAPABILITIES['github.api.rate_limit']?.salience_level).toBeUndefined();
+  });
+
+  it('P-9 — resolveSalience honours the demo intent priority_overrides', () => {
+    // A user who promotes every github capability to high via onboarding.
+    const intent: Pick<IntentProfile, 'priority_overrides'> = {
+      priority_overrides: [
+        { capability_pattern: 'github.**', salience: 'high', reason: 'onboarding' },
+      ],
+    };
+    expect(resolveSalience(CAPABILITIES['github.repo.list']!, intent)).toBe('high');
+    expect(resolveSalience(CAPABILITIES['github.api.rate_limit']!, intent)).toBe('high');
+    // Without overrides, capability-declared levels apply.
+    expect(resolveSalience(CAPABILITIES['github.issue.list']!, {})).toBe('high');
+    expect(resolveSalience(CAPABILITIES['github.repo.list']!, {})).toBe('normal');
+  });
+
+  it('P-9 — todayManifest and inboxManifest pass salience_resolved (Queue is salience-aware)', () => {
+    // The /today and /inbox routes both bind the high-salience
+    // `github.issue.list` to a baseline `<Queue>`. The salience-aware
+    // policy clears those routes — `<Queue>` is in the salience-aware
+    // whitelist, so the per-row emphasis the resolver emits has a
+    // visual surface.
+    for (const m of [todayManifest(), inboxManifest()]) {
+      const result = salienceResolved.evaluate({
+        manifest: m,
+        capabilities: CAPABILITIES,
+        intent: INTENT,
+        rate_limited_capability_ids: RATE_LIMITED,
+        pii_fields: new Set(),
+      });
+      expect(result.ok, `${m.manifest_id} salience_resolved`).toBe(true);
     }
   });
 

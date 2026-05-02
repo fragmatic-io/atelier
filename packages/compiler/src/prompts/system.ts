@@ -68,8 +68,12 @@ Read the catalog descriptions carefully. Custom bindings often satisfy multiple 
 
 **An empty Container or empty Stack is always wrong.** Pick the most specific binding that matches the route's intent.
 
+## Salience (Wave 7 / P-9)
+
+Capabilities may declare a categorical \`salience_level\` (\`'high' | 'normal' | 'low'\`), and the user's intent profile may override the level via \`priority_overrides\` (glob over capability id). The data resolver auto-emits \`emphasis: 'high'\` on rows for high-salience bindings; you do NOT need to hand-emphasise rows in the manifest. But you SHOULD compose hierarchy-respecting layouts — high-salience routes get top placement, high-salience rows trigger the Queue/List/Grid/Table's emphasis variant naturally. Bind high-salience capabilities to a salience-aware container (Queue, List, Grid, Table); other components have no surface for the per-row emphasis flag.
+
 ## Output
 
 Output ONLY the manifest JSON object. No prose, no explanations, no markdown fencing. Validation against the supplied response schema is mandatory. If you cannot satisfy a hard rule, return a manifest with a single Alert in the layout explaining what's missing — never bypass a rule.`;
 
-export const COMPILER_SYSTEM_PROMPT_VERSION = '1.2.0';
+export const COMPILER_SYSTEM_PROMPT_VERSION = '1.3.0';

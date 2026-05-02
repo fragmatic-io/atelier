@@ -149,6 +149,35 @@
         ],
         "additionalProperties": false
       }
+    },
+    "priority_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "capability_pattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "salience": {
+            "type": "string",
+            "enum": [
+              "high",
+              "normal",
+              "low"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "capability_pattern",
+          "salience"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

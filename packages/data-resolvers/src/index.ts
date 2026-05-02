@@ -57,3 +57,4 @@ export type {
 } from './filter-parser.js';
 export type { DataBinding, DataResolver, CapabilityLookup } from './types.js';
 export { lookupCapability } from './types.js';
+export { withHighSalienceEmphasis, type WithHighSalienceEmphasisOptions } from './salience.js';

@@ -22,6 +22,7 @@ describe('validateManifest', () => {
       'empty_loading_error_handled',
       'composes_hierarchy_for_long_lists',
       'actions_match_action_slots',
+      'salience_resolved',
     ]);
   });
 

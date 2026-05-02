@@ -157,6 +157,33 @@ export const PriorityRuleSchema = z.object({
 export type PriorityRule = z.infer<typeof PriorityRuleSchema>;
 
 /**
+ * Wave 7 / P-9 — categorical salience override.
+ *
+ * Where `priority_rules` weights signals WITHIN a capability's
+ * `salience_default` expression, `priority_overrides` re-classifies the
+ * capability ITSELF — bumping (or lowering) the level the user sees for a
+ * matching capability id. A glob pattern matches one or many capabilities;
+ * the first matching rule wins.
+ *
+ * Example: a user who marks all PRs as priority during onboarding stores
+ * `{ capability_pattern: 'github.pr.*', salience: 'high', reason: 'user
+ * marked all PRs as priority in onboarding' }`. The data resolver then
+ * promotes rows from `github.pr.list` to `emphasis: 'high'` regardless of
+ * the capability's own `salience_level`.
+ *
+ * Pattern syntax: shell-style globs over the capability id. `*` matches one
+ * id segment, `**` matches any (including `.`); literal segments match
+ * exactly. Authoritative matcher: `matchCapabilityGlob` in
+ * `@cir/policies/baseline/salience`.
+ */
+export const PriorityOverrideSchema = z.object({
+  capability_pattern: z.string().min(1),
+  salience: z.enum(['high', 'normal', 'low']),
+  reason: z.string().min(1).optional(),
+});
+export type PriorityOverride = z.infer<typeof PriorityOverrideSchema>;
+
+/**
  * Persistent intent profile — the user's "how I want software to behave" doc.
  */
 export const IntentProfileSchema = z.object({
@@ -187,6 +214,13 @@ export const IntentProfileSchema = z.object({
    * Omitted means "honour every capability's defaults".
    */
   priority_rules: z.array(PriorityRuleSchema).optional(),
+  /**
+   * Wave 7 / P-9 — categorical salience overrides. Each rule maps a
+   * capability-id glob to a salience level that takes precedence over the
+   * capability's own `salience_level`. The first matching override wins;
+   * unmatched capabilities fall back to their declared level.
+   */
+  priority_overrides: z.array(PriorityOverrideSchema).optional(),
 });
 export type IntentProfile = z.infer<typeof IntentProfileSchema>;
 

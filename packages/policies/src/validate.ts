@@ -17,6 +17,7 @@ import { noPiiInQueryStrings } from './baseline/no_pii_in_query_strings.js';
 import { rateLimitedActionsShowState } from './baseline/rate_limited_actions_show_state.js';
 import { respectsBrandKit } from './baseline/respects_brand_kit.js';
 import { reversibilitySurfaced } from './baseline/reversibility_surfaced.js';
+import { salienceResolved } from './baseline/salience.js';
 
 /**
  * The baseline policies enumerated in `docs/architecture.md` plus
@@ -34,6 +35,7 @@ export const BASELINE_POLICIES: readonly NamedPolicy[] = [
   emptyLoadingErrorHandled,
   composesHierarchyForLongLists,
   actionsMatchActionSlots,
+  salienceResolved,
 ];
 
 export interface ValidateOptions {

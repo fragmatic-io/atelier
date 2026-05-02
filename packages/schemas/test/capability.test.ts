@@ -122,4 +122,67 @@ describe('CapabilitySchema', () => {
       expect(issue).toBeDefined();
     }
   });
+
+  // ---------------------------------------------------------------------------
+  // Wave 7 / P-9 — categorical salience_level
+  // ---------------------------------------------------------------------------
+
+  it('accepts an optional salience_level enum on a capability', () => {
+    for (const level of ['high', 'normal', 'low'] as const) {
+      const cap = {
+        id: 'thread.archive',
+        kind: 'action',
+        version: '1.0.0',
+        input: {},
+        output: {},
+        side_effects: ['archive'],
+        permissions: ['thread:write'],
+        confirmation: 'inline',
+        reversible: true,
+        rollback: 'thread.unarchive',
+        salience_level: level,
+      };
+      const parsed = CapabilitySchema.parse(cap);
+      expect(parsed.salience_level).toBe(level);
+    }
+  });
+
+  it('treats salience_level as optional', () => {
+    const cap = {
+      id: 'thread.archive',
+      kind: 'action',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['archive'],
+      permissions: ['thread:write'],
+      confirmation: 'inline',
+      reversible: true,
+      rollback: 'thread.unarchive',
+    };
+    const parsed = CapabilitySchema.parse(cap);
+    expect(parsed.salience_level).toBeUndefined();
+  });
+
+  it('rejects salience_level outside the high|normal|low enum', () => {
+    const bad = {
+      id: 'thread.archive',
+      kind: 'action',
+      version: '1.0.0',
+      input: {},
+      output: {},
+      side_effects: ['archive'],
+      permissions: ['thread:write'],
+      confirmation: 'inline',
+      reversible: true,
+      rollback: 'thread.unarchive',
+      salience_level: 'urgent',
+    };
+    const result = CapabilitySchema.safeParse(bad);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.join('.') === 'salience_level');
+      expect(issue).toBeDefined();
+    }
+  });
 });

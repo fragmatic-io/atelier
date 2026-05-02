@@ -175,6 +175,29 @@ export const CapabilitySchema = z.object({
    */
   salience_default: z.string().optional(),
   /**
+   * Wave 7 / P-9 — categorical salience level. Independent of (and
+   * complementary to) the numeric `salience_default` expression: where the
+   * expression scores items WITHIN a single capability's data set, the
+   * level scores the capability ITSELF among its peers.
+   *
+   * Semantics:
+   *  - `'high'` — destructive irreversible actions, mentions /
+   *    notifications, urgent decisions; the user should see this on first
+   *    glance.
+   *  - `'normal'` — the default, the bulk of capabilities.
+   *  - `'low'` — ambient quota / metadata / status indicators; legitimately
+   *    present but not what the user came here for.
+   *
+   * The data resolver promotes high-salience bindings to `emphasis: 'high'`
+   * on each row by default (see `@cir/data-resolvers`), and the
+   * `salience_resolved` policy advises authors to compose hierarchy-
+   * respecting layouts when a high-salience capability is bound. The
+   * user's `IntentProfile.priority_overrides` can override this per-user.
+   *
+   * Capabilities without an explicit level are treated as `'normal'`.
+   */
+  salience_level: z.enum(['high', 'normal', 'low']).optional(),
+  /**
    * When `undoable: true`, the dispatcher returns an undo handle valid for
    * `undo_window_ms`. The runtime emits `action.undoable_window_open` on
    * dispatch and `action.undone` if undo fires within the window. Use for:

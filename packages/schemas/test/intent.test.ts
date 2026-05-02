@@ -140,6 +140,76 @@ describe('IntentProfileSchema', () => {
     const result = IntentProfileSchema.safeParse(profile);
     expect(result.success).toBe(false);
   });
+
+  // ---------------------------------------------------------------------------
+  // Wave 7 / P-9 — priority_overrides (categorical)
+  // ---------------------------------------------------------------------------
+
+  it('accepts a profile with priority_overrides entries', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-05-02T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      priority_overrides: [
+        { capability_pattern: 'github.pr.*', salience: 'high', reason: 'onboarding' },
+        { capability_pattern: '*.notify', salience: 'high' },
+        { capability_pattern: 'log.**', salience: 'low' },
+      ],
+    };
+    const parsed = IntentProfileSchema.parse(profile);
+    expect(parsed.priority_overrides).toHaveLength(3);
+    expect(parsed.priority_overrides?.[0]?.salience).toBe('high');
+    expect(parsed.priority_overrides?.[0]?.reason).toBe('onboarding');
+    expect(parsed.priority_overrides?.[1]?.reason).toBeUndefined();
+  });
+
+  it('treats priority_overrides as optional', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-05-02T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+    };
+    const parsed = IntentProfileSchema.parse(profile);
+    expect(parsed.priority_overrides).toBeUndefined();
+  });
+
+  it('rejects a priority_override with an unknown salience level', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-05-02T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      priority_overrides: [{ capability_pattern: 'github.**', salience: 'urgent' }],
+    };
+    const result = IntentProfileSchema.safeParse(profile);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a priority_override with an empty capability_pattern', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-05-02T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      priority_overrides: [{ capability_pattern: '', salience: 'high' }],
+    };
+    const result = IntentProfileSchema.safeParse(profile);
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('GlobalPreferencesSchema', () => {

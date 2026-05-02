@@ -43,6 +43,10 @@ export const CAPABILITIES: Record<string, Capability> = {
     rate_limit: '60/min/user',
     reversible: true,
     salience_default: 'urgency * recency + assigned_to_me * 2',
+    // P-9: triage queues are the user's primary surface — the data
+    // resolver auto-emits `emphasis: 'high'` so every row in the queue
+    // surfaces `data-emphasis="high"` for host-stylesheet treatment.
+    salience_level: 'high',
   },
   'github.issue.get': {
     id: 'github.issue.get',
@@ -99,6 +103,11 @@ export const CAPABILITIES: Record<string, Capability> = {
     undoable: true,
     undo_window_ms: 5000,
     low_stakes: true,
+    // P-9: closing an issue is a destructive-but-reversible decision the
+    // user should see clearly amongst the queue. The data resolver and
+    // the salience-aware container surface high-priority issues with a
+    // visible emphasis flag.
+    salience_level: 'high',
   },
   'github.issue.archive': {
     // Client-only convenience capability used by the optimistic-archive
@@ -117,6 +126,9 @@ export const CAPABILITIES: Record<string, Capability> = {
     undoable: true,
     undo_window_ms: 5000,
     low_stakes: true,
+    // P-9: matches `github.issue.close` — both are the user's main triage
+    // levers and deserve hierarchy in the queue.
+    salience_level: 'high',
   },
   'github.issue.bulk_close': {
     // Wraps github.issue.close. The bulk path requires verbal confirmation

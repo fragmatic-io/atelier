@@ -64,6 +64,14 @@
     "salience_default": {
       "type": "string"
     },
+    "salience_level": {
+      "type": "string",
+      "enum": [
+        "high",
+        "normal",
+        "low"
+      ]
+    },
     "undoable": {
       "type": "boolean"
     },
