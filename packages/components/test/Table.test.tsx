@@ -2,7 +2,7 @@
 import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { Table, TableBinding } from '../src/components/Table.js';
+import { Table, TableBinding, type TableRowSpec } from '../src/components/Table.js';
 import type { BulkAction } from '../src/components/BulkActionBar.js';
 
 const COLS = [
@@ -189,8 +189,8 @@ describe('Table', () => {
       { name: 'Cal', age: 22 },
       { name: 'Dre', age: 41 },
     ];
-    const idOf = (row: { name?: unknown }, i: number): string => {
-      return typeof row.name === 'string' ? row.name : String(i);
+    const idOf = (row: TableRowSpec, i: number): string => {
+      return typeof row['name'] === 'string' ? row['name'] : String(i);
     };
     const actions: readonly BulkAction[] = [
       { id: 'archive', label: 'Archive' },
