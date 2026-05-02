@@ -16,7 +16,7 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { randomBytes } from 'node:crypto';
-import { IntentProfileSchema, type IntentProfile } from '@cir/schemas';
+import { IntentProfileSchema, type IntentProfile } from '@atelier/schemas';
 import { buildJwks, signJwt, verifyJwt, type JwtClaims, type VaultKeyPair } from './signing.js';
 import {
   authorizeWrite,
@@ -34,7 +34,7 @@ import {
 
 /**
  * Shape of the `system.security_revocation` trigger we emit on revoke.
- * Mirrors `@cir/schemas`'s discriminated-union member without depending on
+ * Mirrors `@atelier/schemas`'s discriminated-union member without depending on
  * the Zod-inferred type (the schemas package does not export the per-member
  * inferred type alias today; defining it locally keeps the dep on the wire
  * shape, not the codegen).

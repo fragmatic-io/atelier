@@ -26,7 +26,7 @@
  * without touching `Date.now()`.
  */
 
-import type { CompileBudget } from '@cir/schemas';
+import type { CompileBudget } from '@atelier/schemas';
 import { BudgetExceededError } from './server-resolver.js';
 import type { CompileInput, CompileResult, CompilerService } from './types.js';
 
