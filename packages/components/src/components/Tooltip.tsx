@@ -6,18 +6,22 @@
  * Tooltip — Linear-grade hover tip with portal, sticky-window timing, and
  * smart edge-flip positioning.
  *
- * Behaviour (Wave 7a / track Int-2):
+ * Behaviour (Wave 11 / track Int-2):
  *  - 400ms initial show delay; subsequent re-hovers within a 1500ms sticky
- *    window re-open in 100ms.
- *  - 8px offset from the trigger; flips to the opposite side if the
- *    preferred side would clip the tooltip outside the viewport.
+ *    window re-open in 100ms ("snappy when scanning, polite when not" —
+ *    Linear / Stripe pattern).
+ *  - 8px offset from the trigger (configurable); flips to the opposite
+ *    side if the preferred side would clip the tooltip outside the
+ *    viewport, with a final per-axis clamp into the viewport.
  *  - 100ms opacity fade-in; honours `prefers-reduced-motion: reduce`.
  *  - Hides on click of the trigger or anywhere outside.
+ *  - Keyboard: focus opens (covers `:focus-visible` keyboard tab-in);
+ *    Escape closes; `aria-describedby` wires the trigger to the
+ *    `role="tooltip"` bubble while open.
  *  - Touch devices: long-press (500ms hold) opens the tooltip; tap
  *    elsewhere dismisses.
  *  - Renders via `createPortal` to `document.body` so `overflow: hidden`
  *    ancestors do not clip the bubble.
- *  - Accessibility: `aria-describedby` wires the trigger to `role="tooltip"`.
  *
  * Pairs with the `tooltip-tone` skill (≤80 chars, no terminal period,
  * never repeats the visible label, never the only path to crucial info).
