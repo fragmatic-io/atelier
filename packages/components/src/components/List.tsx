@@ -32,6 +32,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { durationFor, type ComponentBinding } from '@atelier/runtime';
 import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
+import { Icon } from './Icon.js';
+import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';
 import {
   cn,
   contentVariantClass,
@@ -92,6 +94,14 @@ export interface ListProps<T> {
    */
   pinAriaLabel?: (item: T) => string;
   /**
+   * Wave 11 / Nav-3 — override the pinned-row glyph. `undefined` (default)
+   * keeps the Unicode pushpin (`\u{1F4CC}`). `null` disables the glyph
+   * entirely. An `IconRef` (string or `{ set, name }` bag) renders via the
+   * Vis-3 `<Icon>` resolver — hosts wired to a `lucide` (or other) pack pick
+   * up a real icon. Mirrors `<Button icon=…>` from Wave 11 / Vis-3.
+   */
+  pinIcon?: IconRef | null;
+  /**
    * Wave 7b / Int-9 — opt-in multi-select. When true, every row renders a
    * leading checkbox and reflects `data-selected` based on `selectedIds`.
    */
@@ -132,6 +142,7 @@ export function List<T>({
   showPinnedSeparator = true,
   pinnedSeparatorVariant = 'default',
   pinAriaLabel,
+  pinIcon,
   selectable = false,
   idOf,
   selectedIds,
@@ -187,6 +198,25 @@ export function List<T>({
     position: 'sticky',
     top: 0,
     zIndex: 10,
+  };
+  // Wave 11 / Nav-3 — pin glyph renderer. `null` disables, `undefined`
+  // (default) keeps the Unicode pushpin, an `IconRef` resolves through
+  // `<Icon>` (mirrors `<Button icon=…>` from Vis-3).
+  const renderPinGlyph = (): ReactNode => {
+    if (pinIcon === null) return null;
+    if (pinIcon === undefined) {
+      return (
+        <span data-pin-indicator="true" aria-hidden="true">
+          {PIN_GLYPH}
+        </span>
+      );
+    }
+    const ref = normalizeIconRef(pinIcon);
+    return (
+      <span data-pin-indicator="true" aria-hidden="true">
+        <Icon set={ref.set} name={ref.name} />
+      </span>
+    );
   };
   // Stable partition. We carry the original source index alongside each item
   // so React keys survive a pin/unpin flip.
@@ -340,9 +370,7 @@ export function List<T>({
             aria-label={ariaLabel}
             style={pinnedStyle}
           >
-            <span data-pin-indicator="true" aria-hidden="true">
-              {PIN_GLYPH}
-            </span>
+            {renderPinGlyph()}
             {renderItemFn(item, i)}
           </li>
         );
@@ -421,6 +449,7 @@ export const ListBinding: ComponentBinding = {
       showPinnedSeparator: 'boolean',
       pinnedSeparatorVariant: 'string',
       pinAriaLabel: 'function',
+      pinIcon: 'unknown',
       selectable: 'boolean',
       idOf: 'function',
       selectedIds: 'object',

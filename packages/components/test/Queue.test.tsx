@@ -160,6 +160,120 @@ describe('Queue', () => {
     expect(pinned?.textContent).toContain('Bravo');
   });
 
+  // -- Wave 11 / Nav-3 — sticky pin parity with <List> / <Table> ----------
+  describe('pinned items (Nav-3)', () => {
+    it('partitions pinned items to the top regardless of source order', () => {
+      const items = [
+        { id: 'a', title: 'Alpha' },
+        { id: 'b', title: 'Bravo', pinned: true },
+        { id: 'c', title: 'Charlie' },
+      ];
+      const { container } = render(<Queue items={items} />);
+      const rows = Array.from(container.querySelectorAll('[data-cir-part="queue-row"]'));
+      expect(rows[0]?.textContent).toContain('Bravo');
+      expect(rows[1]?.textContent).toContain('Alpha');
+      expect(rows[2]?.textContent).toContain('Charlie');
+    });
+
+    it('renders a pinned-separator when pinned rows exist (default)', () => {
+      const items = [
+        { id: 'a', title: 'Alpha' },
+        { id: 'b', title: 'Bravo', pinned: true },
+      ];
+      const { container } = render(<Queue items={items} />);
+      expect(container.querySelector('[data-cir-part="pinned-separator"]')).not.toBeNull();
+    });
+
+    it('omits the separator when showPinnedSeparator={false}', () => {
+      const items = [
+        { id: 'a', title: 'Alpha' },
+        { id: 'b', title: 'Bravo', pinned: true },
+      ];
+      const { container } = render(<Queue items={items} showPinnedSeparator={false} />);
+      expect(container.querySelector('[data-cir-part="pinned-separator"]')).toBeNull();
+    });
+
+    it('does not emit a separator when no rows are pinned', () => {
+      const items = [
+        { id: 'a', title: 'Alpha' },
+        { id: 'b', title: 'Bravo' },
+      ];
+      const { container } = render(<Queue items={items} />);
+      expect(container.querySelector('[data-cir-part="pinned-separator"]')).toBeNull();
+      expect(
+        container.querySelector('[data-cir-component="Queue"]')?.getAttribute('data-has-pinned'),
+      ).toBe('false');
+    });
+
+    it('applies sticky CSS to pinned rows', () => {
+      const items = [{ id: 'b', title: 'Bravo', pinned: true }];
+      const { container } = render(<Queue items={items} />);
+      const li = container.querySelector<HTMLElement>(
+        '[data-cir-part="queue-row"][data-pinned="true"]',
+      );
+      expect(li?.style.position).toBe('sticky');
+      expect(li?.style.top).toBe('0px');
+      expect(li?.style.zIndex).toBe('10');
+    });
+
+    it('renders a default pin glyph (Unicode pushpin) on pinned rows', () => {
+      const items = [{ id: 'b', title: 'Bravo', pinned: true }];
+      const { container } = render(<Queue items={items} />);
+      const indicator = container.querySelector(
+        '[data-cir-part="queue-row"][data-pinned="true"] [data-pin-indicator="true"]',
+      );
+      expect(indicator).not.toBeNull();
+      expect(indicator?.textContent ?? '').toContain('\u{1F4CC}');
+    });
+
+    it('honours pinIcon={null} (no glyph at all)', () => {
+      const items = [{ id: 'b', title: 'Bravo', pinned: true }];
+      const { container } = render(<Queue items={items} pinIcon={null} />);
+      // Row still pinned + sticky, but no indicator span.
+      expect(container.querySelector('[data-pinned="true"]')).not.toBeNull();
+      expect(container.querySelector('[data-pin-indicator="true"]')).toBeNull();
+    });
+
+    it('honours pinIcon as IconRef (renders <Icon> via the resolver)', () => {
+      const items = [{ id: 'b', title: 'Bravo', pinned: true }];
+      const { container } = render(<Queue items={items} pinIcon="pin" />);
+      const indicator = container.querySelector('[data-pin-indicator="true"]');
+      expect(indicator).not.toBeNull();
+      // Default resolver produces a missing-icon placeholder marker.
+      expect(indicator?.querySelector('[data-cir-component="Icon"]')).not.toBeNull();
+      expect(indicator?.querySelector('[data-icon-name="pin"]')).not.toBeNull();
+    });
+
+    it('uses pinAriaLabel callback for the aria-label on pinned rows', () => {
+      const items = [{ id: 'b', title: 'Bravo', pinned: true }];
+      const { container } = render(
+        <Queue items={items} pinAriaLabel={(it) => `Pinned: ${(it as { title: string }).title}`} />,
+      );
+      expect(
+        container
+          .querySelector('[data-cir-part="queue-row"][data-pinned="true"]')
+          ?.getAttribute('aria-label'),
+      ).toBe('Pinned: Bravo');
+    });
+
+    it('defaults pinned aria-label to "Pinned"', () => {
+      const items = [{ id: 'b', title: 'Bravo', pinned: true }];
+      const { container } = render(<Queue items={items} />);
+      expect(
+        container
+          .querySelector('[data-cir-part="queue-row"][data-pinned="true"]')
+          ?.getAttribute('aria-label'),
+      ).toBe('Pinned');
+    });
+
+    it('emits data-cir-density on the pinned section so hosts can target compact', () => {
+      const items = [{ id: 'b', title: 'Bravo', pinned: true }];
+      const { container } = render(<Queue items={items} density="compact" />);
+      const group = container.querySelector('[data-cir-part="queue-group"]');
+      expect(group?.getAttribute('data-cir-density')).toBe('compact');
+    });
+  });
+
   it('surfaces per-item `emphasis` as data-emphasis on the row (mirrors pinned)', () => {
     // Marketplace-pivot affordance: rows opt into a salience tag via an
     // `emphasis` field on the item, the same shape `pinned` uses. The data

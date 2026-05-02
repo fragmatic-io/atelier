@@ -151,6 +151,30 @@ describe('List', () => {
         'Pinned',
       );
     });
+    // -- Wave 11 / Nav-3 — pinIcon override --------------------------------
+    it('honours pinIcon={null} (no glyph at all)', () => {
+      const items: Item[] = [{ id: 'a', label: 'Alpha', pinned: true }];
+      const { container } = render(<List items={items} renderItem={renderRow} pinIcon={null} />);
+      expect(container.querySelector('li[data-pinned="true"]')).not.toBeNull();
+      expect(container.querySelector('[data-pin-indicator="true"]')).toBeNull();
+    });
+    it('honours pinIcon as IconRef (renders <Icon> via the resolver)', () => {
+      const items: Item[] = [{ id: 'a', label: 'Alpha', pinned: true }];
+      const { container } = render(<List items={items} renderItem={renderRow} pinIcon="pin" />);
+      const indicator = container.querySelector('[data-pin-indicator="true"]');
+      expect(indicator).not.toBeNull();
+      expect(indicator?.querySelector('[data-cir-component="Icon"]')).not.toBeNull();
+      expect(indicator?.querySelector('[data-icon-name="pin"]')).not.toBeNull();
+    });
+    it('honours pinIcon as { set, name } bag', () => {
+      const items: Item[] = [{ id: 'a', label: 'Alpha', pinned: true }];
+      const { container } = render(
+        <List items={items} renderItem={renderRow} pinIcon={{ set: 'lucide', name: 'star' }} />,
+      );
+      const indicator = container.querySelector('[data-pin-indicator="true"]');
+      expect(indicator?.querySelector('[data-icon-set="lucide"]')).not.toBeNull();
+      expect(indicator?.querySelector('[data-icon-name="star"]')).not.toBeNull();
+    });
   });
   // -- Wave 7c / track A — selectable integration --
   describe('selectable + bulk actions', () => {

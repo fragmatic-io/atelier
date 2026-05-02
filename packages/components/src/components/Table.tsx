@@ -33,6 +33,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { durationFor, type ComponentBinding } from '@atelier/runtime';
 import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
+import { Icon } from './Icon.js';
+import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';
 import {
   cn,
   contentVariantClass,
@@ -111,6 +113,13 @@ export interface TableProps {
   /** Override the `aria-label` applied to every pinned `<tr>`. */
   pinAriaLabel?: (row: TableRowSpec) => string;
   /**
+   * Wave 11 / Nav-3 — override the pinned-row glyph. `undefined` (default)
+   * keeps the Unicode pushpin (`\u{1F4CC}`). `null` disables the glyph
+   * entirely. An `IconRef` (string or `{ set, name }` bag) renders via the
+   * Vis-3 `<Icon>` resolver.
+   */
+  pinIcon?: IconRef | null;
+  /**
    * Wave 7b / Int-9 — opt-in multi-select. When true, every row gets a
    * leading checkbox cell.
    */
@@ -150,6 +159,7 @@ export function Table({
   showPinnedSeparator = true,
   pinnedSeparatorVariant = 'default',
   pinAriaLabel,
+  pinIcon,
   selectable = false,
   idOf,
   selectedIds,
@@ -185,6 +195,25 @@ export function Table({
     top: 0,
     zIndex: 10,
     background: 'inherit',
+  };
+  // Wave 11 / Nav-3 — pin glyph renderer. Mirrors `<List>` / `<Queue>`:
+  // `null` disables, `undefined` (default) keeps the Unicode pushpin, an
+  // `IconRef` resolves through `<Icon>`.
+  const renderPinGlyph = (): ReactNode => {
+    if (pinIcon === null) return null;
+    if (pinIcon === undefined) {
+      return (
+        <span data-pin-indicator="true" aria-hidden="true">
+          {PIN_GLYPH}{' '}
+        </span>
+      );
+    }
+    const ref = normalizeIconRef(pinIcon);
+    return (
+      <span data-pin-indicator="true" aria-hidden="true">
+        <Icon set={ref.set} name={ref.name} />{' '}
+      </span>
+    );
   };
   const indexed = rows.map((row, i) => ({ row, i }));
   const pinnedRows = indexed.filter(({ row }) => isPinnedRow(row));
@@ -358,9 +387,7 @@ export function Table({
                   colSpan={Math.max(columns.length, 1)}
                   style={pinnedCellStyle}
                 >
-                  <span data-pin-indicator="true" aria-hidden="true">
-                    {PIN_GLYPH}{' '}
-                  </span>
+                  {renderPinGlyph()}
                   {renderItem(row, i)}
                 </td>
               ) : (
@@ -374,11 +401,7 @@ export function Table({
                       style={colStyle}
                       data-tnum={c.numeric === true ? 'true' : undefined}
                     >
-                      {ci === 0 ? (
-                        <span data-pin-indicator="true" aria-hidden="true">
-                          {PIN_GLYPH}{' '}
-                        </span>
-                      ) : null}
+                      {ci === 0 ? renderPinGlyph() : null}
                       {row[c.key] ?? ''}
                     </td>
                   );

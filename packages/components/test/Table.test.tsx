@@ -171,6 +171,26 @@ describe('Table', () => {
       expect(container.querySelector('table')?.getAttribute('data-has-pinned')).toBe('false');
       expect(container.querySelectorAll('tbody tr[data-pinned="true"]').length).toBe(0);
     });
+    // -- Wave 11 / Nav-3 — pinIcon override --------------------------------
+    it('honours pinIcon={null} (no glyph at all)', () => {
+      const rows = [{ name: 'Bea', age: 28, pinned: true }];
+      const { container } = render(<Table columns={COLS} rows={rows} pinIcon={null} />);
+      expect(container.querySelector('tr[data-pinned="true"]')).not.toBeNull();
+      expect(container.querySelector('[data-pin-indicator="true"]')).toBeNull();
+    });
+    it('honours pinIcon as IconRef (renders <Icon> via the resolver)', () => {
+      const rows = [{ name: 'Bea', age: 28, pinned: true }];
+      const { container } = render(<Table columns={COLS} rows={rows} pinIcon="pin" />);
+      const indicator = container.querySelector('[data-pin-indicator="true"]');
+      expect(indicator).not.toBeNull();
+      expect(indicator?.querySelector('[data-cir-component="Icon"]')).not.toBeNull();
+      expect(indicator?.querySelector('[data-icon-name="pin"]')).not.toBeNull();
+    });
+    it('emits data-cir-density on the table so hosts can target compact', () => {
+      const rows = [{ name: 'Bea', age: 28, pinned: true }];
+      const { container } = render(<Table columns={COLS} rows={rows} density="compact" />);
+      expect(container.querySelector('table')?.getAttribute('data-cir-density')).toBe('compact');
+    });
   });
   // -- Wave 7c / track A — selectable integration --
   describe('selectable + bulk actions', () => {

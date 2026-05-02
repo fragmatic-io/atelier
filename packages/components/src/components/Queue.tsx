@@ -49,16 +49,32 @@
  * automatically so a per-row archive on a selected row leaves the bar in a
  * coherent state. Backwards compat: queues without `selectable` behave
  * identically to pre-Int-9 builds.
+ *
+ * Wave 11 / Nav-3 — sticky pinned rows. Items with `pinned: true` partition
+ * to the top of the rendered list (in source order), pick up `position:
+ * sticky` so they stay anchored when an ancestor scrolls, and a faint
+ * separator divides the pinned block from the unpinned tail (toggle via
+ * `showPinnedSeparator`). Closes the parity gap with `<List>` / `<Table>`
+ * which already partition + stick. The `pinIcon` prop accepts an `IconRef`
+ * for hosts wired to a Vis-3 `IconResolver`, `null` to disable the glyph,
+ * or `undefined` (default) to keep the Unicode pushpin. Grouping is
+ * mutually-exclusive with sticky pinning — when `groupBy` is supplied the
+ * pinned partition is bypassed (rows still carry `data-pinned="true"` and
+ * the glyph, but ordering is owned by the group buckets).
  */
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { durationFor, type ComponentBinding } from '@atelier/runtime';
 import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
+import { Icon } from './Icon.js';
+import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';
 import {
   cn,
   contentVariantClass,
   actionVariantClass,
+  pinnedSeparatorClass,
   type ContentVariant,
   type ActionVariant,
+  type PinnedSeparatorVariant,
 } from './_variants.js';
 import { DEFAULT_DENSITY, DENSITY_ROW_PADDING_PX, type Density } from './density.js';
 
@@ -132,6 +148,26 @@ export interface QueueProps<T = unknown> {
   bulkActions?: readonly BulkAction[];
   /** Click handler for a bulk action. Receives the action's id (= capability id). */
   onBulkAction?: (actionId: string) => void;
+  /**
+   * Wave 11 / Nav-3 — render a faint divider between the pinned block and
+   * the unpinned tail. Defaults to `true`. Setting to `false` is useful when
+   * the host already paints its own visual separation.
+   */
+  showPinnedSeparator?: boolean;
+  /** Visual variant of the pinned-block separator. */
+  pinnedSeparatorVariant?: PinnedSeparatorVariant;
+  /**
+   * Override the `aria-label` applied to every pinned row. Receives the raw
+   * item so callers can localise per-language or per-row. Defaults to
+   * `'Pinned'`.
+   */
+  pinAriaLabel?: (item: T) => string;
+  /**
+   * Override the pinned-row glyph. `undefined` (default) keeps the Unicode
+   * pushpin (`\u{1F4CC}`). `null` disables the glyph entirely. An `IconRef`
+   * (string or `{ set, name }` bag) renders via the Vis-3 `<Icon>` resolver.
+   */
+  pinIcon?: IconRef | null;
 }
 
 const PIN_GLYPH = '\u{1F4CC}';
@@ -199,6 +235,10 @@ export function Queue<T = unknown>({
   onSelectionChange,
   bulkActions,
   onBulkAction,
+  showPinnedSeparator = true,
+  pinnedSeparatorVariant = 'default',
+  pinAriaLabel,
+  pinIcon,
 }: QueueProps<T>): ReactNode {
   const items: readonly T[] =
     itemsProp ?? (Array.isArray(data) ? (data as readonly T[]) : ([] as readonly T[]));
@@ -280,6 +320,36 @@ export function Queue<T = unknown>({
     paddingTop: `${String(rowPad)}px`,
     paddingBottom: `${String(rowPad)}px`,
   };
+  // Sticky styling is emitted inline so non-Tailwind hosts get the behaviour
+  // without any CSS-config surgery. Only fires when an ancestor has overflow;
+  // when Queue is composed inside a non-scrolling card the rule is inert.
+  const pinnedRowStyle: CSSProperties = {
+    ...rowStyle,
+    position: 'sticky',
+    top: 0,
+    zIndex: 10,
+  };
+
+  // Pin glyph renderer. Mirrors the `IconRef`-or-string pattern used by
+  // `<Button icon=…>` (Wave 11 / Vis-3): `null` disables the glyph,
+  // `undefined` (default) keeps the Unicode pushpin, an `IconRef` resolves
+  // through `<Icon>`.
+  const renderPinGlyph = (): ReactNode => {
+    if (pinIcon === null) return null;
+    if (pinIcon === undefined) {
+      return (
+        <span data-cir-part="queue-pin" data-pin-indicator="true" aria-hidden="true">
+          {PIN_GLYPH}
+        </span>
+      );
+    }
+    const ref = normalizeIconRef(pinIcon);
+    return (
+      <span data-cir-part="queue-pin" data-pin-indicator="true" aria-hidden="true">
+        <Icon set={ref.set} name={ref.name} />
+      </span>
+    );
+  };
 
   const dispatch = async (actionId: string, item: T, rowId: string): Promise<void> => {
     if (onAction === undefined) return;
@@ -356,12 +426,17 @@ export function Queue<T = unknown>({
     await dispatch(action.id, item, rowId);
   };
 
-  const renderRowEl = (entry: { item: T; i: number; id: string }): ReactNode => {
-    const isPinned =
-      typeof entry.item === 'object' &&
-      entry.item !== null &&
-      'pinned' in entry.item &&
-      (entry.item as { pinned?: unknown }).pinned === true;
+  const isItemPinned = (item: T): boolean =>
+    typeof item === 'object' &&
+    item !== null &&
+    'pinned' in item &&
+    (item as { pinned?: unknown }).pinned === true;
+
+  const renderRowEl = (
+    entry: { item: T; i: number; id: string },
+    opts: { sticky?: boolean } = {},
+  ): ReactNode => {
+    const pinned = isItemPinned(entry.item);
     // Per-item salience tag. Mirrors the `pinned` pattern: items can carry an
     // `emphasis` field (any string — typical values: 'high', 'hero',
     // 'comfortable') that surfaces as `data-emphasis` on the row so host
@@ -375,16 +450,19 @@ export function Queue<T = unknown>({
     const busy = busyId === entry.id;
     const isNew = animateRowAppear && newIds.has(entry.id);
     const checked = selectable && effectiveSelected.has(entry.id);
+    const ariaLabel = pinned && pinAriaLabel ? pinAriaLabel(entry.item) : undefined;
+    const useSticky = pinned && opts.sticky === true;
     return (
       <li
         key={entry.id}
         data-cir-part="queue-row"
-        data-pinned={isPinned ? 'true' : 'false'}
+        data-pinned={pinned ? 'true' : 'false'}
         {...(emphasis !== undefined ? { 'data-emphasis': emphasis } : {})}
         {...(isNew ? { 'data-cir-new': 'true' } : {})}
         data-busy={busy ? 'true' : 'false'}
         data-selected={selectable ? (checked ? 'true' : 'false') : undefined}
-        style={rowStyle}
+        {...(pinned ? { 'aria-label': ariaLabel ?? 'Pinned' } : {})}
+        style={useSticky ? pinnedRowStyle : rowStyle}
       >
         {selectable ? (
           <input
@@ -402,11 +480,7 @@ export function Queue<T = unknown>({
             }}
           />
         ) : null}
-        {isPinned ? (
-          <span data-cir-part="queue-pin" aria-hidden="true">
-            {PIN_GLYPH}
-          </span>
-        ) : null}
+        {pinned ? renderPinGlyph() : null}
         <div data-cir-part="queue-row-body" style={{ flex: 1, minWidth: 0 }}>
           {renderRow(entry.item, entry.i)}
         </div>
@@ -475,6 +549,12 @@ export function Queue<T = unknown>({
     grouped = [{ key: '_all', label: '', rows: visibleItems }];
   }
 
+  // Wave 11 / Nav-3 — partition pinned items to the top within each group's
+  // visible rows. The most common case is a single ungrouped queue (the
+  // `_all` bucket); under explicit `groupBy` each bucket is partitioned
+  // independently so a "today" / "later" split still pins within "today".
+  const hasAnyPinned = visibleItems.some(({ item }) => isItemPinned(item));
+
   const section = (
     <section
       data-cir-component="Queue"
@@ -482,6 +562,7 @@ export function Queue<T = unknown>({
       data-cir-density={density}
       data-variant={variant}
       data-selectable={selectable ? 'true' : 'false'}
+      data-has-pinned={hasAnyPinned ? 'true' : 'false'}
       className={cn(contentVariantClass[variant], className)}
       aria-label={title}
     >
@@ -500,16 +581,36 @@ export function Queue<T = unknown>({
           {feedback.text}
         </div>
       ) : null}
-      {grouped.map((group) => (
-        <div key={group.key} data-cir-part="queue-group" data-group-key={group.key}>
-          {useGrouping && group.label.length > 0 ? (
-            <div data-cir-part="queue-group-label">{group.label}</div>
-          ) : null}
-          <ul data-cir-part="queue-rows" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {group.rows.map(renderRowEl)}
-          </ul>
-        </div>
-      ))}
+      {grouped.map((group) => {
+        const pinnedRows = group.rows.filter(({ item }) => isItemPinned(item));
+        const unpinnedRows = group.rows.filter(({ item }) => !isItemPinned(item));
+        const hasPinnedHere = pinnedRows.length > 0;
+        return (
+          <div
+            key={group.key}
+            data-cir-part="queue-group"
+            data-group-key={group.key}
+            data-cir-density={density}
+          >
+            {useGrouping && group.label.length > 0 ? (
+              <div data-cir-part="queue-group-label">{group.label}</div>
+            ) : null}
+            <ul data-cir-part="queue-rows" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {pinnedRows.map((entry) => renderRowEl(entry, { sticky: true }))}
+              {hasPinnedHere && showPinnedSeparator ? (
+                <li
+                  key="cir-pinned-separator"
+                  aria-hidden="true"
+                  data-cir-part="pinned-separator"
+                  className={pinnedSeparatorClass[pinnedSeparatorVariant]}
+                  style={{ listStyle: 'none', padding: 0, height: 0 }}
+                />
+              ) : null}
+              {unpinnedRows.map((entry) => renderRowEl(entry))}
+            </ul>
+          </div>
+        );
+      })}
     </section>
   );
 
@@ -580,6 +681,10 @@ export const QueueBinding: ComponentBinding = {
       onSelectionChange: 'function',
       bulkActions: 'array',
       onBulkAction: 'function',
+      showPinnedSeparator: 'boolean',
+      pinnedSeparatorVariant: 'string',
+      pinAriaLabel: 'function',
+      pinIcon: 'unknown',
     },
   },
 };
