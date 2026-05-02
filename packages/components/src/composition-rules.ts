@@ -132,4 +132,11 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   HoverCard: { can_contain: '*', min_children: 1, max_children: 1 },
   Icon: { can_contain: 'leaf' },
   BulkActionBar: { can_contain: 'leaf' },
+  // Wave 10 / S-2 — virtualized list + table primitives. Both render rows
+  // from `data` / `items` / `rows` via an internal virtualizer; manifest
+  // authors do not embed children. Treated as list / table roles for the
+  // long-list-hierarchy policy (which itself nudges toward these
+  // components when capability cardinality crosses the virtual threshold).
+  VirtualList: { can_contain: 'leaf' },
+  VirtualTable: { can_contain: 'leaf' },
 });

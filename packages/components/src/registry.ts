@@ -75,6 +75,8 @@ import { StepperBinding } from './components/Stepper.js';
 import { TableBinding } from './components/Table.js';
 import { CodeBlockBinding } from './components/CodeBlock.js';
 import { StatusBarBinding } from './components/StatusBar.js';
+import { VirtualListBinding } from './components/VirtualList.js';
+import { VirtualTableBinding } from './components/VirtualTable.js';
 import { TabsBinding } from './components/Tabs.js';
 import { TextInputBinding } from './components/TextInput.js';
 import { TimeInputBinding } from './components/TimeInput.js';
@@ -150,6 +152,12 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Toggle: ToggleBinding,
   Tooltip: TooltipBinding,
   Tree: TreeBinding,
+  // Wave 10 / S-2 — virtualized variants of List + Table for high-cardinality
+  // data. Forced by `composes_hierarchy_for_long_lists` when the bound
+  // capability declares `expected_count > 500`. Same surface as the
+  // non-virtual primitives plus cursor-driven onFetchMore / onFetchPrev.
+  VirtualList: VirtualListBinding,
+  VirtualTable: VirtualTableBinding,
   Wizard: WizardBinding,
 });
 

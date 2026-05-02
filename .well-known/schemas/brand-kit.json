@@ -34,6 +34,41 @@
             },
             "weight": {
               "$ref": "#/properties/tokens/properties/colors"
+            },
+            "letter_spacing": {
+              "$ref": "#/properties/tokens/properties/colors"
+            },
+            "line_height": {
+              "$ref": "#/properties/tokens/properties/colors"
+            },
+            "opentype": {
+              "type": "object",
+              "properties": {
+                "tabular_numerals": {
+                  "type": "boolean"
+                },
+                "ligatures": {
+                  "type": "string",
+                  "enum": [
+                    "common",
+                    "discretionary",
+                    "none"
+                  ]
+                },
+                "optical_sizing": {
+                  "type": "boolean"
+                },
+                "fractions": {
+                  "type": "boolean"
+                },
+                "superscript": {
+                  "type": "boolean"
+                },
+                "subscript": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
             }
           },
           "required": [
@@ -234,6 +269,32 @@
         "contrast_minimum",
         "focus_ring_required"
       ],
+      "additionalProperties": false
+    },
+    "compile_budget": {
+      "type": "object",
+      "properties": {
+        "max_tokens_per_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_calls_per_hour": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_tokens_per_call": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "on_exhausted": {
+          "type": "string",
+          "enum": [
+            "fall_through",
+            "fail"
+          ],
+          "default": "fall_through"
+        }
+      },
       "additionalProperties": false
     }
   },

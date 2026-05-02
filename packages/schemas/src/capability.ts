@@ -212,6 +212,20 @@ export const CapabilitySchema = z.object({
   // `exclusiveMinimum: true` shape rejection (see brand-kit.ts for the
   // same workaround).
   undo_window_ms: z.number().int().min(1).optional(),
+  /**
+   * Wave 10 / S-2 — typical/expected output cardinality for `data` capabilities.
+   * The policy walker reads this to decide when a `<List>` / `<Table>` /
+   * `<Grid>` binding has crossed the virtual threshold (default 500) and the
+   * manifest should swap to `<VirtualList>` / `<VirtualTable>` to keep the
+   * DOM count manageable. Same heuristic the long-list-hierarchy policy
+   * already used for inline `expected_count` hints — promoted to the
+   * capability so authors declare it once.
+   *
+   * Action capabilities ignore this field; only `kind: 'data'` consults it.
+   * Bindings can still inline an `expected_count` hint; the inline value
+   * wins when both are present.
+   */
+  expected_count: z.number().int().min(0).optional(),
   _review: ReviewEnvelopeSchema.optional(),
 });
 

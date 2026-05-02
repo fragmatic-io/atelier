@@ -16,7 +16,7 @@
 | **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                          | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
 | **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture; **C-1 ✅ shipped**) | 🟡 partial     | HIGH                | 3 wk left  | M              |
 | **7**   | Personalisation — P-3, P-4, P-7 (P-1 / P-8 / P-9 / DD shipped)                                                                                                 | 🟡 in flight   | mixed               | 3 wk       | C-Phase-1      |
-| **10**  | Scale tracks — S-1, S-2, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-6 ✅ shipped                                                                                    | 📅 planned     | mixed               | 8 wk       | C-Phase-2      |
+| **10**  | Scale tracks — S-1, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-2 + S-6 ✅ shipped                                                                                   | 🟡 partial     | mixed               | 6 wk       | C-Phase-2      |
 | **8**   | Vault marketplace — V-6 (V-1, V-3 ✅ shipped)                                                                                                                  | 📅 planned     | MEDIUM              | 4-6 wk     | C, 7           |
 | **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items; Vis-2, Int-2, Int-3, Int-4, Int-13, Cnt-1, Cnt-8, Nav-4 ✅ shipped)                               | 📅 partial     | varies              | 6-10 mo    | C, P-7, S-3    |
 | **12+** | Multi-platform + marketing — N-1..N-5 (**N-4 ✅ shipped**)                                                                                                     | 🟡 partial     | LOWER               | 12-16 wk   | M (now proven) |
@@ -155,14 +155,14 @@ Today's failure modes that get worse at scale:
 The framework today handles single-app, ≤200-capability registries with low-cardinality data fine. Past those limits these tracks fix the failure modes.
 
 - [ ] **S-1 — Capability scoping (two-stage compile).** See `Wave C / Phase C-3` above for the integrated plan; `findCapability` is the natural surface. 2 wk. **HIGH.**
-- [ ] **S-2 — Virtualized List/Table + cursor pagination on `DataResolver`.** Without this, components rendering >500-item lists OOM the browser. `<VirtualList>` + `<VirtualTable>` (under `react-virtuoso` or `@tanstack/react-virtual`) + composition rule that forces virtualized variant when capability cardinality exceeds threshold + cursor protocol on the resolver. **2-3 wk. HIGH.**
+- [x] **S-2 — Virtualized List/Table + cursor pagination on `DataResolver`.** Shipped. `<VirtualList>` + `<VirtualTable>` (under `@tanstack/react-virtual`) mirror the `<List>` / `<Table>` surface and emit `onFetchMore` / `onFetchPrev` at scroll edges; backed by a new `CursorPaginatedResult` envelope on `DataBinding` + `paginate()` helper in `@atelier/data-resolvers`. The `composes_hierarchy_for_long_lists` policy now nudges the swap to the virtual variant when a bound capability's `expected_count > VIRTUAL_THRESHOLD` (default 500). New `Capability.expected_count?` field declares the cardinality once at the capability layer. Catalog 65 → 67. Marigold showcase via `apps/demo-dummyjson/test/virtual-pagination.test.ts`. Back-compat across the whole protocol: bindings without `pagination` default to `'none'`; resolvers returning plain arrays continue to work.
 - [ ] **S-3 — Streaming subscriptions on `DataResolver`.** `resolver.subscribe(binding)` returns `AsyncIterable<T>` for live data. **1.5 wk. MEDIUM.** Gates Coll-1..5.
 - [ ] **S-4 — Distributed `TriggerBus` (`RedisTriggerBus` primary, `NATSTriggerBus` optional).** Required when invalidations need to cross processes. Existing `TriggerBus` interface is the seam. **1-2 wk. HIGH for multi-region.**
 - [ ] **S-5 — Hierarchical capability registry + generated index + incremental validation.** Allow nested paths + auto-generated `_index.json` summarising ids/versions/paths + CI re-validates only changed files (via `git diff`). **1 wk. MEDIUM.**
 - [x] **S-6 — Compile cost budget enforcement.** `BudgetMeteredCompiler`, `BudgetCounter`, `mergeCompileBudgets`, `BudgetExceededError.code`. `bc92956`. Demo wiring env-gated.
 - [ ] **S-7 — Capability vector embeddings (RAG variant of S-1).** Higher-quality scoping when registries grow past ~1000 capabilities. **3 wk. LOWER** — defer until S-1's quality ceiling is hit.
 
-**Recommended order for "real-app scale":** S-1 → S-2 → S-5 → S-4 → S-3 → S-7. (S-6 already done.)
+**Recommended order for "real-app scale":** S-1 → S-5 → S-4 → S-3 → S-7. (S-2 + S-6 already done.)
 
 ---
 

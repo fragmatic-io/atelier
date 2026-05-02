@@ -79,6 +79,10 @@
       "type": "integer",
       "minimum": 1
     },
+    "expected_count": {
+      "type": "integer",
+      "minimum": 0
+    },
     "_review": {
       "type": "object",
       "properties": {

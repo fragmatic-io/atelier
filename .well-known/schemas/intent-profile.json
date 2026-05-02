@@ -102,6 +102,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "max_tokens_per_call": {
+          "type": "integer",
+          "minimum": 0
+        },
         "on_exhausted": {
           "type": "string",
           "enum": [
@@ -142,6 +146,35 @@
         "required": [
           "domain",
           "signal"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "priority_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "capability_pattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "salience": {
+            "type": "string",
+            "enum": [
+              "high",
+              "normal",
+              "low"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "capability_pattern",
+          "salience"
         ],
         "additionalProperties": false
       }

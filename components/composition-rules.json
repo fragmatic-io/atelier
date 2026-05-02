@@ -204,6 +204,12 @@
   "Tree": {
     "can_contain": "leaf"
   },
+  "VirtualList": {
+    "can_contain": "leaf"
+  },
+  "VirtualTable": {
+    "can_contain": "leaf"
+  },
   "Wizard": {
     "can_contain": "leaf"
   }

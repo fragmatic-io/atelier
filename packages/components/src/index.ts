@@ -79,6 +79,27 @@ export type { EmptyStateProps } from './components/EmptyState.js';
 export { List, ListBinding } from './components/List.js';
 export type { ListProps } from './components/List.js';
 
+// Wave 10 / S-2 — virtualized variants of List + Table for high-cardinality
+// data. Mirror the surface of the non-virtual primitives plus cursor-driven
+// onFetchMore / onFetchPrev callbacks; backed by `@tanstack/react-virtual`.
+export {
+  VirtualList,
+  VirtualListBinding,
+  virtualListTextRender,
+  VIRTUAL_LIST_DEFAULT_ESTIMATE,
+  VIRTUAL_LIST_DEFAULT_OVERSCAN,
+} from './components/VirtualList.js';
+export type { VirtualListProps, VirtualListVariant } from './components/VirtualList.js';
+
+export {
+  VirtualTable,
+  VirtualTableBinding,
+  virtualTableTextRender,
+  VIRTUAL_TABLE_DEFAULT_ESTIMATE,
+  VIRTUAL_TABLE_DEFAULT_OVERSCAN,
+} from './components/VirtualTable.js';
+export type { VirtualTableProps, VirtualTableVariant } from './components/VirtualTable.js';
+
 export { Queue, QueueBinding, queueTextRender } from './components/Queue.js';
 export type { QueueProps, QueueAction, QueueVariant } from './components/Queue.js';
 

@@ -21,12 +21,36 @@ import type { Capability } from '@atelier/schemas';
  * Mirrors `ComponentDataBindingSchema` from `@atelier/schemas` and `DataBinding`
  * from `@atelier/react/data-resolver`. Duplicating this type avoids a hard
  * dependency from `@atelier/data-resolvers` onto `@atelier/react`.
+ *
+ * Wave 10 / S-2 — added optional `cursor` / `limit` / `pagination` fields
+ * for the cursor pagination protocol consumed by `<VirtualList>` /
+ * `<VirtualTable>`. All three are back-compatible — resolvers that ignore
+ * them continue to work; bindings without `pagination` default to `'none'`
+ * (single-shot delivery). See `cursor.ts` for the full contract.
  */
 export interface DataBinding {
   source: string;
   filter?: string;
   sort?: string;
   group_by?: string;
+  /**
+   * Wave 10 / S-2 — opaque server-issued cursor identifying where the next
+   * page begins. Undefined on the first call. Resolvers that emit a
+   * `CursorPaginatedResult` thread their `next_cursor` back through this
+   * field on the next request.
+   */
+  cursor?: string | undefined;
+  /**
+   * Wave 10 / S-2 — page size. Hosts can use this to clamp transport-side
+   * fetches; the virtual list defaults to a sensible window when omitted.
+   */
+  limit?: number | undefined;
+  /**
+   * Wave 10 / S-2 — pagination mode. Defaults to `'none'` (legacy single
+   * payload). Setting to `'cursor'` opts into the `CursorPaginatedResult`
+   * envelope; `'offset'` is reserved for legacy `skip` / `limit` adapters.
+   */
+  pagination?: 'cursor' | 'offset' | 'none' | undefined;
 }
 
 /**

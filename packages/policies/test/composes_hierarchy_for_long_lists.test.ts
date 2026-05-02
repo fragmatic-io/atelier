@@ -18,11 +18,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { composesHierarchyForLongLists } from '../src/baseline/composes_hierarchy_for_long_lists.js';
+import {
+  composesHierarchyForLongLists,
+  VIRTUAL_THRESHOLD,
+} from '../src/baseline/composes_hierarchy_for_long_lists.js';
 import type { Capability, LayoutNode, Manifest } from '@atelier/schemas';
 import type { PolicyContext } from '../src/result.js';
 
-function capability(opts: { salience?: string | null } = {}): Capability {
+function capability(opts: { salience?: string | null; expectedCount?: number } = {}): Capability {
   // Default salience expression; pass `{ salience: null }` to omit the field.
   const salience = opts.salience === undefined ? 'urgency * recency' : opts.salience;
   return {
@@ -36,6 +39,7 @@ function capability(opts: { salience?: string | null } = {}): Capability {
     confirmation: 'none',
     reversible: true,
     ...(salience !== null ? { salience_default: salience } : {}),
+    ...(opts.expectedCount !== undefined ? { expected_count: opts.expectedCount } : {}),
   };
 }
 
@@ -199,5 +203,112 @@ describe('composes_hierarchy_for_long_lists', () => {
     const result = composesHierarchyForLongLists.evaluate(ctxFor(layout));
     expect(result.ok).toBe(true);
     expect(result.violations).toHaveLength(0);
+  });
+
+  // -- Wave 10 / S-2 — virtualization advisory ----------------------------
+
+  describe('virtualization advisory (Wave 10 / S-2)', () => {
+    it('advises swapping <List> → <VirtualList> when capability.expected_count > VIRTUAL_THRESHOLD', () => {
+      const layout: LayoutNode = {
+        component: 'List',
+        data: { source: 'thread.list' },
+        // Already declares hierarchy treatment so the salience check passes;
+        // this isolates the virtualization advisory.
+        props: { density: 'compact' },
+      };
+      const result = composesHierarchyForLongLists.evaluate(
+        ctxFor(layout, capability({ expectedCount: VIRTUAL_THRESHOLD + 1 })),
+      );
+      expect(result.ok).toBe(false);
+      const v = result.violations[0]!;
+      expect(v.severity).toBe('warn');
+      expect(v.message).toContain('VirtualList');
+      expect(v.message).toContain(String(VIRTUAL_THRESHOLD));
+      expect(v.hint).toContain("'List' for 'VirtualList'");
+    });
+
+    it('advises swapping <Table> → <VirtualTable> when expected_count > VIRTUAL_THRESHOLD', () => {
+      const layout: LayoutNode = {
+        component: 'Table',
+        data: { source: 'thread.list' },
+        props: { density: 'compact' },
+      };
+      const result = composesHierarchyForLongLists.evaluate(
+        ctxFor(layout, capability({ expectedCount: 5000 })),
+      );
+      const messages = result.violations.map((v) => v.message);
+      expect(messages.some((m) => m.includes('VirtualTable'))).toBe(true);
+    });
+
+    it('does NOT advise virtualization when expected_count is at or below the threshold', () => {
+      const layout: LayoutNode = {
+        component: 'List',
+        data: { source: 'thread.list' },
+        props: { density: 'compact' },
+      };
+      const result = composesHierarchyForLongLists.evaluate(
+        ctxFor(layout, capability({ expectedCount: VIRTUAL_THRESHOLD })),
+      );
+      // density:'compact' satisfies salience hierarchy, and 500 <= threshold
+      // means no virtualization advisory either.
+      expect(result.ok).toBe(true);
+    });
+
+    it('does NOT advise virtualization for <Grid> (tile grids virtualize differently)', () => {
+      const layout: LayoutNode = {
+        component: 'Grid',
+        data: { source: 'thread.list' },
+        row_binding: 'ProductCard',
+      };
+      const result = composesHierarchyForLongLists.evaluate(
+        ctxFor(layout, capability({ expectedCount: 9999 })),
+      );
+      expect(result.ok).toBe(true);
+      // Sanity: no advisory contains the word "Virtual" for a Grid binding.
+      for (const v of result.violations) {
+        expect(v.message).not.toContain('Virtual');
+      }
+    });
+
+    it('inline binding expected_count overrides the capability default', () => {
+      // Capability says huge, binding says small — no advisory.
+      const layout: LayoutNode = {
+        component: 'List',
+        data: { source: 'thread.list', expected_count: 50 },
+        props: { density: 'compact' },
+      };
+      const result = composesHierarchyForLongLists.evaluate(
+        ctxFor(layout, capability({ expectedCount: 9999 })),
+      );
+      expect(result.ok).toBe(true);
+    });
+
+    it('fires the advisory even when the salience-hierarchy obligation is already satisfied', () => {
+      // emphasizeTopN clears the hierarchy check; virtualization is independent.
+      const layout: LayoutNode = {
+        component: 'List',
+        data: { source: 'thread.list' },
+        props: { emphasizeTopN: 5 },
+      };
+      const result = composesHierarchyForLongLists.evaluate(
+        ctxFor(layout, capability({ expectedCount: 1000 })),
+      );
+      const messages = result.violations.map((v) => v.message);
+      expect(messages.some((m) => m.includes('VirtualList'))).toBe(true);
+    });
+
+    it('fires the advisory regardless of salience_default declaration (long is long)', () => {
+      // Capability has NO salience_default — the salience-hierarchy check
+      // skips, but the virtualization advisory still fires once
+      // expected_count crosses the threshold.
+      const cap = capability({ salience: null, expectedCount: 2000 });
+      const layout: LayoutNode = {
+        component: 'List',
+        data: { source: 'thread.list' },
+      };
+      const result = composesHierarchyForLongLists.evaluate(ctxFor(layout, cap));
+      const messages = result.violations.map((v) => v.message);
+      expect(messages.some((m) => m.includes('VirtualList'))).toBe(true);
+    });
   });
 });

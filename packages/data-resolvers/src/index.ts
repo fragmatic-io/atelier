@@ -58,3 +58,14 @@ export type {
 export type { DataBinding, DataResolver, CapabilityLookup } from './types.js';
 export { lookupCapability } from './types.js';
 export { withHighSalienceEmphasis, type WithHighSalienceEmphasisOptions } from './salience.js';
+// Wave 10 / S-2 — cursor pagination protocol on top of `DataResolver`.
+// Back-compat: legacy resolvers that return arrays continue to work; the
+// envelope is purely additive. `paginate(resolver, binding)` walks a
+// cursor-paginated resolver to completion (tests + exports + demos).
+export {
+  paginate,
+  isCursorPaginatedResult,
+  type CursorPaginatedResult,
+  type PaginationMode,
+  type PaginateOptions,
+} from './cursor.js';

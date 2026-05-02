@@ -118,6 +118,10 @@
                   },
                   "error_state": {
                     "$ref": "#/properties/routes/items/properties/layout"
+                  },
+                  "expected_count": {
+                    "type": "integer",
+                    "minimum": 0
                   }
                 },
                 "required": [

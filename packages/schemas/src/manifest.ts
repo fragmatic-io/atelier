@@ -76,6 +76,14 @@ export interface ComponentDataBinding {
   empty_state?: LayoutNode | undefined;
   loading_state?: LayoutNode | undefined;
   error_state?: LayoutNode | undefined;
+  /**
+   * Wave 10 / S-2 — inline cardinality hint for this binding. When set,
+   * overrides the bound capability's `expected_count` for policy purposes
+   * (e.g. the long-list / virtualization advisory). Useful when the
+   * manifest knows the binding is filtered to a small subset of a
+   * naturally-large capability.
+   */
+  expected_count?: number | undefined;
 }
 
 /**
@@ -122,6 +130,8 @@ export const ComponentDataBindingSchema: z.ZodType<ComponentDataBinding> = z.laz
     empty_state: LayoutNodeSchema.optional(),
     loading_state: LayoutNodeSchema.optional(),
     error_state: LayoutNodeSchema.optional(),
+    // Wave 10 / S-2 — inline cardinality hint (see interface comment).
+    expected_count: z.number().int().min(0).optional(),
   }),
 );
 

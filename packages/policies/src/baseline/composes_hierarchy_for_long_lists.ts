@@ -37,6 +37,16 @@
  * Source: Wave 7b / track P-9 — the information-hierarchy skill
  * (`skills/information-hierarchy.skill.md`) and the new
  * `Capability.salience_default` field.
+ *
+ * Wave 10 / S-2 — the same walker now also advises swapping `<List>` /
+ * `<Table>` (NOT `<Grid>`; tile grids virtualize differently) for the
+ * `<VirtualList>` / `<VirtualTable>` baseline variant once the bound
+ * capability's `expected_count` exceeds {@link VIRTUAL_THRESHOLD} (default
+ * 500). The advisory is independent of the salience hierarchy obligation —
+ * a long list with a top-N emphasis still benefits from virtualization once
+ * the row count gets large enough to OOM the browser. Severity stays
+ * `warn`; the migration is mechanical (rename the binding id and thread an
+ * `onFetchMore` cursor through the data resolver).
  */
 
 import type { LayoutNode } from '@atelier/schemas';
@@ -59,6 +69,21 @@ const LONG_LIST_ROLES: ReadonlySet<string> = new Set(['list', 'table', 'grid']);
 
 /** Default cardinality threshold above which hierarchy treatment is required. */
 const HIERARCHY_THRESHOLD = 7;
+
+/**
+ * Wave 10 / S-2 — cardinality threshold above which the manifest should
+ * swap `<List>` / `<Table>` for `<VirtualList>` / `<VirtualTable>`. Below
+ * this, the non-virtual baseline ships fewer DOM nodes than the virtualizer's
+ * fixed overhead. Above this, browsers struggle with the row count; the
+ * virtual variant becomes the right primitive.
+ */
+export const VIRTUAL_THRESHOLD = 500;
+
+/** Components for which the virtualization advisory has a baseline replacement. */
+const VIRTUALIZABLE_REPLACEMENTS: Readonly<Record<string, string>> = Object.freeze({
+  List: 'VirtualList',
+  Table: 'VirtualTable',
+});
 
 /**
  * Try to read an inline cardinality hint from the data binding. We accept
@@ -149,12 +174,45 @@ export const composesHierarchyForLongLists: NamedPolicy = {
       const sourceId = (node.data as { source?: unknown }).source;
       if (typeof sourceId !== 'string') return;
       const cap = ctx.capabilities[sourceId];
-      if (!cap || !cap.salience_default) return; // Capability doesn't declare salience — skip.
+      if (!cap) return;
+
+      // Wave 10 / S-2 — virtualization advisory. We resolve the effective
+      // cardinality from (a) inline binding hint, then (b) the capability's
+      // declared `expected_count`. When that count exceeds VIRTUAL_THRESHOLD
+      // and the manifest used a non-virtual baseline (`<List>` / `<Table>`),
+      // emit a `warn` nudging the swap to `<VirtualList>` / `<VirtualTable>`.
+      // This runs independently of the salience-hierarchy check below: a
+      // binding that already declares `emphasizeTopN` still benefits from
+      // virtualization at high cardinality.
+      const inlineCard = expectedCardinality(node);
+      const capCard =
+        typeof (cap as { expected_count?: unknown }).expected_count === 'number'
+          ? (cap as { expected_count: number }).expected_count
+          : undefined;
+      const effectiveCard = inlineCard ?? capCard;
+      if (
+        effectiveCard !== undefined &&
+        effectiveCard > VIRTUAL_THRESHOLD &&
+        Object.prototype.hasOwnProperty.call(VIRTUALIZABLE_REPLACEMENTS, node.component)
+      ) {
+        const replacement = VIRTUALIZABLE_REPLACEMENTS[node.component]!;
+        violations.push({
+          policy_id: POLICY_ID,
+          severity: 'warn',
+          message: `Use <${replacement}> for capability "${sourceId}" (expected_count ${String(
+            effectiveCard,
+          )} > ${String(VIRTUAL_THRESHOLD)}). ${node.component} at ${path} risks OOMing the browser at this row count.`,
+          path,
+          hint: `Swap component: '${node.component}' for '${replacement}' and thread an onFetchMore cursor through the data resolver. The Virtual variant mirrors the ${node.component} surface and only renders viewport rows.`,
+        });
+      }
+
+      if (!cap.salience_default) return; // Capability doesn't declare salience — skip the hierarchy check.
 
       // Determine whether the binding is long enough to warrant hierarchy.
       // If an explicit hint is present, use it. Otherwise, the presence of
       // `salience_default` + the long-list component is the heuristic.
-      const card = expectedCardinality(node);
+      const card = inlineCard ?? capCard;
       const longEnough = card === undefined ? true : card > HIERARCHY_THRESHOLD;
       if (!longEnough) return;
 

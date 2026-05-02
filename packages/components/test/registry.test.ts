@@ -74,11 +74,13 @@ const EXPECTED = [
   'Toggle',
   'Tooltip',
   'Tree',
+  'VirtualList',
+  'VirtualTable',
   'Wizard',
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 65 baseline components', () => {
+  it('contains exactly the 67 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -204,6 +206,10 @@ describe('COMPOSITION_RULES', () => {
       'ChatThread',
       // Wave 7b / Vis-3 — Icon is a leaf; SVG sourced from IconResolver.
       'Icon',
+      // Wave 10 / S-2 — virtualized variants render rows from a data
+      // binding; manifest authors do not embed children.
+      'VirtualList',
+      'VirtualTable',
     ] as const) {
       expect(COMPOSITION_RULES[leaf]?.can_contain).toBe('leaf');
     }

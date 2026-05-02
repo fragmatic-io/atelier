@@ -124,6 +124,14 @@ describe('TEXT_RENDERERS', () => {
         currentId: 'a',
         onStepChange: () => undefined,
       },
+      // Wave 10 / S-2 — virtualized list + table samples for the
+      // text-renderer coverage gate.
+      VirtualList: { items: [1, 2, 3], total: 30 },
+      VirtualTable: {
+        columns: [{ key: 'k', header: 'h' }],
+        rows: [{ k: 'v' }, { k: 'w' }],
+        total: 1000,
+      },
     };
 
     for (const [id, renderer] of Object.entries(TEXT_RENDERERS)) {

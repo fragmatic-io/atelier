@@ -77,6 +77,8 @@ import { toastTextRender } from './components/Toast.js';
 import { toggleTextRender } from './components/Toggle.js';
 import { tooltipTextRender } from './components/Tooltip.js';
 import { treeTextRender } from './components/Tree.js';
+import { virtualListTextRender } from './components/VirtualList.js';
+import { virtualTableTextRender } from './components/VirtualTable.js';
 import { wizardTextRender } from './components/Wizard.js';
 
 /** Returns a plain-text representation of a component for non-visual render targets. */
@@ -147,5 +149,8 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Toggle: toggleTextRender as TextRenderer,
   Tooltip: tooltipTextRender as TextRenderer,
   Tree: treeTextRender as TextRenderer,
+  // Wave 10 / S-2 — virtualized list + table primitives.
+  VirtualList: virtualListTextRender as TextRenderer,
+  VirtualTable: virtualTableTextRender as TextRenderer,
   Wizard: wizardTextRender as TextRenderer,
 });
