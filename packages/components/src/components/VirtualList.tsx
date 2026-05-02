@@ -178,6 +178,7 @@ export function VirtualList<T>({
       data-cir-component="VirtualList"
       data-bordered={bordered ? 'true' : 'false'}
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       data-virtual="true"
       data-row-count={String(items.length)}

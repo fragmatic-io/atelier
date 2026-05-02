@@ -53,6 +53,7 @@ export function KPIRow({
       data-cir-component="KPIRow"
       data-columns={String(cols)}
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       data-size={size}
       className={cn(statVariantClass[variant], statSizeClass[size], className)}

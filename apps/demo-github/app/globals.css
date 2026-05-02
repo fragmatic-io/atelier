@@ -80,6 +80,15 @@ html[data-color-mode='dark'] {
 }
 
 :root {
+  /* Vis-6 — density token bridge. The render walker emits
+     `data-cir-density="<value>"` on the route wrapper AND on every
+     density-aware component; the per-attribute blocks below resolve the
+     CSS variables to the matching tier. Mirrors `DENSITY_PADDING_PX`,
+     `DENSITY_ROW_PADDING_PX`, and `DENSITY_GAP_MULTIPLIER` from
+     `@atelier/components/density`. */
+  --atelier-density-padding: 12px;
+  --atelier-density-row-padding: 8px;
+  --atelier-density-gap-multiplier: 1;
   /* Radius */
   --cir-radius-xs: 3px;
   --cir-radius-sm: 4px;
@@ -109,6 +118,21 @@ html[data-color-mode='dark'] {
 /* ---------------------------------------------------------------------- */
 /* Page chrome                                                             */
 /* ---------------------------------------------------------------------- */
+
+/* Vis-6 — per-density blocks. The route walker emits
+   `data-cir-density="<value>"` on the outermost wrapper; descendants pick
+   up the right tier values automatically. */
+[data-cir-density='compact'] {
+  --atelier-density-padding: 4px;
+  --atelier-density-row-padding: 2px;
+  --atelier-density-gap-multiplier: 0.5;
+}
+
+[data-cir-density='spacious'] {
+  --atelier-density-padding: 20px;
+  --atelier-density-row-padding: 14px;
+  --atelier-density-gap-multiplier: 1.5;
+}
 
 * {
   box-sizing: border-box;

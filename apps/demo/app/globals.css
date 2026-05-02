@@ -90,7 +90,29 @@
      and common `liga` enabled. Body inherits via the rule below. */
   --cir-font-feature-settings: 'tnum' 1, 'liga' 1;
 
+  /* Vis-6 — density token bridge. The render walker emits
+     `data-cir-density="<value>"` on the route wrapper AND on every
+     density-aware component; the per-attribute blocks below resolve the
+     CSS variables to the matching tier. Mirrors `DENSITY_PADDING_PX`,
+     `DENSITY_ROW_PADDING_PX`, and `DENSITY_GAP_MULTIPLIER` from
+     `@atelier/components/density`. */
+  --atelier-density-padding: 12px;
+  --atelier-density-row-padding: 8px;
+  --atelier-density-gap-multiplier: 1;
+
   color-scheme: light dark;
+}
+
+[data-cir-density='compact'] {
+  --atelier-density-padding: 4px;
+  --atelier-density-row-padding: 2px;
+  --atelier-density-gap-multiplier: 0.5;
+}
+
+[data-cir-density='spacious'] {
+  --atelier-density-padding: 20px;
+  --atelier-density-row-padding: 14px;
+  --atelier-density-gap-multiplier: 1.5;
 }
 
 /* ------------------------------------------------------------------ */

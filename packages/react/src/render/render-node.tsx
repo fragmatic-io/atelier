@@ -36,6 +36,12 @@ import {
 } from 'react';
 import type { ComponentRegistry, RenderNode as RenderNodeShape } from '@atelier/runtime';
 import type { LayoutNode } from '@atelier/schemas';
+// Import directly from the source modules so the React adapter does not pull
+// the components package's whole barrel (which transitively brings in optional
+// peer-deps used by VirtualList / VirtualTable). Both files are stable
+// internal entry points and ship in the published package.
+import { resolveDensity, type Density } from '@atelier/components/density-resolver';
+import { DENSITY_AWARE_COMPONENTS as COMPONENTS_DENSITY_AWARE_SET } from '@atelier/components/_variants';
 import { DataResolverContext, type DataBinding } from '../data/data-resolver.js';
 import { useDispatcher } from '../hooks/use-dispatcher.js';
 import { useCir } from '../hooks/use-cir.js';
@@ -43,22 +49,15 @@ import { BASELINE_RESOLVER_DEFAULTS } from '../context/runtime-context.js';
 
 /**
  * Components in the catalog that accept a `density` personalisation prop.
- * Kept in lock-step with the 8 layout components in `@atelier/components` that
- * actually wire density to spacing today (Stack, Container, Card, Grid, List,
- * Table, StatCard, KPIRow). The walker only defaults the prop for these IDs
- * to avoid attaching `density="..."` to a component whose props_schema does
- * not declare it (which would surface a React unknown-prop warning).
+ *
+ * Mirrors `DENSITY_AWARE_COMPONENTS` from `@atelier/components` — the
+ * components package owns the canonical list (Wave 11 / Vis-6); the
+ * adapter re-exports it here as a local alias so the rest of this file
+ * keeps the same name. The walker only defaults the prop for these IDs
+ * to avoid attaching `density="..."` to a component whose props_schema
+ * does not declare it (which would surface a React unknown-prop warning).
  */
-const DENSITY_AWARE_COMPONENTS = new Set<string>([
-  'Stack',
-  'Container',
-  'Card',
-  'Grid',
-  'List',
-  'Table',
-  'StatCard',
-  'KPIRow',
-]);
+const DENSITY_AWARE_COMPONENTS = COMPONENTS_DENSITY_AWARE_SET;
 
 const warned = new Set<string>();
 const warnedLegacyActions = new Set<string>();
@@ -183,17 +182,30 @@ type DefaultStateKind = 'empty' | 'loading' | 'error';
 
 export interface RenderNodeProps {
   node: RenderNodeShape;
+  /**
+   * Route path the walker is rendering against. Threaded through so density
+   * resolution (Wave 11 / Vis-6) can apply per-route `density_overrides`
+   * from the user's intent profile. Defaults to `''` so unit tests that
+   * mount `<RenderNode>` directly continue to work — the absence of a route
+   * resolves the override layer to "no match" and falls through to the
+   * global preference.
+   */
+  route?: string;
 }
 
-export function RenderNode({ node }: RenderNodeProps): ReactElement {
+export function RenderNode({ node, route }: RenderNodeProps): ReactElement {
   const dispatch = useDispatcher();
   const services = useCir();
   const { data, loading, error } = useResolvedData(node.data);
 
+  // Build the route prop conditionally so we satisfy `exactOptionalPropertyTypes`
+  // (passing `route={undefined}` is rejected when the prop is `route?: string`).
+  const routeProp = route !== undefined ? { route } : {};
+
   if (!node.binding) {
     warnMissingBinding(node.componentId);
     const childNodes: ReactNode = node.children.map((child, i) => (
-      <RenderNode key={i} node={child} />
+      <RenderNode key={i} node={child} {...routeProp} />
     ));
     return <div data-cir-fallback={node.componentId}>?{childNodes}</div>;
   }
@@ -205,15 +217,17 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
   // prop and the active intent profile carries the corresponding signal, the
   // walker fills it in. The runtime stays "dumb" (it does not decide what to
   // show) — it is only resolving a default value for an unset prop.
+  //
+  // Wave 11 / Vis-6 — density resolution honours per-route overrides.
+  // `resolveDensity(intent, route)` reads `density_overrides` first (a
+  // route-pattern glob list) and falls through to `global_preferences.density`.
   if (
     DENSITY_AWARE_COMPONENTS.has(node.componentId) &&
     props['density'] === undefined &&
     services.intent !== undefined
   ) {
-    const density = services.intent.global_preferences['density'];
-    if (density === 'compact' || density === 'comfortable' || density === 'spacious') {
-      props['density'] = density;
-    }
+    const effective: Density = resolveDensity(services.intent, route ?? '');
+    props['density'] = effective;
   }
 
   if (node.data) {
@@ -238,7 +252,7 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
           ? 'empty'
           : null;
     if (stateKind !== null) {
-      const slot = renderStateSlot(stateKind, node, services);
+      const slot = renderStateSlot(stateKind, node, services, route);
       if (slot !== null) return slot;
     }
   }
@@ -285,7 +299,7 @@ export function RenderNode({ node }: RenderNodeProps): ReactElement {
 
   const children: ReactNode =
     node.children.length > 0
-      ? node.children.map((child, i) => <RenderNode key={i} node={child} />)
+      ? node.children.map((child, i) => <RenderNode key={i} node={child} {...routeProp} />)
       : undefined;
 
   return createElement(Component, props, children);
@@ -302,6 +316,7 @@ function renderStateSlot(
   kind: DefaultStateKind,
   node: RenderNodeShape,
   services: ReturnType<typeof useCir>,
+  route: string | undefined,
 ): ReactElement | null {
   const slotKey = (
     {
@@ -310,10 +325,11 @@ function renderStateSlot(
       error: 'error_state',
     } as const
   )[kind];
+  const routeProp = route !== undefined ? { route } : {};
   // (1) Inline manifest slot wins outright — it's already a RenderNode.
   const inline = node.data?.[slotKey];
   if (inline !== undefined) {
-    return <RenderNode node={inline} />;
+    return <RenderNode node={inline} {...routeProp} />;
   }
   // (2) Host override on services. (3) Framework baseline.
   const overrides = services.resolverDefaults;
@@ -329,7 +345,7 @@ function renderStateSlot(
   const renderable = layoutNodeToRenderNode(layout, services.registry);
   return (
     <div data-cir-default-state={kind}>
-      <RenderNode node={renderable} />
+      <RenderNode node={renderable} {...routeProp} />
     </div>
   );
 }

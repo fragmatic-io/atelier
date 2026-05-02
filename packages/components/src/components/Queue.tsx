@@ -330,6 +330,7 @@ export function Queue<T = unknown>({
     <section
       data-cir-component="Queue"
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       className={cn(contentVariantClass[variant], className)}
       aria-label={title}

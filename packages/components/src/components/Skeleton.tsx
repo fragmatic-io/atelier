@@ -17,6 +17,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
+import { DEFAULT_DENSITY, DENSITY_ROW_PADDING_PX, type Density } from './density.js';
 
 export type SkeletonRadius = 'sm' | 'md' | 'full';
 export type SkeletonVariant = FeedbackVariant;
@@ -44,6 +45,13 @@ export interface SkeletonProps {
   count?: number;
   /** Column count for shape="table-row". Default 4. */
   columns?: number;
+  /**
+   * Wave 11 / Vis-6 — personalisation density. Threaded by the renderer
+   * so loading-state rows match the populated state's row height. Skeleton
+   * uses the value to scale `table-row` vertical padding; `rect` and other
+   * shapes continue to honour explicit `width` / `height` props.
+   */
+  density?: Density;
   className?: string;
 }
 
@@ -207,7 +215,7 @@ function renderCard(): ReactNode {
   );
 }
 
-function renderTableRow(columns: number, rowSeed: number): ReactNode {
+function renderTableRow(columns: number, rowSeed: number, density: Density): ReactNode {
   const cells = [];
   for (let i = 0; i < columns; i += 1) {
     cells.push(
@@ -219,8 +227,21 @@ function renderTableRow(columns: number, rowSeed: number): ReactNode {
       />,
     );
   }
+  // Wave 11 / Vis-6 — row vertical padding tracks the effective density so
+  // the skeleton's row height matches the populated `<List>` / `<Table>`
+  // row height (no jarring re-flow when data lands).
+  const rowPad = DENSITY_ROW_PADDING_PX[density];
   return (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 0' }}>{cells}</div>
+    <div
+      style={{
+        display: 'flex',
+        gap: 12,
+        alignItems: 'center',
+        padding: `${String(rowPad)}px 0`,
+      }}
+    >
+      {cells}
+    </div>
   );
 }
 
@@ -303,6 +324,7 @@ export function Skeleton({
   shape = 'rect',
   count = 1,
   columns = 4,
+  density = DEFAULT_DENSITY,
   className,
 }: SkeletonProps): ReactNode {
   const reducedMotion = usePrefersReducedMotion();
@@ -328,6 +350,8 @@ export function Skeleton({
         data-shape="rect"
         data-radius={radius}
         data-variant={variant}
+        data-density={density}
+        data-cir-density={density}
         className={cn(feedbackVariantClass[variant], animateClass, className)}
         style={style}
       />
@@ -361,7 +385,7 @@ export function Skeleton({
     case 'table-row': {
       const rows = [];
       for (let i = 0; i < safeCount; i += 1) {
-        rows.push(<div key={i}>{renderTableRow(safeCols, i)}</div>);
+        rows.push(<div key={i}>{renderTableRow(safeCols, i, density)}</div>);
       }
       body = <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{rows}</div>;
       break;
@@ -401,6 +425,8 @@ export function Skeleton({
       data-shape={shape}
       data-radius={radius}
       data-variant={variant}
+      data-density={density}
+      data-cir-density={density}
       data-count={String(safeCount)}
       data-columns={shape === 'table-row' ? String(safeCols) : undefined}
       className={cn(feedbackVariantClass[variant], animateClass, className)}

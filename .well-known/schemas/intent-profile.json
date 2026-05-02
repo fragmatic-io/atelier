@@ -178,6 +178,35 @@
         ],
         "additionalProperties": false
       }
+    },
+    "density_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "route_pattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "density": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "comfortable",
+              "spacious"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "route_pattern",
+          "density"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

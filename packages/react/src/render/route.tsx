@@ -25,6 +25,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { buildRenderPlan, RouteNotFoundError, RouteNotRenderableError } from '@atelier/runtime';
 import type { Trigger } from '@atelier/schemas';
+import { resolveDensity } from '@atelier/components/density-resolver';
 import { useCir } from '../hooks/use-cir.js';
 import { useManifest } from '../hooks/use-resolver.js';
 import { useTrigger } from '../hooks/use-trigger.js';
@@ -156,17 +157,32 @@ export function CirRoute(props: CirRouteProps): React.ReactElement {
   if (plan instanceof Error) return <>{errorFallback(plan)}</>;
   if (!plan) return <>{fallback}</>;
 
+  // Wave 11 / Vis-6 — emit `data-cir-density` on the route's outermost
+  // wrapper so the host's `globals.css` can resolve `--atelier-density-*`
+  // CSS variables to the right tier per-route. The wrapper is a plain
+  // `<div>` carrying only `display: contents` so it does not introduce a
+  // layout box but is a real DOM element CSS can attach to. The route walker
+  // also threads the `path` prop into `<RenderNode>` so per-component
+  // `density` defaulting honours `density_overrides`.
+  const effectiveDensity = resolveDensity(services.intent, path);
+
   return (
     <CurrentManifestContext.Provider value={{ manifest_id: manifest.manifest_id, route: path }}>
-      <CirErrorBoundary
-        fallback={errorFallback}
-        resetKey={manifest.manifest_id}
-        audit={services.audit}
-        user_id={services.identity.user_id}
-        app_id={services.identity.app_id}
+      <div
+        data-cir-route={path}
+        data-cir-density={effectiveDensity}
+        style={{ display: 'contents' }}
       >
-        <RenderNode node={plan.root} />
-      </CirErrorBoundary>
+        <CirErrorBoundary
+          fallback={errorFallback}
+          resetKey={manifest.manifest_id}
+          audit={services.audit}
+          user_id={services.identity.user_id}
+          app_id={services.identity.app_id}
+        >
+          <RenderNode node={plan.root} route={path} />
+        </CirErrorBoundary>
+      </div>
     </CurrentManifestContext.Provider>
   );
 }

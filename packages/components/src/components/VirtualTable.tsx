@@ -153,6 +153,7 @@ export function VirtualTable({
     <div
       data-cir-component="VirtualTable"
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       data-virtual="true"
       data-row-count={String(rows.length)}

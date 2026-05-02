@@ -184,6 +184,36 @@ export const PriorityOverrideSchema = z.object({
 export type PriorityOverride = z.infer<typeof PriorityOverrideSchema>;
 
 /**
+ * Wave 11 / Vis-6 — per-surface density override.
+ *
+ * Where `global_preferences.density` is the user's GLOBAL density signal,
+ * `density_overrides` is the per-surface escape hatch — a route-pattern glob
+ * with a forced density that takes precedence over the global preference for
+ * matching routes. Designed for the "admin tables stay compact even though I
+ * prefer comfortable everywhere else" / "onboarding stays spacious even
+ * though I'm a power user" pattern Stripe + Linear ship.
+ *
+ * Pattern syntax: shell-style globs over the route path. `*` matches one
+ * path segment, `**` matches any (including `/`); literal segments match
+ * exactly. The first matching rule wins.
+ *
+ * Example: `{ route_pattern: '/admin/*', density: 'compact',
+ * reason: 'admin power-user surface' }` matches `/admin/queues` but not
+ * `/admin/queues/123` (use `'/admin/**'` for that).
+ *
+ * Authoritative matcher: `matchRouteGlob` in
+ * `@atelier/components/density-resolver`. The render walker calls
+ * `resolveDensity(intent, route)` once per route and threads the result
+ * to every density-aware component.
+ */
+export const DensityOverrideSchema = z.object({
+  route_pattern: z.string().min(1),
+  density: DensityPreference,
+  reason: z.string().min(1).optional(),
+});
+export type DensityOverride = z.infer<typeof DensityOverrideSchema>;
+
+/**
  * Persistent intent profile — the user's "how I want software to behave" doc.
  */
 export const IntentProfileSchema = z.object({
@@ -221,6 +251,14 @@ export const IntentProfileSchema = z.object({
    * unmatched capabilities fall back to their declared level.
    */
   priority_overrides: z.array(PriorityOverrideSchema).optional(),
+  /**
+   * Wave 11 / Vis-6 — per-surface density overrides. Each rule maps a
+   * route-pattern glob to a forced density that takes precedence over the
+   * global density preference for matching routes. The first matching rule
+   * wins; unmatched routes fall back to `global_preferences.density` (or
+   * the framework default `'comfortable'`).
+   */
+  density_overrides: z.array(DensityOverrideSchema).optional(),
 });
 export type IntentProfile = z.infer<typeof IntentProfileSchema>;
 

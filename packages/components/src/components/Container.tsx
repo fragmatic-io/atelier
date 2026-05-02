@@ -59,6 +59,7 @@ export function Container({
       data-max-width={maxWidth}
       data-padding={padding}
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       className={cn(layoutVariantClass[variant], className)}
       style={style}

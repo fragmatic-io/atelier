@@ -293,6 +293,7 @@ export function Grid<T extends GridItem = GridItem>({
       data-columns={String(columns)}
       data-gap={gap}
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       data-selectable={selectable ? 'true' : 'false'}
       className={cn(layoutVariantClass[variant], className)}

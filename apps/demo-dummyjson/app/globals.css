@@ -82,6 +82,28 @@
     Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --cir-font-display: 'Cabinet Grotesk', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
   --cir-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Vis-6 — density token bridge. The render walker emits
+     `data-cir-density="<value>"` on the route wrapper AND on every
+     density-aware component; the per-attribute blocks below resolve the
+     CSS variables to the matching tier. Numbers mirror
+     `DENSITY_PADDING_PX`, `DENSITY_ROW_PADDING_PX`, and
+     `DENSITY_GAP_MULTIPLIER` from `@atelier/components/density`. */
+  --atelier-density-padding: 12px;
+  --atelier-density-row-padding: 8px;
+  --atelier-density-gap-multiplier: 1;
+}
+
+[data-cir-density='compact'] {
+  --atelier-density-padding: 4px;
+  --atelier-density-row-padding: 2px;
+  --atelier-density-gap-multiplier: 0.5;
+}
+
+[data-cir-density='spacious'] {
+  --atelier-density-padding: 20px;
+  --atelier-density-row-padding: 14px;
+  --atelier-density-gap-multiplier: 1.5;
 }
 
 html[data-color-mode='dark'] {

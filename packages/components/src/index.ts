@@ -23,12 +23,25 @@
 // -----------------------------------------------------------------------------
 export {
   DEFAULT_DENSITY,
+  DENSITY_CSS_VALUES,
+  DENSITY_CSS_VAR_NAMES,
   DENSITY_GAP_MULTIPLIER,
   DENSITY_PADDING_PX,
   DENSITY_ROW_PADDING_PX,
   densityScaleGapPx,
   type Density,
 } from './components/density.js';
+
+// Wave 11 / Vis-6 — per-route density resolution (intent → effective density).
+export {
+  compileRouteGlob,
+  matchRouteGlob,
+  resolveDensity,
+  type DensityOverride,
+} from './density-resolver.js';
+
+// Wave 11 / Vis-6 — Tailwind variant table for compact / comfortable / spacious.
+export { densityClass, DENSITY_AWARE_COMPONENTS } from './components/_variants.js';
 
 // -----------------------------------------------------------------------------
 // Layout

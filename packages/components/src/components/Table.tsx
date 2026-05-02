@@ -273,6 +273,7 @@ export function Table({
     <table
       data-cir-component="Table"
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       data-has-pinned={hasPinned ? 'true' : 'false'}
       data-selectable={selectable ? 'true' : 'false'}

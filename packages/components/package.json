@@ -10,7 +10,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./registry": "./src/registry.ts",
-    "./composition-rules": "./src/composition-rules.ts"
+    "./composition-rules": "./src/composition-rules.ts",
+    "./density-resolver": "./src/density-resolver.ts",
+    "./_variants": "./src/components/_variants.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",

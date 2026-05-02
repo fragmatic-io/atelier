@@ -535,3 +535,53 @@ export const ELEVATION_LEVELS: readonly Elevation[] = Object.freeze([
   'modal',
   'commandbar',
 ] as const);
+
+// -----------------------------------------------------------------------------
+// Density (Wave 11 / Vis-6) — three-tier rhythm: compact / comfortable /
+// spacious. Components emit `data-cir-density={value}` AND opt into this map
+// so Tailwind hosts get a sensible default rhythm for free; non-Tailwind hosts
+// rely on the CSS variables (`--atelier-density-padding`,
+// `--atelier-density-row-padding`, `--atelier-density-gap-multiplier`)
+// projected on the route's outermost wrapper.
+//
+// The Tailwind utility strings deliberately stay simple — `p-{n}` and
+// `gap-{n}` only — so the multipliers do not collide with per-component layout
+// utilities. Authors compose the class via `cn(densityClass[d], className)`.
+// -----------------------------------------------------------------------------
+export type Density = 'compact' | 'comfortable' | 'spacious';
+
+export const densityClass: Readonly<Record<Density, string>> = Object.freeze({
+  compact: 'p-1 gap-1',
+  comfortable: 'p-3 gap-3',
+  spacious: 'p-5 gap-6',
+});
+
+/**
+ * Frozen set of canonical component IDs that consume density via the
+ * personalisation pipeline. The render walker uses this list to know which
+ * components to default the prop on; manifests can list the same ids when
+ * declaring custom binding metadata. New density-aware components must be
+ * added here AND must accept a `density?: Density` prop.
+ *
+ * Why a set in a value module: the React renderer (`@atelier/react`) consumes
+ * this list for its walker. Centralising here keeps the component package as
+ * the single source of truth for "what is density-aware" — schemas + react
+ * import from one place rather than re-declaring.
+ */
+export const DENSITY_AWARE_COMPONENTS: ReadonlySet<string> = Object.freeze(
+  new Set<string>([
+    'Stack',
+    'Container',
+    'Card',
+    'Grid',
+    'List',
+    'Table',
+    'Queue',
+    'KPIRow',
+    'StatCard',
+    'DetailView',
+    'Skeleton',
+    'VirtualList',
+    'VirtualTable',
+  ]),
+);

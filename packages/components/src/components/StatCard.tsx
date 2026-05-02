@@ -52,6 +52,7 @@ export function StatCard({
     <section
       data-cir-component="StatCard"
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       data-size={size}
       aria-label={label}

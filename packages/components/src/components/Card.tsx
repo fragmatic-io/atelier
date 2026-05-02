@@ -258,6 +258,7 @@ export const Card = forwardRef<HTMLElement, CardProps>(function Card(
         ref={ref}
         data-cir-component="Card"
         data-density={density}
+        data-cir-density={density}
         data-variant={variant}
         {...(elevation !== undefined ? { 'data-elevation': elevation } : {})}
         className={cn(layoutVariantClass[variant], elevationCls, className)}
@@ -290,6 +291,7 @@ export const Card = forwardRef<HTMLElement, CardProps>(function Card(
       ref={ref}
       data-cir-component="Card"
       data-density={density}
+      data-cir-density={density}
       data-variant={variant}
       data-cir-tile="true"
       {...(elevation !== undefined ? { 'data-elevation': elevation } : {})}

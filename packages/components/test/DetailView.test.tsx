@@ -15,13 +15,25 @@ describe('DetailView', () => {
     expect(container.querySelectorAll('dt').length).toBe(2);
     expect(container.querySelectorAll('dd').length).toBe(2);
   });
-  it('density is normal by default', () => {
+  // Wave 11 / Vis-6 — DetailView opted into the personalisation density
+  // pipeline. The legacy `dense?: boolean` prop still works (true → compact)
+  // for back-compat with hosts that toggle it from settings UI; new code
+  // should pass `density?: Density` directly. The data-density attribute
+  // reports the resolved canonical value so host stylesheets can target
+  // `[data-cir-density="compact"]`.
+  it('defaults to comfortable density', () => {
     const { container } = render(<DetailView fields={FIELDS} />);
-    expect(container.querySelector('dl')?.getAttribute('data-density')).toBe('normal');
+    expect(container.querySelector('dl')?.getAttribute('data-density')).toBe('comfortable');
+    expect(container.querySelector('dl')?.getAttribute('data-cir-density')).toBe('comfortable');
   });
-  it('dense=true sets data-density=dense', () => {
+  it('dense=true collapses to density=compact (back-compat)', () => {
     const { container } = render(<DetailView fields={FIELDS} dense />);
-    expect(container.querySelector('dl')?.getAttribute('data-density')).toBe('dense');
+    expect(container.querySelector('dl')?.getAttribute('data-density')).toBe('compact');
+    expect(container.querySelector('dl')?.getAttribute('data-cir-density')).toBe('compact');
+  });
+  it('explicit density prop wins over dense=true', () => {
+    const { container } = render(<DetailView fields={FIELDS} dense density="spacious" />);
+    expect(container.querySelector('dl')?.getAttribute('data-density')).toBe('spacious');
   });
   it('binding id matches', () => {
     expect(DetailViewBinding.id).toBe('DetailView');
