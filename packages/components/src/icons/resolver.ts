@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Icon resolver protocol — Wave 7b (Vis-3).
  *
- * `@cir/components` ships ZERO icon packs. Hosts plug their own pack in by
+ * `@atelier/components` ships ZERO icon packs. Hosts plug their own pack in by
  * implementing `IconResolver` and providing it via `IconResolverProvider`.
  * The resolver returns the SVG markup string for a given (set, name) pair,
  * or `null` when the icon isn't known to the host.

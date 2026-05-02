@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `cir inspect`. Covers file-path mode, server mode (mocked fetch),
  * --json round-trip, --no-color stripping, and schema-invalid input.
@@ -17,7 +17,7 @@ import {
   runInspect,
   stripAnsi,
 } from '../src/commands/inspect.js';
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 
 function fixtureManifest(): Manifest {
   return {
@@ -206,7 +206,7 @@ describe('inspectCommand', () => {
     const code = await inspectCommand([], {}, tmp);
     expect(code).toBe(1);
     const errOut = errSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(errOut).toContain('usage: cir inspect');
+    expect(errOut).toContain('usage: atelier inspect');
   });
 
   it('returns 1 with a clear message for a bad manifest', async () => {
@@ -215,13 +215,13 @@ describe('inspectCommand', () => {
     const code = await inspectCommand([file], { 'no-color': 'true' }, tmp);
     expect(code).toBe(1);
     const errOut = errSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(errOut).toContain('cir inspect:');
+    expect(errOut).toContain('atelier inspect:');
   });
 
   it('--help prints usage and returns 0', async () => {
     const code = await inspectCommand([], { help: 'true' }, tmp);
     expect(code).toBe(0);
     const printed = logSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(printed).toContain('usage: cir inspect');
+    expect(printed).toContain('usage: atelier inspect');
   });
 });

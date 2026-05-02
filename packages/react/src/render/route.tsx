@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -23,8 +23,8 @@
  */
 
 import { useEffect, useMemo, type ReactNode } from 'react';
-import { buildRenderPlan, RouteNotFoundError, RouteNotRenderableError } from '@cir/runtime';
-import type { Trigger } from '@cir/schemas';
+import { buildRenderPlan, RouteNotFoundError, RouteNotRenderableError } from '@atelier/runtime';
+import type { Trigger } from '@atelier/schemas';
 import { useCir } from '../hooks/use-cir.js';
 import { useManifest } from '../hooks/use-resolver.js';
 import { useTrigger } from '../hooks/use-trigger.js';

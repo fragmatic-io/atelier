@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the `composes_according_to_rules` policy factory.
  *
@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { composesAccordingTo, type CompositionRules } from '../src/baseline/composition_rules.js';
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(layout: Manifest['routes'][number]['layout']): PolicyContext {

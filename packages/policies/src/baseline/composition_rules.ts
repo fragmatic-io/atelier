@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `composes_according_to_rules`
  *
@@ -12,12 +12,12 @@
  *   - `min_children` / `max_children` — bounded child counts
  *
  * Why a factory? Composition rules are app-specific. Each app declares its
- * own component catalog (the baseline catalog ships with `@cir/components`,
+ * own component catalog (the baseline catalog ships with `@atelier/components`,
  * but downstream apps add custom components like `DecisionQueue`). The
  * factory takes the rules and returns a `NamedPolicy` an app can drop into
  * its policy list:
  *
- *     import { COMPOSITION_RULES } from '@cir/components';
+ *     import { COMPOSITION_RULES } from '@atelier/components';
  *     const policies = [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)];
  *
  * Components not present in the rule map are skipped — the runtime renders

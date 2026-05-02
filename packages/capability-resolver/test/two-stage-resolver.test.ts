@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `TwoStageCapabilityResolver`. The resolver wraps a tiny-model
  * LLM client; we drive it with a hand-rolled stub that returns
@@ -16,7 +16,7 @@
  *   - empty intent / k<=0 short-circuits
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryScopingCache } from '../src/cache.js';
 import { SubstringCapabilityResolver } from '../src/substring-resolver.js';

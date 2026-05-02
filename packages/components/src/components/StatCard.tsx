@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * StatCard — single KPI tile. Variants (Wave 6 / P-10): default, accent,
  * muted. Sizes: sm, md (default), lg.
  */
 import type { CSSProperties, ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, statSizeClass, statVariantClass, type Size, type StatVariant } from './_variants.js';
 import { DEFAULT_DENSITY, DENSITY_PADDING_PX, type Density } from './density.js';
 

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { CirProviders } from '@/lib/cir-providers';
+import { CirProviders } from '@/lib/atelier-providers';
 import { DUMMYJSON_BRAND_KIT } from '@/lib/brand-kit';
 import { LensSwitcher } from '@/components/LensSwitcher';
 
 export const metadata: Metadata = {
-  title: 'DummyJSON Shop — CIR demo',
+  title: 'DummyJSON Shop — Atelier demo',
   description:
     'Lens-switching e-commerce showcase, dressed in the Marigold theme. Browse a real product catalog; switch viewing density without losing scroll.',
 };
@@ -21,14 +21,14 @@ export const metadata: Metadata = {
  * `data-color-mode="light"` so server-rendered chrome reads the cream
  * surface even before the providers boot. The lens settings page
  * mirrors the user's choice onto the same attribute (see
- * `cir-providers.tsx` — `useEffect(... document.documentElement
+ * `atelier-providers.tsx` — `useEffect(... document.documentElement
  * .setAttribute('data-color-mode', mode))`), so toggling is one
  * attribute write, no flash.
  *
  * The brand kit is mounted as a JSON `<script type="application/json">`
  * tag for any debug overlay (the runtime `<DebugPanel>` reads it via the
  * `useDebugBrandKit` hook); the same value is also threaded through the
- * services bag in `lib/cir-server.ts`.
+ * services bag in `lib/atelier-server.ts`.
  */
 export default function RootLayout({ children }: { children: ReactNode }): React.JSX.Element {
   return (

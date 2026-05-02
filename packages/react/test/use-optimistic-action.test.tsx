@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';
 import { useEffect, useRef, type ReactElement } from 'react';
-import type { ActionResult } from '@cir/runtime';
-import type { Capability } from '@cir/schemas';
+import type { ActionResult } from '@atelier/runtime';
+import type { Capability } from '@atelier/schemas';
 import {
   useOptimisticAction,
   type UseOptimisticActionOptions,

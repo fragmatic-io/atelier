@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the `respects_brand_kit` policy.
  *
@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { BrandKit, Manifest } from '@cir/schemas';
+import type { BrandKit, Manifest } from '@atelier/schemas';
 import { respectsBrandKit, hexContrastRatio } from '../src/baseline/respects_brand_kit.js';
 import type { PolicyContext } from '../src/result.js';
 import { baselineContext } from './fixtures/manifest.js';

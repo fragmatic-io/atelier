@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -47,7 +47,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import {
   detectPlatform,
   formatHotkey,
@@ -55,7 +55,7 @@ import {
   type ActionRecencyTracker,
   type KeyboardAction,
   type Platform,
-} from '@cir/keyboard';
+} from '@atelier/keyboard';
 import { useKeyboardServicesFromContext } from '../keyboard/context.js';
 import { Icon } from './Icon.js';
 import { cn, commandPaletteVariantClass, type CommandPaletteVariant } from './_variants.js';
@@ -190,8 +190,8 @@ export function CommandPalette({
 
   // -- Auto-discovery from the keyboard registry -----------------------------
   // We read services via the components-local `KeyboardContext` so this
-  // baseline component doesn't take a runtime dependency on `@cir/react`.
-  // The `<KeyboardProvider>` (also in `@cir/components`) sets the same
+  // baseline component doesn't take a runtime dependency on `@atelier/react`.
+  // The `<KeyboardProvider>` (also in `@atelier/components`) sets the same
   // context.
   const services = useKeyboardServicesFromContext();
   const recency = services?.recency;

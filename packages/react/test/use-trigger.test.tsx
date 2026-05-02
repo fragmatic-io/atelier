@@ -2,7 +2,7 @@
 import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import { useTrigger } from '../src/hooks/use-trigger.js';
 import { buildTestServices } from '../src/testing/build-test-services.js';

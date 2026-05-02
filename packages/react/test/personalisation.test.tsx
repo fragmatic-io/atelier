@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 // @vitest-environment happy-dom
 /**
  * End-to-end personalisation test.
@@ -14,15 +14,15 @@
  *      `data-density="compact"` attribute and the smaller body padding the
  *      component derives from it.
  *
- * Uses the real `Card` from `@cir/components` so this is genuinely an E2E
+ * Uses the real `Card` from `@atelier/components` so this is genuinely an E2E
  * pass through the schema, the walker, and the component.
  */
 import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
-import type { IntentProfile } from '@cir/schemas';
-import { CardBinding } from '@cir/components';
-import { MapComponentRegistry } from '@cir/runtime/testing';
+import type { IntentProfile } from '@atelier/schemas';
+import { CardBinding } from '@atelier/components';
+import { MapComponentRegistry } from '@atelier/runtime/testing';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import { CirRoute } from '../src/render/route.js';
 import { buildTestServices } from '../src/testing/build-test-services.js';

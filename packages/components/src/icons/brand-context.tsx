@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * IconBrandContext — optional runtime hook for `<Icon>` to honour a brand
  * kit's `iconography.minimum_size`.
@@ -11,7 +11,7 @@
  * default), the size prop is honoured verbatim.
  *
  * The shape intentionally mirrors `BrandIconographySchema` from
- * `@cir/schemas` so a host that already loads a brand kit can pass the
+ * `@atelier/schemas` so a host that already loads a brand kit can pass the
  * iconography slice in directly.
  *
  * Wave 7b (Vis-3).

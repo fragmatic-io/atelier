@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Skill eval: `settings-section-grouping` pins the section-count target
  * (3–7), the layout fork threshold (>=4 sections OR >=30 fields → sidebar),
@@ -10,8 +10,8 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { defineEval } from '@cir/evals';
-import { parseSkillMarkdown } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { parseSkillMarkdown } from '@atelier/schemas';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SKILL_PATH = resolve(here, '../../skills/settings-section-grouping.skill.md');

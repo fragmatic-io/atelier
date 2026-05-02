@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import {
   WILDCARD_TRIGGER_TYPE,

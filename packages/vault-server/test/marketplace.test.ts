@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
 import { generateKeyPairSync, sign as nodeSign } from 'node:crypto';
 import {
@@ -20,7 +20,7 @@ import {
   signingInputForBundle,
   type MarketplaceAddress,
   type SignedBundle,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 
 /** Build a fresh ed25519 keypair + matching SignedBundle. */
 function makeBundle(opts?: {
@@ -38,7 +38,7 @@ function makeBundle(opts?: {
   const der = publicKey.export({ format: 'der', type: 'spki' }) as Buffer;
   const publicKeyRaw = der.subarray(der.length - 32);
   const address: MarketplaceAddress =
-    opts?.address ?? parseMarketplaceAddress('cir://acme/email-triage@1.0.0')!;
+    opts?.address ?? parseMarketplaceAddress('atelier://acme/email-triage@1.0.0')!;
   const payload = opts?.payload ?? { recipe: 'inbox-zero' };
   const timestamp = opts?.timestamp ?? '2026-05-02T12:00:00.000Z';
   const signingInput = signingInputForBundle({ address, payload, timestamp });
@@ -70,7 +70,7 @@ describe('parseFetchPath', () => {
   it('parses a canonical fetch path', () => {
     const out = parseFetchPath('/vault/marketplace/acme/recipe@1.0.0');
     expect(out).toEqual({
-      scheme: 'cir',
+      scheme: 'atelier',
       author: 'acme',
       persona: 'recipe',
       version: '1.0.0',

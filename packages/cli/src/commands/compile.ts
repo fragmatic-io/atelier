@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir compile <intent.json>` — offline compile producing a manifest.
+ * `atelier compile <intent.json>` — offline compile producing a manifest.
  *
- * Mirrors `apps/demo/lib/cir-server.ts` end-to-end so a developer can hit
+ * Mirrors `apps/demo/lib/atelier-server.ts` end-to-end so a developer can hit
  * the same compile path the dev server takes, without a running Next.js
  * process. Writes the produced manifest to `--out` or stdout.
  *
- *   cir compile <intent.json> [--capabilities <dir>] [--skills <dir>]
+ *   atelier compile <intent.json> [--capabilities <dir>] [--skills <dir>]
  *                             [--components <registry.json>] [--brand-kit <file>]
  *                             [--route <path>] [--app-id <id>] [--user-id <id>]
  *                             [--out <file>] [--json]
@@ -32,7 +32,7 @@ import {
   FallbackCompiler,
   GeminiCompiler,
   type CompilerService,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 import {
   BrandKitSchema,
   CapabilitySchema,
@@ -46,7 +46,7 @@ import {
   type IntentProfile,
   type Manifest,
   type Skill,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 
 import { COMPILE_USAGE } from '../usage.js';
 
@@ -90,7 +90,7 @@ export async function loadCapabilities(dir: string): Promise<Record<string, Capa
         const parsed = CapabilitySchema.parse(JSON.parse(raw));
         out[parsed.id] = parsed;
       } catch (err) {
-        console.error(`cir compile: skipping ${full}: ${(err as Error).message}`);
+        console.error(`atelier compile: skipping ${full}: ${(err as Error).message}`);
       }
     }
   }
@@ -132,7 +132,7 @@ export async function loadSkills(dir: string): Promise<Record<string, Skill>> {
         const skill: Skill = parsed.skill;
         out[skill.name] = skill;
       } catch (err) {
-        console.error(`cir compile: skipping ${full}: ${(err as Error).message}`);
+        console.error(`atelier compile: skipping ${full}: ${(err as Error).message}`);
       }
     }
   }
@@ -178,7 +178,7 @@ export async function loadIntent(path: string): Promise<IntentProfile> {
 }
 
 // ---------------------------------------------------------------------------
-// Compiler factory. Mirrors `apps/demo/lib/cir-server.ts:buildServer`.
+// Compiler factory. Mirrors `apps/demo/lib/atelier-server.ts:buildServer`.
 // ---------------------------------------------------------------------------
 
 /** Strip anything that looks like an API key from a string. Defensive only. */
@@ -190,7 +190,7 @@ export function redactApiKey(s: string): string {
 /**
  * Build a CompositeCompiler from env. When `GEMINI_API_KEY` is set, the
  * cascade is `[Gemini, Fallback]`; otherwise just `[Fallback]`. The fallback
- * here is a no-op stub (no hand-written manifests on disk for `cir compile`):
+ * here is a no-op stub (no hand-written manifests on disk for `atelier compile`):
  * the host project supplies them by injecting a different compiler via the
  * test seam. For the CLI's default offline run, the fallback throws — the
  * composite then surfaces a "no manifest available" error.
@@ -205,7 +205,7 @@ export function buildDefaultCompiler(
   const apiKey = env['GEMINI_API_KEY'];
 
   // Without a hand-written manifest store on disk, the CLI synthesizes a
-  // minimal stub manifest so `cir compile` still produces a schema-valid
+  // minimal stub manifest so `atelier compile` still produces a schema-valid
   // artifact even with no API key. The stub carries a single `EmptyState`
   // child on the requested route and is marked with `compiler_model:
   // 'cli-stub'` so consumers can tell it apart from real LLM output.
@@ -227,7 +227,7 @@ export function buildDefaultCompiler(
       routes: [
         {
           path: route,
-          title: 'CIR (offline stub)',
+          title: 'Atelier (offline stub)',
           layout: {
             component: 'EmptyState',
             props: {
@@ -367,14 +367,14 @@ export async function compileCommand(
   try {
     const result = await runCompile(opts);
     if (result.writtenTo) {
-      console.log(`cir compile: wrote ${result.writtenTo}`);
+      console.log(`atelier compile: wrote ${result.writtenTo}`);
     } else {
       console.log(result.serialized);
     }
     return 0;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`cir compile: ${redactApiKey(msg)}`);
+    console.error(`atelier compile: ${redactApiKey(msg)}`);
     return 1;
   }
 }

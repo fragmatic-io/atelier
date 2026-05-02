@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/compiler` — public surface.
+ * `@atelier/compiler` — public surface.
  *
  * The compiler service translates `(capabilities + skills + components +
  * intent + brand kit + trigger)` into a validated `Manifest`. Caching is
@@ -12,7 +12,7 @@
  *   import {
  *     CompositeCompiler, GeminiCompiler, FallbackCompiler,
  *     MemoryManifestStore, ServerManifestResolver,
- *   } from '@cir/compiler';
+ *   } from '@atelier/compiler';
  *
  *   const compiler = new CompositeCompiler([
  *     new GeminiCompiler({ apiKey: process.env.GEMINI_API_KEY! }),
@@ -32,7 +32,7 @@
  *   import {
  *     CompositeCompiler, GeminiCompiler, GenericFallbackCompiler,
  *     BudgetMeteredCompiler, InMemoryBudgetCounter, mergeCompileBudgets,
- *   } from '@cir/compiler';
+ *   } from '@atelier/compiler';
  *
  *   const counter = new InMemoryBudgetCounter();   // dev; Redis in prod
  *   const budget = mergeCompileBudgets(
@@ -75,7 +75,7 @@
  * into a refinement-mode `CompileInput` and re-prompts the SAME inner
  * compiler — typically recovering ~70% of single-shot validation
  * failures before the composite cascades. Showcase wiring lives in
- * `apps/demo-github/lib/cir-server.ts`:
+ * `apps/demo-github/lib/atelier-server.ts`:
  *
  *   const gemini = new GeminiCompiler({ apiKey, ... });   // no `validate`
  *   compilers.push(

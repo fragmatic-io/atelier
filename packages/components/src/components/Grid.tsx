@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -51,7 +51,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
 import { Card } from './Card.js';
 import { STACK_GAP_PX, type StackGap } from './Stack.js';

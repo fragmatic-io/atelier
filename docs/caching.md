@@ -1,6 +1,6 @@
 # Caching
 
-This is the heart of the framework. The single most important decision in CIR is what to cache, where, and how to invalidate it.
+This is the heart of the framework. The single most important decision in Atelier is what to cache, where, and how to invalidate it.
 
 ---
 
@@ -129,4 +129,4 @@ Sync policy:
   - On focus: revalidate stale manifests in background
 ```
 
-This is what makes CIR feel instant on subsequent visits. The first compile takes seconds; every subsequent render is sub-frame.
+This is what makes Atelier feel instant on subsequent visits. The first compile takes seconds; every subsequent render is sub-frame.

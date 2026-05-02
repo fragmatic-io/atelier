@@ -1,6 +1,6 @@
 # Why This Addendum Exists
 
-The core CIR framework is render-target-agnostic in principle, but its examples assume web/native clients, route-based navigation, and a human user with persistent identity. Chat and agent contexts differ in five ways that matter for production:
+The core Atelier framework is render-target-agnostic in principle, but its examples assume web/native clients, route-based navigation, and a human user with persistent identity. Chat and agent contexts differ in five ways that matter for production:
 
 1. **Render surface is a conversation, not a route.** UI is rendered inline in messages, not on persistent pages. Layout primitives are different.
 
@@ -10,7 +10,7 @@ The core CIR framework is render-target-agnostic in principle, but its examples 
 
 4. **Triggers are turn-based, not invalidation-based.** Every user message is a potential trigger. Every tool call result is a potential trigger.
 
-5. **Token economics are dominated by context, not compilation.** A long conversation can spend more tokens on context than the entire CIR compilation pipeline. Different optimization strategies apply.
+5. **Token economics are dominated by context, not compilation.** A long conversation can spend more tokens on context than the entire Atelier compilation pipeline. Different optimization strategies apply.
 
 This document and its sibling chapters address each of these explicitly.
 

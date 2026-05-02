@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Behavioral pattern detector — the Phase 4 plug-point.
  *
@@ -17,7 +17,7 @@
  * in the package README.
  */
 
-import type { AppId, ManifestId, Trigger, UserId } from '@cir/schemas';
+import type { AppId, ManifestId, Trigger, UserId } from '@atelier/schemas';
 
 /**
  * A single observed user action. The detector receives a stream of these

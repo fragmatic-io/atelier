@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * GET /api/cir/audit-events — snapshot of the last N audit events from the
  * server's StreamingAuditSink.
@@ -10,7 +10,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getCirServer } from '@/lib/cir-server';
+import { getCirServer } from '@/lib/atelier-server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

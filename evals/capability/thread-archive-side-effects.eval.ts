@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Capability eval: `thread.archive` declares the right side effects and
  * confirmation policy.
@@ -11,7 +11,7 @@
  *  - declare `permissions: ['thread:write']`
  */
 
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import { CAPABILITIES } from '../../apps/demo/lib/fake-capabilities';
 
 export default defineEval({

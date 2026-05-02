@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest fetcher — HTTP client for the Manifest Store.
  *
@@ -16,7 +16,7 @@
  * unsafe characters survive the round trip.
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import type { ManifestCacheKey } from './cache.js';
 
 export interface ManifestFetcherOptions {

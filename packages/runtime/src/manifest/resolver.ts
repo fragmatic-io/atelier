@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest resolver — cache-first lookup, fetch on miss, optional policy
  * validation, audit on every transition.
@@ -22,7 +22,7 @@
  *      Today, fetch errors bubble through.
  */
 
-import type { AuditEvent, Manifest } from '@cir/schemas';
+import type { AuditEvent, Manifest } from '@atelier/schemas';
 import type { AuditSink } from '../audit/emit.js';
 import { NoopAuditSink } from '../audit/emit.js';
 import { isoNow, type Clock } from '../types.js';

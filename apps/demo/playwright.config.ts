@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -7,8 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
  * port 3100 (off the standard 3000 to avoid collision with a user's running
  * instance) and waits for `/today` to respond before tests start.
  *
- * Run locally: `pnpm --filter @cir/demo e2e`
- * Browser binary needs `pnpm --filter @cir/demo exec playwright install chromium`
+ * Run locally: `pnpm --filter @atelier/demo e2e`
+ * Browser binary needs `pnpm --filter @atelier/demo exec playwright install chromium`
  * once per machine; we don't run E2E in CI in Phase 4d (would require either
  * caching the browser binary or accepting a ~3min download per CI run).
  */

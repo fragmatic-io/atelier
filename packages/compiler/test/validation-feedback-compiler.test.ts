@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await -- stub compilers must be Promise-returning to satisfy CompilerService.compile; not every stub awaits */
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the Wave C / Phase C-1 surface:
  *
@@ -29,7 +29,7 @@
  *   - a misbehaving `onRetry` handler does not poison the compile path
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import { describe, expect, it, vi } from 'vitest';
 import { CompositeCompiler } from '../src/composite-compiler.js';
 import {

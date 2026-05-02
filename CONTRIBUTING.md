@@ -1,12 +1,12 @@
-# Contributing to CIR
+# Contributing to Atelier
 
-Welcome. CIR — **Capability · Intent · Render** — is a production architecture for dynamic software interfaces. Before you write a single line, read [`ETHOS.md`](ETHOS.md). The ten principles answer most design questions you will run into; the ones they don't deserve a discussion in an issue, not a unilateral patch.
+Welcome. Atelier — **Capability · Intent · Render** — is a production architecture for dynamic software interfaces. Before you write a single line, read [`ETHOS.md`](ETHOS.md). The ten principles answer most design questions you will run into; the ones they don't deserve a discussion in an issue, not a unilateral patch.
 
 This document covers the mechanics. The substance — how to think about capabilities, skills, intent, manifests, triggers — lives in [`ETHOS.md`](ETHOS.md), [`AGENTS.md`](AGENTS.md), and [`docs/`](docs/).
 
 ## Dev setup
 
-CIR uses Node 22 and pnpm 10. The repo pins both.
+Atelier uses Node 22 and pnpm 10. The repo pins both.
 
 ```bash
 # Use the pinned Node version (.nvmrc).
@@ -52,7 +52,7 @@ Keep branches scoped. A branch that touches a capability schema, a runtime compo
 
 ## Commits
 
-CIR uses [Conventional Commits](https://www.conventionalcommits.org/). The commit-msg hook enforces the format, so you'll find out fast if you forget.
+Atelier uses [Conventional Commits](https://www.conventionalcommits.org/). The commit-msg hook enforces the format, so you'll find out fast if you forget.
 
 Conventional commit format is enforced in three places: the local `commit-msg` hook (per-commit), the `.github/workflows/commitlint.yml` action (validates the commit range AND the PR title on every push), and the local `pre-push` hook running `pnpm validate:fast` (everything except tests). The full test suite runs in CI.
 
@@ -106,7 +106,7 @@ Don't write UI for a new capability. UI is generated. If you find yourself reach
 
 ## License
 
-CIR is licensed under the [MIT License](LICENSE). By submitting a contribution, you agree that your contribution is licensed under the same terms. The [`NOTICE`](NOTICE) file records the project's attribution; preserve it in derivative works.
+Atelier is licensed under the [MIT License](LICENSE). By submitting a contribution, you agree that your contribution is licensed under the same terms. The [`NOTICE`](NOTICE) file records the project's attribution; preserve it in derivative works.
 
 ## Code of Conduct
 

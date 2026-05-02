@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Brand kit (Octant) sanity tests for `apps/demo-github`.
  *
@@ -17,7 +17,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { BrandKitSchema } from '@cir/schemas';
+import { BrandKitSchema } from '@atelier/schemas';
 import {
   DEMO_GITHUB_BRAND_KIT,
   FONT_STACK_MONO_OCTANT,

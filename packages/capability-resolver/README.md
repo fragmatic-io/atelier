@@ -1,4 +1,4 @@
-# `@cir/capability-resolver`
+# `@atelier/capability-resolver`
 
 Capability scoping for the C-2 `ToolUsingCompiler` (Wave 10 / S-1; also tracked as Wave C / Phase C-3).
 
@@ -9,10 +9,10 @@ Past ~200 capabilities, stuffing every schema into the cold prompt no longer fit
 This package ships:
 
 - `CapabilityResolver` — abstract scoping interface.
-- `SubstringCapabilityResolver` — fast / free baseline. Same logic as `@cir/compiler`'s `fallbackFindCapability` but tunable + properly tested.
+- `SubstringCapabilityResolver` — fast / free baseline. Same logic as `@atelier/compiler`'s `fallbackFindCapability` but tunable + properly tested.
 - `TwoStageCapabilityResolver` — production. Stage 1 calls a tiny model (Gemini Flash by default) on 1-line registry summaries and returns the top-K capability ids. Stage 2 is the host's existing primary compiler.
 - `MemoryScopingCache` — in-memory cache keyed by `(userId, appId, route, intentHash)`.
-- `semanticSearchFromResolver` / `semanticSearchFromLookup` — bridge to `@cir/compiler`'s `SemanticSearch` seam.
+- `semanticSearchFromResolver` / `semanticSearchFromLookup` — bridge to `@atelier/compiler`'s `SemanticSearch` seam.
 
 ## When to use which
 
@@ -29,8 +29,8 @@ import {
   SubstringCapabilityResolver,
   TwoStageCapabilityResolver,
   semanticSearchFromResolver,
-} from '@cir/capability-resolver';
-import { ToolUsingCompiler, GeminiAgentClient } from '@cir/compiler';
+} from '@atelier/capability-resolver';
+import { ToolUsingCompiler, GeminiAgentClient } from '@atelier/compiler';
 
 const resolver = process.env.CIR_CAPABILITY_SCOPING_ENABLED === '1'
   ? new TwoStageCapabilityResolver({
@@ -64,4 +64,4 @@ Stage-1 failures (LLM error, malformed reply, abort) cascade automatically to a 
 
 ## Cost discipline
 
-Stage-1 calls are real LLM calls. Pass `recordTokens` to attribute them to your `BudgetCounter` so they count against `max_tokens_per_day` / `max_calls_per_hour`. The resolver does not enforce budgets itself — that's `@cir/compiler`'s `BudgetMeteredCompiler`'s job.
+Stage-1 calls are real LLM calls. Pass `recordTokens` to attribute them to your `BudgetCounter` so they count against `max_tokens_per_day` / `max_calls_per_hour`. The resolver does not enforce budgets itself — that's `@atelier/compiler`'s `BudgetMeteredCompiler`'s job.

@@ -2,8 +2,8 @@
 import './setup.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, waitFor } from '@testing-library/react';
-import { buildRenderPlan } from '@cir/runtime';
-import { MapComponentRegistry } from '@cir/runtime/testing';
+import { buildRenderPlan } from '@atelier/runtime';
+import { MapComponentRegistry } from '@atelier/runtime/testing';
 import { RenderNode, __resetMissingBindingWarnings } from '../src/render/render-node.js';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import { buildTestServices } from '../src/testing/build-test-services.js';

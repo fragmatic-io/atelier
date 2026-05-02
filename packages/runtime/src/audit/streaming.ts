@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * StreamingAuditSink — buffered ring-buffer sink with subscriber callbacks.
  *
- * Used to feed live audit events to the `<DebugPanel>` UI in `@cir/react`,
+ * Used to feed live audit events to the `<DebugPanel>` UI in `@atelier/react`,
  * and to expose the last N events via an HTTP endpoint for tools/dashboards.
  *
  * The buffer is bounded; oldest entries drop when full. Subscribe at any
@@ -12,7 +12,7 @@
  * want a snapshot + live tail, not duplicate processing).
  */
 
-import type { AuditEvent } from '@cir/schemas';
+import type { AuditEvent } from '@atelier/schemas';
 import type { AuditSink } from './emit.js';
 
 export interface StreamingAuditSinkOptions {

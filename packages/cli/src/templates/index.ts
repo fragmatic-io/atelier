@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Inline string templates used by `cir init`. Kept as plain string-returning
+ * Inline string templates used by `atelier init`. Kept as plain string-returning
  * functions (no mustache / handlebars) to match the rest of the repo's
  * "no UX libraries" stance.
  *
@@ -49,7 +49,7 @@ export default function Page() {
     <main style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
       <h1>${ctx.appName}</h1>
       <p>
-        Welcome to your new CIR app. Edit <code>app/page.tsx</code> and start
+        Welcome to your new Atelier app. Edit <code>app/page.tsx</code> and start
         composing capabilities, skills, and components.
       </p>
       <ul>
@@ -75,12 +75,12 @@ import type { ReactNode } from 'react';
 // <DebugPanel> surfaces a live audit stream + last-compiled-from info in dev.
 // It expects a \`sink\` prop wired to your StreamingAuditSink (typically the
 // same one passed to <CirRuntime>'s \`services.audit\`). For terminal-side
-// observability while you're hacking, run \`cir dev --tail\` in another shell.
-import { DebugPanel } from '@cir/react/debug';
+// observability while you're hacking, run \`atelier dev --tail\` in another shell.
+import { DebugPanel } from '@atelier/react/debug';
 
 export const metadata = {
-  title: 'CIR app',
-  description: 'A new CIR app',
+  title: 'Atelier app',
+  description: 'A new Atelier app',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -151,14 +151,14 @@ export function tailwindConfigTemplate(): string {
   return `// SPDX-License-Identifier: MIT
 /** @type {import('tailwindcss').Config} */
 const config = {
-  // CIR mirrors the user's intent profile color_mode onto
+  // Atelier mirrors the user's intent profile color_mode onto
   // <html data-color-mode>. The 'class' fallback covers hosts that toggle
   // class="dark" themselves; either selector enables Tailwind's dark: utilities.
   darkMode: ['class', '[data-color-mode="dark"]'],
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
-    './node_modules/@cir/components/dist/**/*.js',
+    './node_modules/@atelier/components/dist/**/*.js',
   ],
   theme: {
     extend: {
@@ -206,7 +206,7 @@ coverage
 export function readmeTemplate(ctx: InitContext): string {
   return `# ${ctx.appName}
 
-A new CIR app, scaffolded by \`cir init\`.
+A new Atelier app, scaffolded by \`atelier init\`.
 
 ## Getting started
 
@@ -220,12 +220,12 @@ pnpm dev
 - \`app/\` — Next.js 15 App Router pages.
 - \`capabilities/\` — capability JSON artifacts.
 - \`skills/\` — skill markdown bundles.
-- \`components/\` — your project's component overrides (use \`cir add\` to copy baselines).
+- \`components/\` — your project's component overrides (use \`atelier add\` to copy baselines).
 
-See \`docs/\` in the [CIR repo](https://github.com/fragmatic-io/cir) for more.
+See \`docs/\` in the [Atelier repo](https://github.com/fragmatic-io/atelier) for more.
 `;
 }
 
 export function placeholderTemplate(label: string): string {
-  return `# ${label}\n\nThis directory holds CIR \`${label}\` artifacts.\nDelete this file once you add real artifacts.\n`;
+  return `# ${label}\n\nThis directory holds Atelier \`${label}\` artifacts.\nDelete this file once you add real artifacts.\n`;
 }

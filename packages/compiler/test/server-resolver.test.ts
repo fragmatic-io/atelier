@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await -- stub compiler/budget counter signatures are Promise-returning to satisfy the production interface; bodies do not always await */
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `ServerManifestResolver`. Uses `MemoryManifestStore` plus a stub
  * compiler that returns a known manifest. Covers cache miss/hit, force
@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import type { AuditEvent } from '@cir/schemas';
+import type { AuditEvent } from '@atelier/schemas';
 import { MemoryManifestStore } from '../src/manifest-store.js';
 import {
   BudgetExceededError,

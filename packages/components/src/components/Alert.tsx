@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Alert — inline announcement. `variant` is canonical; `severity` is a
  * legacy alias. Wave 6 / P-10: variants info (default), success, warning, error.
@@ -18,7 +18,7 @@
  *     opt out of the default for a bare alert without artwork.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, displayVariantClass, iconSizePx, type DisplayVariant } from './_variants.js';
 import { Icon } from './Icon.js';
 import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Stepper — standalone progress strip. Each step carries an explicit
  * `status` (`pending` / `active` / `done` / `error`) so the host can drive
@@ -11,7 +11,7 @@
  * checkmarks / connectors per step.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, stepperVariantClass, type StepperVariant } from './_variants.js';
 
 export type StepperStatus = 'pending' | 'active' | 'done' | 'error';

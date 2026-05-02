@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { defineConfig } from 'vitest/config';
 
 /**
- * CIR root Vitest configuration.
+ * Atelier root Vitest configuration.
  *
  * Workspace-aware: picks up *.test.ts / *.spec.ts under packages/ (schemas,
  * policies, evals, runtime, compiler) and the top-level scripts/ harness
@@ -24,7 +24,7 @@ import { defineConfig } from 'vitest/config';
  *    a small drop doesn't break CI but real regressions do.
  *  - Files that are intentionally untested at this phase (debug overlays,
  *    observability streaming, partially-implemented baseline policies, the
- *    fresh @cir/compiler package) are excluded from `coverage.include` rather
+ *    fresh @atelier/compiler package) are excluded from `coverage.include` rather
  *    than dragging package aggregates below the ratchet. Each exclusion
  *    carries a comment naming the phase that should re-include it.
  */
@@ -63,7 +63,7 @@ export default defineConfig({
         functions: 0,
         branches: 0,
         statements: 0,
-        // @cir/schemas: schemas are nearly all declarative and now reach 100%
+        // @atelier/schemas: schemas are nearly all declarative and now reach 100%
         // across every dimension. Ratchet aggressively — anything below this
         // means a new schema landed without tests.
         'packages/schemas/src/**/*.ts': {
@@ -72,7 +72,7 @@ export default defineConfig({
           branches: 95,
           statements: 99,
         },
-        // @cir/policies: pure-function validators. The base set lands at
+        // @atelier/policies: pure-function validators. The base set lands at
         // 96–100% once the partially-implemented `respects_brand_kit` policy
         // is excluded (see exclusions below). Ratchet to lock that in.
         'packages/policies/src/**/*.ts': {
@@ -81,7 +81,7 @@ export default defineConfig({
           branches: 95,
           statements: 97,
         },
-        // @cir/evals: orchestration with CLI + reporters; harder to fully cover
+        // @atelier/evals: orchestration with CLI + reporters; harder to fully cover
         // without spawning real processes for every flag combo. Brief said
         // leave at 90/90/80/90 (still maturing) — measured ~94/100/88/94.
         'packages/evals/src/**/*.ts': {
@@ -90,7 +90,7 @@ export default defineConfig({
           branches: 80,
           statements: 90,
         },
-        // @cir/runtime: orchestration (cache + fetch + dispatch + bus). With
+        // @atelier/runtime: orchestration (cache + fetch + dispatch + bus). With
         // `audit/streaming.ts` (Phase 4d streaming sink, no harness yet) and
         // `render/plan-types.ts` (types-only) excluded below, the rest of the
         // package sits at 97–100%. Ratchet without dragging.
@@ -100,7 +100,7 @@ export default defineConfig({
           branches: 88,
           statements: 96,
         },
-        // @cir/components: React components with happy-dom tests. Aggregates
+        // @atelier/components: React components with happy-dom tests. Aggregates
         // ~98/100/87/98 with the suite shipped in 4b. Ratchet branches up
         // moderately (variant `className` ternaries are individually covered
         // by their default path; both branches are not always hit).
@@ -110,7 +110,7 @@ export default defineConfig({
           branches: 85,
           statements: 95,
         },
-        // @cir/react: provider, hooks, render walker, confirm portal. The
+        // @atelier/react: provider, hooks, render walker, confirm portal. The
         // giant trigger-type switch in `route.tsx` adds many shallow branches
         // and pulls overall branch coverage down a few points. With the debug
         // overlays excluded (Phase 4d additions, untested), the rest of the
@@ -121,7 +121,7 @@ export default defineConfig({
           branches: 88,
           statements: 94,
         },
-        // @cir/compiler: first unit-test pass landed (Phase 5c). Six new test
+        // @atelier/compiler: first unit-test pass landed (Phase 5c). Six new test
         // files cover GeminiCompiler (with an inline GoogleGenAI fake),
         // FallbackCompiler, CompositeCompiler, MemoryManifestStore,
         // ServerManifestResolver, and the prompt builder. Aggregate measured
@@ -133,7 +133,7 @@ export default defineConfig({
           branches: 81,
           statements: 95,
         },
-        // @cir/cli (Wave 2 / track P2.5; Wave 4 P-CLI-2 added inspect,
+        // @atelier/cli (Wave 2 / track P2.5; Wave 4 P-CLI-2 added inspect,
         // compile, and dev --tail): scaffold + shell-out wrappers + the
         // unit-testable parsing/loading seams of the new commands.
         // Templates and pure shell-out wrappers (dev.ts, validate.ts,
@@ -146,7 +146,7 @@ export default defineConfig({
           branches: 70,
           statements: 83,
         },
-        // @cir/data-resolvers (Wave 6 / track P-2): pure-function adapters
+        // @atelier/data-resolvers (Wave 6 / track P-2): pure-function adapters
         // (REST, OpenAPI, GraphQL, Mock, Composite) + a SWR cache wrapper +
         // a small filter parser. Aggregate measured ~99/91/100/99. Branches
         // are dragged a bit by `openapi.ts`'s `exactOptionalPropertyTypes`
@@ -170,7 +170,7 @@ export default defineConfig({
         // tested via spawned subprocess specs (see packages/evals/test/cli.test.ts)
         // rather than unit tests, so v8 reports 0% line coverage and would
         // drag aggregates below their per-file ratchets. The standalone
-        // @cir/cli package (packages/cli/) is unit-tested directly and stays
+        // @atelier/cli package (packages/cli/) is unit-tested directly and stays
         // included.
         'packages/schemas/src/cli/**',
         'packages/evals/src/cli/**',
@@ -191,7 +191,7 @@ export default defineConfig({
         // Brand-kit baseline policy is partially implemented — only the
         // detection scaffold is wired; rule evaluation lands in Phase 5b/c.
         'packages/policies/src/baseline/respects_brand_kit.ts',
-        // @cir/cli scaffold: inline templates are pure data (no executable
+        // @atelier/cli scaffold: inline templates are pure data (no executable
         // logic worth measuring) and dev/validate/components-sync are
         // shell-out wrappers that can't be unit-tested without spawning real
         // pnpm/next/tsx subprocesses. Re-include in Wave 3+ if we add an

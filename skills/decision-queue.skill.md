@@ -62,7 +62,7 @@ known_failure_modes:
 
 # Decision queue
 
-The decision-queue is the canonical "inbox-zero" surface in CIR. It is
+The decision-queue is the canonical "inbox-zero" surface in Atelier. It is
 not a list of everything — it is a list of items that explicitly require
 a human decision today, classified by urgency, with one obvious next
 action per row. The skill exists to keep the compiler from regressing

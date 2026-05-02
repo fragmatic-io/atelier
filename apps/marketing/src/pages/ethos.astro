@@ -1,6 +1,6 @@
 ---
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 interface Principle {
@@ -17,7 +17,7 @@ const principles: Principle[] = [
     num: 1,
     title: 'Dynamic over static',
     body:
-      'UI is composed at runtime by the compiler, not authored as static React pages. A demo that renders the same DOM whether the LLM ran or not is not demonstrating CIR.',
+      'UI is composed at runtime by the compiler, not authored as static React pages. A demo that renders the same DOM whether the LLM ran or not is not demonstrating Atelier.',
   },
   {
     num: 2,
@@ -71,7 +71,7 @@ const principles: Principle[] = [
     num: 10,
     title: 'Demos are existence proofs',
     body:
-      'Every demo must demonstrate something only CIR can do. If a demo could be implemented as a static React app with the same UX, it does not belong as a CIR demo.',
+      'Every demo must demonstrate something only Atelier can do. If a demo could be implemented as a static React app with the same UX, it does not belong as a Atelier demo.',
   },
   {
     num: 11,
@@ -85,13 +85,13 @@ const principles: Principle[] = [
 
 <BaseLayout
   title="Ethos"
-  description="The eleven principles every CIR implementation honors."
+  description="The eleven principles every Atelier implementation honors."
   pageKey="ethos"
 >
   <h1>Ethos</h1>
   <blockquote>
     <p>
-      <strong>CIR's core thesis:</strong> a UI's <em>layout</em> is a runtime artifact. A compiler
+      <strong>Atelier's core thesis:</strong> a UI's <em>layout</em> is a runtime artifact. A compiler
       takes a recipe (declarative app description), the user's intent profile, and the granted
       capabilities, and produces a manifest tree. The runtime walks the tree against a registered
       binding catalog. Policies validate the tree before render.

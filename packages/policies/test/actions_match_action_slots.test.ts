@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the `actions_match_action_slots` baseline policy.
  *
@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { actionsMatchActionSlots } from '../src/baseline/actions_match_action_slots.js';
-import type { LayoutNode, Manifest } from '@cir/schemas';
+import type { LayoutNode, Manifest } from '@atelier/schemas';
 import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(

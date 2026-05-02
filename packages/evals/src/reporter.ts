@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Reporters for the eval runner.
  *
@@ -66,7 +66,7 @@ function formatValue(value: unknown): string {
 /** Human-friendly streaming reporter. */
 export const ConsoleReporter: Reporter = {
   onStart(plan: { total: number }): void {
-    write(kleur.dim(`cir-evals: running ${String(plan.total)} eval(s)`));
+    write(kleur.dim(`atelier-evals: running ${String(plan.total)} eval(s)`));
   },
   onResult(result: EvalResult): void {
     const tag = glyphFor(result.status);

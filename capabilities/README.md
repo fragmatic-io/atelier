@@ -1,6 +1,6 @@
 # capabilities/
 
-Typed action and data definitions — the **public surface** of a CIR app. Each capability declares its input, output, side effects, permissions, confirmation policy, rate limit, and reversibility. Capabilities are signed, versioned, and edge-cached. The compiler reads them; the runtime never invokes them directly.
+Typed action and data definitions — the **public surface** of a Atelier app. Each capability declares its input, output, side effects, permissions, confirmation policy, rate limit, and reversibility. Capabilities are signed, versioned, and edge-cached. The compiler reads them; the runtime never invokes them directly.
 
 ## Files
 
@@ -27,7 +27,7 @@ Every capability MUST honestly declare `side_effects`, `permissions`, and `rever
 
 ## Importing from OpenAPI
 
-`pnpm cir import openapi <spec>` produces a tree of capabilities under `capabilities/<tag>/`, each one stamped with an `_review` envelope:
+`pnpm atelier import openapi <spec>` produces a tree of capabilities under `capabilities/<tag>/`, each one stamped with an `_review` envelope:
 
 ```json
 "_review": {
@@ -37,7 +37,7 @@ Every capability MUST honestly declare `side_effects`, `permissions`, and `rever
 }
 ```
 
-`pnpm exec cir-schemas validate-data --strict` fails on any draft, so unreviewed imports cannot land. Flip `status` to `reviewed` once a human has audited side effects, permissions, confirmation level, and reversibility.
+`pnpm exec atelier-schemas validate-data --strict` fails on any draft, so unreviewed imports cannot land. Flip `status` to `reviewed` once a human has audited side effects, permissions, confirmation level, and reversibility.
 
 ## What ships in this repo
 

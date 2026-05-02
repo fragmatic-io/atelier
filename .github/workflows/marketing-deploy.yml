@@ -1,6 +1,6 @@
 name: marketing-deploy
 
-# Builds the @cir/marketing Astro site and deploys it to GitHub Pages.
+# Builds the @atelier/marketing Astro site and deploys it to GitHub Pages.
 #
 # REQUIRES (one-time, repo-owner action):
 #   Settings → Pages → Source: "GitHub Actions"
@@ -52,11 +52,11 @@ jobs:
       - name: Build site
         env:
           # `actions/configure-pages` sets `base_path` to the project's Pages
-          # base (e.g. /cir for fragmatic-io.github.io/cir, or / for a custom
-          # domain). Pass it through so Astro emits matching absolute URLs.
+          # base (e.g. /atelier for fragmatic-io.github.io/atelier, or / for a
+          # custom domain). Pass it through so Astro emits matching absolute URLs.
           MARKETING_BASE: ${{ steps.pages.outputs.base_path }}
           MARKETING_SITE: ${{ steps.pages.outputs.origin }}
-        run: pnpm --filter @cir/marketing build
+        run: pnpm --filter @atelier/marketing build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

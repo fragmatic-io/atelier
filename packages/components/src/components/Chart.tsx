@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Chart — pure SVG bar / line / area chart. No third-party charting library.
  *
@@ -18,7 +18,7 @@
  * purpose so a richer impl can land without breaking manifest authors.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, chartVariantClass, type ChartVariant } from './_variants.js';
 
 export interface ChartDatum {

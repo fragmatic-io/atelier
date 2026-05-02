@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -15,7 +15,7 @@
  * portal renders. Subsequent requests sit invisibly until the head resolves.
  */
 
-import type { ConfirmationDecision, ConfirmationRequest } from '@cir/runtime';
+import type { ConfirmationDecision, ConfirmationRequest } from '@atelier/runtime';
 
 export interface PendingConfirmation {
   request: ConfirmationRequest;

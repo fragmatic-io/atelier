@@ -12,7 +12,7 @@ AGENT ROLES
   on-behalf (acting for a human)
   autonomous (no human in loop)
 
-CIR ⊃ MCP
+Atelier ⊃ MCP
   Capability ⊃ MCP tool
   Skill = MCP's missing layer
   Component = MCP Apps UI resource (with catalog + composition)

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { AuditEvent, Capability } from '@cir/schemas';
+import type { AuditEvent, Capability } from '@atelier/schemas';
 import { ActionDispatcher } from '../../src/actions/dispatcher.js';
 import type { AuditSink } from '../../src/audit/emit.js';
 import {

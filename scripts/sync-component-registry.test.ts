@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `scripts/sync-component-registry.ts`.
  *
@@ -16,7 +16,7 @@ import { existsSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { ComponentRegistrySchema, CompositionRulesSchema } from '@cir/schemas';
+import { ComponentRegistrySchema, CompositionRulesSchema } from '@atelier/schemas';
 
 // Import without an extension — tsx resolves the `.ts` source at runtime,
 // and the root tsconfig (`./tsconfig.json`) picks up scripts/** without

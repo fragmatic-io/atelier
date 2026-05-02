@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * SSE endpoint. The demo's `SseTriggerTransport` connects here and listens
  * for trigger events broadcast by `/api/triggers/publish`.

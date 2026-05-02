@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `persisted-state` — tiny SSR-safe helpers for stashing small bits of
  * UI state in `localStorage`. Wave 7b lands this for `<Sidebar>`'s

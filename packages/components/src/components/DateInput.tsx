@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * DateInput — labelled `<input type="date">`. Value is the ISO-8601 calendar
  * date string `'YYYY-MM-DD'` or `''` for empty. We use the platform widget
@@ -10,7 +10,7 @@
  * `aria-invalid` and surfaces an inline error message via `aria-describedby`.
  */
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type DateInputVariant = InputVariant;

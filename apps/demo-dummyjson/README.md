@@ -1,4 +1,4 @@
-# `@cir/demo-dummyjson` — lens-switching e-commerce showcase
+# `@atelier/demo-dummyjson` — lens-switching e-commerce showcase
 
 The DummyJSON catalog demo. The pitch:
 
@@ -48,7 +48,7 @@ folded into the compiler's system prompt + enforced by the
   `rounded-cir-lg`, `shadow-cir-md`, `text-cir-primary`. Dark mode
   toggles via `data-color-mode="dark"` on `<html>`.
 
-This is one of three reference apps that exercise CIR end-to-end. Where
+This is one of three reference apps that exercise Atelier end-to-end. Where
 `apps/demo` covers email triage and `apps/demo-github` covers
 real-mutation review, **`apps/demo-dummyjson` is the personalisation
 showcase**: the same `/browse` route renders three distinct manifests
@@ -99,7 +99,7 @@ The repo's `pnpm demo` orchestrates the apps/demo email-triage app.
 This demo is currently launched directly:
 
 ```bash
-pnpm --filter @cir/demo-dummyjson dev
+pnpm --filter @atelier/demo-dummyjson dev
 ```
 
 …or via the dispatcher script flag:

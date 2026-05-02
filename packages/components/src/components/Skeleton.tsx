@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -15,7 +15,7 @@
  * layout-only (no slot for children).
  */
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
 
 export type SkeletonRadius = 'sm' | 'md' | 'full';

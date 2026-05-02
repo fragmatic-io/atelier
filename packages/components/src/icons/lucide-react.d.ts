@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 //
 // Ambient type declarations for lucide-react's per-icon subpath imports.
 // lucide-react v1.x ships TypeScript declarations only for its top-level

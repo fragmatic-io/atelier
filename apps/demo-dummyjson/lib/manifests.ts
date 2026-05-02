@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Hand-written manifests for the dummyjson catalog demo. The
  * `FallbackCompiler` calls `manifestForRoute` on a cache miss; without a
@@ -13,7 +13,7 @@
  *
  * Marketplace pivot — closing chapter. All three demos now ship zero
  * custom bindings; the per-route bodies compose pure baseline primitives
- * from `@cir/components`:
+ * from `@atelier/components`:
  *
  *   - `/browse` — `<Grid data={products}>` over a single `<Card>` template
  *     child. The Grid threads each item as the Card's `data` prop; the
@@ -59,8 +59,8 @@
  *     gains the same data-driven step body wiring `<Wizard>` already has.
  */
 
-import type { LayoutNode, Manifest } from '@cir/schemas';
-import type { Density } from '@cir/components';
+import type { LayoutNode, Manifest } from '@atelier/schemas';
+import type { Density } from '@atelier/components';
 
 const COMPILED_FROM = {
   capability_version: '0.1.0',
@@ -155,7 +155,7 @@ function chromeHeader(activePath: string): LayoutNode {
 // was a band-aid: the data-bound nodes already raise an inline undo
 // toast, AND the runtime mounts a global `<UndoToast>` at the app root.
 // Phase 2 #5 lets the host declare those services as
-// `AmbientPolicySatisfier`s in `cir-providers.tsx`, so the policy clears
+// `AmbientPolicySatisfier`s in `atelier-providers.tsx`, so the policy clears
 // the obligation without an in-manifest anchor. The constant is gone;
 // the manifests below are the actual rendered tree.
 

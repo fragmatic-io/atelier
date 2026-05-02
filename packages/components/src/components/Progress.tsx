@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Progress — accessible progress indicator. Variants (Wave 6 / P-10):
  * bordered, elevated, ghost (default), tinted.
  */
 import { useId, type CSSProperties, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
 
 export type ProgressVariant = FeedbackVariant;

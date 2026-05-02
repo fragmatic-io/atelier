@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 
 'use client';
 /**
@@ -7,7 +7,7 @@
  * (Wave 6 / P-10): bordered (default), elevated, ghost, tinted.
  */
 import { useState, type ReactNode, type SyntheticEvent } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
 export interface AccordionItem {

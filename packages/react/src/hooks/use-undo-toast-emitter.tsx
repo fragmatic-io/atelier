@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -13,14 +13,14 @@
  *
  * Mirrors the shape of `useReactConfirmation()` (same external-store +
  * imperative-callback + paired `<Portal>` pattern) so hosts that already
- * mount `<Portal />` in `cir-providers.tsx` can mount `<Sink />` next to
+ * mount `<Portal />` in `atelier-providers.tsx` can mount `<Sink />` next to
  * it without any new mental model.
  *
  * The sink renders an inline minimal undo affordance (countdown + Undo
- * button + dismiss). Hosts that want the canonical `@cir/components`
+ * button + dismiss). Hosts that want the canonical `@atelier/components`
  * `<Toast variant="undo">` can import that component and assemble their
- * own sink — this hook's sink is intentionally dep-free so `@cir/react`
- * stays a pure adapter (no runtime dependency on `@cir/components`).
+ * own sink — this hook's sink is intentionally dep-free so `@atelier/react`
+ * stays a pure adapter (no runtime dependency on `@atelier/components`).
  *
  * Why an external store? `withUndo()` calls `emitter.show()` from outside
  * React (the dispatcher's async path). Calling React state setters from
@@ -35,7 +35,7 @@ import type {
   UndoResult,
   UndoToastEmitter,
   UndoToastNotice,
-} from '@cir/runtime';
+} from '@atelier/runtime';
 import { useCir } from './use-cir.js';
 
 interface ActiveNotice {
@@ -233,7 +233,7 @@ interface UndoToastItemProps {
 
 /**
  * Inline undo toast — message + Undo button + dismiss + countdown bar.
- * Visual mirror of `<Toast variant="undo">` from `@cir/components` but
+ * Visual mirror of `<Toast variant="undo">` from `@atelier/components` but
  * without the dep. Hosts that want the canonical look swap their own
  * sink in by calling `withUndo()` with a custom emitter.
  */

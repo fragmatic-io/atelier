@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Intent profile store for the dummyjson catalog demo.
  *
@@ -23,9 +23,9 @@ import {
   VaultUnauthorizedError,
   VaultUnreachableError,
   type VaultTokenStorage,
-} from '@cir/vault-client';
-import { IntentProfileSchema, type IntentProfile } from '@cir/schemas';
-import type { Density } from '@cir/components';
+} from '@atelier/vault-client';
+import { IntentProfileSchema, type IntentProfile } from '@atelier/schemas';
+import type { Density } from '@atelier/components';
 
 /** localStorage key for this demo's profile slot. Namespaced. */
 export const INTENT_STORAGE_KEY = 'cir.demo-dummyjson.intent';

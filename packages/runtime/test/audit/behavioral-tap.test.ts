@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the `BehavioralTap` adapter — wires `StreamingAuditSink`
  * `action.executed` events into a `BehavioralPatternDetector.observe()`.
@@ -13,8 +13,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { BehavioralPatternDetector, DetectedPattern, ObservedAction } from '@cir/policies';
-import type { AuditEvent, Trigger } from '@cir/schemas';
+import type { BehavioralPatternDetector, DetectedPattern, ObservedAction } from '@atelier/policies';
+import type { AuditEvent, Trigger } from '@atelier/schemas';
 import { StreamingAuditSink } from '../../src/audit/streaming.js';
 import {
   BehavioralTap,

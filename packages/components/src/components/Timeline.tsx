@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Timeline — vertical event timeline rendered as an `<ol>` with one `<li>`
  * per entry. Each entry surfaces a date, a connector dot, and the entry
@@ -11,7 +11,7 @@
  * "2d ago", absolute, locale-aware) and passes the resulting string in.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, timelineVariantClass, type TimelineVariant } from './_variants.js';
 
 export type TimelineStatus = 'past' | 'current' | 'future';

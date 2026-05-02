@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -26,11 +26,11 @@ describe('runInit()', () => {
     }
   });
 
-  it('emits the DebugPanel import in app/layout.tsx with cir dev --tail hint', async () => {
+  it('emits the DebugPanel import in app/layout.tsx with atelier dev --tail hint', async () => {
     await runInit({ dir: '.', cwd: tmp });
     const layout = await readFile(join(tmp, 'app/layout.tsx'), 'utf8');
-    expect(layout).toContain("import { DebugPanel } from '@cir/react/debug';");
-    expect(layout).toContain('cir dev --tail');
+    expect(layout).toContain("import { DebugPanel } from '@atelier/react/debug';");
+    expect(layout).toContain('atelier dev --tail');
   });
 
   it('produces a parseable package.json with the dir name', async () => {
@@ -54,7 +54,7 @@ describe('runInit()', () => {
     await expect(runInit({ dir: '.', cwd: tmp, strict: true })).rejects.toThrow(/strict mode/);
   });
 
-  it('emits a Tailwind config wired for CIR dark-mode mirroring (Vis-2)', async () => {
+  it('emits a Tailwind config wired for Atelier dark-mode mirroring (Vis-2)', async () => {
     await runInit({ dir: '.', cwd: tmp });
     const tw = await readFile(join(tmp, 'tailwind.config.mjs'), 'utf8');
     // The selector form covers the runtime's <html data-color-mode="dark">
@@ -62,9 +62,9 @@ describe('runInit()', () => {
     expect(tw).toContain('darkMode');
     expect(tw).toContain('[data-color-mode="dark"]');
     expect(tw).toContain('class');
-    // Tailwind needs to scan the @cir/components dist output to pick up the
+    // Tailwind needs to scan the @atelier/components dist output to pick up the
     // utility classes we ship from `_variants.ts`.
-    expect(tw).toContain('@cir/components');
+    expect(tw).toContain('@atelier/components');
   });
 
   it('bridges typography depth tokens to CSS variables (Vis-1)', async () => {

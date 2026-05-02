@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * GeminiCompiler — calls Google's Gemini API (via @google/genai) to produce
  * manifests. Tier-routed: cold compiles use a heavier model (default
@@ -9,14 +9,14 @@
  * reason injected into the prompt.
  *
  * The compiler emits structured JSON via Gemini's `responseSchema`. We pass
- * the manifest's JSON Schema (codegen'd by `@cir/schemas` toJsonSchema()) as
+ * the manifest's JSON Schema (codegen'd by `@atelier/schemas` toJsonSchema()) as
  * the response schema; Gemini honors it. If the response still fails Zod
  * validation, that's a CompilerOutputError the resolver can catch and retry
  * or fall back from.
  */
 
 import { GoogleGenAI, type GenerateContentConfig } from '@google/genai';
-import { ManifestSchema, type Manifest } from '@cir/schemas';
+import { ManifestSchema, type Manifest } from '@atelier/schemas';
 import { COMPILER_SYSTEM_PROMPT, COMPILER_SYSTEM_PROMPT_VERSION } from './prompts/system.js';
 import { buildPromptContext } from './prompts/builder.js';
 import {

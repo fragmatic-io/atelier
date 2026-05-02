@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 import { describe, expect, it, vi } from 'vitest';
 import { RestDataResolver, buildRestUrl } from '../src/rest.js';

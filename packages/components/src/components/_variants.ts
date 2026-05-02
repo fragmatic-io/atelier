@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Shared variant utilities for `@cir/components`.
+ * Shared variant utilities for `@atelier/components`.
  *
  * The package ships zero CSS — components are styled by host adapters via
  * `data-cir-component` and `data-variant` selectors. Even so, components
@@ -26,7 +26,7 @@
  * strategy combined with toggling `class="dark"` on `<html>`) get a working
  * pair-tested dark theme out of the box. The runtime mirrors
  * `intent.global_preferences.color_mode` onto `<html data-color-mode>` from
- * `@cir/react`'s `<CirRoute>` so the selector matches automatically.
+ * `@atelier/react`'s `<CirRoute>` so the selector matches automatically.
  *
  * Hosts that do NOT ship Tailwind ignore the unknown classes — both the
  * light and dark utilities are no-ops in that case.

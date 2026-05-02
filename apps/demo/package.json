@@ -1,5 +1,5 @@
 {
-  "name": "@cir/demo",
+  "name": "@atelier/demo",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -13,16 +13,16 @@
     "e2e:install": "playwright install chromium"
   },
   "dependencies": {
-    "@cir/compiler": "workspace:*",
-    "@cir/components": "workspace:*",
-    "@cir/data-resolvers": "workspace:*",
-    "@cir/keyboard": "workspace:*",
-    "@cir/policies": "workspace:*",
-    "@cir/react": "workspace:*",
-    "@cir/runtime": "workspace:*",
-    "@cir/schemas": "workspace:*",
-    "@cir/vault-client": "workspace:*",
-    "@cir/vault-server": "workspace:*",
+    "@atelier/compiler": "workspace:*",
+    "@atelier/components": "workspace:*",
+    "@atelier/data-resolvers": "workspace:*",
+    "@atelier/keyboard": "workspace:*",
+    "@atelier/policies": "workspace:*",
+    "@atelier/react": "workspace:*",
+    "@atelier/runtime": "workspace:*",
+    "@atelier/schemas": "workspace:*",
+    "@atelier/vault-client": "workspace:*",
+    "@atelier/vault-server": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

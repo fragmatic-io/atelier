@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir validate` — spawn the host project's `pnpm validate` script.
+ * `atelier validate` — spawn the host project's `pnpm validate` script.
  *
  * The CLI does not re-implement the validate chain; it shells out to pnpm.
- * Hosts inside the CIR monorepo will hit the root-level `validate` script;
+ * Hosts inside the Atelier monorepo will hit the root-level `validate` script;
  * standalone hosts can override their own `validate` script in
  * `package.json`. Wave 3+ will likely teach this command to fall back to a
  * built-in chain when no script is defined.
@@ -36,7 +36,7 @@ export function validateCommand(
       shell: false,
     });
     child.on('error', (err) => {
-      console.error(`cir validate: failed to spawn 'pnpm' — ${err.message}`);
+      console.error(`atelier validate: failed to spawn 'pnpm' — ${err.message}`);
       resolveOuter(1);
     });
     child.on('close', (code) => {

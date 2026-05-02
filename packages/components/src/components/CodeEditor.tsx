@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -15,7 +15,7 @@
  * — we count `\n` characters so empty trailing lines still render.
  */
 import { useId, useMemo, type KeyboardEvent, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type CodeEditorVariant = InputVariant;

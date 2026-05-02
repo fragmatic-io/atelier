@@ -1,8 +1,8 @@
 {
-  "name": "@cir/evals",
+  "name": "@atelier/evals",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR eval harness — discovers and runs scenario-based evals against capabilities, skills, components, and manifests",
+  "description": "Atelier eval harness — discovers and runs scenario-based evals against capabilities, skills, components, and manifests",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -11,14 +11,14 @@
     ".": "./src/index.ts"
   },
   "bin": {
-    "cir-evals": "./src/cli/index.ts"
+    "atelier-evals": "./src/cli/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/schemas": "workspace:*",
+    "@atelier/schemas": "workspace:*",
     "fast-glob": "^3.3.2",
     "kleur": "^4.1.5"
   },

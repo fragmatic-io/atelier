@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -28,7 +28,7 @@
  */
 
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import type { ActionResult, UndoResult } from '@cir/runtime';
+import type { ActionResult, UndoResult } from '@atelier/runtime';
 import { useCir } from './use-cir.js';
 import { CurrentManifestContext } from '../context/manifest-context.js';
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tier-3 manifest cache (server-side). Lives in the compiler service's
  * process. Indexed by `(user_id, app_id, route, capability_v, intent_v,
@@ -15,7 +15,7 @@
  * many users).
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 
 export interface ManifestStoreKey {
   user_id: string;

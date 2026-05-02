@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
-// ESLint 9 flat config for CIR.
+// Copyright (c) 2026 The Atelier Authors
+// ESLint 9 flat config for Atelier.
 // Project is "type": "module", so this file is ESM.
 // Uses typescript-eslint's helper to compose recommended-type-checked rules
 // with project-service-driven type information from tsconfig.base.json.

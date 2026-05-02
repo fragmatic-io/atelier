@@ -1,8 +1,8 @@
 {
-  "name": "@cir/components",
+  "name": "@atelier/components",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR baseline React component library — unstyled, semantic primitives that fit ComponentBinding",
+  "description": "Atelier baseline React component library — unstyled, semantic primitives that fit ComponentBinding",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -17,9 +17,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/keyboard": "workspace:*",
-    "@cir/runtime": "workspace:*",
-    "@cir/schemas": "workspace:*",
+    "@atelier/keyboard": "workspace:*",
+    "@atelier/runtime": "workspace:*",
+    "@atelier/schemas": "workspace:*",
     "lucide-react": "^1.14.0",
     "react-markdown": "^9.1.0",
     "rehype-sanitize": "^6.0.0",

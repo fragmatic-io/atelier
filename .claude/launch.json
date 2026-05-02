@@ -10,14 +10,14 @@
     {
       "name": "demo",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@cir/demo", "dev"],
+      "runtimeArgs": ["--filter", "@atelier/demo", "dev"],
       "port": 3000,
       "env": { "NEXT_PUBLIC_VAULT_URL": "http://localhost:4001" }
     },
     {
       "name": "demo-dummyjson",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@cir/demo-dummyjson", "dev"],
+      "runtimeArgs": ["--filter", "@atelier/demo-dummyjson", "dev"],
       "port": 3001,
       "autoPort": true,
       "env": { "NEXT_PUBLIC_VAULT_URL": "http://localhost:4001" }
@@ -25,7 +25,7 @@
     {
       "name": "demo-github",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@cir/demo-github", "dev"],
+      "runtimeArgs": ["--filter", "@atelier/demo-github", "dev"],
       "port": 3002,
       "autoPort": true,
       "env": { "NEXT_PUBLIC_VAULT_URL": "http://localhost:4001" }

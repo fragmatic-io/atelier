@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Common primitives shared across CIR schemas.
+ * Common primitives shared across Atelier schemas.
  *
  * These are the leaf-level Zod types — semver strings, identifier formats,
  * datetime stamps, enumerations — that the higher-level schemas (capability,

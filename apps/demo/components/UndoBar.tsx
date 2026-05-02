@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -7,14 +7,14 @@
  * UndoBar — runtime-ambient undo affordance for the Aurora demo.
  *
  * Marketplace pivot: this component is no longer a manifest-referenced
- * binding. It mounts at the React root (`cir-providers.tsx`) and the
+ * binding. It mounts at the React root (`atelier-providers.tsx`) and the
  * companion `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy
  * context tells `reversibility_surfaced` the obligation is covered for
  * every reversible action the runtime fires — regardless of route.
  *
  * Wave 11 / Int-8 — superseded as the PRIMARY undo path by the
  * `<Toast variant="undo">` emitter wired through `withUndo()` middleware
- * in `cir-providers.tsx`. The toast surfaces a 5-second window with a
+ * in `atelier-providers.tsx`. The toast surfaces a 5-second window with a
  * countdown bar per dispatch (Linear's pattern). This component remains
  * mounted as a STACK-BASED FALLBACK — covers the case where the user
  * dismissed the toast but still wants to walk back through the undo
@@ -28,7 +28,7 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useCir } from '@cir/react';
+import { useCir } from '@atelier/react';
 
 export function UndoBar(): React.JSX.Element {
   const { dispatcher } = useCir();
@@ -71,5 +71,5 @@ export function UndoBar(): React.JSX.Element {
 }
 
 // No `ComponentBinding` export — UndoBar is mounted ambiently in
-// `cir-providers.tsx`, not referenced from any manifest. The
+// `atelier-providers.tsx`, not referenced from any manifest. The
 // `UNDO_TOAST_AMBIENT_SATISFIER` declaration covers the policy obligation.

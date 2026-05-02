@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright (c) 2026 The CIR Authors */
+/* Copyright (c) 2026 The Atelier Authors */
 
 /*
  * Octant — the demo-github visual identity.
  *
  * Token wiring is a one-way projection from the BrandKit (lib/brand-kit.ts)
  * into CSS custom properties. We mirror everything under `--cir-*` so the
- * `@cir/components` library and the app's chrome all key off the same
+ * `@atelier/components` library and the app's chrome all key off the same
  * variables. Light is the default; dark is selected by the
  * `[data-color-mode='dark']` attribute on `<html>` (the OS preference flips
  * it on first paint via the inline script in `app/layout.tsx`).

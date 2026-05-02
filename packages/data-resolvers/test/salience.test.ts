@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `withHighSalienceEmphasis` — the Wave 7 / P-9 data-resolver
  * wrapper that auto-stamps `emphasis: 'high'` on rows for high-salience
@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { Capability, IntentProfile } from '@cir/schemas';
+import type { Capability, IntentProfile } from '@atelier/schemas';
 import { withHighSalienceEmphasis } from '../src/salience.js';
 import type { DataResolver } from '../src/types.js';
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -19,7 +19,7 @@
  * `keydown` for their own use). The `bind` call returns its own cleanup;
  * hosts call it from a `useEffect` so it tears down on unmount.
  *
- * Pairs with `<BulkActionBar>` from `@cir/components` — the canonical
+ * Pairs with `<BulkActionBar>` from `@atelier/components` — the canonical
  * Wave 7b / track Int-9 selection surface.
  */
 

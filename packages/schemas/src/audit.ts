@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Audit log event schema.
  *
  * Mirrors `/Users/vid/cir/docs/architecture.md` §Audit log. Every state
- * transition in a CIR system is recorded as one of these events:
+ * transition in a Atelier system is recorded as one of these events:
  * manifest compiled, manifest served, action executed, intent changed,
  * capability changed.
  *

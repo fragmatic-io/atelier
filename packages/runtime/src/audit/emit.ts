@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * AuditSink — caller-provided pluggable destination for `AuditEvent`s.
  *
@@ -19,7 +19,7 @@
  *  - `policy.violated` (resolver-level validation rejection)
  */
 
-import type { AuditEvent } from '@cir/schemas';
+import type { AuditEvent } from '@atelier/schemas';
 
 /**
  * A pluggable audit destination. Implementations must NOT throw; if they

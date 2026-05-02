@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/vault-server` — public surface.
+ * `@atelier/vault-server` — public surface.
  *
  * The intent vault: user-owned profile store, ed25519-signed scoped tokens,
  * scope-based read/write filtering, revocation with trigger emission. See

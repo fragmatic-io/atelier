@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
- * React context that carries the `@cir/runtime` services into the tree.
+ * React context that carries the `@atelier/runtime` services into the tree.
  *
  * The provider (`<CirRuntime>`) sets this context once at app boot. Every
  * hook (`useCir`, `useManifest`, `useDispatcher`, `useTrigger`) reads from
@@ -23,8 +23,8 @@ import type {
   ComponentRegistry,
   ManifestResolver,
   TriggerSubscription,
-} from '@cir/runtime';
-import type { BrandKit, IntentProfile, LayoutNode } from '@cir/schemas';
+} from '@atelier/runtime';
+import type { BrandKit, IntentProfile, LayoutNode } from '@atelier/schemas';
 
 /**
  * Phase 2 #4 — Resolver fallback contract.

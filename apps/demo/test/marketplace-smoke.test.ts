@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Marketplace integration smoke (Wave 8 / V-6).
  *
  * Drives an in-process publish → fetch → verify round trip against the
- * real `@cir/vault-server` marketplace handler + the real
- * `@cir/vault-client` `MarketplaceClient`. No sockets, no env-flag gating
+ * real `@atelier/vault-server` marketplace handler + the real
+ * `@atelier/vault-client` `MarketplaceClient`. No sockets, no env-flag gating
  * at the test layer — the test owns its own tiny vault service.
  *
  * The demo's runtime gating (`CIR_MARKETPLACE_ENABLED=1`) is independent
@@ -14,12 +14,12 @@
  */
 import { describe, expect, it } from 'vitest';
 import { generateKeyPairSync } from 'node:crypto';
-import { MemoryMarketplaceStorage, handleMarketplaceRequest } from '@cir/vault-server';
+import { MemoryMarketplaceStorage, handleMarketplaceRequest } from '@atelier/vault-server';
 import {
   InMemoryTrustedKeyStore,
   MarketplaceClient,
   type MarketplaceKeyMaterial,
-} from '@cir/vault-client';
+} from '@atelier/vault-client';
 
 function makeKeypair(): MarketplaceKeyMaterial {
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
@@ -61,10 +61,10 @@ describe('marketplace smoke — end-to-end', () => {
       lenses: ['today'],
       trust: 'ask-once',
     };
-    const published = await client.publish('cir://aurora-labs/email-triage@1.0.0', recipe, key);
-    expect(published.address).toBe('cir://aurora-labs/email-triage@1.0.0');
+    const published = await client.publish('atelier://aurora-labs/email-triage@1.0.0', recipe, key);
+    expect(published.address).toBe('atelier://aurora-labs/email-triage@1.0.0');
 
-    const fetched = await client.fetch('cir://aurora-labs/email-triage@1.0.0');
+    const fetched = await client.fetch('atelier://aurora-labs/email-triage@1.0.0');
     expect(fetched).toEqual(recipe);
   });
 });

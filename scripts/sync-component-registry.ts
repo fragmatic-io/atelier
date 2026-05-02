@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir components sync` — emit `/components/registry.json` and
- * `/components/composition-rules.json` from the code-side `@cir/components`
+ * `atelier components sync` — emit `/components/registry.json` and
+ * `/components/composition-rules.json` from the code-side `@atelier/components`
  * registry.
  *
  * The code-side artifacts (`COMPONENT_BINDINGS`, `COMPONENT_METADATA`,
  * `COMPOSITION_RULES`, `TEXT_RENDERERS`) live in
- * `@cir/components/src/registry.ts` and `@cir/components/src/text-render.ts`.
+ * `@atelier/components/src/registry.ts` and `@atelier/components/src/text-render.ts`.
  * This script projects them into the public registry shapes that
- * `ComponentRegistrySchema` and `CompositionRulesSchema` (in `@cir/schemas`)
+ * `ComponentRegistrySchema` and `CompositionRulesSchema` (in `@atelier/schemas`)
  * validate. The `validate-data` CLI walks `components/` and validates each
  * JSON file against the right schema (per `PATH_DISPATCH` overrides).
  *
@@ -35,14 +35,14 @@ import {
   COMPONENT_METADATA,
   COMPOSITION_RULES,
   TEXT_RENDERERS,
-} from '@cir/components';
+} from '@atelier/components';
 import {
   ComponentRegistrySchema,
   CompositionRulesSchema,
   type ComponentDefinition,
   type ComponentRegistry,
   type CompositionRules,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const OUT_PATH = resolve(ROOT, 'components/registry.json');
@@ -64,7 +64,7 @@ async function readPackageVersion(): Promise<string> {
 
 /** Builds the bare-record registry from the code-side bindings. */
 export function buildRegistry(componentsVersion: string): ComponentRegistry {
-  const designTokens = `@cir/components/baseline@${componentsVersion}`;
+  const designTokens = `@atelier/components/baseline@${componentsVersion}`;
   const ids = Object.keys(COMPONENT_BINDINGS).sort();
   const out: Record<string, ComponentDefinition> = {};
   for (const id of ids) {
@@ -73,7 +73,7 @@ export function buildRegistry(componentsVersion: string): ComponentRegistry {
       props_schema: `${id}Props`,
       // Project optional metadata as concrete arrays. Empty is HONEST —
       // components without a defensible capability binding stay empty
-      // (see `COMPONENT_METADATA` in `@cir/components/src/registry.ts`).
+      // (see `COMPONENT_METADATA` in `@atelier/components/src/registry.ts`).
       data_sources: meta?.dataSources ? [...meta.dataSources] : [],
       actions_supported: meta?.actionsSupported ? [...meta.actionsSupported] : [],
       responsive_targets: ['web'],
@@ -166,7 +166,7 @@ async function checkTarget(target: CheckTarget): Promise<boolean> {
   if (existing !== target.serialized) {
     console.error(
       `components:check: drift detected — ${target.label} is stale.\n` +
-        `  Run \`pnpm components:sync\` to regenerate from @cir/components.`,
+        `  Run \`pnpm components:sync\` to regenerate from @atelier/components.`,
     );
     const existingIds = extractIds(existing);
     const generatedIds = Object.keys(target.parsed).sort();

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * IconResolverContext — React context that carries an `IconResolver` down
  * the tree. `<Icon>` reads from this context to look up its SVG markup.

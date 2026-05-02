@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `lib/admin-patterns.ts` — the pure helpers behind the
  * `/admin/patterns` admin route. We exercise the data path (detector

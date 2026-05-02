@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Breadcrumb — `<nav aria-label="Breadcrumb">` wrapping an `<ol>` of items.
  * The last item is treated as the current page: it is rendered as plain
@@ -8,7 +8,7 @@
  * visual `▸` glyph that is hidden from assistive tech (`aria-hidden`).
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, navigationVariantClass, type NavigationVariant } from './_variants.js';
 
 export type BreadcrumbVariant = NavigationVariant;

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
  * `RenderNode` — internal component that walks a `RenderNode` tree (from
- * `@cir/runtime`'s `buildRenderPlan`) and renders the bound React component
+ * `@atelier/runtime`'s `buildRenderPlan`) and renders the bound React component
  * for each node.
  *
  * Per-node behavior:
@@ -21,7 +21,7 @@
  *  - Recurse into `node.children` and pass them as `children` prop.
  *
  * Why we resolve data here and not in the component: keeps components
- * dumb. Components shipped by `@cir/components` should never need to know
+ * dumb. Components shipped by `@atelier/components` should never need to know
  * about the runtime — they receive props.
  */
 
@@ -34,8 +34,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { ComponentRegistry, RenderNode as RenderNodeShape } from '@cir/runtime';
-import type { LayoutNode } from '@cir/schemas';
+import type { ComponentRegistry, RenderNode as RenderNodeShape } from '@atelier/runtime';
+import type { LayoutNode } from '@atelier/schemas';
 import { DataResolverContext, type DataBinding } from '../data/data-resolver.js';
 import { useDispatcher } from '../hooks/use-dispatcher.js';
 import { useCir } from '../hooks/use-cir.js';
@@ -43,7 +43,7 @@ import { BASELINE_RESOLVER_DEFAULTS } from '../context/runtime-context.js';
 
 /**
  * Components in the catalog that accept a `density` personalisation prop.
- * Kept in lock-step with the 8 layout components in `@cir/components` that
+ * Kept in lock-step with the 8 layout components in `@atelier/components` that
  * actually wire density to spacing today (Stack, Container, Card, Grid, List,
  * Table, StatCard, KPIRow). The walker only defaults the prop for these IDs
  * to avoid attaching `density="..."` to a component whose props_schema does
@@ -155,7 +155,7 @@ function dataLooksEmpty(value: unknown): boolean {
 
 /**
  * Convert a `LayoutNode` (the manifest shape) into a `RenderNode` using the
- * supplied registry. Mirrors `buildRenderNode` from `@cir/runtime` but lives
+ * supplied registry. Mirrors `buildRenderNode` from `@atelier/runtime` but lives
  * here because the React adapter is the only consumer that needs it for
  * default state slots resolved at render time (the upstream `buildRenderPlan`
  * already handled manifest-declared slots).

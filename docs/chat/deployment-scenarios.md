@@ -4,7 +4,7 @@ Five concrete starting points. Pick the one closest to your situation and follow
 
 ---
 
-## 1. Building a CIR-native chatbot from scratch
+## 1. Building a Atelier-native chatbot from scratch
 
 You're building a new AI product (e.g., an AI customer support agent for a SaaS company).
 
@@ -25,9 +25,9 @@ You're building a new AI product (e.g., an AI customer support agent for a SaaS 
 
 ---
 
-## 2. Adding CIR to an existing agent platform
+## 2. Adding Atelier to an existing agent platform
 
-You have a working agent platform (LangChain, AutoGPT-style, custom) and want to upgrade to CIR.
+You have a working agent platform (LangChain, AutoGPT-style, custom) and want to upgrade to Atelier.
 
 **Steps:**
 
@@ -45,9 +45,9 @@ This is a 3-6 month migration for a mature agent platform. Each step adds value 
 
 ---
 
-## 3. Wrapping an MCP server in CIR
+## 3. Wrapping an MCP server in Atelier
 
-You have an MCP server and want CIR's production layer.
+You have an MCP server and want Atelier's production layer.
 
 **Steps:**
 
@@ -62,20 +62,20 @@ You have an MCP server and want CIR's production layer.
 
 ---
 
-## 4. Building a CIR runtime for Claude.ai or ChatGPT (via MCP Apps)
+## 4. Building a Atelier runtime for Claude.ai or ChatGPT (via MCP Apps)
 
-You want your CIR-enabled app to render inside a major chat host.
+You want your Atelier-enabled app to render inside a major chat host.
 
 **Steps:**
 
 1. Implement an MCP server that exposes your capabilities
 2. For UI: each tool that should render UI returns an MCP Apps UI resource
-3. The UI resource is HTML hosting your CIR runtime bundle
-4. Your runtime fetches the manifest from your CIR backend (with host-provided auth)
+3. The UI resource is HTML hosting your Atelier runtime bundle
+4. Your runtime fetches the manifest from your Atelier backend (with host-provided auth)
 5. Your runtime renders, dispatches actions back through MCP tool calls
-6. Your manifest cache is your CIR backend; the host caches the runtime bundle
+6. Your manifest cache is your Atelier backend; the host caches the runtime bundle
 
-This is the natural shape of a CIR-aware MCP App. The chat host doesn't need to know about CIR; it just sees standard MCP Apps resources. Your backend gets the production benefits (caching, policies, audits, token economics) on top.
+This is the natural shape of a CIR-aware MCP App. The chat host doesn't need to know about Atelier; it just sees standard MCP Apps resources. Your backend gets the production benefits (caching, policies, audits, token economics) on top.
 
 ---
 

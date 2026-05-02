@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Salience scoring helper. The capability `github.issue.list` declares
  * `salience_default: "urgency * recency + assigned_to_me * 2"`. The

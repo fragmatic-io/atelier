@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -23,7 +23,7 @@
  */
 
 import { useMemo } from 'react';
-import type { ConfirmationCallback, ConfirmationDecision } from '@cir/runtime';
+import type { ConfirmationCallback, ConfirmationDecision } from '@atelier/runtime';
 import { ConfirmPortal } from './confirm-portal.js';
 import { createConfirmStore, type ConfirmStore } from './confirm-store.js';
 

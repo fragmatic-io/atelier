@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Per-test cleanup for `@testing-library/react`. With Vitest's
  * `globals: false` (the repo default), the library's auto-cleanup hook

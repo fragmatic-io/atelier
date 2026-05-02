@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -16,11 +16,11 @@
  * marketplace pivot, leaving Octant at zero custom bindings).
  *
  * Pre-MD-C this file imported `<IssueQueue>` directly as JSX, which
- * undermined the CIR thesis: every page is a manifest the runtime renders.
+ * undermined the Atelier thesis: every page is a manifest the runtime renders.
  * See MD-C in `/Users/vid/cir/docs/wave-progress.md` for the rationale.
  */
 
-import { CirRoute } from '@cir/react';
+import { CirRoute } from '@atelier/react';
 
 export default function TodayPage(): React.JSX.Element {
   return <CirRoute path="/today" />;

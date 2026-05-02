@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Container — page-level width-constrained <main> landmark.
  * Variants (Wave 6 / P-10): bordered, elevated, ghost (default), tinted.
  */
 import type { CSSProperties, ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 import { DEFAULT_DENSITY, DENSITY_PADDING_PX, type Density } from './density.js';
 

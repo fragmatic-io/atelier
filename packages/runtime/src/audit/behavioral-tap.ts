@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `BehavioralTap` — adapter that subscribes to a `StreamingAuditSink` and
  * forwards each `action.executed` event to a `BehavioralPatternDetector`.
@@ -27,8 +27,8 @@
  * isolation, persisting detector state across process restarts.
  */
 
-import type { AuditEvent } from '@cir/schemas';
-import type { BehavioralPatternDetector, ObservedAction } from '@cir/policies';
+import type { AuditEvent } from '@atelier/schemas';
+import type { BehavioralPatternDetector, ObservedAction } from '@atelier/policies';
 import type { StreamingAuditSink } from './streaming.js';
 
 /** Prefix used in audit `trigger_chain` entries to mark capability ids. */

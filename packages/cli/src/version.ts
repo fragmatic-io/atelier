@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Reads the `@cir/cli` package version. Resolves `package.json` relative to
+ * Reads the `@atelier/cli` package version. Resolves `package.json` relative to
  * this module rather than `process.cwd()` so the lookup works regardless of
  * where the user invoked `cir`.
  */

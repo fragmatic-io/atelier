@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Per-call prompt builder for `compileIntentProfile()`.
  *
@@ -13,7 +13,7 @@
  * description-line of meaningful preference, plus lens slots for any apps
  * the user named.
  */
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 
 export interface IntentProfilePromptInput {
   description: string;
@@ -90,7 +90,7 @@ export function buildIntentProfilePrompt(
   return { user: lines.join('\n'), empty_description: empty };
 }
 
-export const INTENT_PROFILE_SYSTEM_PROMPT = `You are CIR's intent-profile compiler. Your sole job is to translate a user's short free-text self-description into a draft IntentProfile JSON for that user to review and edit.
+export const INTENT_PROFILE_SYSTEM_PROMPT = `You are Atelier's intent-profile compiler. Your sole job is to translate a user's short free-text self-description into a draft IntentProfile JSON for that user to review and edit.
 
 ## What you produce
 

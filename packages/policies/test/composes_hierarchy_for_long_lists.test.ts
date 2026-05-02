@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the `composes_hierarchy_for_long_lists` baseline policy
  * (Wave 7b / track P-9).
@@ -19,7 +19,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { composesHierarchyForLongLists } from '../src/baseline/composes_hierarchy_for_long_lists.js';
-import type { Capability, LayoutNode, Manifest } from '@cir/schemas';
+import type { Capability, LayoutNode, Manifest } from '@atelier/schemas';
 import type { PolicyContext } from '../src/result.js';
 
 function capability(opts: { salience?: string | null } = {}): Capability {

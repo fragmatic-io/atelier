@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
 /**
- * CIR runtime services bag for the dummyjson catalog demo, plus the React
+ * Atelier runtime services bag for the dummyjson catalog demo, plus the React
  * provider tree.
  *
  * The data layer is pure RestDataResolver hitting `https://dummyjson.com`
  * directly — no proxy, no fake-data.ts. The whole point of this demo is
- * exercising the public-API resolver that ships in `@cir/data-resolvers`.
+ * exercising the public-API resolver that ships in `@atelier/data-resolvers`.
  *
  *  - `dummyjson.product.list`            → /products
  *  - `dummyjson.product.search`          → /products/search?q=…
@@ -39,16 +39,16 @@ import {
   wireTriggerInvalidation,
   type ActionExecutionContext,
   type ConfirmationCallback,
-} from '@cir/runtime';
-import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
+} from '@atelier/runtime';
+import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@atelier/components';
 import {
   CirRuntime,
   CompileBadge,
   DebugPanel,
   useReactConfirmation,
   type DataBinding,
-} from '@cir/react';
-import { CompositeDataResolver, RestDataResolver } from '@cir/data-resolvers';
+} from '@atelier/react';
+import { CompositeDataResolver, RestDataResolver } from '@atelier/data-resolvers';
 import {
   validateManifest,
   BASELINE_POLICIES,
@@ -56,8 +56,8 @@ import {
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
   type AmbientPolicySatisfier,
-} from '@cir/policies';
-import type { IntentProfile, Manifest } from '@cir/schemas';
+} from '@atelier/policies';
+import type { IntentProfile, Manifest } from '@atelier/schemas';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
 import { DEMO_DUMMYJSON_BINDINGS, DEMO_DUMMYJSON_COMPOSITION_ROLES } from './component-bindings.js';
@@ -359,7 +359,7 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
   const { services, audit } = built;
 
   // Mirror lens changes onto <html data-color-mode> so dark-mode CSS in
-  // `@cir/components/_variants.ts` lights up under user-toggled themes.
+  // `@atelier/components/_variants.ts` lights up under user-toggled themes.
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const profile = loadIntentProfile();

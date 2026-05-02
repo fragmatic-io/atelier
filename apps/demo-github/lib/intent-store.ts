@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Intent profile store for `apps/demo-github`. Modelled on
  * `apps/demo/lib/intent-store.ts` but with two demo-specific additions:
@@ -26,8 +26,8 @@ import {
   VaultUnauthorizedError,
   VaultUnreachableError,
   type VaultTokenStorage,
-} from '@cir/vault-client';
-import { IntentProfileSchema, type IntentProfile } from '@cir/schemas';
+} from '@atelier/vault-client';
+import { IntentProfileSchema, type IntentProfile } from '@atelier/schemas';
 
 /** localStorage key. Namespaced for clarity in DevTools. */
 export const INTENT_STORAGE_KEY = 'cir.demo-github.intent';

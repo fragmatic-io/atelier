@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `lib/onboarding-compile.ts` — the pure helper behind the
  * `/api/cir/onboarding/compile` route. Exercises the validator + handler
@@ -11,12 +11,12 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import type {
   CompileIntentProfileInput,
   CompileIntentProfileResult,
   IntentProfileCompilerService,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 import {
   buildIntentProfileCompiler,
   handleCompileRequest,

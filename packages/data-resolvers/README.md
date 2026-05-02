@@ -1,6 +1,6 @@
-# `@cir/data-resolvers`
+# `@atelier/data-resolvers`
 
-Reusable adapters that satisfy the `DataResolver` protocol from `@cir/react`.
+Reusable adapters that satisfy the `DataResolver` protocol from `@atelier/react`.
 
 Without this package, every host had to hand-roll a fetch layer to resolve manifest data
 bindings, and the runtime shipped only an `EmptyDataResolver` sentinel that returned
@@ -9,14 +9,14 @@ wired the resolver is worse than a default UI; this package fixes that.
 
 ## Adapters
 
-| Adapter                    | When to use                                                                                                                         |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `RestDataResolver`         | Hand-rolled HTTP API. Configurable URL templates, auth header injection, response transforms.                                       |
-| `OpenApiDataResolver`      | Capabilities imported via `cir import openapi` — the resolver re-uses `_review.imported_from` to find and call the right operation. |
-| `GraphQLDataResolver`      | Single GraphQL endpoint with an auto-built query. Override per-capability via `fieldMap` or `queryFor`.                             |
-| `MockDataResolver`         | In-memory fixtures. Applies `filter` / `sort` / `group_by` client-side.                                                             |
-| `CompositeDataResolver`    | Falls through a list of resolvers; first non-`undefined` wins.                                                                      |
-| `withCache(resolver, ...)` | TTL + stale-while-revalidate wrapper around any other resolver.                                                                     |
+| Adapter                    | When to use                                                                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `RestDataResolver`         | Hand-rolled HTTP API. Configurable URL templates, auth header injection, response transforms.                                           |
+| `OpenApiDataResolver`      | Capabilities imported via `atelier import openapi` — the resolver re-uses `_review.imported_from` to find and call the right operation. |
+| `GraphQLDataResolver`      | Single GraphQL endpoint with an auto-built query. Override per-capability via `fieldMap` or `queryFor`.                                 |
+| `MockDataResolver`         | In-memory fixtures. Applies `filter` / `sort` / `group_by` client-side.                                                                 |
+| `CompositeDataResolver`    | Falls through a list of resolvers; first non-`undefined` wins.                                                                          |
+| `withCache(resolver, ...)` | TTL + stale-while-revalidate wrapper around any other resolver.                                                                         |
 
 ## Quick start
 
@@ -26,7 +26,7 @@ import {
   MockDataResolver,
   RestDataResolver,
   withCache,
-} from '@cir/data-resolvers';
+} from '@atelier/data-resolvers';
 
 const mock = new MockDataResolver({
   fixtures: {
@@ -61,7 +61,7 @@ The package ships a small parser for the expression grammar from
 [`docs/artifacts.md`](../../docs/artifacts.md):
 
 ```ts
-import { parseFilter, toPredicate, toQueryString, toWhereClause } from '@cir/data-resolvers';
+import { parseFilter, toPredicate, toQueryString, toWhereClause } from '@atelier/data-resolvers';
 
 const ast = parseFilter('requires_decision = true AND received_after = "2026-04-30"');
 

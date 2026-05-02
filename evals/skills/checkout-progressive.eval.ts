@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Skill eval: checkout-progressive.
  *
@@ -11,8 +11,8 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { defineEval } from '@cir/evals';
-import { parseSkillMarkdown } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { parseSkillMarkdown } from '@atelier/schemas';
 
 const SKILL_PATH = resolve(
   new URL('.', import.meta.url).pathname,

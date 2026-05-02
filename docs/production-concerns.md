@@ -57,7 +57,7 @@ The threat model:
 
 ## Observability
 
-What every CIR deployment must instrument:
+What every Atelier deployment must instrument:
 
 ```
 Metrics:
@@ -81,7 +81,7 @@ Logs:
   - Audit log (never sampled)
 ```
 
-The audit log is the canonical record. Everything else is for performance tuning. A CIR system without an audit log is unsafe to run in production.
+The audit log is the canonical record. Everything else is for performance tuning. A Atelier system without an audit log is unsafe to run in production.
 
 ---
 
@@ -113,7 +113,7 @@ The eval suite runs on:
 - Every compiler model upgrade
 - Daily on production samples
 
-A CIR system with weak evals will produce weird interfaces and erode trust. A CIR system with strong evals can iterate fast on the compiler without breaking users.
+A Atelier system with weak evals will produce weird interfaces and erode trust. A Atelier system with strong evals can iterate fast on the compiler without breaking users.
 
 ---
 

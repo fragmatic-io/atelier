@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { defineConfig } from 'astro/config';
 
 // GitHub Pages serves project sites from `<user>.github.io/<repo>/` unless a

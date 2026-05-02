@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * End-to-end eval: replay a fixture audit log of 100 actions through the
  * `BehavioralTap` adapter and assert the expected graduation candidates
@@ -10,10 +10,10 @@
  * runs / OSes.
  */
 
-import { defineEval } from '@cir/evals';
-import { SequenceDetector } from '@cir/policies';
-import { BehavioralTap, StreamingAuditSink } from '@cir/runtime';
-import type { AuditEvent } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { SequenceDetector } from '@atelier/policies';
+import { BehavioralTap, StreamingAuditSink } from '@atelier/runtime';
+import type { AuditEvent } from '@atelier/schemas';
 
 interface DetectorOutcome {
   total_observations: number;

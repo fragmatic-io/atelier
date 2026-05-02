@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir inspect <manifest-id-or-path>` — pretty-print a manifest.
+ * `atelier inspect <manifest-id-or-path>` — pretty-print a manifest.
  *
  * Two input modes:
- *   - File path: `cir inspect ./fixtures/manifest.json` — read directly.
- *   - Live id:   `cir inspect m_a7b3c9d1` — looks up via dev server.
+ *   - File path: `atelier inspect ./fixtures/manifest.json` — read directly.
+ *   - Live id:   `atelier inspect m_a7b3c9d1` — looks up via dev server.
  *                Default `http://localhost:3000/api/cir/manifest/<id>`.
  *                Configurable via `--server <url>`.
  *
@@ -23,7 +23,7 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 
-import { ManifestSchema, type LayoutNode, type Manifest } from '@cir/schemas';
+import { ManifestSchema, type LayoutNode, type Manifest } from '@atelier/schemas';
 
 import { INSPECT_USAGE } from '../usage.js';
 
@@ -293,7 +293,7 @@ export async function inspectCommand(
     return 0;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`cir inspect: ${msg}`);
+    console.error(`atelier inspect: ${msg}`);
     return 1;
   }
 }

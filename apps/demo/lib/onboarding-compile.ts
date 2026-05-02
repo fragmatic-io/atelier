@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Pure helper used by `app/api/cir/onboarding/compile/route.ts`.
  *
  * Splits the validation + compile work out of the route file so the unit
  * test can exercise it without importing Next.js server machinery
- * (`@/lib/cir-server`, `getCirServer()`, etc.) or mocking the App Router.
+ * (`@/lib/atelier-server`, `getCirServer()`, etc.) or mocking the App Router.
  *
  * The route is a thin adapter on top of this; production paths import the
  * compiler factory from here, the test injects a stub compiler.
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import {
   CompositeIntentProfileCompiler,
   FallbackIntentProfileCompiler,
   GeminiIntentProfileCompiler,
   type CompileIntentProfileResult,
   type IntentProfileCompilerService,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 
 export interface CompileRequestBody {
   description: string;

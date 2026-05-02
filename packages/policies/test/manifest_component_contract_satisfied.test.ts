@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `manifest_component_contract_satisfied` — the schema-validated
  * per-binding manifest contract policy. Phase 2 #1.
@@ -17,7 +17,7 @@ import {
   manifestComponentContractSatisfied,
   type ManifestComponentContracts,
 } from '../src/baseline/manifest_component_contract_satisfied.js';
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(layout: Manifest['routes'][number]['layout']): PolicyContext {

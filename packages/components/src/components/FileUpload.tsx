@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 
 'use client';
 /**
@@ -13,7 +13,7 @@
  * filename list; `onFiles` is the source of truth for consumers.
  */
 import { forwardRef, useId, useState, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type FileUploadVariant = InputVariant;

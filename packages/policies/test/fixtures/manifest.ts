@@ -2,7 +2,7 @@
 // Mirror the manifest example from /Users/vid/cir/docs/artifacts.md §Render
 // and a small set of capabilities/intent the policies need to evaluate it.
 
-import type { Capability, Manifest } from '@cir/schemas';
+import type { Capability, Manifest } from '@atelier/schemas';
 import type { PolicyContext } from '../../src/result.js';
 
 export function baselineManifest(): Manifest {

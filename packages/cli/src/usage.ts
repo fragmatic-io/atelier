@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Usage strings for the `cir` CLI. Kept in a dedicated module so the
+ * Usage strings for the `atelier` CLI. Kept in a dedicated module so the
  * top-level help and per-subcommand help share wording.
  */
 
-export const TOP_LEVEL_USAGE = `usage: cir <command> [options]
+export const TOP_LEVEL_USAGE = `usage: atelier <command> [options]
 
 Commands:
-  init [dir]              Scaffold a new CIR app in [dir] (defaults to '.').
+  init [dir]              Scaffold a new Atelier app in [dir] (defaults to '.').
   dev                     Start the dev server (delegates to 'next dev').
                           --tail / --tail-only stream audit events to stderr.
   add <component>         Copy a baseline component into ./components/.
-  components-sync         Regenerate components/registry.json from @cir/components.
+  components-sync         Regenerate components/registry.json from @atelier/components.
   validate                Run the validate chain (typecheck, lint, schema validation).
   import openapi <spec>   Generate capabilities/ from an OpenAPI 3.x spec.
   import figma <tokens>   Generate a BrandKit JSON from a Figma tokens export.
@@ -22,17 +22,17 @@ Commands:
 
 Options:
   --help, -h              Show this message.
-  --version, -v           Print the @cir/cli version.
+  --version, -v           Print the @atelier/cli version.
 
-Run 'cir <command> --help' for command-specific options.`;
+Run 'atelier <command> --help' for command-specific options.`;
 
-export const INIT_USAGE = `usage: cir init [dir]
+export const INIT_USAGE = `usage: atelier init [dir]
 
-Scaffold a new CIR app. [dir] defaults to '.'. Writes package.json,
+Scaffold a new Atelier app. [dir] defaults to '.'. Writes package.json,
 app/page.tsx, app/layout.tsx, tsconfig.json, next.config.mjs, README.md,
 and stub directories for capabilities/, skills/, components/.`;
 
-export const DEV_USAGE = `usage: cir dev [--tail | --tail-only] [--audit-url <url>] [--no-color] [-- next-args...]
+export const DEV_USAGE = `usage: atelier dev [--tail | --tail-only] [--audit-url <url>] [--no-color] [-- next-args...]
 
 Thin wrapper around 'next dev'. Any args after '--' are forwarded.
 
@@ -45,22 +45,22 @@ Thin wrapper around 'next dev'. Any args after '--' are forwarded.
 
 Reconnect schedule: capped exponential (1s, 2s, 4s, 8s).`;
 
-export const ADD_USAGE = `usage: cir add <component>
+export const ADD_USAGE = `usage: atelier add <component>
 
-Copy a baseline component from @cir/components into ./components/.
-Use 'cir add --list' to see available components.`;
+Copy a baseline component from @atelier/components into ./components/.
+Use 'atelier add --list' to see available components.`;
 
-export const COMPONENTS_SYNC_USAGE = `usage: cir components-sync [--check]
+export const COMPONENTS_SYNC_USAGE = `usage: atelier components-sync [--check]
 
-Regenerate components/registry.json from @cir/components. With --check,
+Regenerate components/registry.json from @atelier/components. With --check,
 exit non-zero if the on-disk file is stale.`;
 
-export const VALIDATE_USAGE = `usage: cir validate
+export const VALIDATE_USAGE = `usage: atelier validate
 
 Run the full validate chain: license headers, typecheck, lint,
 format check, components:check, schema validation, and tests.`;
 
-export const INSPECT_USAGE = `usage: cir inspect <manifest-id-or-path> [--server <url>] [--json] [--no-color]
+export const INSPECT_USAGE = `usage: atelier inspect <manifest-id-or-path> [--server <url>] [--json] [--no-color]
 
 Pretty-print a manifest. Two input modes:
 
@@ -72,7 +72,7 @@ Pretty-print a manifest. Two input modes:
   --json              Dump the parsed manifest as pretty JSON instead.
   --no-color          Suppress ANSI color escapes (auto when stdout is not a TTY).`;
 
-export const COMPILE_USAGE = `usage: cir compile <intent.json> [--capabilities <dir>] [--skills <dir>]
+export const COMPILE_USAGE = `usage: atelier compile <intent.json> [--capabilities <dir>] [--skills <dir>]
                                 [--components <registry.json>] [--brand-kit <file>]
                                 [--route <path>] [--app-id <id>] [--user-id <id>]
                                 [--out <file>] [--json]
@@ -91,9 +91,9 @@ Offline compile producing a manifest. Mirrors the demo's server wiring.
 
 Without GEMINI_API_KEY the FallbackCompiler runs (heuristics, no LLM).`;
 
-export const VAULT_DEV_USAGE = `usage: cir vault dev [--port 4001] [--db <path>] [--issuer <url>]
+export const VAULT_DEV_USAGE = `usage: atelier vault dev [--port 4001] [--db <path>] [--issuer <url>]
 
-Boot a local CIR intent vault server (see @cir/vault-server). Uses
+Boot a local Atelier intent vault server (see @atelier/vault-server). Uses
 node:http; persists profiles + grants to a JSON file; signs tokens with
 ed25519.
 

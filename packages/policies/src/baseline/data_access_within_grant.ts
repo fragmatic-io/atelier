@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `data_access_within_grant`
  *
@@ -24,7 +24,7 @@
  *    within scope (no fields projected).
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 

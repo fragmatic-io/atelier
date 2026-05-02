@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `GeminiIntentProfileCompiler` and `CompositeIntentProfileCompiler`.
  *
@@ -15,7 +15,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { GoogleGenAI } from '@google/genai';
-import type { Capability, IntentProfile } from '@cir/schemas';
+import type { Capability, IntentProfile } from '@atelier/schemas';
 import {
   CompositeIntentProfileCompiler,
   FallbackIntentProfileCompiler,

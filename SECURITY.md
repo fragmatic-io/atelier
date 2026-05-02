@@ -1,6 +1,6 @@
 # Security Policy
 
-CIR ships infrastructure that compiles and serves user interfaces from typed capabilities. Security in CIR is layered — see [`docs/production-concerns.md`](docs/production-concerns.md) §Security and [`docs/chat/production-concerns.md`](docs/chat/production-concerns.md) for the full threat model.
+Atelier ships infrastructure that compiles and serves user interfaces from typed capabilities. Security in Atelier is layered — see [`docs/production-concerns.md`](docs/production-concerns.md) §Security and [`docs/chat/production-concerns.md`](docs/chat/production-concerns.md) for the full threat model.
 
 ## Reporting a vulnerability
 
@@ -54,7 +54,7 @@ When a fix lands, a security advisory will be published with:
 
 ## Hardening checklist for operators
 
-If you are deploying CIR in production, see the [security threat model in `docs/production-concerns.md`](docs/production-concerns.md#security) for the full list. The non-negotiables:
+If you are deploying Atelier in production, see the [security threat model in `docs/production-concerns.md`](docs/production-concerns.md#security) for the full list. The non-negotiables:
 
 1. Sign capability and skill artifacts at publish time; verify signatures on load
 2. Treat user-supplied content as untrusted in compiler prompts (sandboxed sections)

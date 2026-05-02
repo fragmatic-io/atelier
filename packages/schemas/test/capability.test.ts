@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
 import { CapabilitySchema, KNOWN_SIDE_EFFECTS } from '../src/capability.js';
 

@@ -1,8 +1,8 @@
 {
-  "name": "@cir/runtime",
+  "name": "@atelier/runtime",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR render runtime — framework-agnostic core: manifest fetcher/resolver, action dispatcher, trigger bus, component registry, render-plan derivation",
+  "description": "Atelier render runtime — framework-agnostic core: manifest fetcher/resolver, action dispatcher, trigger bus, component registry, render-plan derivation",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -16,8 +16,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/policies": "workspace:*",
-    "@cir/schemas": "workspace:*",
+    "@atelier/policies": "workspace:*",
+    "@atelier/schemas": "workspace:*",
     "idb-keyval": "^6.2.1"
   },
   "devDependencies": {

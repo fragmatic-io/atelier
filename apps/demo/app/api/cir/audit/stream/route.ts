@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * GET /api/cir/audit/stream — Server-Sent Events feed of audit events.
  *
  * The wire contract is documented in `packages/cli/README.md` §`cir dev --tail`
  * and consumed by:
- *   - `cir dev --tail` (terminal-side tailer in `@cir/cli`)
- *   - `<DebugPanel>` in `@cir/react/debug`
+ *   - `cir dev --tail` (terminal-side tailer in `@atelier/cli`)
+ *   - `<DebugPanel>` in `@atelier/react/debug`
  *
  * Implementation lives in `lib/audit-stream.ts` so it's testable without
  * Next.js. This file just:
- *   1. Pulls the demo's process-wide `StreamingAuditSink` from `cir-server.ts`.
+ *   1. Pulls the demo's process-wide `StreamingAuditSink` from `atelier-server.ts`.
  *   2. Parses optional `?tenant_id` and `?type=` query filters.
  *   3. Hands both to `buildAuditStreamResponse()`.
  *
@@ -26,7 +26,7 @@
  * so a stale TCP connection is detected by the consumer.
  */
 
-import { getCirServer } from '@/lib/cir-server';
+import { getCirServer } from '@/lib/atelier-server';
 import { buildAuditStreamResponse, parseTypesParam } from '@/lib/audit-stream';
 
 // Match the existing SSE route in this app (apps/demo/app/api/triggers/stream)

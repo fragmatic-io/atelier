@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Wave 11 / Int-8 — assert Aurora's destructive capabilities carry the
  * `undoable: true` flag and that the matching rollback capabilities exist.
@@ -7,9 +7,9 @@
  * a regression that drops the flag silently disables the undo toast.
  */
 import { describe, expect, it } from 'vitest';
-import { CapabilitySchema, type Capability } from '@cir/schemas';
+import { CapabilitySchema, type Capability } from '@atelier/schemas';
 import { CAPABILITIES } from '../lib/fake-capabilities.js';
-import { UNDO_TOAST_AMBIENT_SATISFIER } from '@cir/policies';
+import { UNDO_TOAST_AMBIENT_SATISFIER } from '@atelier/policies';
 
 describe('Aurora — fake-capabilities undoable flags', () => {
   it.each(['thread.archive', 'task.complete', 'task.snooze', 'task.create_from_thread'])(

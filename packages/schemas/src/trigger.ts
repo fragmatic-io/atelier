@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Trigger schema — the events that invalidate manifests and drive
  * recompilation.
@@ -146,7 +146,7 @@ export const BehaviorWorkaroundDetectedTrigger = z.object({
 
 /**
  * `behavior.pattern_detected` — emitted by the runtime's behavioral pattern
- * detector (see `@cir/policies/SequenceDetector`) when N users converge on
+ * detector (see `@atelier/policies/SequenceDetector`) when N users converge on
  * the same action sequence often enough to merit promotion to a recipe.
  * Distinct from `behavior.workaround_detected` (single user finding a hacky
  * way around a missing feature) — patterns are POSITIVE signals worth

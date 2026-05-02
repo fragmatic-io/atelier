@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `buildTestServices()` — assembles a `CirRuntimeServices` bag wired to
- * in-memory testing helpers from `@cir/runtime/testing`.
+ * in-memory testing helpers from `@atelier/runtime/testing`.
  *
  * Hosts can override any individual service. Identity defaults to
  * `('test-user', 'test-app')`. The dispatcher is wired with `ALWAYS_CONFIRM`
@@ -14,15 +14,15 @@ import {
   ManifestFetcher,
   ManifestResolver,
   type ConfirmationCallback,
-} from '@cir/runtime';
+} from '@atelier/runtime';
 import {
   ALWAYS_CONFIRM,
   InMemoryTriggerBus,
   MapActionRegistry,
   MapComponentRegistry,
   MemoryManifestCache,
-} from '@cir/runtime/testing';
-import type { Capability, Manifest } from '@cir/schemas';
+} from '@atelier/runtime/testing';
+import type { Capability, Manifest } from '@atelier/schemas';
 import type { CirRuntimeServices } from '../context/runtime-context.js';
 
 export interface BuildTestServicesOptions {

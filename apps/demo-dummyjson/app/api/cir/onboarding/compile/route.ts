@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * POST /api/cir/onboarding/compile — light variant of the apps/demo
  * onboarding compile route. The dummyjson catalog demo doesn't strictly
@@ -17,9 +17,9 @@ import {
   FallbackIntentProfileCompiler,
   GeminiIntentProfileCompiler,
   type IntentProfileCompilerService,
-} from '@cir/compiler';
-import type { Capability } from '@cir/schemas';
-import { getCirServer } from '@/lib/cir-server';
+} from '@atelier/compiler';
+import type { Capability } from '@atelier/schemas';
+import { getCirServer } from '@/lib/atelier-server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

@@ -1,5 +1,5 @@
 <!--
-Thanks for contributing to CIR.
+Thanks for contributing to Atelier.
 
 Before opening: see AGENTS.md for which artifact category your change belongs
 under (capability / skill / component / policy / recipe / runtime / compiler /

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 /**
  * MetaBadge — small inline status pill that surfaces a count, label,
@@ -31,7 +31,7 @@
  * props, not from manifest children.
  */
 import type { CSSProperties, ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, iconSizePx, metaBadgeVariantClass, type MetaBadgeVariant } from './_variants.js';
 import { Icon } from './Icon.js';
 import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';

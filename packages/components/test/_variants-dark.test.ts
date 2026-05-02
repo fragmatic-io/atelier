@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Vis-2 — every variant table entry in `_variants.ts` must include at
  * least one `dark:`-prefixed Tailwind utility, so a host that configures

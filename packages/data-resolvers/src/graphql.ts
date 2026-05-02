@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `GraphQLDataResolver` — auto-builds a GraphQL query from the bound
  * capability's `output` shape and POSTs it to a single configured endpoint.

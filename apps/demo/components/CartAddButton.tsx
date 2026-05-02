@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -19,9 +19,9 @@
  */
 
 import { useState } from 'react';
-import type { Capability } from '@cir/schemas';
-import type { ActionResult } from '@cir/runtime';
-import { useDispatcher, useOptimisticAction } from '@cir/react';
+import type { Capability } from '@atelier/schemas';
+import type { ActionResult } from '@atelier/runtime';
+import { useDispatcher, useOptimisticAction } from '@atelier/react';
 
 export interface CartAddButtonProps {
   /** The cart-add capability (passed in so the autodetect can fire). */

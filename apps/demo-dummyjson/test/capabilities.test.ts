@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Sanity checks on the capability registry the demo binds against.
  * Mirrors the JSON capability files that ship under
- * `capabilities/dummyjson/` — `cir-schemas validate-data` exercises
+ * `capabilities/dummyjson/` — `atelier-schemas validate-data` exercises
  * those at the root level; this test lives at the app level to lock the
  * runtime registry against the same shape.
  */
 
 import { describe, expect, it } from 'vitest';
-import { CapabilitySchema } from '@cir/schemas';
+import { CapabilitySchema } from '@atelier/schemas';
 import { CAPABILITIES } from '../lib/capabilities';
 
 describe('CAPABILITIES', () => {

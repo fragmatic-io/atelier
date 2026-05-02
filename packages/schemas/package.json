@@ -1,8 +1,8 @@
 {
-  "name": "@cir/schemas",
+  "name": "@atelier/schemas",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR foundational schemas — Zod schemas + generated JSON Schemas for capabilities, skills, components, intent, manifests, triggers, policies, audit",
+  "description": "Atelier foundational schemas — Zod schemas + generated JSON Schemas for capabilities, skills, components, intent, manifests, triggers, policies, audit",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -11,7 +11,7 @@
     ".": "./src/index.ts"
   },
   "bin": {
-    "cir-schemas": "./src/cli/index.ts"
+    "atelier-schemas": "./src/cli/index.ts"
   },
   "scripts": {
     "build": "tsc -p .",

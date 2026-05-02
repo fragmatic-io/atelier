@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Per-call prompt context builder. Takes a `CompileInput` and returns the
  * variable portion of the prompt the LLM sees alongside the cached system
@@ -15,7 +15,7 @@
  *   - Echoing the previous manifest verbatim if we're in diff mode
  */
 
-import type { Capability, IntentProfile, PriorityRule } from '@cir/schemas';
+import type { Capability, IntentProfile, PriorityRule } from '@atelier/schemas';
 import type { CompileInput } from '../types.js';
 
 export interface BuiltPromptContext {
@@ -255,7 +255,7 @@ export function buildPromptContext(input: CompileInput): BuiltPromptContext {
  * Translate `intent.global_preferences` into a terse list of manifest-shaping
  * rules. Each rule is a single line so the section stays in the low hundreds
  * of tokens even when every signal is set. The mapping mirrors the renderer's
- * defaulting behaviour in `@cir/react`'s `<RenderNode>` walker so the two
+ * defaulting behaviour in `@atelier/react`'s `<RenderNode>` walker so the two
  * agree on what "personalised" means.
  */
 function buildPersonalisationDirectives(

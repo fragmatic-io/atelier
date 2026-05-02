@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -9,7 +9,7 @@ import {
   InMemoryKeyboardRegistry,
   InMemoryRecencyTracker,
   type KeyboardServices,
-} from '@cir/keyboard';
+} from '@atelier/keyboard';
 import { KeyboardProvider, useKeyboardAction, useKeyboardActions } from '../src/keyboard/index.js';
 
 function makeServices(): KeyboardServices {

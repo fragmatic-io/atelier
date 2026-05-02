@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * In-memory trigger bus. Synchronous-ish: subscribers fire in registration
  * order; the bus awaits async handlers before resolving `emit()`. Errors
@@ -10,7 +10,7 @@
  * (wildcard, every event).
  */
 
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import type { Unsubscribe } from '../types.js';
 import {
   WILDCARD_TRIGGER_TYPE,

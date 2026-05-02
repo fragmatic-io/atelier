@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Markdown — sanitized renderer. Variants (Wave 6 / P-10): bordered,
  * elevated, ghost (default), tinted.
@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, contentVariantClass, type ContentVariant } from './_variants.js';
 
 export type MarkdownVariant = ContentVariant;

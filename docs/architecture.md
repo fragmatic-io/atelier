@@ -210,7 +210,7 @@ Structure of a compile call:
 
 ```
 SYSTEM PROMPT (cached, versioned per compiler release):
-  - CIR framework explanation
+  - Atelier framework explanation
   - Manifest JSON schema
   - Validation rules
   - Output format requirements

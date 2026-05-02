@@ -1,10 +1,10 @@
 #!/usr/bin/env -S node --import=tsx/esm
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir-evals` CLI.
+ * `atelier-evals` CLI.
  *
- *   cir-evals run [--pattern <glob>] [--kind <kind>] [--tag <tag>]
+ *   atelier-evals run [--pattern <glob>] [--kind <kind>] [--tag <tag>]
  *                 [--filter <substr>] [--reporter console|json]
  *                 [--concurrency <n>] [--timeout <ms>]
  *
@@ -119,7 +119,7 @@ function exitCodeFor(summary: RunSummary): number {
 
 function usage(): void {
   console.error(
-    `usage: cir-evals run [--pattern <glob>] [--kind <kind>] [--tag <tag>]\n` +
+    `usage: atelier-evals run [--pattern <glob>] [--kind <kind>] [--tag <tag>]\n` +
       `                     [--filter <substr>] [--reporter console|json]\n` +
       `                     [--concurrency <n>] [--timeout <ms>]`,
   );

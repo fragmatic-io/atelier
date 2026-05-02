@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `<Toast variant="undo">` — Wave 11 / Int-8.
  *

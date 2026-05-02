@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the adapter that bridges `CapabilityResolver` to
- * `@cir/compiler`'s `SemanticSearch` seam. Coverage:
+ * `@atelier/compiler`'s `SemanticSearch` seam. Coverage:
  *
  *   - `semanticSearchFromResolver` returns an object with a sync `search`
  *     and an async `prime` — calling `prime` then `search.capabilities`
@@ -10,12 +10,12 @@
  *   - cold cache (no prime call) returns []
  *   - mismatched query (different from the last primed) returns []
  *   - resolver throw is swallowed; `onError` fires; `lastRefs` is reset
- *   - returned `SemanticSearch` matches the type from `@cir/compiler`
+ *   - returned `SemanticSearch` matches the type from `@atelier/compiler`
  *   - `semanticSearchFromLookup` adapts a sync function correctly
  */
 
-import type { Capability } from '@cir/schemas';
-import type { SemanticSearch } from '@cir/compiler';
+import type { Capability } from '@atelier/schemas';
+import type { SemanticSearch } from '@atelier/compiler';
 import { describe, expect, it, vi } from 'vitest';
 import {
   SubstringCapabilityResolver,
@@ -165,7 +165,7 @@ describe('semanticSearchFromResolver', () => {
     expect(recorded[0]?.k).toBe(7);
   });
 
-  it('produces a SemanticSearch shape that satisfies @cir/compiler', () => {
+  it('produces a SemanticSearch shape that satisfies @atelier/compiler', () => {
     const resolver = new SubstringCapabilityResolver();
     const primed = semanticSearchFromResolver(resolver, {
       registry: caps(),

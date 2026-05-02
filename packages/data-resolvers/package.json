@@ -1,8 +1,8 @@
 {
-  "name": "@cir/data-resolvers",
+  "name": "@atelier/data-resolvers",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR data resolver adapters — REST, OpenAPI, GraphQL, Mock, Composite, plus a SWR-style cache wrapper. Plug into the `DataResolver` protocol from @cir/react so manifest data bindings resolve to real data without hand-rolling a fetch layer.",
+  "description": "Atelier data resolver adapters — REST, OpenAPI, GraphQL, Mock, Composite, plus a SWR-style cache wrapper. Plug into the `DataResolver` protocol from @atelier/react so manifest data bindings resolve to real data without hand-rolling a fetch layer.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,7 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/schemas": "workspace:*"
+    "@atelier/schemas": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

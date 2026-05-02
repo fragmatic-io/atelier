@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -13,11 +13,11 @@
  */
 
 import { useEffect, useRef } from 'react';
-import type { Trigger } from '@cir/schemas';
-import type { TriggerHandler } from '@cir/runtime';
+import type { Trigger } from '@atelier/schemas';
+import type { TriggerHandler } from '@atelier/runtime';
 import { useCir } from './use-cir.js';
 
-/** Wildcard literal `'*'` mirrors `@cir/runtime`'s `WILDCARD_TRIGGER_TYPE`. */
+/** Wildcard literal `'*'` mirrors `@atelier/runtime`'s `WILDCARD_TRIGGER_TYPE`. */
 export type TriggerEventType = Trigger['type'] | '*';
 
 export function useTrigger(eventType: TriggerEventType, handler: TriggerHandler): void {

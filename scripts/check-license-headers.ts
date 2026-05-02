@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 /**
  * License header check.
@@ -40,7 +40,7 @@ const EXCLUDE = [
 ];
 
 const SPDX_LINE = 'SPDX-License-Identifier: MIT';
-const HEADER = `// ${SPDX_LINE}\n// Copyright (c) 2026 The CIR Authors\n`;
+const HEADER = `// ${SPDX_LINE}\n// Copyright (c) 2026 The Atelier Authors\n`;
 // Match the SPDX line inside `//`, `#`, or `/* ... */` style comments.
 // Accept both MIT (current) and Apache-2.0 (legacy, transitional) so a partial
 // migration doesn't blow up CI mid-flight.

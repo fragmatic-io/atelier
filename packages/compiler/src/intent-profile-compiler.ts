@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Intent profile compiler service — translates a user's free-text
  * self-description into a draft `IntentProfile` for review.
@@ -29,7 +29,7 @@ import {
   type Capability,
   type IntentProfile,
   type IntentRule,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 import {
   buildIntentProfilePrompt,
   INTENT_PROFILE_SYSTEM_PROMPT,

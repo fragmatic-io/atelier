@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `withUndo()` — middleware wrapper for `ActionDispatcher` that emits an
  * undo-toast notice for every successful undoable dispatch.
@@ -28,7 +28,7 @@
  * declaration as coverage. No per-route plumbing.
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import type {
   ActionDispatcher,
   ActionExecutionContext,
@@ -78,7 +78,7 @@ export interface UndoHandle {
  *
  * Hosts can implement this by:
  *  - Mounting a `<ToastSinkProvider>` and using the `useUndoToastEmitter()`
- *    hook from `@cir/react` (the recommended path).
+ *    hook from `@atelier/react` (the recommended path).
  *  - Routing notices into an existing notification system (Sonner, etc.).
  *  - Logging them for tests / headless runs (see `with-undo.test.ts`).
  */

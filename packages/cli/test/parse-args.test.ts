@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
 import { parseArgs } from '../src/parse-args.js';
 
@@ -44,7 +44,7 @@ describe('parseArgs', () => {
   });
 
   it('reads next non-flag token as the flag value', () => {
-    // Matches the convention used by `cir-schemas` and `cir-evals`: any
+    // Matches the convention used by `atelier-schemas` and `atelier-evals`: any
     // token that does not start with `--` is consumed as the previous
     // flag's value. Callers that need a boolean must use `--flag=true` or
     // place the flag after every positional.

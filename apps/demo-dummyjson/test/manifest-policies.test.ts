@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest ↔ baseline-policy contract for the dummyjson catalog demo.
  *
@@ -23,7 +23,7 @@
  * off-screen `<Stack>` of `<Button>`s for `cart.remove` / `cart.add` so
  * `reversibility_surfaced` would find a rollback affordance. Phase 2 #5
  * replaces both with **ambient policy satisfiers** declared at the
- * services bag level (see `lib/cir-providers.tsx`):
+ * services bag level (see `lib/atelier-providers.tsx`):
  *
  *   - The chrome `<StatusBar>` carries the `*.rate_limit` data binding
  *     AND the host declares the chip as an `AmbientPolicySatisfier` so
@@ -36,7 +36,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
+import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@atelier/components';
 import {
   BASELINE_POLICIES,
   composesAccordingTo,
@@ -45,12 +45,12 @@ import {
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
   type AmbientPolicySatisfier,
-} from '@cir/policies';
-import { manifestContractsFromBindings } from '@cir/runtime';
+} from '@atelier/policies';
+import { manifestContractsFromBindings } from '@atelier/runtime';
 import { DUMMYJSON_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
 import { browseManifest, cartManifest, checkoutManifest, productManifest } from '../lib/manifests';
-import type { Density } from '@cir/components';
+import type { Density } from '@atelier/components';
 
 /**
  * Mirror of `DEMO_DUMMYJSON_COMPOSITION_ROLES` from
@@ -62,7 +62,7 @@ import type { Density } from '@cir/components';
 const DEMO_DUMMYJSON_COMPOSITION_ROLES: Readonly<Record<string, 'list' | 'grid' | 'table'>> =
   Object.freeze({});
 
-// `COMPONENT_BINDINGS` import is here strictly to mirror `cir-providers.tsx`'s
+// `COMPONENT_BINDINGS` import is here strictly to mirror `atelier-providers.tsx`'s
 // runtime configuration — keeps the test honest about what the live demo
 // validates against.
 void COMPONENT_BINDINGS;
@@ -87,7 +87,7 @@ const INTENT = {
   ],
 };
 
-// Mirror of `AMBIENT_POLICY_SATISFIERS` from `lib/cir-providers.tsx`.
+// Mirror of `AMBIENT_POLICY_SATISFIERS` from `lib/atelier-providers.tsx`.
 // Declaring the chrome rate-limit chip + ambient undo toast clears the
 // `rate_limited_actions_show_state` and `reversibility_surfaced`
 // obligations without any in-manifest anchor nodes.
@@ -150,7 +150,7 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
 
   // Phase 2 #5: the off-screen `<Stack>` of `<Button>` rollback anchors
   // is gone. Reversibility is satisfied via the ambient `<UndoToast>`
-  // declared in `cir-providers.tsx` (and asserted indirectly by the
+  // declared in `atelier-providers.tsx` (and asserted indirectly by the
   // policy run above — if the satisfier wiring were broken, the run
   // would surface `reversibility_surfaced` errors).
   it('does not need an in-tree rollback Button — ambient UndoToast covers reversibility', () => {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await -- stub compilers must be Promise-returning to satisfy CompilerService.compile; not every stub awaits */
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `CompositeCompiler`. The composite is a small orchestration
  * piece — these tests cover the cascade matrix (which errors do/don't

@@ -1,4 +1,4 @@
-# CIR
+# Atelier
 
 **Capability · Intent · Render** — a production architecture for dynamic software interfaces.
 
@@ -8,15 +8,15 @@
 
 Software ships **capabilities and skills** (typed actions, data, usage knowledge). Users keep **intent** (preferences, lenses, rules). Agents emit **UI as ephemeral output** — a `Manifest` JSON document that the runtime renders. Cached. Versioned. Recomputed only on trigger.
 
-CIR is the integration of pieces that already exist — MCP-style capabilities, skills, JSON manifest UI, intent profiles, multi-tier caching, pub-sub triggers — into one principled architecture. Compile rarely, render constantly. **The interface is not the product. The capability is.**
+Atelier is the integration of pieces that already exist — MCP-style capabilities, skills, JSON manifest UI, intent profiles, multi-tier caching, pub-sub triggers — into one principled architecture. Compile rarely, render constantly. **The interface is not the product. The capability is.**
 
 ---
 
 ## Quick start (10 minutes from `git clone` to a personalised UI)
 
 ```bash
-git clone https://github.com/fragmatic-io/cir.git
-cd cir
+git clone https://github.com/fragmatic-io/atelier.git
+cd atelier
 pnpm install                                              # ≈ 60s
 
 # (Optional) drop your Gemini API key into apps/demo/.env.local for LLM
@@ -29,7 +29,7 @@ pnpm demo                                                 # boots vault + Next.j
 # demo:  http://localhost:3000  (lands on /onboarding for a clean profile)
 ```
 
-`pnpm demo` is the orchestration script — it spawns `cir vault dev` (the
+`pnpm demo` is the orchestration script — it spawns `atelier vault dev` (the
 intent vault server) and `next dev` (the demo app) with prefixed log
 streams, sets `NEXT_PUBLIC_VAULT_URL` automatically, and tears both down
 on Ctrl-C. First-boot path: **`/onboarding` → vault consent UI → token
@@ -46,23 +46,23 @@ Three demos ship in `apps/`:
   archive, undo within 5s, hierarchy treatment for assigned-to-me, hover
   cards on `#issue` references.
 
-Each is bootable individually with `pnpm --filter @cir/demo-<name> dev`,
+Each is bootable individually with `pnpm --filter @atelier/demo-<name> dev`,
 or via `pnpm demo --app <name>` once the vault is running.
 
-Developer CLI — same `cir` entry point you'll use in your own apps:
+Developer CLI — same `atelier` entry point you'll use in your own apps:
 
 ```bash
-pnpm cir --help                                    # top-level usage
-pnpm cir init my-app                               # scaffold a new CIR app
-pnpm cir compile fixtures/intent.json \            # offline compile to a manifest
+pnpm atelier --help                                    # top-level usage
+pnpm atelier init my-app                               # scaffold a new Atelier app
+pnpm atelier compile fixtures/intent.json \            # offline compile to a manifest
   --capabilities capabilities/ \
   --components components/registry.json
-pnpm cir inspect manifests/m_xyz.json              # pretty-print a manifest tree
-pnpm cir dev --tail                                # spawn next dev + tail audit SSE
-pnpm cir import openapi spec.yaml                  # generate draft capabilities
-pnpm cir add Button                                # copy a baseline component into ./components/
-pnpm cir components-sync                           # regen registry.json from @cir/components
-pnpm cir validate                                  # run the host validate chain
+pnpm atelier inspect manifests/m_xyz.json              # pretty-print a manifest tree
+pnpm atelier dev --tail                                # spawn next dev + tail audit SSE
+pnpm atelier import openapi spec.yaml                  # generate draft capabilities
+pnpm atelier add Button                                # copy a baseline component into ./components/
+pnpm atelier components-sync                           # regen registry.json from @atelier/components
+pnpm atelier validate                                  # run the host validate chain
 ```
 
 See [`packages/cli/README.md`](packages/cli/README.md) for the full subcommand surface and the flags (`--strict`, `--tail`, `--tail-only`, `--audit-url`, `--no-color`, `--json`, `--server`).
@@ -86,7 +86,7 @@ graph TB
   end
 
   subgraph Compile["COMPILER SERVICE (LLM)"]
-    Compiler["@cir/compiler<br/>Gemini + Fallback + Composite"]
+    Compiler["@atelier/compiler<br/>Gemini + Fallback + Composite"]
   end
 
   subgraph Cache["MULTI-TIER CACHE"]
@@ -98,7 +98,7 @@ graph TB
     Resolver["ManifestResolver"]
     Dispatcher["ActionDispatcher<br/>(modal + verbal_required)"]
     Bus["TriggerBus + SSE"]
-    Renderer["@cir/react walker"]
+    Renderer["@atelier/react walker"]
   end
 
   Caps --> Compiler
@@ -121,7 +121,7 @@ graph TB
   Bus -->|invalidate| T3
   Bus -->|invalidate| T4
 
-  Audit[("StreamingAuditSink<br/>+ SSE /api/cir/audit/stream<br/>+ cir dev --tail")]
+  Audit[("StreamingAuditSink<br/>+ SSE /api/cir/audit/stream<br/>+ atelier dev --tail")]
   Compiler -.-> Audit
   Dispatcher -.-> Audit
   Resolver -.-> Audit
@@ -151,36 +151,36 @@ Cost: 1 LLM call on cold path (~5–20k tokens). Zero LLM calls on the hot path.
 
 ## Packages
 
-| Package             | One-liner                                                                                                                                                                                                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@cir/schemas`      | Zod schemas + JSON Schema codegen for every CIR artifact (Capability, Skill, Component, Manifest, Trigger, Intent, Audit, BrandKit, Policy, CompositionRules). [README](packages/schemas/README.md).                                                                             |
-| `@cir/policies`     | 7 baseline pure-function validators + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` interface. [README](packages/policies/README.md).                                                                                                          |
-| `@cir/runtime`      | Framework-agnostic core: manifest cache (Memory + IndexedDB), fetcher, resolver, action dispatcher (modal + verbal-phrase confirm + LRU undo), trigger bus + SSE transport, render-plan builder, audit sinks (incl. `StreamingAuditSink`). [README](packages/runtime/README.md). |
-| `@cir/components`   | 56 baseline React primitives (Layout, Display, Input, Navigation, Feedback, Action, Specialized) with composition rules + per-component metadata. [README](packages/components/README.md).                                                                                       |
-| `@cir/react`        | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirmation portal, SWR + optimistic UI, `@cir/react/debug` subpath for the floating audit panel. [README](packages/react/README.md).                                                                       |
-| `@cir/compiler`     | LLM-backed compile service: `GeminiCompiler` + `FallbackCompiler` + `CompositeCompiler`, `compileIntentProfile()` for LLM-assisted onboarding, `MemoryManifestStore` + `RedisManifestStore`, `ServerManifestResolver`. [README](packages/compiler/README.md).                    |
-| `@cir/evals`        | Eval harness, `defineEval()`, `cir-evals` CLI. End-to-end Gemini smoke + nightly workflow. [README](packages/evals/README.md).                                                                                                                                                   |
-| `@cir/cli`          | Unified developer CLI: `cir init / dev / add / components-sync / validate / import openapi / inspect / compile / vault dev`, with `--tail` for terminal-side audit observability. [README](packages/cli/README.md).                                                              |
-| `@cir/vault-server` | The reference intent vault server. `node:http` + ed25519 JWTs + JSON-file storage. Mints scoped tokens, enforces scope-based read/write filtering, emits `system.security_revocation` triggers. [README](packages/vault-server/README.md).                                       |
-| `@cir/vault-client` | Typed wire client for the vault. Local JWKS-cached signature verification, pluggable token storage (browser localStorage + in-memory + custom), typed errors for clean fall-through. [README](packages/vault-client/README.md).                                                  |
+| Package                 | One-liner                                                                                                                                                                                                                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@atelier/schemas`      | Zod schemas + JSON Schema codegen for every Atelier artifact (Capability, Skill, Component, Manifest, Trigger, Intent, Audit, BrandKit, Policy, CompositionRules). [README](packages/schemas/README.md).                                                                         |
+| `@atelier/policies`     | 7 baseline pure-function validators + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` interface. [README](packages/policies/README.md).                                                                                                          |
+| `@atelier/runtime`      | Framework-agnostic core: manifest cache (Memory + IndexedDB), fetcher, resolver, action dispatcher (modal + verbal-phrase confirm + LRU undo), trigger bus + SSE transport, render-plan builder, audit sinks (incl. `StreamingAuditSink`). [README](packages/runtime/README.md). |
+| `@atelier/components`   | 56 baseline React primitives (Layout, Display, Input, Navigation, Feedback, Action, Specialized) with composition rules + per-component metadata. [README](packages/components/README.md).                                                                                       |
+| `@atelier/react`        | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirmation portal, SWR + optimistic UI, `@atelier/react/debug` subpath for the floating audit panel. [README](packages/react/README.md).                                                                   |
+| `@atelier/compiler`     | LLM-backed compile service: `GeminiCompiler` + `FallbackCompiler` + `CompositeCompiler`, `compileIntentProfile()` for LLM-assisted onboarding, `MemoryManifestStore` + `RedisManifestStore`, `ServerManifestResolver`. [README](packages/compiler/README.md).                    |
+| `@atelier/evals`        | Eval harness, `defineEval()`, `atelier-evals` CLI. End-to-end Gemini smoke + nightly workflow. [README](packages/evals/README.md).                                                                                                                                               |
+| `@atelier/cli`          | Unified developer CLI: `atelier init / dev / add / components-sync / validate / import openapi / inspect / compile / vault dev`, with `--tail` for terminal-side audit observability. [README](packages/cli/README.md).                                                          |
+| `@atelier/vault-server` | The reference intent vault server. `node:http` + ed25519 JWTs + JSON-file storage. Mints scoped tokens, enforces scope-based read/write filtering, emits `system.security_revocation` triggers. [README](packages/vault-server/README.md).                                       |
+| `@atelier/vault-client` | Typed wire client for the vault. Local JWKS-cached signature verification, pluggable token storage (browser localStorage + in-memory + custom), typed errors for clean fall-through. [README](packages/vault-client/README.md).                                                  |
 
 ---
 
 ## Vault
 
-CIR's vault — the user-owned store apps request scoped read access to — ships in two packages:
+Atelier's vault — the user-owned store apps request scoped read access to — ships in two packages:
 
-- **`@cir/vault-server`** — Reference vault server. `node:http` + ed25519 JWT signing + JSON-file storage by default. Run with `pnpm cir vault dev --port 4001`.
-- **`@cir/vault-client`** — Typed wire client. The demo's `apps/demo/lib/intent-store.ts` swapped from `localStorage` to this client (Wave 7 / track V-1). On vault unreachable, the demo falls back to `localStorage` with a console warning. Production hosts disable the fallback via `NEXT_PUBLIC_VAULT_FALLBACK=disabled`.
+- **`@atelier/vault-server`** — Reference vault server. `node:http` + ed25519 JWT signing + JSON-file storage by default. Run with `pnpm atelier vault dev --port 4001`.
+- **`@atelier/vault-client`** — Typed wire client. The demo's `apps/demo/lib/intent-store.ts` swapped from `localStorage` to this client (Wave 7 / track V-1). On vault unreachable, the demo falls back to `localStorage` with a console warning. Production hosts disable the fallback via `NEXT_PUBLIC_VAULT_FALLBACK=disabled`.
 
 The wire format — endpoints, scope grammar, JWT claims, key rotation, revocation propagation — lives in [`docs/vault-protocol.md`](docs/vault-protocol.md).
 
 ```bash
 # 1. Boot the vault.
-pnpm cir vault dev --port 4001
+pnpm atelier vault dev --port 4001
 
 # 2. Run the demo. NEXT_PUBLIC_VAULT_URL points at the vault by default.
-pnpm --filter @cir/demo dev
+pnpm --filter @atelier/demo dev
 # → http://localhost:3000
 ```
 
@@ -201,7 +201,7 @@ graph TB
     S5["Public artifacts<br/>capabilities/ skills/ recipes/ policies/<br/>+ .well-known/cir.json"]
     S6["_review envelope<br/>+ validate-data --strict CI gate<br/>for OpenAPI imports"]
     S7["LLM-assisted onboarding<br/>compileIntentProfile + /onboarding/describe<br/>+ /onboarding/review human gate"]
-    S8["8-subcommand cir CLI<br/>incl. cir inspect / compile / dev --tail"]
+    S8["8-subcommand atelier CLI<br/>incl. atelier inspect / compile / dev --tail"]
     S9["Nightly Gemini eval workflow<br/>auth-fail vs no-key distinction"]
     S10["984 tests across 136 files<br/>15 schema-validated artifact files"]
   end
@@ -209,7 +209,7 @@ graph TB
   subgraph Roadmap["Roadmap / not yet shipped"]
     direction TB
     R3["Behavioral pattern detector implementations<br/>(interface only)"]
-    R4["Audit sink server endpoint in the demo<br/>(cir dev --tail is a contract)"]
+    R4["Audit sink server endpoint in the demo<br/>(atelier dev --tail is a contract)"]
     R5["Marketplace / community recipes"]
     R6["Live-query subscriptions<br/>(SWR + optimistic UI cover the common cases)"]
     R7["Cross-app workflow compilation"]
@@ -222,7 +222,7 @@ graph TB
 ## Run the demo end-to-end
 
 ```bash
-pnpm --filter @cir/demo dev
+pnpm --filter @atelier/demo dev
 # → http://localhost:3000
 ```
 
@@ -256,7 +256,7 @@ Once granted, `/today` loads. Open DevTools console for audit events. Try:
 In a second terminal:
 
 ```bash
-pnpm cir dev --tail-only
+pnpm atelier dev --tail-only
 # tails /api/cir/audit/stream — every compile / policy fail / action.executed
 ```
 
@@ -271,13 +271,13 @@ pnpm validate                 # license + typecheck + lint + format + components
 pnpm validate:fast            # everything except tests (pre-push hook)
 pnpm test                     # vitest (984 tests across 136 files at this commit)
 pnpm test:coverage            # detailed coverage by package
-pnpm exec cir-schemas dump --out .well-known/schemas      # regenerate published JSON Schemas
-pnpm exec cir-schemas validate-data --strict              # fail on _review drafts
-pnpm exec cir-evals run                                   # eval suite
-pnpm exec cir-evals run --tag smoke                       # Gemini end-to-end smoke (skips without key)
-pnpm exec cir-evals run --tag chain                       # personalisation chain integration witness (offline-first, deterministic)
-pnpm --filter @cir/demo build                             # Next.js production build
-pnpm --filter @cir/demo e2e                               # Playwright (requires `e2e:install` first)
+pnpm exec atelier-schemas dump --out .well-known/schemas      # regenerate published JSON Schemas
+pnpm exec atelier-schemas validate-data --strict              # fail on _review drafts
+pnpm exec atelier-evals run                                   # eval suite
+pnpm exec atelier-evals run --tag smoke                       # Gemini end-to-end smoke (skips without key)
+pnpm exec atelier-evals run --tag chain                       # personalisation chain integration witness (offline-first, deterministic)
+pnpm --filter @atelier/demo build                             # Next.js production build
+pnpm --filter @atelier/demo e2e                               # Playwright (requires `e2e:install` first)
 ```
 
 The nightly Gemini job runs at `.github/workflows/nightly-evals.yml` against the `GEMINI_API_KEY` repo secret. PR CI skips it; nightly catches drift. If the key is revoked or invalid, the eval surfaces `auth_failed: true` and the workflow exits non-zero — silent skip on a revoked key would be a regression, not a pass.
@@ -287,7 +287,7 @@ The nightly Gemini job runs at `.github/workflows/nightly-evals.yml` against the
 ## Repo layout
 
 ```
-cir/
+atelier/
 ├── ETHOS.md                    # The ten principles
 ├── AGENTS.md                   # Coding-agent instructions
 ├── README.md                   # ← this file
@@ -296,7 +296,7 @@ cir/
 ├── apps/demo/                  # Next.js 15 end-to-end showcase
 ├── capabilities/               # typed action+data definitions (with _review envelope)
 ├── skills/                     # markdown skills with YAML frontmatter
-├── components/                 # registry.json + composition-rules.json (synced from @cir/components)
+├── components/                 # registry.json + composition-rules.json (synced from @atelier/components)
 ├── policies/                   # app-defined declarative policies (JSON, PolicySchema)
 ├── recipes/                    # default manifests per persona
 ├── evals/                      # *.eval.ts scenarios, incl. nightly Gemini smoke

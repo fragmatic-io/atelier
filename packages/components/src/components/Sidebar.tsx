@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -31,7 +31,7 @@
  * without a stylesheet still see the right shape.
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { readPersistedBool, writePersistedBool } from '../lib/persisted-state.js';
 import { cn, navigationVariantClass, type NavigationVariant } from './_variants.js';
 

@@ -4,16 +4,16 @@
 
 ## Two surfaces
 
-CIR has **two** policy surfaces that should not be confused:
+Atelier has **two** policy surfaces that should not be confused:
 
-1. **`@cir/policies` (TypeScript)** — the runtime validator code. Pure functions, deterministic, fast, runs every compile and every action call. Lives in [`../packages/policies/`](../packages/policies/README.md).
-2. **This directory (declarative JSON)** — app-defined policies that ride alongside capabilities, validated against `@cir/schemas`'s `PolicySchema`. The `_review` envelope and `cir-schemas validate-data --strict` gate apply here. Discovery via `/.well-known/cir.json`.
+1. **`@atelier/policies` (TypeScript)** — the runtime validator code. Pure functions, deterministic, fast, runs every compile and every action call. Lives in [`../packages/policies/`](../packages/policies/README.md).
+2. **This directory (declarative JSON)** — app-defined policies that ride alongside capabilities, validated against `@atelier/schemas`'s `PolicySchema`. The `_review` envelope and `atelier-schemas validate-data --strict` gate apply here. Discovery via `/.well-known/cir.json`.
 
-Files in this directory are metadata about how an app's capabilities should be governed (rate limits, confirmation thresholds, scope rules). They are consumed by the runtime alongside the baseline `@cir/policies` validators.
+Files in this directory are metadata about how an app's capabilities should be governed (rate limits, confirmation thresholds, scope rules). They are consumed by the runtime alongside the baseline `@atelier/policies` validators.
 
 ## Files (declarative)
 
-- **Format**: JSON, validated against `PolicySchema` (`@cir/schemas`).
+- **Format**: JSON, validated against `PolicySchema` (`@atelier/schemas`).
 - **Naming**: `{rule}.json` — e.g. `cart-modifications-rate-limited.json`.
 - **One policy per file.** The runtime composes these alongside the baseline.
 
@@ -26,7 +26,7 @@ Files in this directory are metadata about how an app's capabilities should be g
 
 See [`../docs/architecture.md`](../docs/architecture.md) — section "Policy engine" for the contract: a manifest that fails any policy is rejected, the compiler retries with the failure reason, and persistent failure surfaces as a developer error (the user falls back to the prior known-good manifest).
 
-## Baseline policies (shipped in `@cir/policies`)
+## Baseline policies (shipped in `@atelier/policies`)
 
 - `data_access_within_grant`
 - `confirmation_required_for_destructive`

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/runtime` — public surface of the framework-agnostic runtime core.
+ * `@atelier/runtime` — public surface of the framework-agnostic runtime core.
  *
  * What lives here (Phase 4a):
  *  - Manifest cache interface + Memory and IndexedDB implementations

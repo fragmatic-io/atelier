@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Map — placeholder map component.
  *
  * A real tile-rendering map needs Leaflet / Mapbox / MapLibre, all of which
- * pull in significant runtime + CSS. To keep `@cir/components` free of any
+ * pull in significant runtime + CSS. To keep `@atelier/components` free of any
  * cartography deps in v1, this component renders a textual fallback:
  *  - A header with the center coordinates and zoom level.
  *  - A `<ul>` of markers with their labels and coordinates.
@@ -16,7 +16,7 @@
  * selector + part attributes are the contract a renderer must keep.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, mapVariantClass, type MapVariant } from './_variants.js';
 
 export interface MapMarker {

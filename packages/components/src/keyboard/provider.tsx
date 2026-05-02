@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -41,7 +41,7 @@ import {
   type HotkeyEventLike,
   type KeyboardServices,
   type Platform,
-} from '@cir/keyboard';
+} from '@atelier/keyboard';
 import { KeyboardContext } from './context.js';
 
 export interface KeyboardProviderProps {

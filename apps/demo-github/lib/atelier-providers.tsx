@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
 /**
- * CIR runtime services bag for `apps/demo-github`. Mirrors the demo's
- * `cir-providers.tsx` with three demo-specific tweaks:
+ * Atelier runtime services bag for `apps/demo-github`. Mirrors the demo's
+ * `atelier-providers.tsx` with three demo-specific tweaks:
  *
  *   1. The data resolver composes a fixture-backed `MockDataResolver` for
  *      `github.*` capabilities with a `RestDataResolver` that talks to
@@ -39,16 +39,16 @@ import {
   wireTriggerInvalidation,
   type ActionExecutionContext,
   type ConfirmationCallback,
-} from '@cir/runtime';
-import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
+} from '@atelier/runtime';
+import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@atelier/components';
 import {
   CirRuntime,
   CompileBadge,
   DebugPanel,
   useReactConfirmation,
   type DataBinding,
-} from '@cir/react';
-import { CompositeDataResolver, MockDataResolver, RestDataResolver } from '@cir/data-resolvers';
+} from '@atelier/react';
+import { CompositeDataResolver, MockDataResolver, RestDataResolver } from '@atelier/data-resolvers';
 import {
   validateManifest,
   BASELINE_POLICIES,
@@ -56,8 +56,8 @@ import {
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
   type AmbientPolicySatisfier,
-} from '@cir/policies';
-import type { IntentProfile, Manifest } from '@cir/schemas';
+} from '@atelier/policies';
+import type { IntentProfile, Manifest } from '@atelier/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
 import { DEMO_GITHUB_BINDINGS } from './component-bindings.js';

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * End-to-end smoke eval: real Gemini → real manifest → real policies → real walk.
  *
@@ -19,27 +19,27 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import {
   CompositeCompiler,
   FallbackCompiler,
   GeminiCompiler,
   type CompilerService,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 import {
   BASELINE_POLICIES,
   validateManifest,
   type PolicyContext,
   type PolicyViolation,
-} from '@cir/policies';
-import { buildRenderPlan, MapComponentRegistry, type ComponentBinding } from '@cir/runtime';
+} from '@atelier/policies';
+import { buildRenderPlan, MapComponentRegistry, type ComponentBinding } from '@atelier/runtime';
 import {
   CapabilitySchema,
   ManifestSchema,
   type Capability,
   type ComponentDefinition,
   type Manifest,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CAPABILITIES_DIR = path.join(REPO_ROOT, 'capabilities', 'github');
@@ -170,7 +170,7 @@ function smokeComponents(): ComponentDefinition[] {
         data_sources: [],
         actions_supported: [],
         responsive_targets: ['web'],
-        design_tokens: '@cir/components/baseline@0.1.0',
+        design_tokens: '@atelier/components/baseline@0.1.0',
         examples: [],
         text_render: true,
       }) as unknown as ComponentDefinition,

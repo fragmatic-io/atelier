@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * In-memory store for the demo. Persists across hot reloads in dev via
  * `globalThis`. Resets when the Next.js server restarts.
  *
- * In a real CIR app these would be database queries gated by the Action
+ * In a real Atelier app these would be database queries gated by the Action
  * Gateway; here they're just JS objects so the demo runs offline.
  */
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -11,11 +11,11 @@
  *   - spacious  → `<Grid columns={2}>` with bigger thumbnails
  *
  * `<CirRoute>` resolves the manifest via the runtime's
- * `ManifestResolver`. The lens-aware fetch wrapper in `cir-providers.tsx`
+ * `ManifestResolver`. The lens-aware fetch wrapper in `atelier-providers.tsx`
  * forwards `x-cir-density` so the server picks the right fallback variant.
  */
 
-import { CirRoute } from '@cir/react';
+import { CirRoute } from '@atelier/react';
 
 export default function BrowsePage(): React.JSX.Element {
   return <CirRoute path="/browse" />;

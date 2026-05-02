@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir import figma <tokens.json>` — turn a W3C Design Tokens JSON export
- * into a CIR `BrandKit` JSON.
+ * `atelier import figma <tokens.json>` — turn a W3C Design Tokens JSON export
+ * into a Atelier `BrandKit` JSON.
  *
- *   cir import figma <tokens.json> [--out brand-kit.json]
+ *   atelier import figma <tokens.json> [--out brand-kit.json]
  *                                  [--id <kit-id>] [--version <semver>]
  *                                  [--dry-run]
  *
@@ -27,7 +27,7 @@
  * mapping isn't required, predictable mapping is.
  *
  * No new dependencies. The W3C tokens format is plain JSON, the BrandKit
- * schema lives in `@cir/schemas`, and the writer is `fs/promises`.
+ * schema lives in `@atelier/schemas`, and the writer is `fs/promises`.
  */
 
 /* eslint-disable no-console */
@@ -36,7 +36,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve } from 'node:path';
 
-import { BrandKitSchema, type BrandKit } from '@cir/schemas';
+import { BrandKitSchema, type BrandKit } from '@atelier/schemas';
 
 // -----------------------------------------------------------------------------
 // W3C design tokens — minimal type model.
@@ -365,7 +365,7 @@ export function convertTokens(input: unknown, opts: ConvertOptions = {}): Conver
 }
 
 // -----------------------------------------------------------------------------
-// CLI argv parsing — matches `cir import openapi` style.
+// CLI argv parsing — matches `atelier import openapi` style.
 // -----------------------------------------------------------------------------
 
 interface ImportArgs {
@@ -437,11 +437,11 @@ function parseImportArgs(args: readonly string[]): ImportArgs {
   return { spec, out, id, version, dryRun, help };
 }
 
-const USAGE = `usage: cir import figma <tokens.json> [--out brand-kit.json]
+const USAGE = `usage: atelier import figma <tokens.json> [--out brand-kit.json]
                                        [--id <kit-id>] [--version <semver>]
                                        [--dry-run]
 
-Convert a W3C Design Tokens (Figma) JSON export to a CIR BrandKit JSON.
+Convert a W3C Design Tokens (Figma) JSON export to a Atelier BrandKit JSON.
 Tokens with unrecognized paths are listed as warnings — review and re-tag
 the input or hand-edit the output before publishing.
 
@@ -455,7 +455,7 @@ fields are intentionally empty / TODO; Figma's design-tokens format does
 not carry that information. Hand-fill before shipping.`;
 
 /**
- * `cir import figma` programmatic entry point.
+ * `atelier import figma` programmatic entry point.
  *
  * Args: positional `<tokens.json>`, then any of `--out`, `--id`, `--version`,
  * `--dry-run`. Returns; throws on unrecoverable errors.

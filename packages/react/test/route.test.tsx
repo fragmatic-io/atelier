@@ -2,8 +2,8 @@
 import './setup.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, waitFor } from '@testing-library/react';
-import type { IntentProfile, Trigger } from '@cir/schemas';
-import { MapComponentRegistry } from '@cir/runtime/testing';
+import type { IntentProfile, Trigger } from '@atelier/schemas';
+import { MapComponentRegistry } from '@atelier/runtime/testing';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import { CirRoute } from '../src/render/route.js';
 import { __resetMissingBindingWarnings } from '../src/render/render-node.js';

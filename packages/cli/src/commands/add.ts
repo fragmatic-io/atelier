@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir add <component>` — copy a baseline component from `@cir/components`
+ * `atelier add <component>` — copy a baseline component from `@atelier/components`
  * source into the host project's `components/` directory.
  *
- * Discovery walks the resolved `@cir/components` package's
+ * Discovery walks the resolved `@atelier/components` package's
  * `src/components/` directory (every file is `<Name>.tsx`). We avoid
  * importing the binding registry directly because each component's source
  * uses JSX, which would require a JSX runtime in the CLI process — far
@@ -21,11 +21,11 @@ import { dirname, resolve } from 'node:path';
 import { ADD_USAGE } from '../usage.js';
 
 /**
- * Resolve the path to `@cir/components`'s `src/components/` directory.
+ * Resolve the path to `@atelier/components`'s `src/components/` directory.
  *
  * Uses `createRequire` so the CLI works under both `node --import=tsx/esm`
  * (production invocation) and Vitest's SSR worker (which does not implement
- * `import.meta.resolve`). The `@cir/components/registry` subpath export is
+ * `import.meta.resolve`). The `@atelier/components/registry` subpath export is
  * defined in that package's `exports` map, so the resolution is stable.
  *
  * Exported for tests.
@@ -34,12 +34,12 @@ export function resolveComponentsSourceDir(): string {
   const req = createRequire(import.meta.url);
   // package.json -> "exports": { "./registry": "./src/registry.ts" }.
   // The components live in ./src/components/ alongside the registry.
-  const registryPath = req.resolve('@cir/components/registry');
+  const registryPath = req.resolve('@atelier/components/registry');
   return resolve(dirname(registryPath), 'components');
 }
 
 /**
- * List every component name discoverable under `@cir/components`. Names
+ * List every component name discoverable under `@atelier/components`. Names
  * are derived from `*.tsx` file names (one component per file).
  */
 export async function listAvailableComponents(): Promise<string[]> {
@@ -110,7 +110,9 @@ export async function addCommand(
       for (const n of names) console.log(n);
       return 0;
     } catch (err: unknown) {
-      console.error(`cir add --list failed: ${err instanceof Error ? err.message : String(err)}`);
+      console.error(
+        `atelier add --list failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
       return 1;
     }
   }
@@ -124,7 +126,7 @@ export async function addCommand(
     console.log(`copied ${result.componentName}.tsx -> ${result.destPath}`);
     return 0;
   } catch (err: unknown) {
-    console.error(`cir add failed: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(`atelier add failed: ${err instanceof Error ? err.message : String(err)}`);
     return 1;
   }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   MemoryVaultStorage,
@@ -7,8 +7,8 @@ import {
   handleVaultRequest,
   loadOrGenerateKeyPair,
   type VaultRequest,
-} from '@cir/vault-server';
-import type { IntentProfile } from '@cir/schemas';
+} from '@atelier/vault-server';
+import type { IntentProfile } from '@atelier/schemas';
 import {
   MemoryTokenStorage,
   VaultClient,

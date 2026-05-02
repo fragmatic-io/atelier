@@ -1,8 +1,8 @@
-# @cir/react
+# @atelier/react
 
-The React adapter for [`@cir/runtime`](../runtime/README.md).
+The React adapter for [`@atelier/runtime`](../runtime/README.md).
 
-This package is the bridge between CIR's framework-agnostic runtime core and
+This package is the bridge between Atelier's framework-agnostic runtime core and
 React. It provides:
 
 - A **provider** (`<CirRuntime>`) that puts the runtime services on a React
@@ -14,19 +14,19 @@ React. It provides:
   runtime's `ConfirmationCallback` contract.
 
 The package does **not** ship UI components — those live in
-[`@cir/components`](../components/README.md). The adapter receives the
+[`@atelier/components`](../components/README.md). The adapter receives the
 `ComponentRegistry` as services and renders whatever bindings the host
 provides. ETHOS principle 7: the render runtime is dumb on purpose.
 
 ## Next.js / React Server Components
 
 Every file that uses hooks, context, or class state ships with the
-`'use client'` directive. You can import `@cir/react` from a Server
+`'use client'` directive. You can import `@atelier/react` from a Server
 Component without a wrapper — Next.js will route the boundary correctly:
 
 ```tsx
 // app/today/page.tsx — Server Component
-import { CirRuntime, CirRoute } from '@cir/react';
+import { CirRuntime, CirRoute } from '@atelier/react';
 import { buildServices } from '@/lib/cir-services';
 
 export default function TodayPage() {
@@ -38,15 +38,15 @@ export default function TodayPage() {
 }
 ```
 
-`@cir/components` is mostly server-component-friendly (pure functional
+`@atelier/components` is mostly server-component-friendly (pure functional
 components with no state); only `ConfirmDialog` is client-only.
-`@cir/runtime`, `@cir/policies`, and `@cir/schemas` are pure
+`@atelier/runtime`, `@atelier/policies`, and `@atelier/schemas` are pure
 TypeScript with no React dependencies — safe to import from anywhere.
 
 ## Quick start
 
 ```tsx
-import { CirRuntime, CirRoute, useReactConfirmation } from '@cir/react';
+import { CirRuntime, CirRoute, useReactConfirmation } from '@atelier/react';
 import {
   ManifestFetcher,
   ManifestResolver,
@@ -56,7 +56,7 @@ import {
   MemoryManifestCache,
   InMemoryTriggerBus,
   ConsoleAuditSink,
-} from '@cir/runtime';
+} from '@atelier/runtime';
 
 function App() {
   const { confirm, Portal } = useReactConfirmation();
@@ -116,7 +116,7 @@ pass the action callback plus the `Capability` declaration; the hook reads
 path automatically. No opt-in flag required.
 
 ```tsx
-import { useOptimisticAction, useDispatcher } from '@cir/react';
+import { useOptimisticAction, useDispatcher } from '@atelier/react';
 import { CAPABILITIES } from './capabilities';
 
 function CartButton({ productId }: { productId: number }) {
@@ -156,13 +156,13 @@ canonical primitives a host needs to drive a Linear-style multi-select:
 `selected` set and an `isSelected(id)` predicate. The hook pairs with
 the `<List>`, `<Table>`, and `<Grid>` `selectable` / `bulkActions`
 integration shipped from
-[`@cir/components`](../components/README.md#selectable-lists-tables-and-grids-wave-7b--int-9--wave-7c--track-a) —
+[`@atelier/components`](../components/README.md#selectable-lists-tables-and-grids-wave-7b--int-9--wave-7c--track-a) —
 just pipe `selected` into the component's `selectedIds` prop.
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import { useMultiSelect, useDispatcher } from '@cir/react';
-import { Table, type BulkAction } from '@cir/components';
+import { useMultiSelect, useDispatcher } from '@atelier/react';
+import { Table, type BulkAction } from '@atelier/components';
 
 interface Issue {
   id: string;
@@ -234,7 +234,7 @@ The hook's surface:
 
 The selection set is plain `Set<string>` (or your TId union — pass it as
 the type parameter for stronger row-id typing). Components from
-`@cir/components` accept this set verbatim via their `selectedIds`
+`@atelier/components` accept this set verbatim via their `selectedIds`
 prop — no adapter glue required.
 
 ## Confirmation portal
@@ -258,7 +258,7 @@ all resolve the request promise.
 
 ## DataResolver protocol
 
-Components shipped via `@cir/components` (or any host registry) often bind to
+Components shipped via `@atelier/components` (or any host registry) often bind to
 data via the manifest's `data` spec (`{ source, filter, sort, group_by }`).
 The runtime keeps that spec opaque — the adapter resolves it at render time
 through a `DataResolver` provided by the host:
@@ -282,31 +282,31 @@ their empty state.
 
 - [`docs/architecture.md`](../../docs/architecture.md) §"Data flow: the hot
   path (render)" — the path this adapter implements.
-- [`@cir/runtime`](../runtime/README.md) — the framework-agnostic core this
+- [`@atelier/runtime`](../runtime/README.md) — the framework-agnostic core this
   package adapts.
 
-## Debug panel — `@cir/react/debug`
+## Debug panel — `@atelier/react/debug`
 
 Optional dev-only surface that subscribes to a `StreamingAuditSink` (from
-`@cir/runtime`) and renders a floating, filterable event log. Imported
+`@atelier/runtime`) and renders a floating, filterable event log. Imported
 from a separate subpath so a production bundle can tree-shake it:
 
 ```tsx
-import { DebugPanel } from '@cir/react/debug';
+import { DebugPanel } from '@atelier/react/debug';
 // keep the import behind a NODE_ENV check or a feature flag in your host
 {
   process.env.NODE_ENV !== 'production' && <DebugPanel sink={auditSink} />;
 }
 ```
 
-The same sink can be tailed from a terminal via `cir dev --tail` against
+The same sink can be tailed from a terminal via `atelier dev --tail` against
 the demo's `/api/cir/audit/stream` SSE endpoint — both observers share
 one backlog buffer and one event stream.
 
 ## Testing
 
-`@cir/react/testing` exports `renderWithCir(ui, options)` and
+`@atelier/react/testing` exports `renderWithCir(ui, options)` and
 `buildTestServices(options)` for downstream test suites. They wire in
-`@cir/runtime/testing`'s in-memory primitives (`MemoryManifestCache`,
+`@atelier/runtime/testing`'s in-memory primitives (`MemoryManifestCache`,
 `InMemoryTriggerBus`, `Map*Registry`, `ALWAYS_CONFIRM`) so consumer tests
 don't have to.

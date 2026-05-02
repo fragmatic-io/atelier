@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Skill eval: every capability id a skill claims to use must exist in the
  * demo's CAPABILITIES record.
@@ -10,8 +10,8 @@
  * and should never be aspirational.
  */
 
-import { defineEval } from '@cir/evals';
-import { parseSkillMarkdown } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { parseSkillMarkdown } from '@atelier/schemas';
 import { CAPABILITIES } from '../../apps/demo/lib/fake-capabilities';
 
 const SKILL_SOURCE = `---

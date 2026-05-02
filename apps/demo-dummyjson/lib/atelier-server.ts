@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-side singleton for the dummyjson catalog demo: real compiler +
  * Tier-3 cache + audit. Survives hot reload via `globalThis`.
  *
- * Differs from `apps/demo/lib/cir-server.ts` in two ways:
+ * Differs from `apps/demo/lib/atelier-server.ts` in two ways:
  *  1. The fallback `lookup` is **lens-aware** — it reads density off a
  *     server-bound `IntentProfile` (default `'comfortable'`) so the same
  *     route resolves to three distinct manifests across compact / cozy /
@@ -21,7 +21,7 @@ import {
   ServerManifestResolver,
   type CompilerService,
   type ManifestStore,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 import {
   composesAccordingTo,
   emptyLoadingErrorHandled,
@@ -31,18 +31,18 @@ import {
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
   type AmbientPolicySatisfier,
-} from '@cir/policies';
-import { StreamingAuditSink } from '@cir/runtime';
-import { COMPOSITION_RULES } from '@cir/components/composition-rules';
-import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@cir/schemas';
-import type { Density } from '@cir/components';
+} from '@atelier/policies';
+import { StreamingAuditSink } from '@atelier/runtime';
+import { COMPOSITION_RULES } from '@atelier/components/composition-rules';
+import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@atelier/schemas';
+import type { Density } from '@atelier/components';
 import { DUMMYJSON_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
 import { manifestForRoute } from './manifests.js';
 
 /**
  * Ambient satisfiers (Phase 2 #5) — declarations of which runtime services
- * cover which policy obligations. Mirrors `lib/cir-providers.tsx` so the
+ * cover which policy obligations. Mirrors `lib/atelier-providers.tsx` so the
  * LLM-side validation cascade and the client-side validation cascade
  * agree on what is satisfied without manifest-level evidence.
  */
@@ -60,7 +60,7 @@ const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
 // Per-binding manifest contracts the policy validates against. Empty here
 // because the demo's custom bindings live in a client-side module that
 // can't be pulled into this server-side route, and importing the
-// baseline `COMPONENT_BINDINGS` from `@cir/components` drags client-only
+// baseline `COMPONENT_BINDINGS` from `@atelier/components` drags client-only
 // React contexts into the Next bundle. The policy is additive — bindings
 // without a contract are silently skipped — so passing an empty map is
 // safe. Phase 3 follow-up: lift baseline contracts into a server-safe
@@ -101,7 +101,7 @@ function validateManifestSemantics(manifest: Manifest): { errors: readonly strin
       granted_fields: [] as string[],
     },
     // Ambient satisfiers — chrome rate-limit chip + ambient undo toast.
-    // Mirrors `cir-providers.tsx`: lets the LLM omit per-route quota /
+    // Mirrors `atelier-providers.tsx`: lets the LLM omit per-route quota /
     // rollback anchor nodes since the chrome already covers them.
     ambient_policy_satisfiers: AMBIENT_POLICY_SATISFIERS,
   };
@@ -398,7 +398,7 @@ function buildServer(): CirServer {
     data_sources: [],
     actions_supported: [],
     responsive_targets: ['web'],
-    design_tokens: '@cir/demo-dummyjson/brand@0.1.0',
+    design_tokens: '@atelier/demo-dummyjson/brand@0.1.0',
     examples: [],
     text_render: true,
   }));

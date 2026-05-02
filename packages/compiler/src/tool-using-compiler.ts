@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `ToolUsingCompiler` — Wave C / Phase C-2.
  *
@@ -57,7 +57,7 @@
  *   - Marketplace recipe RAG (C-5) — gated on V-6.
  */
 
-import { ManifestSchema, type Manifest } from '@cir/schemas';
+import { ManifestSchema, type Manifest } from '@atelier/schemas';
 import {
   CompilerOutputError,
   type CompileInput,
@@ -505,7 +505,7 @@ const TOOL_DECLARATIONS: readonly AgentToolDeclaration[] = [
 // Prompt builders — the C-2 system prompt is much shorter than the cold C-0
 // prompt because the LLM discovers what it needs via tools.
 
-export const AGENT_SYSTEM_PROMPT = `You are CIR's UI compiler, running as a tool-using agent.
+export const AGENT_SYSTEM_PROMPT = `You are Atelier's UI compiler, running as a tool-using agent.
 
 Your job: produce a single Manifest JSON that satisfies the user's intent for one route, using the framework's components and the host's capabilities.
 

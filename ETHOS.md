@@ -1,10 +1,10 @@
-# CIR Ethos
+# Atelier Ethos
 
 > **Capabilities and skills are the public artifact.**
 > **Intent is the private artifact.**
 > **UI is ephemeral output.**
 
-Ten principles. Memorize these. Every architectural decision in CIR derives from them.
+Ten principles. Memorize these. Every architectural decision in Atelier derives from them.
 
 ---
 

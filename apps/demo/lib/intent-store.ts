@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Demo intent profile store — vault-backed with a localStorage fallback.
  *
  * Wave 7 / track V-1 swapped this module from "localStorage shim" to a
- * `@cir/vault-client` wrapper. The sync API (`loadIntentProfile`,
+ * `@atelier/vault-client` wrapper. The sync API (`loadIntentProfile`,
  * `saveIntentProfile`, etc.) still operates against localStorage — it's the
  * immediate-render path the route gates use to decide where to redirect on
  * first paint, AND it's the fallback when the vault server isn't running.
@@ -28,8 +28,8 @@ import {
   VaultUnauthorizedError,
   VaultUnreachableError,
   type VaultTokenStorage,
-} from '@cir/vault-client';
-import { IntentProfileSchema, type IntentProfile } from '@cir/schemas';
+} from '@atelier/vault-client';
+import { IntentProfileSchema, type IntentProfile } from '@atelier/schemas';
 
 /** localStorage key. Namespaced so the key is unambiguous in DevTools. */
 export const INTENT_STORAGE_KEY = 'cir.demo.intent';
@@ -61,7 +61,7 @@ export const DEMO_LENS_SCOPES = [
 
 export type DemoLensScopeId = (typeof DEMO_LENS_SCOPES)[number]['id'];
 
-/** Default user_id used by the demo. Matches `cir-providers.tsx`. */
+/** Default user_id used by the demo. Matches `atelier-providers.tsx`. */
 export const DEMO_USER_ID = 'demo-user';
 
 /** Vault URL config. Falls back to the `cir vault dev` default. */

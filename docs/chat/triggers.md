@@ -1,6 +1,6 @@
 # Triggers in Chat and Agent Contexts
 
-The core CIR document defines schema, intent, behavioral, explicit, and system triggers (see [`../triggers.md`](../triggers.md)). Chat and agent contexts add five more.
+The core Atelier document defines schema, intent, behavioral, explicit, and system triggers (see [`../triggers.md`](../triggers.md)). Chat and agent contexts add five more.
 
 ---
 
@@ -22,7 +22,7 @@ Output: one of
 
 **80% of turns are `continue`. 15% are `extend`.** The remaining 5% require larger compilations. The classifier saves 90%+ of token cost vs always recompiling.
 
-This is the chat equivalent of cache-hit-rate for web CIR. It is the single most important token optimization in chat-CIR. A small fast model classifies every turn before any expensive recompile; 80% continue means 80% of turns cost effectively zero in compilation.
+This is the chat equivalent of cache-hit-rate for web Atelier. It is the single most important token optimization in chat-Atelier. A small fast model classifies every turn before any expensive recompile; 80% continue means 80% of turns cost effectively zero in compilation.
 
 ---
 

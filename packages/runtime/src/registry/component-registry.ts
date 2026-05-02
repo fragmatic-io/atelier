@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Component registry — the runtime's lookup table from `componentId` (as
  * declared in a manifest's `LayoutNode.component`) to a framework-specific
@@ -13,7 +13,7 @@
  * references a name the host hasn't shipped (it falls through to a fallback
  * UI rather than crashing).
  *
- * Component impls live in `@cir/components` (Phase 4b). Do NOT add
+ * Component impls live in `@atelier/components` (Phase 4b). Do NOT add
  * implementations here.
  */
 
@@ -40,7 +40,7 @@
  */
 export type CompositionRole = 'list' | 'grid' | 'table';
 
-import type { ManifestComponentContract } from '@cir/schemas';
+import type { ManifestComponentContract } from '@atelier/schemas';
 
 /**
  * One bound component. `factory` is opaque to the runtime — it could be a

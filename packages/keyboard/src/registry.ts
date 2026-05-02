@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `KeyboardRegistry` — Wave 11 / Int-3.
  *
  * The marketplace primitive for "things the user can do via the keyboard".
- * Every CIR capability becomes (or can become) a `KeyboardAction`; the
+ * Every Atelier capability becomes (or can become) a `KeyboardAction`; the
  * registry is the lookup that powers Cmd+K, Cmd+P (Int-6), chord shortcuts
  * (Int-7), and settings search (Int-12).
  *
@@ -12,7 +12,7 @@
  *
  *  - **Pure logic, no React.** Hosts can drive the registry from non-React
  *    code (Electron menus, native menus, Storybook). The React adapter
- *    (`@cir/react`'s `<KeyboardProvider>` + `useKeyboardAction`) wraps
+ *    (`@atelier/react`'s `<KeyboardProvider>` + `useKeyboardAction`) wraps
  *    `register()` with hook lifecycle.
  *  - **Subscription model.** `subscribe(listener)` lets the React provider
  *    re-render whenever actions change. Subscribers run synchronously after
@@ -39,7 +39,7 @@ import {
 } from './hotkey.js';
 
 /**
- * A single keyboard-invocable action. Mirrors a CIR capability shape closely
+ * A single keyboard-invocable action. Mirrors a Atelier capability shape closely
  * (an `id`, a human label, optional metadata) so the runtime can register
  * one `KeyboardAction` per capability.
  */

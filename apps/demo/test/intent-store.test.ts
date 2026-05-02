@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 // @vitest-environment happy-dom
 /**
  * Tests for the demo's localStorage-backed intent profile store.

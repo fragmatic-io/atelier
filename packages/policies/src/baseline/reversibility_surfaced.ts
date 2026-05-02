@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `reversibility_surfaced`
  *
@@ -27,7 +27,7 @@
  * ETHOS principle 8: "Reversibility is a primitive, not a feature."
  */
 
-import type { LayoutNode, Manifest } from '@cir/schemas';
+import type { LayoutNode, Manifest } from '@atelier/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 import { ambientCovers } from './ambient-satisfiers.js';

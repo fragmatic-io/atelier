@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Next.js config mirroring `apps/demo/next.config.ts`. Workspace packages ship
  * raw TypeScript (their `main` points at `src/`), so Next must transpile them
@@ -10,14 +10,14 @@
 const config = {
   reactStrictMode: true,
   transpilePackages: [
-    '@cir/compiler',
-    '@cir/components',
-    '@cir/data-resolvers',
-    '@cir/policies',
-    '@cir/react',
-    '@cir/runtime',
-    '@cir/schemas',
-    '@cir/vault-client',
+    '@atelier/compiler',
+    '@atelier/components',
+    '@atelier/data-resolvers',
+    '@atelier/policies',
+    '@atelier/react',
+    '@atelier/runtime',
+    '@atelier/schemas',
+    '@atelier/vault-client',
   ],
   webpack: (cfg) => {
     cfg.resolve = cfg.resolve ?? {};

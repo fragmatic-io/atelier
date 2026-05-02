@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `VaultClient` — typed wire client for `@cir/vault-server`.
+ * `VaultClient` — typed wire client for `@atelier/vault-server`.
  *
  * Each method maps 1:1 to a wire endpoint. The client:
  *   - persists the active token via the storage adapter,
@@ -13,7 +13,7 @@
  * (React state, redirects to consent UI, fall-through to localStorage).
  */
 
-import { IntentProfileSchema, type IntentProfile } from '@cir/schemas';
+import { IntentProfileSchema, type IntentProfile } from '@atelier/schemas';
 import {
   VaultResponseError,
   VaultTokenExpiredError,

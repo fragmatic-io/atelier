@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Hand-written manifests for `apps/demo-github`. The compiler's fallback
  * compiler delegates to `manifestForRoute()` when no LLM is configured.
@@ -35,7 +35,7 @@
  * it via the inline distinctive empties.
  */
 
-import type { LayoutNode, Manifest } from '@cir/schemas';
+import type { LayoutNode, Manifest } from '@atelier/schemas';
 
 const COMPILED_FROM = {
   capability_version: '0.1.0',
@@ -124,7 +124,7 @@ function headerNode(activePath: string): LayoutNode {
 // policy walker. That node was a band-aid: the actual rate-limit chip
 // lives in `<OctantHeader>` and updates from `lib/github-client.ts`.
 // Phase 2 #5 lets the host declare the chip as an `AmbientPolicySatisfier`
-// in `cir-providers.tsx`, so the policy clears the obligation without an
+// in `atelier-providers.tsx`, so the policy clears the obligation without an
 // in-manifest hidden card. The helper is gone; the manifests below are
 // the actual rendered tree.
 

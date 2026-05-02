@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `respects_brand_kit` — design-system enforcement.
  *
@@ -47,7 +47,7 @@
  * (returns ok). That keeps existing apps working until they author one.
  */
 
-import type { BrandKit } from '@cir/schemas';
+import type { BrandKit } from '@atelier/schemas';
 
 import type { NamedPolicy, PolicyViolation } from '../result.js';
 import { walkManifest, escapeJsonPointerSegment } from '../internal/walk-layout.js';

@@ -1,6 +1,6 @@
 # The Agent's Three Roles
 
-In CIR, an agent can occupy any of three roles. Each role has different intent semantics, audit requirements, and trust boundaries.
+In Atelier, an agent can occupy any of three roles. Each role has different intent semantics, audit requirements, and trust boundaries.
 
 ---
 
@@ -51,6 +51,6 @@ User's primary agent
 Human user
 ```
 
-CIR handles this with **sub-agent permission inheritance**: a sub-agent inherits a strict subset of its parent's capability grants, and the parent records every sub-agent invocation in its own audit chain. The user's audit log shows the full tree.
+Atelier handles this with **sub-agent permission inheritance**: a sub-agent inherits a strict subset of its parent's capability grants, and the parent records every sub-agent invocation in its own audit chain. The user's audit log shows the full tree.
 
 The bus that mediates these interactions is described in [`architecture-additions.md`](architecture-additions.md) (Agent-to-Agent Capability Bus).

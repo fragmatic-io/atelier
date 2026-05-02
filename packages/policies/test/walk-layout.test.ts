@@ -5,7 +5,7 @@ import {
   walkManifest,
 } from '../src/internal/walk-layout.js';
 import { baselineManifest } from './fixtures/manifest.js';
-import type { LayoutNode } from '@cir/schemas';
+import type { LayoutNode } from '@atelier/schemas';
 
 describe('walk-layout helpers', () => {
   it('collectLayoutNodes flattens every node with its JSON Pointer', () => {

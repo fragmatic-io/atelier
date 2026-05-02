@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import { wireTriggerInvalidation } from '../../src/triggers/invalidation.js';
 import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import { MemoryManifestCache } from '../../src/manifest/memory-cache.js';

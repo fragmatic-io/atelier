@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the `empty_loading_error_handled` baseline policy.
  *
@@ -18,7 +18,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { emptyLoadingErrorHandled } from '../src/baseline/empty_loading_error_handled.js';
-import type { LayoutNode, Manifest } from '@cir/schemas';
+import type { LayoutNode, Manifest } from '@atelier/schemas';
 import type { PolicyContext } from '../src/result.js';
 
 function ctxFor(

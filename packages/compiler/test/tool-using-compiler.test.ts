@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await -- stub agents must be Promise-returning to satisfy AgentClient.generateTurn; not every stub awaits */
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the Wave C / Phase C-2 surface — `ToolUsingCompiler`. The
  * wrapper drives a bounded agent loop: the inner `AgentClient` returns
@@ -24,7 +24,7 @@
  *     manifest
  */
 
-import type { Capability, ComponentDefinition, Manifest } from '@cir/schemas';
+import type { Capability, ComponentDefinition, Manifest } from '@atelier/schemas';
 import { describe, expect, it, vi } from 'vitest';
 import { CompositeCompiler } from '../src/composite-compiler.js';
 import { CompilerOutputError, type CompileInput } from '../src/types.js';

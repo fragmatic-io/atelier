@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Pure helpers behind the `/admin/patterns` admin route.
  *
@@ -30,7 +30,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { SequenceDetector, type DetectedPattern, type ObservedAction } from '@cir/policies';
+import { SequenceDetector, type DetectedPattern, type ObservedAction } from '@atelier/policies';
 
 export interface AdminPatternRow {
   pattern_id: string;

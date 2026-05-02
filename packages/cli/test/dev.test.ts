@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `devCommand` integration tests — focuses on the `--tail-only` short-circuit
  * (it must NOT spawn `next`). The real `next dev` spawn path is shell-out
@@ -39,7 +39,7 @@ describe('devCommand --tail-only', () => {
     const code = await devCommand([], { help: 'true' });
     expect(code).toBe(0);
     const out = log.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(out).toContain('usage: cir dev');
+    expect(out).toContain('usage: atelier dev');
     expect(out).toContain('--tail');
     log.mockRestore();
   });

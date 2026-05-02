@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
 /**
  * Settings panel: view and revoke the lenses this app currently holds.
  *
- * Wave 7 / V-1: "Revoke this lens" calls `@cir/vault-client.revokeGrant()`
+ * Wave 7 / V-1: "Revoke this lens" calls `@atelier/vault-client.revokeGrant()`
  * (via `revokeLensAsync`) which tears down the scoped token and emits a
  * `system.security_revocation` trigger; subscribed runtimes invalidate
  * their cached manifests via the existing trigger bus. When the vault
@@ -31,7 +31,16 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Card, Container, HoverCard, Progress, Stack, Toast } from '@cir/components';
+import {
+  Alert,
+  Button,
+  Card,
+  Container,
+  HoverCard,
+  Progress,
+  Stack,
+  Toast,
+} from '@atelier/components';
 import {
   DEMO_LENS_SCOPES,
   grantedScopesFromProfile,

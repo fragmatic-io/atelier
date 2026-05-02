@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Marketplace pressure gate.
  *
@@ -7,7 +7,7 @@
  * custom bindings are a last resort." This test asserts each demo's custom
  * binding count stays at or below a hard ceiling, ratcheting down over
  * time. A custom binding is something registered in the demo's
- * `DEMO_*_BINDINGS` record on top of `@cir/components`'s
+ * `DEMO_*_BINDINGS` record on top of `@atelier/components`'s
  * `COMPONENT_BINDINGS`. Headers / chrome / domain queues should compose
  * baseline primitives instead of authoring per-host React.
  *
@@ -15,7 +15,7 @@
  * `DEMO_*_BINDINGS` maps without first promoting the shape to baseline,
  * this test fails. The fix is one of:
  *
- *   1. Promote the shape to `@cir/components` (preferred — see how `Queue`
+ *   1. Promote the shape to `@atelier/components` (preferred — see how `Queue`
  *      and `Logo` collapsed `DecisionQueue` / `TaskQueue` / `Wordmark` /
  *      `OctantHeader` / `MarigoldHeader` in the marketplace pivot).
  *   2. Express the shape as composition of existing primitives (`Stack` +
@@ -163,7 +163,7 @@ describe('marketplace pressure', () => {
           `${demo.name} ships ${String(ids.length)} custom bindings; ceiling is ${String(ceiling)}.\n` +
             `  Bindings: ${ids.join(', ')}\n` +
             'Per docs/ethos.md principle #11, custom bindings are a last resort.\n' +
-            'Either: (a) promote the shape to @cir/components baseline, ' +
+            'Either: (a) promote the shape to @atelier/components baseline, ' +
             '(b) compose existing primitives, or ' +
             '(c) lower MAX_CUSTOM_BINDINGS and document the new follow-up entry.',
         );

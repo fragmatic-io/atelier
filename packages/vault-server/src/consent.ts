@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Vault consent UI — server-rendered HTML for the OAuth-style grant dance.
  *
@@ -12,7 +12,7 @@
  * Why the consent UI lives on the vault side: that is how OAuth-grade flows
  * work. The user trusts the vault. If the host rendered the consent screen
  * the user would be trusting the app to faithfully describe what it is
- * asking for — which is the whole problem CIR is built to solve.
+ * asking for — which is the whole problem Atelier is built to solve.
  *
  * Why server-rendered HTML (no React, no JS framework): the vault is not a
  * frontend app. Adding a CSS pipeline / bundler to the vault doubles the
@@ -267,7 +267,7 @@ export function renderConsentPage(input: {
 </style>
 </head>
 <body>
-  <p class="vault-tag">CIR Vault &middot; ${escapeHtml(issuer)}</p>
+  <p class="vault-tag">Atelier Vault &middot; ${escapeHtml(issuer)}</p>
   <h1>Authorize <span class="app-id">${escapeHtml(params.appId)}</span></h1>
   <p>This app is asking for the following access to your intent profile. Approve to mint a scoped token; deny to refuse.</p>
 

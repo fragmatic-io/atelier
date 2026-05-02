@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Shared `IconRef` shape used by every component that accepts an optional
  * leading icon (Button, Alert, EmptyState, MetaBadge, …).
@@ -12,7 +12,7 @@
  * primitive's purpose.
  *
  * `DEFAULT_ICON_SET` is `'lucide'` because that's the pack `LucideIconResolver`
- * (the reference adapter CIR ships) recognises. Hosts that wire other
+ * (the reference adapter Atelier ships) recognises. Hosts that wire other
  * packs continue to pass the explicit `{ set, name }` form.
  */
 

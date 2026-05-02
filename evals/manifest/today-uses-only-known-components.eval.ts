@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Manifest eval: every component referenced in the `/today` layout is
- * registered (either in the @cir/components baseline or the demo's
+ * registered (either in the @atelier/components baseline or the demo's
  * extension bindings).
  *
  * The runtime falls back to a placeholder when a component id is unknown,
@@ -10,17 +10,17 @@
  * drift rather than letting the placeholder ship.
  *
  * NOTE: We hard-code the set of registered component ids rather than
- * importing `@cir/components`/`apps/demo/components`. Both modules pull
+ * importing `@atelier/components`/`apps/demo/components`. Both modules pull
  * in `'use client'` React TSX files that fail to load under plain Node +
  * tsx (no JSX runtime resolution at module load). Phase 5c can split a
  * pure-JS `IDS` export out of the registry to remove the duplication.
  */
 
-import { defineEval } from '@cir/evals';
-import type { LayoutNode } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import type { LayoutNode } from '@atelier/schemas';
 import { todayManifest } from '../../apps/demo/lib/fake-manifests';
 
-// Mirrors the keys of @cir/components/src/registry.ts COMPONENT_BINDINGS
+// Mirrors the keys of @atelier/components/src/registry.ts COMPONENT_BINDINGS
 // (Phase 4b baseline, after the catalog expansion in registry.ts).
 const BASELINE_COMPONENT_IDS = [
   'Accordion',

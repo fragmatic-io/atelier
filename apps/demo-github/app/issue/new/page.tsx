@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -13,7 +13,7 @@
  * surfaces the `issue.close` rollback when the rule fires.
  */
 
-import { CirRoute } from '@cir/react';
+import { CirRoute } from '@atelier/react';
 
 export default function NewIssuePage(): React.JSX.Element {
   return <CirRoute path="/issue/new" />;

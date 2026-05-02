@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest builder tests for the dummyjson catalog demo.
  *
@@ -16,7 +16,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { ManifestSchema } from '@cir/schemas';
+import { ManifestSchema } from '@atelier/schemas';
 import {
   browseManifest,
   cartManifest,
@@ -235,7 +235,7 @@ describe('manifestForRoute', () => {
     // `data-cir-policy-anchor=reversibility`, solely to satisfy the
     // `reversibility_surfaced` policy walker. Reversibility is now
     // declared as an `AmbientPolicySatisfier` on the services bag (see
-    // `lib/cir-providers.tsx`), so the manifest should be free of those
+    // `lib/atelier-providers.tsx`), so the manifest should be free of those
     // anchor buttons.
     const m = browseManifest('comfortable')!;
     const buttons = findAll(m.routes[0]!.layout!, 'Button') as Array<Record<string, unknown>>;

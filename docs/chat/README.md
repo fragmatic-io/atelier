@@ -1,13 +1,13 @@
-# CIR for Chat Interfaces and Agents
+# Atelier for Chat Interfaces and Agents
 
-Companion to the core CIR framework. Extends the model to:
+Companion to the core Atelier framework. Extends the model to:
 
 - **AI chat interfaces** — Claude.ai, ChatGPT, custom chatbots, embedded chat panels
 - **Autonomous agents** — no human in the loop
 - **Multi-agent systems** — agents calling agents
 - **Voice and multi-modal surfaces** — beyond text
 
-The core framework is render-target-agnostic. The chapters here specify _how_ CIR applies when the render target is a conversation, when the user is an agent, or when the runtime is a chat client.
+The core framework is render-target-agnostic. The chapters here specify _how_ Atelier applies when the render target is a conversation, when the user is an agent, or when the runtime is a chat client.
 
 ---
 
@@ -16,7 +16,7 @@ The core framework is render-target-agnostic. The chapters here specify _how_ CI
 1. [overview.md](overview.md) — why this addendum exists; the five differences from the core framework
 2. [render-targets.md](render-targets.md) — the five render targets (full-app, native, embedded chat, inline chat, voice)
 3. [agent-roles.md](agent-roles.md) — runtime, on-behalf, autonomous; multi-agent compositions
-4. [mcp-integration.md](mcp-integration.md) — CIR ⊃ MCP, the mapping, migration path
+4. [mcp-integration.md](mcp-integration.md) — Atelier ⊃ MCP, the mapping, migration path
 5. [conversation-artifacts.md](conversation-artifacts.md) — session manifests, turn deltas, conversation overlays, thread manifests
 6. [multi-modal.md](multi-modal.md) — text fallback, inline UI, voice scripts, mixed-modal, image input, AR
 7. [triggers.md](triggers.md) — turn-level, tool result, topic shift, context threshold, sub-agent emit, schedule

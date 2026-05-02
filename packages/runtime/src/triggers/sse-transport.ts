@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-Sent Events transport for the trigger bus.
  *
@@ -29,7 +29,7 @@
  * inject a fake `EventSource` constructor via `opts.EventSourceImpl`.
  */
 
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import type { TriggerSubscription } from './subscription.js';
 
 /** Subset of the WHATWG EventSource interface we depend on. */

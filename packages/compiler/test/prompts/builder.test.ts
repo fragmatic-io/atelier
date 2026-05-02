@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `buildPromptContext`. The builder is pure — given a
  * `CompileInput`, it returns the user-message text that's appended to the

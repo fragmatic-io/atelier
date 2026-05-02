@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest endpoint. The runtime's `ManifestFetcher` calls
  * `GET /api/manifest/{user_id}/{app_id}/{encodedRoute}`. We delegate to
@@ -14,7 +14,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getCirServer } from '@/lib/cir-server';
+import { getCirServer } from '@/lib/atelier-server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

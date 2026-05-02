@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { act, render } from '@testing-library/react';
@@ -8,10 +8,10 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { useEffect, useRef, type ReactElement } from 'react';
-import { CapabilitySchema, type Capability } from '@cir/schemas';
-import type { UndoTimer } from '@cir/runtime';
-import { ActionDispatcher } from '@cir/runtime';
-import { ALWAYS_CONFIRM } from '@cir/runtime/testing';
+import { CapabilitySchema, type Capability } from '@atelier/schemas';
+import type { UndoTimer } from '@atelier/runtime';
+import { ActionDispatcher } from '@atelier/runtime';
+import { ALWAYS_CONFIRM } from '@atelier/runtime/testing';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import {
   useUndoableDispatch,

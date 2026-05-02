@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -35,7 +35,7 @@
  * separately as track Cnt-5.
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { detectLanguage, type DetectedLanguage } from '../lib/detect-language.js';
 import { cn, codeBlockVariantClass, type CodeBlockVariant } from './_variants.js';
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `GeminiAgentClient` — function-calling-aware Gemini client for the C-2
  * tool-using compiler. Sibling of `GeminiCompiler`: reuses the same

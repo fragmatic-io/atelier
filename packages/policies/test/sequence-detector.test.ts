@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `SequenceDetector` — the first real `BehavioralPatternDetector`
  * implementation. The detector keeps a per-user sliding window, hashes

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -14,7 +14,7 @@ import {
   type VaultRequest,
 } from '../src/index.js';
 import type { VaultRevocationTrigger } from '../src/index.js';
-import type { IntentProfile } from '@cir/schemas';
+import type { IntentProfile } from '@atelier/schemas';
 
 const seedProfile = (): IntentProfile => ({
   user_id: 'demo-user',

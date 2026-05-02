@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Toggle — controlled on/off switch. Rendered as `<button role="switch"
  * aria-checked>` rather than a styled checkbox: native `role="switch"`
@@ -12,7 +12,7 @@
  * management (e.g. settings dialog autofocus).
  */
 import { forwardRef, useId, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type ToggleVariant = InputVariant;

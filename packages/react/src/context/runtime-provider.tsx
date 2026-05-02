@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
- * `<CirRuntime>` — the top-level provider that puts `@cir/runtime` services
+ * `<CirRuntime>` — the top-level provider that puts `@atelier/runtime` services
  * onto a React context.
  *
  * Behavior:
@@ -20,7 +20,7 @@
  *    by the provider; the host is responsible for any UI.
  *
  * Why we do NOT rebuild the dispatcher: `ActionDispatcher` is constructed
- * with a `ConfirmationCallback` baked in (see `@cir/runtime/actions/dispatcher.ts`).
+ * with a `ConfirmationCallback` baked in (see `@atelier/runtime/actions/dispatcher.ts`).
  * Hosts that want React's portal for the dispatcher should call
  * `useReactConfirmation()` themselves at app boot, plug `confirm` into the
  * dispatcher constructor, and render `Portal` inside `<CirRuntime>`. That
@@ -35,7 +35,7 @@ import {
   type DataResolver,
 } from '../data/data-resolver.js';
 import { useReactConfirmation } from '../confirm/use-confirmation.js';
-import type { ConfirmationCallback } from '@cir/runtime';
+import type { ConfirmationCallback } from '@atelier/runtime';
 
 export interface CirRuntimeProps {
   services: CirRuntimeServices;

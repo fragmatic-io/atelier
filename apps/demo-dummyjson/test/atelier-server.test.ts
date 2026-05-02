@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-side singleton + density-from-request helper. Confirms the
  * lens-aware fallback `lookup` produces three distinct manifests across
@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { densityFromProfile, densityFromRequest, getCirServer } from '../lib/cir-server';
+import { densityFromProfile, densityFromRequest, getCirServer } from '../lib/atelier-server';
 
 describe('densityFromRequest', () => {
   it('reads x-cir-density off a Request', () => {

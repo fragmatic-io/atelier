@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -22,7 +22,7 @@ describe('cir add', () => {
     await rm(tmp, { recursive: true, force: true });
   });
 
-  it('lists components from @cir/components source', async () => {
+  it('lists components from @atelier/components source', async () => {
     const names = await listAvailableComponents();
     expect(names.length).toBeGreaterThan(10);
     expect(names).toContain('Button');

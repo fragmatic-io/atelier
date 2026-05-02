@@ -1,6 +1,6 @@
-# @cir/marketing
+# @atelier/marketing
 
-The CIR marketing site / public docs surface. Astro static export, deployed to GitHub Pages.
+The Atelier marketing site / public docs surface. Astro static export, deployed to GitHub Pages.
 
 ## Stack
 
@@ -21,10 +21,10 @@ The CIR marketing site / public docs surface. Astro static export, deployed to G
 ## Local development
 
 ```bash
-pnpm --filter @cir/marketing dev        # http://localhost:4321
-pnpm --filter @cir/marketing build      # → ./dist
-pnpm --filter @cir/marketing preview    # serves built site locally
-pnpm --filter @cir/marketing typecheck  # astro check
+pnpm --filter @atelier/marketing dev        # http://localhost:4321
+pnpm --filter @atelier/marketing build      # → ./dist
+pnpm --filter @atelier/marketing preview    # serves built site locally
+pnpm --filter @atelier/marketing typecheck  # astro check
 ```
 
 ## Deploy
@@ -36,7 +36,7 @@ GitHub Actions workflow at [`.github/workflows/marketing-deploy.yml`](../../.git
 1. **Settings → Pages → Source: GitHub Actions** (the workflow won't deploy until this is flipped).
 2. (Optional) bind a custom domain — drop a `CNAME` file in `apps/marketing/public/` and set `MARKETING_BASE=/` + `MARKETING_SITE=https://your.domain` in the workflow env.
 
-The default `site` is `https://fragmatic-io.github.io` and `base` is `/cir` so URLs work on the project site URL out of the box.
+The default `site` is `https://fragmatic-io.github.io` and `base` is `/atelier` so URLs work on the project site URL out of the box.
 
 ## Why no Tailwind
 

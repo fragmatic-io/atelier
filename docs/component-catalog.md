@@ -1,6 +1,6 @@
 # Component Catalog
 
-The component catalog is what gives CIR coverage. A small, well-designed catalog of ~50 primitives covers 90% of what web apps do.
+The component catalog is what gives Atelier coverage. A small, well-designed catalog of ~50 primitives covers 90% of what web apps do.
 
 ---
 

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Capability metadata loaded by the demo's manifest endpoint. Mirrors
  * `apps/demo/lib/fake-capabilities.ts` — each entry is a typed
- * `Capability` from `@cir/schemas`.
+ * `Capability` from `@atelier/schemas`.
  *
  * The set is deliberately small:
  *  - `github.repo.list`, `github.issue.list`, `github.issue.get` — data
@@ -16,7 +16,7 @@
  * `capabilities/github/*.json` (which is what `validate:data` enforces).
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 
 export const CAPABILITIES: Record<string, Capability> = {
   'github.repo.list': {

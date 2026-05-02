@@ -63,7 +63,7 @@ Every conversation needs the agent to know:
 - What the user's intent profile says
 - What the constraints are
 
-A naive implementation includes all this in every turn's context. A CIR implementation:
+A naive implementation includes all this in every turn's context. A Atelier implementation:
 
 - Skills cached at the host (loaded once per session)
 - Capability descriptions referenced by ID (not re-included)

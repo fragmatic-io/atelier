@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Scope parsing + profile filtering.
  *
@@ -25,7 +25,7 @@
  * legitimately read multiple slices and the others fall away cleanly.
  */
 
-import type { IntentProfile, IntentRule } from '@cir/schemas';
+import type { IntentProfile, IntentRule } from '@atelier/schemas';
 
 /** A parsed scope. Tokens carry the original strings; this is the workable form. */
 export interface ParsedScope {

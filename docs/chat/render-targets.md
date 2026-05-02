@@ -1,12 +1,12 @@
 # The Five Render Targets
 
-CIR manifests render to multiple surfaces. The same compiler can produce manifests for any of them — what changes is the component catalog, the runtime, and the layout primitives.
+Atelier manifests render to multiple surfaces. The same compiler can produce manifests for any of them — what changes is the component catalog, the runtime, and the layout primitives.
 
 ---
 
 ## Target 1: Full-app web
 
-Browser-based web app with persistent routes. Core CIR document covers this in detail.
+Browser-based web app with persistent routes. Core Atelier document covers this in detail.
 
 - **Runtime**: web SDK in the browser
 - **Cache**: IndexedDB + memory
@@ -40,7 +40,7 @@ Manifest rendered as a component _inside_ a chat message in a host like Claude.a
 - **Components**: a constrained subset that fits in a message bubble
 - **Layout**: bounded width, height-constrained, sandboxed iframe
 
-This is the most important new target in CIR. It changes what UI even means: instead of a page or a screen, UI is a component that lives inside a single chat turn, can be interacted with, and produces results that flow back into the conversation.
+This is the most important new target in Atelier. It changes what UI even means: instead of a page or a screen, UI is a component that lives inside a single chat turn, can be interacted with, and produces results that flow back into the conversation.
 
 ## Target 5: Voice (audio-only)
 
@@ -51,7 +51,7 @@ The agent operates over voice. There is no visual UI; the manifest describes a _
 - **Components**: voice prompts, confirmation phrases, action verbs
 - **Layout**: temporal (sequence of utterances), not spatial
 
-A "manifest" here is a script tree: at this point, ask this; if the user says X, branch to Y; on confirmation, call this capability. Every CIR action with a voice-render target needs an audio confirmation policy.
+A "manifest" here is a script tree: at this point, ask this; if the user says X, branch to Y; on confirmation, call this capability. Every Atelier action with a voice-render target needs an audio confirmation policy.
 
 ---
 

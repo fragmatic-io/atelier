@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
-import { buildJwks, loadOrGenerateKeyPair, signJwt, type JwtClaims } from '@cir/vault-server';
+import { buildJwks, loadOrGenerateKeyPair, signJwt, type JwtClaims } from '@atelier/vault-server';
 import { JwksCache, decodeJwt } from '../src/jwks-cache.js';
 import { VaultUnreachableError } from '../src/errors.js';
 

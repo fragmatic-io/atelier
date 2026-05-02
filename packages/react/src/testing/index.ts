@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/react/testing` — render helpers for downstream tests.
+ * `@atelier/react/testing` — render helpers for downstream tests.
  *
- * Mirrors `@cir/runtime/testing`'s pattern: ergonomic wrappers that cut
+ * Mirrors `@atelier/runtime/testing`'s pattern: ergonomic wrappers that cut
  * boilerplate when consumers want to mount a `<CirRuntime>` with sane
  * defaults and exercise hooks/components.
  *
- * NOT re-exported from the main `@cir/react` entry intentionally — keeps
+ * NOT re-exported from the main `@atelier/react` entry intentionally — keeps
  * production bundles free of test-only helpers.
  */
 

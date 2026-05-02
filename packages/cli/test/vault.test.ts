@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -65,7 +65,7 @@ describe('runVaultDev', () => {
     await seed.close();
     // Re-import the signing module so we can export the freshly-generated PEM.
     // We round-trip through the helper used by the CLI itself.
-    const { loadOrGenerateKeyPair, exportPrivatePem } = await import('@cir/vault-server');
+    const { loadOrGenerateKeyPair, exportPrivatePem } = await import('@atelier/vault-server');
     const { pair } = loadOrGenerateKeyPair(undefined);
     const pem = exportPrivatePem(pair);
     const second = await runVaultDev({
@@ -108,7 +108,7 @@ describe('vaultCommand argv parsing', () => {
     const code = await vaultCommand([], { help: 'true' });
     expect(code).toBe(0);
     const out = logSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(out).toContain('cir vault dev');
+    expect(out).toContain('atelier vault dev');
   });
 
   it('rejects an unknown subcommand', async () => {

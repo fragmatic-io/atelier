@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -29,7 +29,7 @@
  */
 import { useCallback, useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { bulkActionBarVariantClass, cn, type BulkActionBarVariant } from './_variants.js';
 
 /**

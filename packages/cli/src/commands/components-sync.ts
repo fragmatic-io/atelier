@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir components-sync [--check]` — alias for the existing
+ * `atelier components-sync [--check]` — alias for the existing
  * `scripts/sync-component-registry.ts` script.
  *
  * The shell-out form keeps the original script as the single source of truth
- * and avoids duplicating tooling. Hosts running outside the CIR monorepo
+ * and avoids duplicating tooling. Hosts running outside the Atelier monorepo
  * will not have the script available; the command surfaces a clear error in
  * that case (Wave 3+ can ship a published variant).
  */
@@ -40,8 +40,8 @@ export function componentsSyncCommand(
   const tsconfigPath = options.tsconfigPath ?? resolve(cwd, 'packages/components/tsconfig.json');
   if (!existsSync(scriptPath)) {
     console.error(
-      `cir components-sync: cannot find ${scriptPath}. ` +
-        `This command currently requires the CIR monorepo layout.`,
+      `atelier components-sync: cannot find ${scriptPath}. ` +
+        `This command currently requires the Atelier monorepo layout.`,
     );
     return Promise.resolve(1);
   }
@@ -54,7 +54,7 @@ export function componentsSyncCommand(
       shell: false,
     });
     child.on('error', (err) => {
-      console.error(`cir components-sync: failed to spawn 'tsx' — ${err.message}`);
+      console.error(`atelier components-sync: failed to spawn 'tsx' — ${err.message}`);
       resolveOuter(1);
     });
     child.on('close', (code) => {

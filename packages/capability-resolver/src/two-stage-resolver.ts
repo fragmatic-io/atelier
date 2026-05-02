@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `TwoStageCapabilityResolver` — the production scoping logic for Wave
  * 10 / S-1 (also tracked as Wave C / Phase C-3).
@@ -23,7 +23,7 @@
  * Two-stage compile is the orthogonal axis: pre-pass the registry with
  * a cheap model, hand the slim result to the expensive model.
  *
- * This is the only place CIR introduces a second model call by design
+ * This is the only place Atelier introduces a second model call by design
  * — bounded multi-agent in the sense the project's architecture notes
  * endorse: each model has one job, the data flow is a strict DAG, and
  * the second model never talks back to the first.
@@ -47,7 +47,7 @@
  * is automatic.
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import { SubstringCapabilityResolver } from './substring-resolver.js';
 import {
   MemoryScopingCache,

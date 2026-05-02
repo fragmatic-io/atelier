@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Root layout — Aurora.
  *
@@ -17,11 +17,11 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { CirProviders } from '@/lib/cir-providers';
+import { CirProviders } from '@/lib/atelier-providers';
 import { Chrome } from '@/components/Chrome';
 
 export const metadata: Metadata = {
-  title: 'CIR demo — personalisation showcase',
+  title: 'Atelier demo — personalisation showcase',
   description:
     'Capability · Intent · Render — onboarding, personalised manifest, optimistic UI, audit stream.',
 };

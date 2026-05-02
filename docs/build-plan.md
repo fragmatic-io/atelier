@@ -1,20 +1,20 @@
 # Phased Build Plan (Historical)
 
-> **Note.** This is the original phasing plan, kept for narrative — _here is how a team would sequence CIR from scratch_. The framework in this repo has shipped through Phase 5d (renamed to Wave 1–4 partway through). For what is actually live today, see the root [`README.md`](../README.md) §"What's shipped" and [`packages/README.md`](../packages/README.md). Use this file to understand the _shape_ of a CIR build, not as a TODO list.
+> **Note.** This is the original phasing plan, kept for narrative — _here is how a team would sequence Atelier from scratch_. The framework in this repo has shipped through Phase 5d (renamed to Wave 1–4 partway through). For what is actually live today, see the root [`README.md`](../README.md) §"What's shipped" and [`packages/README.md`](../packages/README.md). Use this file to understand the _shape_ of a Atelier build, not as a TODO list.
 
 What landed where (mapping):
 
-- **Phase 0–1** — schemas, baseline component catalog, eval harness, runtime → shipped as `@cir/schemas`, `@cir/components` (56 primitives), `@cir/evals`, `@cir/runtime`.
-- **Phase 2 — customization** — intent vault contract, customize flow, trigger bus, policy engine (7 baseline), audit log → shipped as `@cir/policies`, `IntentProfileSchema`, `InMemoryTriggerBus` + `SseTriggerTransport`, `AuditEventSchema`. The vault itself is referenced by ID; demo ships a localStorage shim.
+- **Phase 0–1** — schemas, baseline component catalog, eval harness, runtime → shipped as `@atelier/schemas`, `@atelier/components` (56 primitives), `@atelier/evals`, `@atelier/runtime`.
+- **Phase 2 — customization** — intent vault contract, customize flow, trigger bus, policy engine (7 baseline), audit log → shipped as `@atelier/policies`, `IntentProfileSchema`, `InMemoryTriggerBus` + `SseTriggerTransport`, `AuditEventSchema`. The vault itself is referenced by ID; demo ships a localStorage shim.
 - **Phase 3 — production hardening** — eval suite, observability, multi-tier cache → shipped as `MemoryManifestCache` + `IndexedDBManifestCache` (Tier 4/5), `MemoryManifestStore` + `RedisManifestStore` (Tier 3), `StreamingAuditSink`, nightly Gemini eval workflow.
-- **Phase 4 — expansion** — second domain, cross-app, adapters → partial. The OpenAPI importer (`cir import openapi`) brings external services in as drafts; cross-app workflow compilation is roadmap.
+- **Phase 4 — expansion** — second domain, cross-app, adapters → partial. The OpenAPI importer (`atelier import openapi`) brings external services in as drafts; cross-app workflow compilation is roadmap.
 - **Phase 5 — platform** — marketplace, mobile, OS integration → roadmap.
 
 The original sequencing follows.
 
 ---
 
-A startup or team building CIR from scratch should sequence it like this. Each phase is a self-contained deliverable.
+A startup or team building Atelier from scratch should sequence it like this. Each phase is a self-contained deliverable.
 
 ---
 
@@ -85,7 +85,7 @@ Pick one domain (recommended: email).
 - Open the component catalog spec for community contributions
 - Open the skill format for community contributions
 
-**Deliverable**: multi-domain CIR with one outside-in adapter.
+**Deliverable**: multi-domain Atelier with one outside-in adapter.
 
 ---
 
@@ -93,7 +93,7 @@ Pick one domain (recommended: email).
 
 - Marketplace for recipes ("interface lenses")
 - Marketplace for adapters
-- Developer tooling for CIR-native app authors
+- Developer tooling for Atelier-native app authors
 - Mobile runtime (iOS + Android)
 - Native OS integration (macOS, Windows, ChromeOS)
 

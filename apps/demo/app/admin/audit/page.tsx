@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -25,8 +25,8 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Container, Skeleton, Stack } from '@cir/components';
-import type { AuditEvent, AuditEventType } from '@cir/schemas';
+import { Alert, Container, Skeleton, Stack } from '@atelier/components';
+import type { AuditEvent, AuditEventType } from '@atelier/schemas';
 
 /**
  * Event type → color class. Tailwind 4 utility classes; non-Tailwind hosts

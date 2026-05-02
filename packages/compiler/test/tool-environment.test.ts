@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the C-2 `ToolEnvironment` surface — the substring-fallback
  * search functions and the default no-op behaviour when optional hooks
@@ -9,7 +9,7 @@
  * with the agent loop lives in `tool-using-compiler.test.ts`.
  */
 
-import type { Capability, ComponentDefinition } from '@cir/schemas';
+import type { Capability, ComponentDefinition } from '@atelier/schemas';
 import { describe, expect, it } from 'vitest';
 import { fallbackFindCapability, fallbackFindComponent } from '../src/tool-environment.js';
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * End-to-end personalisation chain integration eval (track DD).
  *
@@ -27,28 +27,28 @@
  *   - `sequence-detector.eval.ts` for the offline sequence-detector eval.
  */
 
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import {
   CompositeCompiler,
   FallbackCompiler,
   GeminiCompiler,
   type CompileInput,
   type CompilerService,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 import {
   BASELINE_POLICIES,
   SequenceDetector,
   validateManifest,
   type PolicyContext,
   type PolicyViolation,
-} from '@cir/policies';
+} from '@atelier/policies';
 import {
   buildRenderPlan,
   BehavioralTap,
   MapComponentRegistry,
   StreamingAuditSink,
   type ComponentBinding,
-} from '@cir/runtime';
+} from '@atelier/runtime';
 import {
   CapabilitySchema,
   ManifestSchema,
@@ -58,7 +58,7 @@ import {
   type IntentProfile,
   type LayoutNode,
   type Manifest,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 import { hasRealGeminiKey } from './gemini-smoke.eval.js';
 
 // -----------------------------------------------------------------------------
@@ -240,7 +240,7 @@ function fixtureComponents(): ComponentDefinition[] {
         data_sources: [],
         actions_supported: [],
         responsive_targets: ['web'],
-        design_tokens: '@cir/components/baseline@0.1.0',
+        design_tokens: '@atelier/components/baseline@0.1.0',
         examples: [],
         text_render: true,
       }) as unknown as ComponentDefinition,

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AuditEvent } from '@cir/schemas';
+import type { AuditEvent } from '@atelier/schemas';
 import { ConsoleAuditSink, NoopAuditSink } from '../../src/audit/emit.js';
 
 const event: AuditEvent = {

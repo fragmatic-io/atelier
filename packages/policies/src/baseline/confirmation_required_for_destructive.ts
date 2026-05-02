@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `confirmation_required_for_destructive`
  *
@@ -13,12 +13,12 @@
  * `/Users/vid/cir/docs/architecture.md` §"Policy engine" both motivate this rule.
  *
  * The destructive side-effect list is a subset of `KNOWN_SIDE_EFFECTS` from
- * `@cir/schemas` (`packages/schemas/src/capability.ts`); we re-declare the
+ * `@atelier/schemas` (`packages/schemas/src/capability.ts`); we re-declare the
  * subset here since not every known side effect is destructive (`mutates:*`
  * and `reads:*` are not, for example).
  */
 
-import type { Capability, LayoutNode } from '@cir/schemas';
+import type { Capability, LayoutNode } from '@atelier/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 
@@ -26,7 +26,7 @@ const POLICY_ID = 'confirmation_required_for_destructive';
 
 /**
  * Side-effect categories that REQUIRE confirmation. Mirrors the spec note in
- * the package brief, drawn from `KNOWN_SIDE_EFFECTS` in `@cir/schemas`. Update
+ * the package brief, drawn from `KNOWN_SIDE_EFFECTS` in `@atelier/schemas`. Update
  * BOTH lists if you add a new destructive category.
  */
 export const DESTRUCTIVE_SIDE_EFFECTS: ReadonlySet<string> = new Set([

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Fake action endpoint. The demo's action handlers in `lib/cir-providers.tsx`
+ * Fake action endpoint. The demo's action handlers in `lib/atelier-providers.tsx`
  * POST here. Each capability mutates the in-memory store and returns an
  * `ActionResult`-shaped response.
  *
- * In a real CIR app this is the Action Gateway (auth + audit + rate limit).
+ * In a real Atelier app this is the Action Gateway (auth + audit + rate limit).
  */
 
 import { NextResponse } from 'next/server';

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `composes_hierarchy_for_long_lists`
  *
@@ -39,7 +39,7 @@
  * `Capability.salience_default` field.
  */
 
-import type { LayoutNode } from '@cir/schemas';
+import type { LayoutNode } from '@atelier/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 

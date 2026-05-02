@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/keyboard` — Wave 11 / Int-3.
+ * `@atelier/keyboard` — Wave 11 / Int-3.
  *
  * The keyboard registry is the marketplace primitive for "things the user
  * can do via the keyboard". It powers:
@@ -12,7 +12,7 @@
  *   - settings search (Int-12) — same registry, filtered to settings group
  *
  * Pure logic. No React. The React adapter (`<KeyboardProvider>`,
- * `useKeyboardAction`) lives in `@cir/react`.
+ * `useKeyboardAction`) lives in `@atelier/react`.
  */
 
 export {

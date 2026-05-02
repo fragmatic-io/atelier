@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `CapabilityResolver` — abstract scoping interface for Wave 10 / S-1 (also
  * tracked as Wave C / Phase C-3).
@@ -25,12 +25,12 @@
  * (S-7) can drop in later without changing callers. Everything beyond
  * `scope(query, k)` is implementation detail.
  *
- * `CapabilityRef` is re-exported from `@cir/compiler` (where it lives
+ * `CapabilityRef` is re-exported from `@atelier/compiler` (where it lives
  * alongside `SemanticSearch`) to keep one source of truth across packages.
  */
 
-import type { Capability } from '@cir/schemas';
-export type { CapabilityRef } from '@cir/compiler';
+import type { Capability } from '@atelier/schemas';
+export type { CapabilityRef } from '@atelier/compiler';
 
 /**
  * Stage-1 input. Carries everything the resolver needs to decide which

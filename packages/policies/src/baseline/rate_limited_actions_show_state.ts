@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `rate_limited_actions_show_state`
  *
@@ -30,7 +30,7 @@
  * to surface for designer review than reject the manifest.
  */
 
-import type { LayoutNode } from '@cir/schemas';
+import type { LayoutNode } from '@atelier/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 import { ambientCovers } from './ambient-satisfiers.js';

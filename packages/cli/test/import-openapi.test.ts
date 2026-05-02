@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the `cir import openapi` command.
  *
@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CapabilitySchema, type Capability } from '@cir/schemas';
+import { CapabilitySchema, type Capability } from '@atelier/schemas';
 import { importOpenApi } from '../src/commands/import-openapi.js';
 
 /** Read a generated capability and parse it through `CapabilitySchema`. */

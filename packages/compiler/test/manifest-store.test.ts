@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `MemoryManifestStore` (Tier-3 in-memory cache). Exercises
  * get/set/delete round-trips, hit/miss accounting, predicate-based eviction,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `genericFallbackManifest` / `GenericFallbackCompiler` — the framework's
  * built-in last-resort fallback.
@@ -31,7 +31,7 @@
  *     `<CompileBadge>` renders `⚪ fallback · 0 tok` distinctively.
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import {
   CompilerOutputError,
   type CompileInput,

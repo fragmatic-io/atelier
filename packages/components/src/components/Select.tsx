@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Select — controlled native `<select>`. We use the platform widget on
  * purpose: it ships keyboard navigation, screen-reader support, and mobile
@@ -8,7 +8,7 @@
  * accessibility cost.
  */
 import { useId, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 
 export interface SelectOption {
   value: string;

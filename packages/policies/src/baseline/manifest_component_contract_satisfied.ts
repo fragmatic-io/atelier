@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `manifest_component_contract_satisfied`
  *
@@ -45,7 +45,7 @@
  *     manifest-author-supplied prop both validate.
  */
 
-import type { ManifestComponentContract, ManifestComponentPropType } from '@cir/schemas';
+import type { ManifestComponentContract, ManifestComponentPropType } from '@atelier/schemas';
 import type { NamedPolicy, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 

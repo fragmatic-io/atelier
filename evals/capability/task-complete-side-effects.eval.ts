@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Capability eval: `task.complete` declares the right side effects and a
  * `task.reopen` rollback.
@@ -10,7 +10,7 @@
  * a destructive action without surfacing the change here.
  */
 
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import { CAPABILITIES } from '../../apps/demo/lib/fake-capabilities';
 
 export default defineEval({

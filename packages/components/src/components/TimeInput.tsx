@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * TimeInput — labelled `<input type="time">`. Value is `'HH:MM'` (24-hour)
  * or `''`. Same controlled/uncontrolled shape as DateInput; the same
@@ -7,7 +7,7 @@
  * error/helper text).
  */
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type TimeInputVariant = InputVariant;

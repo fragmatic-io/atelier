@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Recursive walker over a manifest's `LayoutNode` tree.
  *
@@ -8,7 +8,7 @@
  * once so the policies stay focused on their assertions.
  */
 
-import type { LayoutNode, Manifest, Route } from '@cir/schemas';
+import type { LayoutNode, Manifest, Route } from '@atelier/schemas';
 
 /** Visitor invoked for every layout node in a route, with its JSON Pointer path. */
 export type LayoutVisitor = (node: LayoutNode, path: string, ancestors: LayoutNode[]) => void;

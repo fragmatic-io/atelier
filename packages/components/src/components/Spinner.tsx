@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Spinner — accessible loading indicator. Variants (Wave 6 / P-10):
  * bordered, elevated, ghost (default), tinted.
  */
 import type { CSSProperties, ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
 
 export type SpinnerVariant = FeedbackVariant;

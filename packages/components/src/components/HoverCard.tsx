@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -48,7 +48,7 @@ import {
   type Ref,
 } from 'react';
 import { createPortal } from 'react-dom';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, hoverCardVariantClass, type HoverCardVariant } from './_variants.js';
 
 export type HoverCardSide = 'top' | 'bottom' | 'left' | 'right';

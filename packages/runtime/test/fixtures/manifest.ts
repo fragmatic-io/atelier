@@ -1,7 +1,7 @@
 // Fixture manifest mirroring docs/artifacts.md §Render. Shared by render
 // plan tests and resolver tests.
 
-import type { Capability, Manifest } from '@cir/schemas';
+import type { Capability, Manifest } from '@atelier/schemas';
 
 export function fixtureManifest(): Manifest {
   return {

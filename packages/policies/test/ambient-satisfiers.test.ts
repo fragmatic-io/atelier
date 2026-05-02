@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the prebuilt ambient policy satisfier declarations and the
  * `ambientCovers()` helper. The policies that consult these (`rate_limited_*`,

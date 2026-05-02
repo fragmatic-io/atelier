@@ -66,7 +66,7 @@ A well-engineered compiler prompt fits in 8-20k tokens of context, not 100k:
 
 ```
 SYSTEM (cached, ~3k tokens):
-  CIR framework + manifest schema + validation rules
+  Atelier framework + manifest schema + validation rules
 
 PER-CALL CONTEXT (~5-15k tokens):
   Relevant capabilities (filtered to route): 1-3k

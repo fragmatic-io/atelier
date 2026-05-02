@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Marketplace client — Wave 8 / V-6 (MVP).
  *
- * Pairs with `@cir/vault-server`'s `marketplace.ts` over the HTTP wire. Two
+ * Pairs with `@atelier/vault-server`'s `marketplace.ts` over the HTTP wire. Two
  * surfaces:
  *
  *   - `publish(address, payload, privateKey)` — sign + POST a bundle.
@@ -30,7 +30,7 @@ import {
   signingInputForBundle,
   type MarketplaceAddress,
   type SignedBundle,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 
 /**
  * Local TOFU cache. Authors map to the fingerprint we first saw them sign
@@ -68,7 +68,7 @@ export class InMemoryTrustedKeyStore implements TrustedKeyStore {
 export class LocalStorageTrustedKeyStore implements TrustedKeyStore {
   private readonly prefix: string;
 
-  constructor(prefix = 'cir.marketplace.tofu.') {
+  constructor(prefix = 'atelier.marketplace.tofu.') {
     this.prefix = prefix;
   }
 
@@ -162,7 +162,7 @@ export class MarketplaceTrustError extends MarketplaceError {
 /**
  * Web Crypto-based ed25519 verifier — same approach as `JwksCache` in
  * `client.ts`. Pure function: takes a bundle, returns ok/false. Mirrors
- * `verifyBundleSignature` in `@cir/vault-server` but in browser-safe Web
+ * `verifyBundleSignature` in `@atelier/vault-server` but in browser-safe Web
  * Crypto so no Node dep leaks into a bundled web build.
  */
 async function verifyBundleSignatureWeb(
@@ -333,7 +333,7 @@ export interface MarketplaceClientOptions {
 
 /** Result of `publish()`. */
 export interface PublishResult {
-  /** Canonical `cir://` address (no `signed_by`). */
+  /** Canonical `atelier://` address (no `signed_by`). */
   address: string;
   /** Fingerprint of the key that signed the bundle. */
   keyId: string;
@@ -386,7 +386,7 @@ export class MarketplaceClient {
     const keyId = await computeKeyId(key.publicKey);
     const bundle: SignedBundle = {
       address: {
-        scheme: 'cir',
+        scheme: 'atelier',
         author: parsedAddress.author,
         persona: parsedAddress.persona,
         version: parsedAddress.version,

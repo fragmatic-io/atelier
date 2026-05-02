@@ -1,8 +1,8 @@
-# @cir/vault-server
+# @atelier/vault-server
 
 The reference intent vault server. Mints ed25519-signed scoped tokens, enforces scope-based filtering on read and write, persists profiles + grants to a JSON file (or in-memory for tests), and emits `system.security_revocation` triggers when grants are revoked.
 
-> Wave 7 / track V-1. Pairs with [`@cir/vault-client`](../vault-client/) and the [wire-format spec](../../docs/vault-protocol.md).
+> Wave 7 / track V-1. Pairs with [`@atelier/vault-client`](../vault-client/) and the [wire-format spec](../../docs/vault-protocol.md).
 
 ## Why no Hono / Express
 
@@ -13,14 +13,14 @@ If you want to mount this on top of an existing HTTP framework, import `VaultSer
 ## Quick start
 
 ```bash
-# From the CIR repo:
-pnpm cir vault dev --port 4001
+# From the Atelier repo:
+pnpm atelier vault dev --port 4001
 ```
 
 Or programmatically:
 
 ```ts
-import { MemoryVaultStorage, loadOrGenerateKeyPair, startVaultServer } from '@cir/vault-server';
+import { MemoryVaultStorage, loadOrGenerateKeyPair, startVaultServer } from '@atelier/vault-server';
 
 const { pair, generated } = loadOrGenerateKeyPair(process.env.VAULT_SIGNING_KEY_PEM);
 if (generated) {
@@ -72,10 +72,10 @@ The unsuffixed `lens.<domain>` is the canonical user-facing form (covers read + 
 
 ## Storage adapters
 
-| Adapter                | When to use                                               |
-| ---------------------- | --------------------------------------------------------- |
-| `MemoryVaultStorage`   | Tests, evals, ephemeral demos                             |
-| `JsonFileVaultStorage` | Single-process local dev. v0 default for `cir vault dev`. |
+| Adapter                | When to use                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `MemoryVaultStorage`   | Tests, evals, ephemeral demos                                 |
+| `JsonFileVaultStorage` | Single-process local dev. v0 default for `atelier vault dev`. |
 
 A SQLite adapter is roadmap (gated on Node 24's stable `node:sqlite`). The `VaultStorage` interface is small enough that the swap is a one-file change.
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * DetailView — semantic key-value list as <dl>. Variants (Wave 6 / P-10):
  * bordered, elevated, ghost (default), tinted.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, contentVariantClass, type ContentVariant } from './_variants.js';
 
 export type DetailViewVariant = ContentVariant;

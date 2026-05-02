@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Aurora brand kit — schema + semantic tests.
  *
  * Pins the contract that:
- *   1. The Aurora kit validates against `BrandKitSchema` from `@cir/schemas`.
+ *   1. The Aurora kit validates against `BrandKitSchema` from `@atelier/schemas`.
  *   2. The 5-level elevation scale (resting / hover / popover / modal /
  *      commandbar) is present with paired light + dark CSS shadow strings.
  *   3. The voice block carries the surfaces the brief calls out: button,
@@ -19,7 +19,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { BrandKitSchema, type BrandKit } from '@cir/schemas';
+import { BrandKitSchema, type BrandKit } from '@atelier/schemas';
 import { DEMO_BRAND_KIT, brandKit } from '../lib/brand-kit';
 
 describe('Aurora brand kit', () => {

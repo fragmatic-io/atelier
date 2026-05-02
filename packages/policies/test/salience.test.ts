@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the Wave 7 / P-9 salience surface:
  *  - `matchCapabilityGlob` — the glob matcher.
@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { Capability, IntentProfile, LayoutNode, Manifest } from '@cir/schemas';
+import type { Capability, IntentProfile, LayoutNode, Manifest } from '@atelier/schemas';
 import {
   DEFAULT_SALIENCE_LEVEL,
   matchCapabilityGlob,

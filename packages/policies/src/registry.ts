@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `PolicyRegistry` — mutable container of named policies for apps that
  * compose custom policies on top of the baseline.
@@ -10,7 +10,7 @@
  * they called `validateManifest`. The registry centralizes that pattern.
  *
  * Convention: registering with the same `id` REPLACES the existing entry
- * (last write wins). Mirrors `ActionRegistry` in `@cir/runtime` so apps
+ * (last write wins). Mirrors `ActionRegistry` in `@atelier/runtime` so apps
  * have one mental model for "registry".
  *
  * Typical usage:

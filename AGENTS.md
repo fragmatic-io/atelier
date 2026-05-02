@@ -1,13 +1,13 @@
 # AGENTS.md
 
-You are operating inside a CIR (Capability · Intent · Render) framework.
+You are operating inside Atelier — built on the CIR (Capability · Intent · Render) pattern.
 Read this file before reading any code.
 
 For the operating manual that applies to **runtime** agents (chat, voice, autonomous), see [`docs/chat/runtime-instructions.md`](docs/chat/runtime-instructions.md). This file is for coding agents working _on_ this repository.
 
-## What CIR is
+## What Atelier is
 
-CIR separates software into three artifacts:
+Atelier separates software into three artifacts (the CIR pattern: Capability · Intent · Render):
 
 1. **Capabilities + Skills** — public, owned by the app, versioned.
 2. **Intent** — private, owned by the user, never modify directly.
@@ -17,7 +17,7 @@ Your job depends on which artifact you are working with. Read [`ETHOS.md`](ETHOS
 
 ## Where things live
 
-CIR artifact directories (these define the framework surface):
+Atelier artifact directories (these define the framework surface):
 
 - `/capabilities/` — typed action and data definitions (JSON schema)
 - `/skills/` — markdown files describing how to use capabilities well
@@ -29,13 +29,13 @@ CIR artifact directories (these define the framework surface):
 
 Implementation packages (under the pnpm workspace at `/packages/`):
 
-- `/packages/schemas/` — `@cir/schemas`: Zod schemas + generated JSON Schemas (BrandKit included)
-- `/packages/policies/` — `@cir/policies`: pure-function manifest validators (7 baseline) + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` contract
-- `/packages/evals/` — `@cir/evals`: eval harness, `defineEval()` helper, and `cir-evals` CLI
-- `/packages/runtime/` — `@cir/runtime`: the framework-agnostic render SDK (manifest cache/fetcher/resolver, action dispatcher with `verbal_required` confirmation, trigger bus + SSE transport, registries, render-plan derivation, audit sink)
-- `/packages/components/` — `@cir/components`: 56-component baseline catalog
-- `/packages/react/` — `@cir/react`: React adapter (`<CirRuntime>`, `<CirRoute>`, hooks, confirm portal, SWR + optimistic UI)
-- `/packages/compiler/` — `@cir/compiler`: the LLM-backed compile service (Gemini, `MemoryManifestStore` / `RedisManifestStore`, `FallbackCompiler`)
+- `/packages/schemas/` — `@atelier/schemas`: Zod schemas + generated JSON Schemas (BrandKit included)
+- `/packages/policies/` — `@atelier/policies`: pure-function manifest validators (7 baseline) + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` contract
+- `/packages/evals/` — `@atelier/evals`: eval harness, `defineEval()` helper, and `atelier-evals` CLI
+- `/packages/runtime/` — `@atelier/runtime`: the framework-agnostic render SDK (manifest cache/fetcher/resolver, action dispatcher with `verbal_required` confirmation, trigger bus + SSE transport, registries, render-plan derivation, audit sink)
+- `/packages/components/` — `@atelier/components`: 56-component baseline catalog
+- `/packages/react/` — `@atelier/react`: React adapter (`<CirRuntime>`, `<CirRoute>`, hooks, confirm portal, SWR + optimistic UI)
+- `/packages/compiler/` — `@atelier/compiler`: the LLM-backed compile service (Gemini, `MemoryManifestStore` / `RedisManifestStore`, `FallbackCompiler`)
 - `/packages/cli/` — later phase per `packages/README.md`
 - `/scripts/` — repo-level harness scripts (e.g. `sanity.test.ts`); not for product code
 
@@ -92,7 +92,7 @@ Background reading on the framework lives in [`docs/`](docs/).
 
 ## When asked to "build a feature"
 
-Stop. There is no "feature" in CIR.
+Stop. There is no "feature" in Atelier.
 
 A feature is one or more of: a new capability, a new skill, a new
 component, a new policy, or a new default recipe. Identify which.
@@ -140,7 +140,7 @@ and generated files) must start with an SPDX header:
 
 ```
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 ```
 
 The check runs as part of `pnpm validate`. Run `pnpm fix:license-headers` to

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Vitest unit tests for the vault grant-flow eval.
  *
  * The eval lives in `vault-grant-flow.eval.ts` and is driven by the
- * `cir-evals` runner. This file pins the predicate + run() function under
+ * `atelier-evals` runner. This file pins the predicate + run() function under
  * vitest so a regression breaks CI immediately rather than waiting for the
  * eval pass.
  */

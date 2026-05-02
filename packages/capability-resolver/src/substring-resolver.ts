@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `SubstringCapabilityResolver` — the baseline scoping resolver. No LLM
  * call; pure substring + token-overlap match against capability id and
- * description. This is the same logic `@cir/compiler`'s
+ * description. This is the same logic `@atelier/compiler`'s
  * `fallbackFindCapability` ships, but properly packaged so:
  *
  *   - hosts can use it as a `CapabilityResolver` directly (no LLM needed),
@@ -24,7 +24,7 @@
  * S-7 lifts it again with proper vector embeddings.
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import type { CapabilityRef, CapabilityResolver, ScopeRequest } from './types.js';
 
 /**

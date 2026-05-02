@@ -2,7 +2,7 @@
 import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { act, fireEvent, render, waitFor } from '@testing-library/react';
-import type { ConfirmationDecision, ConfirmationRequest } from '@cir/runtime';
+import type { ConfirmationDecision, ConfirmationRequest } from '@atelier/runtime';
 import { ConfirmPortal } from '../src/confirm/confirm-portal.js';
 import { createConfirmStore } from '../src/confirm/confirm-store.js';
 import { useReactConfirmation } from '../src/confirm/use-confirmation.js';

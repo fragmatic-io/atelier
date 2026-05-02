@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Kanban — static board layout. Renders `columns` as a horizontal flex of
  * `<section>`s, each containing an `<ul>` of clickable `<article>` cards.
@@ -15,7 +15,7 @@
  * interactive role).
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, kanbanVariantClass, type KanbanVariant } from './_variants.js';
 
 export interface KanbanCard {

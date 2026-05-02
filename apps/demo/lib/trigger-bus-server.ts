@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-side trigger bus singleton. Holds connected SSE clients and
  * broadcasts trigger payloads to all of them.

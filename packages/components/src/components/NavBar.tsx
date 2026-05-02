@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * NavBar — semantic top-of-page navigation. Renders a `<nav role="navigation">`
  * with an optional `brand` slot on the left and an `<ul>` of `<a>` items on
@@ -12,7 +12,7 @@
  * Next.js / React Router into the baseline.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 
 export interface NavItem {
   label: string;

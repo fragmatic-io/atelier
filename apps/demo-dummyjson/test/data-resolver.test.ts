@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * RestDataResolver wiring against a mocked fetch. Confirms the demo's URL
  * map shape: every capability maps to the right `https://dummyjson.com/…`
@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { RestDataResolver } from '@cir/data-resolvers';
+import { RestDataResolver } from '@atelier/data-resolvers';
 
 const DUMMYJSON_BASE = 'https://dummyjson.com';
 

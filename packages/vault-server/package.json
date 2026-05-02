@@ -1,8 +1,8 @@
 {
-  "name": "@cir/vault-server",
+  "name": "@atelier/vault-server",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR intent vault server — node:http + ed25519 JWTs + JSON-file storage. Mints scoped read tokens, enforces scope-based filtering, emits revocation triggers.",
+  "description": "Atelier intent vault server — node:http + ed25519 JWTs + JSON-file storage. Mints scoped read tokens, enforces scope-based filtering, emits revocation triggers.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -16,7 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/schemas": "workspace:*"
+    "@atelier/schemas": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

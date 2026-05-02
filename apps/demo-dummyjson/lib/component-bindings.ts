@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Marigold demo — host-side `ComponentBinding`s.
  *
@@ -21,7 +21,7 @@
  * lowers the ceiling to 0 to match Aurora and Octant.
  */
 
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 
 /**
  * Custom bindings the demo registers on top of `COMPONENT_BINDINGS`.
@@ -35,7 +35,7 @@ export const DEMO_DUMMYJSON_BINDINGS: Readonly<Record<string, ComponentBinding>>
 
 /**
  * Composition-role map derived from `DEMO_DUMMYJSON_BINDINGS`. Threaded
- * onto the `PolicyContext` in `cir-providers.tsx` so the policy engine
+ * onto the `PolicyContext` in `atelier-providers.tsx` so the policy engine
  * treats custom bindings declaring a role as if they were the baseline
  * List/Grid/Table component for composition allow-listing. Empty here —
  * no customs means no role overrides.

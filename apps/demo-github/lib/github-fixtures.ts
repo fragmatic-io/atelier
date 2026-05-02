@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Inline fixture data so the demo boots without a GitHub token. Five
  * repos, twelve issues spread across them. The fixture surface mirrors
@@ -68,7 +68,7 @@ export const FIXTURE_REPOS: readonly GitHubRepo[] = [
     full_name: 'fragmatic-io/demo',
     private: false,
     html_url: 'https://github.com/fragmatic-io/demo',
-    description: 'CIR reference demo app',
+    description: 'Atelier reference demo app',
     stargazers_count: 42,
     open_issues_count: 2,
     updated_at: '2026-04-29T09:00:00Z',

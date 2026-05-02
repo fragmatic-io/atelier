@@ -6,7 +6,7 @@ The framework works across apps, websites, chat, agents, mobile, native. The imp
 
 ## First-party apps (the inside-out path)
 
-The app is built CIR-native from day one.
+The app is built Atelier-native from day one.
 
 ```
 your-app/
@@ -22,7 +22,7 @@ your-app/
 
 The default UI users see is just a recipe — `recipes/default.json` — that the company maintains. Everything users do via "customize" produces alternate manifests. The default is no more privileged than any user's lens, except that it ships with the app.
 
-Companies migrating existing apps to CIR start by:
+Companies migrating existing apps to Atelier start by:
 
 1. Extracting capabilities from existing API endpoints
 2. Writing skills for common usage patterns
@@ -38,7 +38,7 @@ This is a 6-12 month migration for a mid-size SaaS app.
 
 ## Existing websites (the outside-in path)
 
-The website is not CIR-native. The user wants their interface anyway.
+The website is not Atelier-native. The user wants their interface anyway.
 
 This is the **sidecar path**:
 
@@ -55,11 +55,11 @@ Browser extension or local agent
 
 Adapters per app: `gmail.cir-adapter.json`, `github.cir-adapter.json`, etc. The adapter maps:
 
-- App's data → CIR-typed data
-- App's actions → CIR capabilities
-- App's permissions → CIR scopes
+- App's data → Atelier-typed data
+- App's actions → Atelier capabilities
+- App's permissions → Atelier scopes
 
-Adapters can be community-maintained. Quality varies. Reliability is lower than first-party CIR. But this is the path that makes CIR usable today, before any SaaS company implements it natively.
+Adapters can be community-maintained. Quality varies. Reliability is lower than first-party Atelier. But this is the path that makes Atelier usable today, before any SaaS company implements it natively.
 
 ---
 
@@ -103,4 +103,4 @@ The right approach is **declarative manifests rendered by native components**:
 - Manifests are JSON, not code — passes app store review
 - Compiler service runs server-side, manifest is fetched
 
-This is exactly what Google's A2UI is gesturing at — the cross-platform "blueprint" approach. CIR's manifest format is compatible with this model; the same manifest can render on web, iOS, Android, and desktop with the appropriate native component set.
+This is exactly what Google's A2UI is gesturing at — the cross-platform "blueprint" approach. Atelier's manifest format is compatible with this model; the same manifest can render on web, iOS, Android, and desktop with the appropriate native component set.

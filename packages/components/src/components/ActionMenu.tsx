@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -7,7 +7,7 @@
  * primary, secondary (default), ghost, outline, destructive. Sizes: sm, md, lg.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { actionVariantClass, cn, type ActionVariant, type Size } from './_variants.js';
 
 export interface ActionMenuItem {

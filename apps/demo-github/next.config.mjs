@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
   // Workspace packages ship raw TypeScript (their `main` points at `src/`).
   // Next.js needs to transpile them in this app.
   transpilePackages: [
-    '@cir/compiler',
-    '@cir/components',
-    '@cir/data-resolvers',
-    '@cir/policies',
-    '@cir/react',
-    '@cir/runtime',
-    '@cir/schemas',
-    '@cir/vault-client',
+    '@atelier/compiler',
+    '@atelier/components',
+    '@atelier/data-resolvers',
+    '@atelier/policies',
+    '@atelier/react',
+    '@atelier/runtime',
+    '@atelier/schemas',
+    '@atelier/vault-client',
   ],
-  // CIR packages are authored as TS NodeNext, which requires `.js` extensions
+  // Atelier packages are authored as TS NodeNext, which requires `.js` extensions
   // in import specifiers even when the source file is `.ts`/`.tsx`. Webpack
   // won't synthesize that resolution by default — `extensionAlias` tells it
   // to try the matching TS extension before falling back to the literal JS

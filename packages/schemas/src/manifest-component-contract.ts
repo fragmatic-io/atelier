@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `ManifestComponentContract` — the canonical, schema-validated description
  * of what manifest props a single component binding accepts.
@@ -10,8 +10,8 @@
  * with `?? []` defaults; the schema layer rejects them upstream.
  *
  * A `ManifestComponentContract` is per-component-id and lives on the
- * runtime's `ComponentBinding` (see `@cir/runtime`). The
- * `manifest_component_contract_satisfied` policy in `@cir/policies`
+ * runtime's `ComponentBinding` (see `@atelier/runtime`). The
+ * `manifest_component_contract_satisfied` policy in `@atelier/policies`
  * walks the manifest tree and validates `node.props` against the contract
  * for each node whose `component` id has one registered.
  *

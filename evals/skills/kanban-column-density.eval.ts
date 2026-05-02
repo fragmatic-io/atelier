@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Skill eval: `skills/kanban-column-density.skill.md` parses cleanly,
  * declares the expected capability surface, and pins the density
@@ -11,8 +11,8 @@
 
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { defineEval } from '@cir/evals';
-import { parseSkillMarkdown } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { parseSkillMarkdown } from '@atelier/schemas';
 
 const SKILL_PATH = resolve(process.cwd(), 'skills/kanban-column-density.skill.md');
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * CodeView — read-only code display.
  *
@@ -13,7 +13,7 @@
  * this component's API.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, codeViewVariantClass, type CodeViewVariant } from './_variants.js';
 
 export interface CodeViewProps {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Vitest unit tests for the personalisation-chain eval.
  *
- * The eval is driven by the `cir-evals` runner; this file pins the per-step
+ * The eval is driven by the `atelier-evals` runner; this file pins the per-step
  * assertions under vitest so a regression breaks CI immediately. The
  * synthesizer hook in `ChainDeps.synthesize` is the primary surface — it
  * lets us deliberately drop a single intent signal and assert that
@@ -18,7 +18,7 @@ import chainEval, {
   type ChainDeps,
   type PersonalisationChainOutcome,
 } from './personalisation-chain.eval.js';
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 
 /** Convenience wrapper: forces the offline path (no Gemini key). */
 async function runOffline(

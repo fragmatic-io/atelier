@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Density — the personalisation signal that compresses or relaxes layout
  * spacing in the components that render multiple children. The catalog
  * supports three values matching `intent.global_preferences.density` from
- * `@cir/schemas`:
+ * `@atelier/schemas`:
  *
  *   - `'compact'`  — tight spacing for power users / dense data displays.
  *   - `'comfortable'` — the default for everyone else.
  *   - `'spacious'` — relaxed spacing for accessibility-leaning users.
  *
- * The renderer (`@cir/react`'s `<RenderNode>` walker) reads
+ * The renderer (`@atelier/react`'s `<RenderNode>` walker) reads
  * `intent.global_preferences.density` and threads it down as the default for
  * any component that accepts the prop. Components only need to translate the
  * value into pixel/spacing tokens; they never read intent directly.

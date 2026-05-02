@@ -1,6 +1,6 @@
 # Multi-Modal Render Targets
 
-CIR is not text-only. Modern agents render across modalities. Each modality is a different render target with its own component catalog and rendering rules.
+Atelier is not text-only. Modern agents render across modalities. Each modality is a different render target with its own component catalog and rendering rules.
 
 ---
 
@@ -97,7 +97,7 @@ The runtime delivers each rendering to its appropriate channel.
 
 ## Image input as intent signal
 
-Modern agents accept image input. In CIR, an image is parsed into intent:
+Modern agents accept image input. In Atelier, an image is parsed into intent:
 
 ```
 User uploads screenshot of email + says "make this into a task"
@@ -117,4 +117,4 @@ The image itself is _not_ part of the manifest. It's pre-processed into structur
 
 ## AR / spatial (future-proofing)
 
-The manifest format should anticipate spatial render targets. Vision Pro, AR glasses, holographic displays will all eventually be CIR runtimes. The component catalog will need spatial primitives: `WorldAnchoredCard`, `GazeTarget`, `HandRayInteraction`. The framework's pattern — declarative manifest, render-target-specific runtime — works here without architectural changes.
+The manifest format should anticipate spatial render targets. Vision Pro, AR glasses, holographic displays will all eventually be Atelier runtimes. The component catalog will need spatial primitives: `WorldAnchoredCard`, `GazeTarget`, `HandRayInteraction`. The framework's pattern — declarative manifest, render-target-specific runtime — works here without architectural changes.

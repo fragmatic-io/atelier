@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 
 'use client';
 /**
@@ -7,7 +7,7 @@
  * elevated, ghost (default), tinted.
  */
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
 export interface TabItem {

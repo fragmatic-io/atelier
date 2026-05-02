@@ -1,12 +1,12 @@
 name: Capability proposal (RFC)
-description: Propose a brand-new CIR capability (action or data). Becomes an RFC for review.
+description: Propose a brand-new Atelier capability (action or data). Becomes an RFC for review.
 title: '[Capability] '
 labels: ['capability', 'rfc']
 body:
   - type: markdown
     attributes:
       value: |
-        Use this form to propose a **new capability** in the CIR registry.
+        Use this form to propose a **new capability** in the Atelier registry.
 
         Read [`AGENTS.md`](../blob/main/AGENTS.md) → "When asked to add a
         capability" and [`ETHOS.md`](../blob/main/ETHOS.md) before filing.

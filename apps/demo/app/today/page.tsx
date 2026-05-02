@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CirRoute } from '@cir/react';
+import { CirRoute } from '@atelier/react';
 import { hasGrantedLens } from '@/lib/intent-store';
 
 export default function TodayPage(): React.JSX.Element {

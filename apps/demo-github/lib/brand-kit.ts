@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Demo-GitHub brand kit — "Octant".
  *
@@ -27,7 +27,7 @@
  *   - variants         (Stack, Button, Alert, Container baseline whitelist)
  */
 
-import type { BrandKit } from '@cir/schemas';
+import type { BrandKit } from '@atelier/schemas';
 
 /**
  * Octant colour ramp. Authored as named tokens; the CSS variable layer in
@@ -252,7 +252,7 @@ export const DEMO_GITHUB_BRAND_KIT: BrandKit = {
 
 /**
  * Re-export the typed kit under the original name for back-compat. The
- * services bag and `cir-server` import this name.
+ * services bag and `atelier-server` import this name.
  */
 export const brandKit = DEMO_GITHUB_BRAND_KIT;
 

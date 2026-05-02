@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -21,8 +21,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Alert, Button, Card, Container, Stack } from '@cir/components';
-import { decodeJwt } from '@cir/vault-client';
+import { Alert, Button, Card, Container, Stack } from '@atelier/components';
+import { decodeJwt } from '@atelier/vault-client';
 import {
   buildDemoProfile,
   grantedScopesFromProfile,

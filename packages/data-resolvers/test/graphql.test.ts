@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 import { describe, expect, it, vi } from 'vitest';
 import { GraphQLDataResolver, defaultFieldName } from '../src/graphql.js';
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 
 function jsonResponse(body: unknown, init: { status?: number } = {}): Response {
   return new Response(JSON.stringify(body), {

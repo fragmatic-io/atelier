@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a defect in CIR (capability, skill, component, policy, recipe, runtime, compiler, or tooling).
+description: Report a defect in Atelier (capability, skill, component, policy, recipe, runtime, compiler, or tooling).
 title: '[Bug] '
 labels: ['bug', 'triage']
 body:
@@ -49,7 +49,7 @@ body:
         - Node version: (output of `node --version`)
         - pnpm version: (output of `pnpm --version`)
         - OS / version:
-        - CIR commit / version:
+        - Atelier commit / version:
       render: markdown
     validations:
       required: true

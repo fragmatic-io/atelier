@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Trigger subscription contract.
  *
@@ -14,7 +14,7 @@
  * Phase 4c.
  */
 
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import type { Unsubscribe } from '../types.js';
 
 /** A subscription handler. May be async; the bus awaits it. */

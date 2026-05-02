@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * End-to-end vault grant-flow eval.
  *
- * Drives `@cir/vault-server` + `@cir/vault-client` against an in-process,
+ * Drives `@atelier/vault-server` + `@atelier/vault-client` against an in-process,
  * in-memory vault — no HTTP, no port allocation, no Gemini key. Walks the
  * full happy path:
  *
@@ -19,7 +19,7 @@
  * Deterministic, offline. Skip-when-no-key not applicable.
  */
 
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import {
   MemoryVaultStorage,
   VaultService,
@@ -27,14 +27,14 @@ import {
   loadOrGenerateKeyPair,
   type VaultRequest,
   type VaultRevocationTrigger,
-} from '@cir/vault-server';
+} from '@atelier/vault-server';
 import {
   MemoryTokenStorage,
   VaultClient,
   VaultResponseError,
   VaultUnauthorizedError,
-} from '@cir/vault-client';
-import type { IntentProfile } from '@cir/schemas';
+} from '@atelier/vault-client';
+import type { IntentProfile } from '@atelier/schemas';
 
 interface VaultEvalOutcome {
   /** Number of steps that succeeded in order. */

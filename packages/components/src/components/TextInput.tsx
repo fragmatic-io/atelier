@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * TextInput — labelled text field. `label` is required so every input is
  * accessible by default; the label is associated to the input via a generated
@@ -11,7 +11,7 @@
  * `aria-describedby`.
  */
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type TextInputVariant = InputVariant;

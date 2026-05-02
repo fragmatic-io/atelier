@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * POST /api/cir/onboarding/compile — server route that takes the user's
  * free-text self-description and returns a draft `IntentProfile` for them
@@ -16,9 +16,9 @@
  */
 
 import { NextResponse } from 'next/server';
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import { buildIntentProfileCompiler, handleCompileRequest } from '@/lib/onboarding-compile';
-import { getCirServer } from '@/lib/cir-server';
+import { getCirServer } from '@/lib/atelier-server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/policies` — public surface.
+ * `@atelier/policies` — public surface.
  *
  * The compiler imports `validateManifest` and the baseline policies; the
  * runtime imports the `BehavioralPatternDetector` interface to plug its own

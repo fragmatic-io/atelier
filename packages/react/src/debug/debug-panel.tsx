@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
 /**
  * `<DebugPanel>` — a floating dev-only panel showing live audit events,
  * cache stats, and token spend. Subscribes to a `StreamingAuditSink` from
- * `@cir/runtime` and re-renders on every emit.
+ * `@atelier/runtime` and re-renders on every emit.
  *
  * Render this somewhere inside `<CirRuntime>` and pass it the streaming
  * sink (the same one wired into `services.audit`). The panel is hidden by
@@ -20,8 +20,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import type { AuditEvent } from '@cir/schemas';
-import type { StreamingAuditSink } from '@cir/runtime';
+import type { AuditEvent } from '@atelier/schemas';
+import type { StreamingAuditSink } from '@atelier/runtime';
 
 export interface DebugPanelProps {
   sink: StreamingAuditSink;
@@ -108,8 +108,8 @@ export function DebugPanel(props: DebugPanelProps): React.JSX.Element {
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           }}
         >
-          🛠️ CIR · {Math.round(stats.cache_hit_rate * 100)}% hit · {formatToken(stats.total_tokens)}{' '}
-          tok
+          🛠️ Atelier · {Math.round(stats.cache_hit_rate * 100)}% hit ·{' '}
+          {formatToken(stats.total_tokens)} tok
         </button>
       </div>
     );
@@ -141,7 +141,7 @@ export function DebugPanel(props: DebugPanelProps): React.JSX.Element {
           alignItems: 'center',
         }}
       >
-        <strong>CIR debug · cache + audit</strong>
+        <strong>Atelier debug · cache + audit</strong>
         <button
           type="button"
           onClick={() => setOpen(false)}

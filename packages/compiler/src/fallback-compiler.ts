@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * FallbackCompiler — emits hand-written manifests instead of calling an LLM.
  *
@@ -13,7 +13,7 @@
  * pass a closure over the `manifestForRoute()` function in `lib/fake-manifests.ts`.
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import {
   CompilerOutputError,
   type CompileInput,

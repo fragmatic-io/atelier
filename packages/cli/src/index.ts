@@ -1,20 +1,20 @@
 #!/usr/bin/env -S node --import=tsx/esm
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /* eslint-disable no-console */
 /**
- * `cir` — unified CIR developer CLI.
+ * `atelier` — unified Atelier developer CLI.
  *
- *   cir init [dir]              Scaffold a new CIR app.
- *   cir dev [--tail|--tail-only] Wrapper around `next dev`, optional audit tail.
- *   cir add <component>         Copy a baseline component into ./components/.
- *   cir components-sync         Regenerate components/registry.json.
- *   cir validate                Run the validate chain.
- *   cir import openapi <spec>   Generate capabilities from an OpenAPI 3 spec.
- *   cir import figma <tokens>   Generate a BrandKit from a Figma tokens JSON.
- *   cir inspect <id-or-path>    Pretty-print a manifest.
- *   cir compile <intent.json>   Offline compile producing a manifest.
- *   cir --help / --version
+ *   atelier init [dir]              Scaffold a new Atelier app.
+ *   atelier dev [--tail|--tail-only] Wrapper around `next dev`, optional audit tail.
+ *   atelier add <component>         Copy a baseline component into ./components/.
+ *   atelier components-sync         Regenerate components/registry.json.
+ *   atelier validate                Run the validate chain.
+ *   atelier import openapi <spec>   Generate capabilities from an OpenAPI 3 spec.
+ *   atelier import figma <tokens>   Generate a BrandKit from a Figma tokens JSON.
+ *   atelier inspect <id-or-path>    Pretty-print a manifest.
+ *   atelier compile <intent.json>   Offline compile producing a manifest.
+ *   atelier --help / --version
  *
  * Argv parsing is hand-rolled (no commander/yargs) to match the rest of the
  * repo. Each subcommand lives in its own module under `commands/` and
@@ -65,7 +65,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
     case 'vault':
       return vaultCommand(positionals, flags);
     case 'import': {
-      // `cir import openapi <spec> ...` — the importer parses its own flags,
+      // `atelier import openapi <spec> ...` — the importer parses its own flags,
       // so we slice off `import` and the target word and hand the rest over
       // verbatim. Keep this branch dumb so the importer stays the source of
       // truth for its argv contract.
@@ -75,7 +75,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
           await importOpenApi(argv.slice(2));
           return 0;
         } catch (err) {
-          console.error(`cir import openapi: ${(err as Error).message}`);
+          console.error(`atelier import openapi: ${(err as Error).message}`);
           return 1;
         }
       }
@@ -84,17 +84,17 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
           await importFigma(argv.slice(2));
           return 0;
         } catch (err) {
-          console.error(`cir import figma: ${(err as Error).message}`);
+          console.error(`atelier import figma: ${(err as Error).message}`);
           return 1;
         }
       }
       console.error(
-        `cir: unknown import target '${target ?? ''}'. Try 'cir import openapi <spec>' or 'cir import figma <tokens.json>'.`,
+        `atelier: unknown import target '${target ?? ''}'. Try 'atelier import openapi <spec>' or 'atelier import figma <tokens.json>'.`,
       );
       return 1;
     }
     default:
-      console.error(`cir: unknown command '${command}'\n`);
+      console.error(`atelier: unknown command '${command}'\n`);
       console.error(TOP_LEVEL_USAGE);
       return 1;
   }

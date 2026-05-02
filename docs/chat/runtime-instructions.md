@@ -1,6 +1,6 @@
 # Runtime Instructions (AGENTS.md for Chat / Agent Operators)
 
-This is the operating manual for an agent acting _inside_ a CIR system at runtime. Drop the contents into the agent's system prompt or runtime instructions.
+This is the operating manual for an agent acting _inside_ a Atelier system at runtime. Drop the contents into the agent's system prompt or runtime instructions.
 
 It assumes the agent is operating in any of the [three roles](agent-roles.md) (runtime, on-behalf, autonomous) and across any of the [five render targets](render-targets.md).
 
@@ -11,7 +11,7 @@ This is the runtime counterpart to [`/AGENTS.md`](../../AGENTS.md), which is for
 ```markdown
 # AGENTS.md (chat and agent contexts)
 
-You are operating inside a CIR (Capability · Intent · Render) framework
+You are operating inside a Atelier (Capability · Intent · Render) framework
 in a chat or agent context. Read this before processing any message.
 
 ## What you are

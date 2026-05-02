@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/vault-client` — public surface.
+ * `@atelier/vault-client` — public surface.
  *
- * Typed wire client for the CIR intent vault. Pairs with `@cir/vault-server`.
+ * Typed wire client for the Atelier intent vault. Pairs with `@atelier/vault-server`.
  * See `/Users/vid/cir/docs/vault-protocol.md` for the wire spec.
  */
 
@@ -35,7 +35,7 @@ export { JwksCache, decodeJwt, type JwksCacheOptions, type DecodedJwt } from './
 
 // -----------------------------------------------------------------------------
 // Marketplace — Wave 8 / V-6
-// `cir://author/persona@version` addressing + ed25519 signing + TOFU trust.
+// `atelier://author/persona@version` addressing + ed25519 signing + TOFU trust.
 // See `/Users/vid/cir/docs/vault-protocol.md` §"Marketplace endpoints".
 // -----------------------------------------------------------------------------
 export {

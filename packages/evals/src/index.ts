@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/evals` — public surface.
+ * `@atelier/evals` — public surface.
  *
  * Authors import `defineEval` to declare scenarios in `*.eval.ts` files; the
  * runner discovers them, the reporter prints them, and the CLI exposes both

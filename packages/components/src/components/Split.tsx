@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -20,7 +20,7 @@
  * Phase 6 layouts opt in to true-zero collapse via a future prop.
  */
 import { useCallback, useRef, useState, type PointerEvent, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 
 export interface SplitProps {
   orientation?: 'horizontal' | 'vertical';

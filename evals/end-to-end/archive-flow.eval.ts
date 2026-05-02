@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * End-to-end eval: simulate the archive flow using the runtime's real
  * dispatcher with a stub `thread.archive` handler.
@@ -16,15 +16,15 @@
  * intent → manifest → action → audit chain, scoped to the action half.
  */
 
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import {
   ActionDispatcher,
   MapActionRegistry,
   type AuditSink,
   type ConfirmationCallback,
   type ConfirmationRequest,
-} from '@cir/runtime';
-import type { AuditEvent } from '@cir/schemas';
+} from '@atelier/runtime';
+import type { AuditEvent } from '@atelier/schemas';
 import { CAPABILITIES } from '../../apps/demo/lib/fake-capabilities';
 
 interface FlowOutcome {

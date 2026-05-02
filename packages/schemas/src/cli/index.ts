@@ -1,16 +1,16 @@
 #!/usr/bin/env -S node --import=tsx/esm
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /* eslint-disable no-console */
 /**
- * `cir-schemas` CLI.
+ * `atelier-schemas` CLI.
  *
- *   cir-schemas dump [--out <dir>]
+ *   atelier-schemas dump [--out <dir>]
  *     Writes one JSON Schema per registered schema to <dir>.
  *     Default <dir>: `.well-known/schemas/` (relative to cwd).
  *
- *   cir-schemas validate-data [--root <dir>] [--strict]
- *     Walks the CIR data directories (capabilities/, recipes/, ...) under
+ *   atelier-schemas validate-data [--root <dir>] [--strict]
+ *     Walks the Atelier data directories (capabilities/, recipes/, ...) under
  *     <dir> (default: cwd) and validates every *.json file against the
  *     schema mapped to that directory by `PATH_DISPATCH`.
  *
@@ -23,12 +23,12 @@
  *     Without `--strict`, behavior is unchanged: schema validation only,
  *     `_review` envelope is optional → permissive. PR builds and
  *     `pnpm validate` should run with `--strict`; local
- *     `cir-schemas validate-data` is permissive so a developer can iterate
+ *     `atelier-schemas validate-data` is permissive so a developer can iterate
  *     on a draft import without CI yelling at them mid-keystroke.
  *
  * Implementation notes:
  *  - This file is invoked via shebang (`node --experimental-strip-types`)
- *    in dev. In CI/published form, `pnpm exec cir-schemas` resolves the
+ *    in dev. In CI/published form, `pnpm exec atelier-schemas` resolves the
  *    package's bin entry through `tsx`-equivalent strip-types loader.
  *  - Kept under ~200 lines: argv parsed by hand, no UX libraries.
  */
@@ -224,7 +224,7 @@ async function main(): Promise<void> {
     }
     default: {
       console.error(
-        `usage: cir-schemas <dump|validate-data> [--out <dir>] [--root <dir>] [--strict]`,
+        `usage: atelier-schemas <dump|validate-data> [--out <dir>] [--root <dir>] [--strict]`,
       );
       process.exit(1);
     }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Action dispatcher — validates input shape, gates on confirmation, executes
  * via a registered handler, records reversible actions on the undo stack,
@@ -16,7 +16,7 @@
  * actions trigger confirmation.
  */
 
-import type { AuditEvent, Capability } from '@cir/schemas';
+import type { AuditEvent, Capability } from '@atelier/schemas';
 import type { AuditSink } from '../audit/emit.js';
 import { NoopAuditSink } from '../audit/emit.js';
 import { isoNow, type Clock } from '../types.js';

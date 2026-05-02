@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Wordmark — the demo's chrome mark.
  *
- * "CIR" rendered as a custom geometric letterform with a small status dot
+ * "Atelier" rendered as a custom geometric letterform with a small status dot
  * to the right of the R, suggesting "live". Sized to a 24px line so it
  * sits comfortably alongside the chrome's status pill and nav links.
  *
@@ -26,7 +26,7 @@ interface WordmarkProps {
   showDot?: boolean;
   /** Optional className to compose with chrome layout utilities. */
   className?: string;
-  /** Optional accessible label override; defaults to "CIR". */
+  /** Optional accessible label override; defaults to "Atelier". */
   ariaLabel?: string;
 }
 
@@ -34,7 +34,7 @@ export function Wordmark({
   size = 24,
   showDot = true,
   className,
-  ariaLabel = 'CIR',
+  ariaLabel = 'Atelier',
 }: WordmarkProps): React.JSX.Element {
   // ViewBox is 64x24 — three letterforms (16px wide each, 4px gutters)
   // plus an optional 6px-radius dot at the right edge.

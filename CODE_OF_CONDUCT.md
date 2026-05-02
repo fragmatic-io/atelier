@@ -1,6 +1,6 @@
 # Code of Conduct
 
-CIR adopts the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) as its code of conduct. The full text is canonical and lives at that URL; the summary below is for orientation only.
+Atelier adopts the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) as its code of conduct. The full text is canonical and lives at that URL; the summary below is for orientation only.
 
 ## In short
 

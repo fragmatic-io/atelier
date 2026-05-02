@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Action registry — `capability_id` -> handler. The dispatcher looks handlers
  * up here when a layout node fires an action.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
 import {
   ComponentDefinitionSchema,
@@ -79,7 +79,7 @@ describe('CompositionRuleSchema', () => {
 
   it("accepts the 'leaf' sentinel for components with no children", () => {
     // Regression: the schema previously only accepted '*' or an array, but
-    // the `@cir/components` `COMPOSITION_RULES` use 'leaf' to mean "no
+    // the `@atelier/components` `COMPOSITION_RULES` use 'leaf' to mean "no
     // children at all" (Markdown, Spinner, every input, …). The catalog
     // sync would have been blocked from emitting these rules without this
     // case. See `packages/schemas/src/component.ts` JSDoc on
@@ -92,11 +92,11 @@ describe('CompositionRuleSchema', () => {
 
 describe('CompositionRulesSchema', () => {
   it('accepts a leaf-heavy bare-record map (Stack/Markdown/Card)', () => {
-    // Round-trip a representative slice of the @cir/components rules through
+    // Round-trip a representative slice of the @atelier/components rules through
     // the schema. The full-registry round-trip lives in
     // `packages/components/test/registry.test.ts` to avoid a circular
-    // package dependency (`@cir/schemas` cannot depend on
-    // `@cir/components` since `@cir/components` depends on `@cir/schemas`).
+    // package dependency (`@atelier/schemas` cannot depend on
+    // `@atelier/components` since `@atelier/components` depends on `@atelier/schemas`).
     const map = {
       Stack: { can_contain: '*' as const, min_children: 1, max_children: 50 },
       Markdown: { can_contain: 'leaf' as const },

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it, vi } from 'vitest';
 import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import {
@@ -7,7 +7,7 @@ import {
   type EventSourceCtor,
   type EventSourceLike,
 } from '../../src/triggers/sse-transport.js';
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 
 class FakeEventSource implements EventSourceLike {
   static instances: FakeEventSource[] = [];

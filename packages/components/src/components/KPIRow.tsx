@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * KPIRow — row of StatCard tiles. Variants (Wave 6 / P-10): default
  * (default), accent, muted. Sizes: sm, md (default), lg.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { StatCard, type StatCardDelta } from './StatCard.js';
 import { cn, statSizeClass, statVariantClass, type Size, type StatVariant } from './_variants.js';
 import { DEFAULT_DENSITY, densityScaleGapPx, type Density } from './density.js';

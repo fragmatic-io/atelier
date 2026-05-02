@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -19,7 +19,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Card, Container, Stack } from '@cir/components';
+import { Alert, Button, Card, Container, Stack } from '@atelier/components';
 import { DEMO_LENS_SCOPES, loadIntentProfile } from '@/lib/intent-store';
 import { requestGrant } from '@/lib/intent-grant';
 
@@ -50,7 +50,7 @@ export default function OnboardingPage(): React.JSX.Element {
       requestGrant({
         scopes,
         intended: '/today',
-        purpose: 'CIR demo onboarding',
+        purpose: 'Atelier demo onboarding',
       });
     } catch (err) {
       // eslint-disable-next-line no-console

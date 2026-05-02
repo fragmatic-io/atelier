@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Public re-exports for the dev-only debug surface.
  *
- * Imported by host apps under `@cir/react/debug` (see the subpath export in
+ * Imported by host apps under `@atelier/react/debug` (see the subpath export in
  * `packages/react/package.json`). The `cir init` template wires
  * `<DebugPanel>` into `app/layout.tsx` behind a `process.env.NODE_ENV ===
  * 'development'` gate; production bundles never include this module.

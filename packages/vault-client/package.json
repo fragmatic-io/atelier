@@ -1,8 +1,8 @@
 {
-  "name": "@cir/vault-client",
+  "name": "@atelier/vault-client",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR vault client — typed wire client for @cir/vault-server. JWKS-cached signature verification, pluggable token storage, typed errors.",
+  "description": "Atelier vault client — typed wire client for @atelier/vault-server. JWKS-cached signature verification, pluggable token storage, typed errors.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -16,7 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/schemas": "workspace:*"
+    "@atelier/schemas": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

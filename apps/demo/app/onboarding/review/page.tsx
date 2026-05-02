@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -28,8 +28,8 @@ import {
   Select,
   Stack,
   TextInput,
-} from '@cir/components';
-import type { IntentProfile, IntentRule } from '@cir/schemas';
+} from '@atelier/components';
+import type { IntentProfile, IntentRule } from '@atelier/schemas';
 import {
   getVaultClient,
   grantedScopesFromProfile,
@@ -193,7 +193,7 @@ export default function OnboardingReviewPage(): React.JSX.Element {
         requestGrant({
           scopes: scopes.length > 0 ? scopes : ['lens.today', 'vocabulary.read'],
           intended: '/onboarding/review',
-          purpose: 'CIR demo onboarding (review draft)',
+          purpose: 'Atelier demo onboarding (review draft)',
         });
         return; // browser is redirecting away
       } catch (err) {

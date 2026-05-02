@@ -1,8 +1,8 @@
 {
-  "name": "@cir/policies",
+  "name": "@atelier/policies",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR policy engine — pure-function validators run by the compiler against generated manifests, plus the BehavioralPatternDetector contract for the runtime",
+  "description": "Atelier policy engine — pure-function validators run by the compiler against generated manifests, plus the BehavioralPatternDetector contract for the runtime",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,7 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/schemas": "workspace:*"
+    "@atelier/schemas": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

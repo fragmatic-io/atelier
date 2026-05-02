@@ -1,8 +1,8 @@
-# @cir/runtime
+# @atelier/runtime
 
-The **framework-agnostic core** of CIR's render runtime. Adapters
+The **framework-agnostic core** of Atelier's render runtime. Adapters
 (React, native, voice) bind to this core; component implementations live in
-`@cir/components`. The shipped React adapter is `@cir/react`.
+`@atelier/components`. The shipped React adapter is `@atelier/react`.
 
 The runtime is the only client-side surface a host app embeds. It is
 deliberately "dumb" (ETHOS principle 7) — it binds data, dispatches actions,
@@ -38,14 +38,14 @@ manifests, manifests live in cache, cache invalidates on triggers.
   what". Real network transports (WebSocket / SSE) are per-deployment.
 - **Component / action registries** — interfaces + Map-backed defaults. The
   component registry's `factory` is opaque; the framework adapter
-  (`@cir/react`) decides what shape it carries.
+  (`@atelier/react`) decides what shape it carries.
 - **`buildRenderPlan(manifest, route, registry)`** — pure transform from a
   `Manifest` route into a framework-agnostic `RenderPlan` node tree.
 - **`AuditSink`** — pluggable destination for `AuditEvent`s.
   `NoopAuditSink` for prod default; `ConsoleAuditSink` for dev;
   `StreamingAuditSink` is a ring-buffered fan-out sink that backs
   `<DebugPanel>`, the demo's `/api/cir/audit/stream` SSE endpoint, and
-  `cir dev --tail` — subscribers get every emitted event, plus a
+  `atelier dev --tail` — subscribers get every emitted event, plus a
   bounded backlog on attach.
 
 ## How an adapter consumes this (sketch)
@@ -61,7 +61,7 @@ import {
   buildRenderPlan,
   InMemoryTriggerBus,
   wireTriggerInvalidation,
-} from '@cir/runtime';
+} from '@atelier/runtime';
 
 const fetcher = new ManifestFetcher({ baseUrl: 'https://manifest.example' });
 const cache = new MemoryManifestCache();
@@ -97,7 +97,7 @@ network call fails, it rolls back automatically and emits an
 `action.optimistic_rolled_back` audit event with a redacted reason.
 
 ```ts
-import { optimisticDispatch } from '@cir/runtime';
+import { optimisticDispatch } from '@atelier/runtime';
 
 await optimisticDispatch(dispatcher, {
   capability: capabilities['cart.add'],
@@ -130,10 +130,10 @@ callbacks are never invoked, so the same call site works for both modes.
 The framework-agnostic core ships here. **Out of scope here (lives in
 adjacent packages):**
 
-- React adapter — `@cir/react` (`<CirRuntime>`, `<CirRoute>`, hooks,
+- React adapter — `@atelier/react` (`<CirRuntime>`, `<CirRoute>`, hooks,
   `<ConfirmPortal>`, stale-while-revalidate + optimistic UI helpers).
-- Component implementations (Stack, Card, Button, ...) — `@cir/components`.
-- LLM-backed compile service — `@cir/compiler`.
+- Component implementations (Stack, Card, Button, ...) — `@atelier/components`.
+- LLM-backed compile service — `@atelier/compiler`.
 - Real WebSocket / SSE / long-poll transport for the trigger bus — per
   deployment. `SseTriggerTransport` ships here; the Next.js demo wires it
   to `/api/triggers/stream`.
@@ -142,6 +142,6 @@ Live-query subscriptions remain on the future-work list.
 
 ## Testing helpers
 
-`@cir/runtime/testing` exports `MemoryManifestCache`, `InMemoryTriggerBus`,
+`@atelier/runtime/testing` exports `MemoryManifestCache`, `InMemoryTriggerBus`,
 `Map*Registry`, `ALWAYS_CONFIRM` / `ALWAYS_DECLINE`, and `ConsoleAuditSink`
 for downstream test suites.

@@ -1,6 +1,6 @@
 # Architecture Additions for Chat / Agent Surfaces
 
-The core CIR architecture (see [`../architecture.md`](../architecture.md)) works for chat/agent contexts, but five additional services improve production fit.
+The core Atelier architecture (see [`../architecture.md`](../architecture.md)) works for chat/agent contexts, but five additional services improve production fit.
 
 ---
 
@@ -33,12 +33,12 @@ A small (typically <50KB) JavaScript bundle that runs inside chat host iframes
 (MCP Apps, OpenAI Apps SDK contexts).
 
 Responsibilities:
-  - Fetch manifest from CIR backend (with auth from host)
+  - Fetch manifest from Atelier backend (with auth from host)
   - Bind data via host-provided fetch API
   - Render components from local catalog
   - Dispatch actions through host-provided action API
   - Send back action results as conversation messages
-  - Sandboxed: no DOM access outside iframe, no localStorage, no network beyond CIR backend
+  - Sandboxed: no DOM access outside iframe, no localStorage, no network beyond Atelier backend
 ```
 
 Multiple runtimes can exist (one per app, or a shared one for many apps). Hosts cache them by version + signature.

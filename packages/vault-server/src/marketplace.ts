@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Marketplace endpoints — Wave 8 / V-6 (MVP).
  *
@@ -36,7 +36,7 @@ import {
   signingInputForBundle,
   type MarketplaceAddress,
   type SignedBundle,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 
 import type { VaultRequest, VaultResponse } from './server.js';
 
@@ -51,7 +51,7 @@ export interface MarketplaceStorage {
 
 /**
  * In-memory storage. Lives behind a `Map` keyed by the canonical
- * `cir://author/persona@version` address (without `signed_by`).
+ * `atelier://author/persona@version` address (without `signed_by`).
  */
 export class MemoryMarketplaceStorage implements MarketplaceStorage {
   private store = new Map<string, SignedBundle>();
@@ -105,7 +105,7 @@ export class JsonFileMarketplaceStorage implements MarketplaceStorage {
 /** Canonical key for a marketplace address — strips `signed_by`. */
 function addressKey(address: MarketplaceAddress): string {
   return formatMarketplaceAddress({
-    scheme: 'cir',
+    scheme: 'atelier',
     author: address.author,
     persona: address.persona,
     version: address.version,
@@ -208,7 +208,7 @@ export function parseFetchPath(path: string): MarketplaceAddress | null {
   const persona = decodeSegment(tail.slice(0, at));
   const version = decodeSegment(tail.slice(at + 1));
   if (persona === null || version === null) return null;
-  return parseMarketplaceAddress(`cir://${author}/${persona}@${version}`);
+  return parseMarketplaceAddress(`atelier://${author}/${persona}@${version}`);
 }
 
 function decodeSegment(s: string): string | null {
@@ -250,7 +250,7 @@ export function handleMarketplaceRequest(
     storage.put(bundle.address, bundle);
     return json(201, {
       address: formatMarketplaceAddress({
-        scheme: 'cir',
+        scheme: 'atelier',
         author: bundle.address.author,
         persona: bundle.address.persona,
         version: bundle.address.version,

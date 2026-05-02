@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// Smoke test: every public export from `@cir/react` and `@cir/react/testing`
+// Smoke test: every public export from `@atelier/react` and `@atelier/react/testing`
 // is reachable, and the testing helper actually mounts a tree.
 
 import './setup.js';
@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import * as react from '../src/index.js';
 import * as testing from '../src/testing/index.js';
 
-describe('@cir/react public surface', () => {
+describe('@atelier/react public surface', () => {
   it('exports provider, route, error boundary, hooks, data resolver', () => {
     expect(typeof react.CirRuntime).toBe('function');
     expect(typeof react.CirRoute).toBe('function');

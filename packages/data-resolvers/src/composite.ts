@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `CompositeDataResolver` — falls through a list of resolvers; the first
  * resolver that returns a non-`undefined` value wins. Useful for

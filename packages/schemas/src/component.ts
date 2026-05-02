@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Component catalog schema.
  *
@@ -78,7 +78,7 @@ export type ComponentRegistry = z.infer<typeof ComponentRegistrySchema>;
  *     markup or consumes its data via props (e.g. `Markdown`, `Spinner`,
  *     `Table`, every input). Distinct from `'*'`: `'leaf'` is a hard "no
  *     manifest children allowed" sentinel that mirrors
- *     `@cir/components/src/registry.ts` `COMPOSITION_RULES`.
+ *     `@atelier/components/src/registry.ts` `COMPOSITION_RULES`.
  *   - an array means "only these components" (e.g. `Form` only contains inputs)
  *
  * `props` describes ALLOWED VALUES for prop names — not types. e.g.

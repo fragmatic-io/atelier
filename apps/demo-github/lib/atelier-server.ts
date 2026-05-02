@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-side singleton for `apps/demo-github`. Identical shape to
- * `apps/demo/lib/cir-server.ts` — composite compiler with a hand-written
+ * `apps/demo/lib/atelier-server.ts` — composite compiler with a hand-written
  * fallback, manifest store, streaming audit sink, behavioural detector
  * tap, capability registry, component catalog summary, and brand kit.
  *
@@ -21,7 +21,7 @@ import {
   ValidationFeedbackCompiler,
   type CompilerService,
   type ManifestStore,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 import {
   SubstringCapabilityResolver,
   TwoStageCapabilityResolver,
@@ -30,22 +30,22 @@ import {
   type ScopingLlmClient,
   type ScopingLlmRequest,
   type ScopingLlmResponse,
-} from '@cir/capability-resolver';
+} from '@atelier/capability-resolver';
 import {
   SequenceDetector,
   composesAccordingTo,
   emptyLoadingErrorHandled,
   manifestComponentContractSatisfied,
-} from '@cir/policies';
-import { BehavioralTap, StreamingAuditSink, manifestContractsFromBindings } from '@cir/runtime';
-import { COMPOSITION_RULES } from '@cir/components/composition-rules';
+} from '@atelier/policies';
+import { BehavioralTap, StreamingAuditSink, manifestContractsFromBindings } from '@atelier/runtime';
+import { COMPOSITION_RULES } from '@atelier/components/composition-rules';
 // COMPONENT_BINDINGS comes from a deep import path in the React adapter
-// (`@cir/components` index pulls IconBrandContext which uses createContext
+// (`@atelier/components` index pulls IconBrandContext which uses createContext
 // — Next.js forbids that on the server). For the manifest-contract policy
 // we only need the metadata, not the React factories; importing nothing
 // here keeps the policy degrading gracefully (skips bindings without a
 // declared contract — additive behavior).
-import type { Capability, ComponentDefinition, Manifest } from '@cir/schemas';
+import type { Capability, ComponentDefinition, Manifest } from '@atelier/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from './brand-kit.js';
 import { CAPABILITIES } from './capabilities.js';
 import { DEMO_GITHUB_BINDINGS } from './component-bindings.js';
@@ -195,7 +195,7 @@ function buildServer(): CirServer {
   if (geminiAvailable) {
     if (useTools) {
       // Wave C / Phase C-2 — tool-using agent path. Same shape Aurora
-      // ships in `apps/demo/lib/cir-server.ts`. Validation hook lives
+      // ships in `apps/demo/lib/atelier-server.ts`. Validation hook lives
       // on the wrapping `ValidationFeedbackCompiler` exactly as in the
       // single-shot path; the agent self-validates via `validateDraft`
       // inside the loop AND gets a second-chance refinement pass at
@@ -435,7 +435,7 @@ function buildServer(): CirServer {
     data_sources: [],
     actions_supported: [],
     responsive_targets: ['web'],
-    design_tokens: '@cir/demo-github/brand@0.1.0',
+    design_tokens: '@atelier/demo-github/brand@0.1.0',
     examples: [],
     text_render: true,
     ...(c.description !== undefined ? { description: c.description } : {}),
@@ -540,7 +540,7 @@ function buildScopingPrimer(apiKey: string): {
 function buildGeminiFlashScopingClient(apiKey: string): ScopingLlmClient {
   const model = process.env['CIR_SCOPING_MODEL'] ?? 'gemini-2.5-flash';
   // Lazy import — the @google/genai SDK is already a transitive dep of
-  // `@cir/compiler`. Inline `require` keeps the import out of the cold
+  // `@atelier/compiler`. Inline `require` keeps the import out of the cold
   // path when scoping is disabled.
   return {
     id: `gemini-scoping[${model}]`,

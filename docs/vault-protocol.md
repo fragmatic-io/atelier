@@ -1,10 +1,10 @@
 # Vault wire protocol
 
-> Status: v0 (Wave 7 / track V-1). Ships with `@cir/vault-server` and `@cir/vault-client`. Hand-rolled JWTs over JSON; ed25519 signatures. The shape of the bytes on the wire is the contract — both packages implement it, and the demo speaks it.
+> Status: v0 (Wave 7 / track V-1). Ships with `@atelier/vault-server` and `@atelier/vault-client`. Hand-rolled JWTs over JSON; ed25519 signatures. The shape of the bytes on the wire is the contract — both packages implement it, and the demo speaks it.
 
-The intent vault is the user-owned store from which apps request scoped read access. CIR is uncompromising on this point: **apps do not host intent**. They request slices from the vault; the user grants; the vault mints a scoped token; the app reads through that token; revocation is immediate.
+The intent vault is the user-owned store from which apps request scoped read access. Atelier is uncompromising on this point: **apps do not host intent**. They request slices from the vault; the user grants; the vault mints a scoped token; the app reads through that token; revocation is immediate.
 
-This document is the wire-level specification a third-party vault would need to implement to be CIR-compatible. The server in `packages/vault-server/` and the client in `packages/vault-client/` are reference implementations.
+This document is the wire-level specification a third-party vault would need to implement to be Atelier-compatible. The server in `packages/vault-server/` and the client in `packages/vault-client/` are reference implementations.
 
 ---
 
@@ -81,7 +81,7 @@ Notes:
 
 ### `GET /vault/profile?aud=<app_id>` — read
 
-Returns a slice of the user's intent profile filtered by the bearer token's scope. Profile shape matches `@cir/schemas` `IntentProfileSchema`.
+Returns a slice of the user's intent profile filtered by the bearer token's scope. Profile shape matches `@atelier/schemas` `IntentProfileSchema`.
 
 ```
 GET /vault/profile?aud=cir.demo
@@ -240,7 +240,7 @@ Validation order on the server (and client `verifyToken()`):
 5. Check `aud` matches the request's `aud` query / endpoint expectation. Reject on audience mismatch.
 6. Check `jti` is not in the revocation list. Reject on revoked.
 
-Steps 1–4 are deterministic and run client-side too in `@cir/vault-client`. The client cannot know `aud` mismatch or revocation without the server, so those checks are server-only.
+Steps 1–4 are deterministic and run client-side too in `@atelier/vault-client`. The client cannot know `aud` mismatch or revocation without the server, so those checks are server-only.
 
 ---
 
@@ -259,14 +259,14 @@ Steps 1–4 are deterministic and run client-side too in `@cir/vault-client`. Th
 
 ## Marketplace endpoints
 
-> Status: v0 (Wave 8 / track V-6 MVP). Adds `cir://author/persona@version` addressing, ed25519-signed bundles, and a TOFU trust model on top of the existing vault. Review-flow UI, search/discovery, and compiler integration (C-Phase-5 RAG) are deferred to follow-ups.
+> Status: v0 (Wave 8 / track V-6 MVP). Adds `atelier://author/persona@version` addressing, ed25519-signed bundles, and a TOFU trust model on top of the existing vault. Review-flow UI, search/discovery, and compiler integration (C-Phase-5 RAG) are deferred to follow-ups.
 
-The marketplace is the user-facing distribution surface for recipes, personas, and capability bundles. Authors publish signed payloads against a `cir://` address; consumers fetch + locally verify before installing. The vault is the trust root: it stores the signed bundle and re-serves it verbatim, never re-signing.
+The marketplace is the user-facing distribution surface for recipes, personas, and capability bundles. Authors publish signed payloads against a `atelier://` address; consumers fetch + locally verify before installing. The vault is the trust root: it stores the signed bundle and re-serves it verbatim, never re-signing.
 
-### `cir://` addressing
+### `atelier://` addressing
 
 ```
-cir://<author>/<persona>@<version>[?signed_by=<key_id>]
+atelier://<author>/<persona>@<version>[?signed_by=<key_id>]
 ```
 
 | segment      | shape                                       | semantics                                                   |
@@ -276,7 +276,7 @@ cir://<author>/<persona>@<version>[?signed_by=<key_id>]
 | `<version>`  | semver 2.0.0                                | Exact match required at fetch time.                         |
 | `?signed_by` | 16-char lowercase hex (sha256-truncated fp) | Optional explicit pin to a specific public-key fingerprint. |
 
-Reference parser: `parseMarketplaceAddress` in `@cir/schemas/src/marketplace.ts`. The companion serialiser is `formatMarketplaceAddress`. Both round-trip exactly.
+Reference parser: `parseMarketplaceAddress` in `@atelier/schemas/src/marketplace.ts`. The companion serialiser is `formatMarketplaceAddress`. Both round-trip exactly.
 
 ### `POST /vault/marketplace/publish`
 
@@ -287,7 +287,7 @@ POST /vault/marketplace/publish
 Content-Type: application/json
 
 {
-  "address": { "scheme": "cir", "author": "acme", "persona": "email-triage", "version": "1.0.0" },
+  "address": { "scheme": "atelier", "author": "acme", "persona": "email-triage", "version": "1.0.0" },
   "payload": { "recipe": "...arbitrary JSON..." },
   "timestamp": "2026-05-02T12:00:00.000Z",
   "signature": "<base64 ed25519 over canonical JSON of {address,payload,timestamp}>",
@@ -306,11 +306,11 @@ Returns the stored signed bundle verbatim. The client re-verifies the signature 
 GET /vault/marketplace/acme/email-triage@1.0.0
 ```
 
-Response on success: `200 OK` with the full `SignedBundle` JSON. On miss: `404 { error: 'bundle not found', address: 'cir://...' }`. On a malformed path: `400 { error: 'malformed marketplace address in path' }`.
+Response on success: `200 OK` with the full `SignedBundle` JSON. On miss: `404 { error: 'bundle not found', address: 'atelier://...' }`. On a malformed path: `400 { error: 'malformed marketplace address in path' }`.
 
 ### Signing — canonical JSON
 
-The signature covers the canonical JSON of `{ address, payload, timestamp }`. Canonical here means **sorted-key** at every depth so two semantically-identical objects always serialise to byte-identical inputs. The reference encoder (`canonicalJsonStringify` in `@cir/schemas/src/marketplace.ts`) is ~20 lines; do not pull in `json-stable-stringify`.
+The signature covers the canonical JSON of `{ address, payload, timestamp }`. Canonical here means **sorted-key** at every depth so two semantically-identical objects always serialise to byte-identical inputs. The reference encoder (`canonicalJsonStringify` in `@atelier/schemas/src/marketplace.ts`) is ~20 lines; do not pull in `json-stable-stringify`.
 
 The `address` passed to the signer omits any optional `?signed_by=` pin. That parameter is a fetch-time pin, not a property of the bundle — two addresses that differ only in `signed_by` produce identical bundle bytes.
 
@@ -333,7 +333,7 @@ on fetch(address):
   return bundle.payload
 ```
 
-Reference implementation: `MarketplaceClient` in `@cir/vault-client/src/marketplace.ts`. Two trusted-key store implementations ship: `InMemoryTrustedKeyStore` (Node default) and `LocalStorageTrustedKeyStore` (browser default). Hosts that need persistence in Node — or stricter posture (e.g. fail closed on first use) — pass their own implementation of the `TrustedKeyStore` interface.
+Reference implementation: `MarketplaceClient` in `@atelier/vault-client/src/marketplace.ts`. Two trusted-key store implementations ship: `InMemoryTrustedKeyStore` (Node default) and `LocalStorageTrustedKeyStore` (browser default). Hosts that need persistence in Node — or stricter posture (e.g. fail closed on first use) — pass their own implementation of the `TrustedKeyStore` interface.
 
 A key change is **not** automatically accepted; the application surfaces both fingerprints to the user (the error carries `knownKeyId` and `observedKeyId`) and the user calls `trustedKeys.set(author, observedKeyId)` to accept. Browser-side TOFU UI is a follow-up.
 
@@ -353,7 +353,7 @@ A future `/.well-known/cir.json` extension may advertise the user's preferred va
 
 ```bash
 # 1. Boot the vault
-pnpm cir vault dev --port 4001 &
+pnpm atelier vault dev --port 4001 &
 
 # 2. Mint a grant (skipping consent UI for clarity).
 TOKEN=$(curl -s -X POST http://localhost:4001/vault/grants \

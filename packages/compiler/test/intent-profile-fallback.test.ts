@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `FallbackIntentProfileCompiler` keyword heuristics.
  *
@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import { FallbackIntentProfileCompiler } from '../src/intent-profile-compiler.js';
 
 function compile(description: string) {

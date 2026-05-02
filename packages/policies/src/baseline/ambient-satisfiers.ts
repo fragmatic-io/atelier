@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Prebuilt `AmbientPolicySatisfier` declarations for the two runtime
  * services hosts most often mount: `<UndoToast>` at the app root and a

@@ -1,8 +1,8 @@
 {
-  "name": "@cir/keyboard",
+  "name": "@atelier/keyboard",
   "version": "0.1.0",
   "private": true,
-  "description": "CIR keyboard registry — hotkey-aware action vocabulary that powers Cmd+K, Cmd+P, and chord shortcuts. Pure logic: no React.",
+  "description": "Atelier keyboard registry — hotkey-aware action vocabulary that powers Cmd+K, Cmd+P, and chord shortcuts. Pure logic: no React.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",

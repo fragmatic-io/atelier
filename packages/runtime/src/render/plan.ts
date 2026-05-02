@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `buildRenderPlan(manifest, routePath, registry)` — turn a `Manifest` into
  * a framework-agnostic node tree the adapter can walk.
@@ -18,7 +18,7 @@
  *    decides whether to render a fallback, throw, or hide.
  */
 
-import type { LayoutNode, Manifest, Route } from '@cir/schemas';
+import type { LayoutNode, Manifest, Route } from '@atelier/schemas';
 import type { ComponentRegistry } from '../registry/component-registry.js';
 import type { RenderNode, RenderPlan } from './plan-types.js';
 

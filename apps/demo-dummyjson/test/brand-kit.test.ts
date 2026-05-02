@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Marigold brand kit shape contract.
  *
@@ -13,7 +13,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { BrandKitSchema, ElevationScaleSchema } from '@cir/schemas';
+import { BrandKitSchema, ElevationScaleSchema } from '@atelier/schemas';
 import { DUMMYJSON_BRAND_KIT } from '../lib/brand-kit';
 
 describe('DUMMYJSON_BRAND_KIT — Marigold theme', () => {

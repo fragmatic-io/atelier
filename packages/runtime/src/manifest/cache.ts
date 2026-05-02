@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `ManifestCache` interface and shared cache-key helpers.
  *
@@ -14,7 +14,7 @@
  * comment.
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 
 /** Composite key the cache uses to look up a manifest. */
 export interface ManifestCacheKey {
@@ -75,7 +75,7 @@ export interface ManifestCache {
 
 /**
  * Stable serialization of a cache key. The runtime uses `:` as a separator
- * because identifiers (per `@cir/schemas/common.ts`) cannot contain it.
+ * because identifiers (per `@atelier/schemas/common.ts`) cannot contain it.
  */
 export function serializeCacheKey(key: ManifestCacheKey): string {
   return `${key.user_id}:${key.app_id}:${key.route}`;

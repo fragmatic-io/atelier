@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the helpers behind `app/api/cir/audit/stream/route.ts`.
  *
  * The Next.js route file is a thin adapter; the streaming logic lives in
  * `lib/audit-stream.ts` so we can exercise it without spinning up the
  * Next.js server. We drive the helper with a real `StreamingAuditSink`
- * (the one demo + DebugPanel + cir-server use), assert the SSE frames
+ * (the one demo + DebugPanel + atelier-server use), assert the SSE frames
  * the consumer sees, and verify lifecycle (subscription cleanup,
  * heartbeat scheduling).
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { AuditEvent } from '@cir/schemas';
-import { StreamingAuditSink } from '@cir/runtime';
+import type { AuditEvent } from '@atelier/schemas';
+import { StreamingAuditSink } from '@atelier/runtime';
 import {
   buildAuditStreamResponse,
   encodeSseFrame,

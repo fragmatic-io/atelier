@@ -45,7 +45,7 @@ jobs:
           echo "Gemini key present (length: ${#GEMINI_API_KEY})."
 
       - name: Run smoke evals
-        run: pnpm exec cir-evals run --tag smoke
+        run: pnpm exec atelier-evals run --tag smoke
 
       - name: Surface result
         if: failure()

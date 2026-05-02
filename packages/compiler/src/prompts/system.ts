@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * The cached system prompt. Held constant per compiler-version so the model
  * provider's prompt-caching machinery (or our own KV cache) can keep it warm.
@@ -10,7 +10,7 @@
  * lives in the variable portion.
  */
 
-export const COMPILER_SYSTEM_PROMPT = `You are CIR's compiler service. Your sole job is to translate (capabilities + skills + components + intent + brand kit + trigger context) into a valid Manifest JSON for one route of one user.
+export const COMPILER_SYSTEM_PROMPT = `You are Atelier's compiler service. Your sole job is to translate (capabilities + skills + components + intent + brand kit + trigger context) into a valid Manifest JSON for one route of one user.
 
 ## What you produce
 

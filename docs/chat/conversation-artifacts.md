@@ -8,7 +8,7 @@ In chat contexts, manifests have a different lifecycle than in web apps. Three n
 
 In a web app, a manifest serves a route and is cached until invalidated. In a chat context, manifests come in two flavors:
 
-**Persistent manifests** are scoped to the user, live across conversations, and follow the standard CIR caching rules. Example: the user's preferred way of seeing flight options whenever they ask about flights.
+**Persistent manifests** are scoped to the user, live across conversations, and follow the standard Atelier caching rules. Example: the user's preferred way of seeing flight options whenever they ask about flights.
 
 **Session manifests** are scoped to a single conversation, live only as long as the conversation is active, and are discarded when the conversation ends. Example: a multi-step booking wizard for one specific trip.
 

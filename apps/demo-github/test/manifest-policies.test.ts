@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest ↔ baseline-policy contract for `apps/demo-github`.
  *
  * Walks every declared route through `manifestForRoute()` and runs
- * `validateManifest()` with the same configuration `cir-providers.tsx`
+ * `validateManifest()` with the same configuration `atelier-providers.tsx`
  * uses at runtime — capability registry, intent grants, brand kit, the
  * full `BASELINE_POLICIES` set, and the catalog's composition rules.
  *
@@ -17,7 +17,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
+import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@atelier/components';
 import {
   BASELINE_POLICIES,
   composesAccordingTo,
@@ -26,9 +26,9 @@ import {
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
   type AmbientPolicySatisfier,
-} from '@cir/policies';
-import { compositionRolesFromBindings, manifestContractsFromBindings } from '@cir/runtime';
-import type { Manifest } from '@cir/schemas';
+} from '@atelier/policies';
+import { compositionRolesFromBindings, manifestContractsFromBindings } from '@atelier/runtime';
+import type { Manifest } from '@atelier/schemas';
 import { DEMO_GITHUB_BRAND_KIT } from '../lib/brand-kit';
 import { CAPABILITIES } from '../lib/capabilities';
 import { DEMO_GITHUB_BINDINGS } from '../lib/component-bindings';
@@ -80,7 +80,7 @@ const MANIFEST_CONTRACTS = manifestContractsFromBindings({
   ...DEMO_GITHUB_BINDINGS,
 });
 
-// Mirror of `AMBIENT_POLICY_SATISFIERS` from `lib/cir-providers.tsx`.
+// Mirror of `AMBIENT_POLICY_SATISFIERS` from `lib/atelier-providers.tsx`.
 // The chrome `<StatusBar>` (composed under `<Stack(Logo, NavBar, StatusBar)>`)
 // carries the rate-limit chip on every route, and the dispatcher's
 // optimistic mutations always raise an undo affordance — declaring the
@@ -143,7 +143,7 @@ describe('demo-github manifest pipeline ↔ BASELINE_POLICIES', () => {
   });
 
   it('every component referenced by the manifests is either a baseline binding or a registered demo binding', () => {
-    // Mirror the registry the runtime builds in `cir-providers.tsx`. Post
+    // Mirror the registry the runtime builds in `atelier-providers.tsx`. Post
     // marketplace pivot the demo layers ZERO custom bindings on top of
     // `COMPONENT_BINDINGS`. The test below proves that nothing the
     // manifests reference falls through the runtime's

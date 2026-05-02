@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Card — bounded content container with optional header.
  *
@@ -26,7 +26,7 @@
  * the manifest having to author a per-cell template.
  */
 import { forwardRef, type CSSProperties, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { MetaBadge } from './MetaBadge.js';
 import {
   cn,

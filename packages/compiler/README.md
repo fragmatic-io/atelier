@@ -1,4 +1,4 @@
-# @cir/compiler
+# @atelier/compiler
 
 The **LLM-backed compile service.** The only LLM-touching component in the hot system. Translates `(capabilities + skills + components + intent + brand kit + trigger)` into a valid manifest, validated by the policy engine before it leaves.
 
@@ -20,7 +20,7 @@ import {
   CompositeIntentProfileCompiler,
   GeminiIntentProfileCompiler,
   FallbackIntentProfileCompiler,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 
 const compiler = new CompositeIntentProfileCompiler([
   new GeminiIntentProfileCompiler({ apiKey: process.env.GEMINI_API_KEY! }),
@@ -55,7 +55,7 @@ import {
   MemoryManifestStore,
   RedisManifestStore,
   ServerManifestResolver,
-} from '@cir/compiler';
+} from '@atelier/compiler';
 import { createClient } from 'redis';
 
 const compiler = new CompositeCompiler([

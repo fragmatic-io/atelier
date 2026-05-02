@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy: `actions_match_action_slots`
  *
@@ -25,7 +25,7 @@
  * and third capabilities will silently never fire.
  */
 
-import type { LayoutNode } from '@cir/schemas';
+import type { LayoutNode } from '@atelier/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 

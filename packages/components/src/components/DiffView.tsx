@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * DiffView — line-by-line text diff renderer.
  *
@@ -12,7 +12,7 @@
  * gutter columns so the visual format matches GitHub-style unified diff.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, diffViewVariantClass, type DiffViewVariant } from './_variants.js';
 
 export type DiffKind = 'add' | 'remove' | 'context';

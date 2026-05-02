@@ -25,7 +25,7 @@ When you add a capability, you also add its skill (see [`../AGENTS.md`](../AGENT
 
 ## Validation pipeline
 
-Skill markdown is parsed by `parseSkillMarkdown` (from `@cir/policies`) which validates the YAML frontmatter against `SkillSchema` (from `@cir/schemas`). `pnpm validate:fast` calls `cir-schemas validate-data` which walks every `*.skill.md` in this directory.
+Skill markdown is parsed by `parseSkillMarkdown` (from `@atelier/policies`) which validates the YAML frontmatter against `SkillSchema` (from `@atelier/schemas`). `pnpm validate:fast` calls `atelier-schemas validate-data` which walks every `*.skill.md` in this directory.
 
 ## Cross-cutting micro-skills
 

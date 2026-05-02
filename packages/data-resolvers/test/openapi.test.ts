@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 import { describe, expect, it, vi } from 'vitest';
 import { OpenApiDataResolver, findOperation, specRefFromImportedFrom } from '../src/openapi.js';
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 
 function makeCapability(overrides: Partial<Capability> = {}): Capability {
   return {

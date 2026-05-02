@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Component bindings + composition rules for the Phase 4b baseline catalog.
  *
- * `COMPONENT_BINDINGS` is the single source of truth that pairs a CIR
+ * `COMPONENT_BINDINGS` is the single source of truth that pairs a Atelier
  * componentId with its concrete React factory. The Phase 4b React adapter
  * imports `ALL_COMPONENTS` and hands it to the runtime's render-plan
  * builder; the runtime treats `factory` as opaque (see
- * `@cir/runtime/registry/component-registry`).
+ * `@atelier/runtime/registry/component-registry`).
  *
  * `COMPOSITION_RULES` mirrors the structure described in
  * `/Users/vid/cir/docs/component-catalog.md` §"Composition rules". The
@@ -17,7 +17,7 @@
  * that means "do not embed children" and is distinct from `'*'` (anything).
  */
 
-import { MapComponentRegistry, type ComponentBinding } from '@cir/runtime';
+import { MapComponentRegistry, type ComponentBinding } from '@atelier/runtime';
 
 import { AccordionBinding } from './components/Accordion.js';
 import { ActionMenuBinding } from './components/ActionMenu.js';
@@ -293,7 +293,7 @@ export const COMPONENT_METADATA: Readonly<Record<string, ComponentBindingMetadat
  */
 // `CompositionRule` and `COMPOSITION_RULES` live in `composition-rules.ts`
 // (server-safe; no React imports). Re-exported here for backwards compat
-// with consumers that import from `@cir/components/registry`.
+// with consumers that import from `@atelier/components/registry`.
 export { COMPOSITION_RULES, type CompositionRule } from './composition-rules.js';
 
 // (Local definition below intentionally kept dead so this file's diff stays

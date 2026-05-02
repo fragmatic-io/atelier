@@ -1,6 +1,6 @@
-# @cir/policies
+# @atelier/policies
 
-Pure-function validators that the CIR compiler runs against a generated
+Pure-function validators that the Atelier compiler runs against a generated
 manifest before serving it. Each policy is deterministic, fast, and
 side-effect free — no LLM calls, no network. The package also declares
 the `BehavioralPatternDetector` contract that the runtime implements to
@@ -51,7 +51,7 @@ scale check — they're presumed audited at the kit level.
 App-supplied custom policies plug in via `PolicyRegistry`:
 
 ```ts
-import { BASELINE_POLICIES, PolicyRegistry, validateManifest } from '@cir/policies';
+import { BASELINE_POLICIES, PolicyRegistry, validateManifest } from '@atelier/policies';
 
 const registry = new PolicyRegistry([...BASELINE_POLICIES, myCustomPolicy]);
 const result = validateManifest({ manifest, ..., policies: registry.list() });
@@ -60,7 +60,7 @@ const result = validateManifest({ manifest, ..., policies: registry.list() });
 ## Usage
 
 ```ts
-import { validateManifest, BASELINE_POLICIES } from '@cir/policies';
+import { validateManifest, BASELINE_POLICIES } from '@atelier/policies';
 
 const result = validateManifest({
   manifest, // produced by the compiler

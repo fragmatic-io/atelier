@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * JSON Schema codegen.
  *
@@ -9,7 +9,7 @@
  *
  * `zod-to-json-schema` v3 supports `jsonSchema7` and `jsonSchema2019-09`. We
  * default to 2019-09 (the closest available to Draft 2020-12) and fall back
- * to 7 if a caller asks for it. CIR validators (Ajv 8) understand both.
+ * to 7 if a caller asks for it. Atelier validators (Ajv 8) understand both.
  */
 
 import type { ZodSchema } from 'zod';

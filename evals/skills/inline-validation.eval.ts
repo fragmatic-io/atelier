@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Skill eval: `inline-validation` ships the three-bucket cadence
  * (cheap_local per-keystroke, server_checked on-blur with debounce,
@@ -10,8 +10,8 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { defineEval } from '@cir/evals';
-import { parseSkillMarkdown } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { parseSkillMarkdown } from '@atelier/schemas';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SKILL_PATH = resolve(here, '../../skills/inline-validation.skill.md');

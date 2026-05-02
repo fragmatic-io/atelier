@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * MultiSelect — controlled native `<select multiple>`. We ship the platform
  * widget for the baseline: a custom combobox would need its own a11y
@@ -12,7 +12,7 @@
  * keyboard.
  */
 import { useId, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type MultiSelectVariant = InputVariant;

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir dev --tail` / `cir dev --tail-only` — Server-Sent Events tail.
+ * `atelier dev --tail` / `atelier dev --tail-only` — Server-Sent Events tail.
  *
- * Streams audit events from a CIR dev server's SSE endpoint and prints them
+ * Streams audit events from a Atelier dev server's SSE endpoint and prints them
  * to stderr in a colored compact format. The `dev.ts` command spawns
  * `next dev`; this module owns the SSE consumer (parser + reconnect loop) so
  * the parser is unit-testable in isolation.
@@ -21,7 +21,7 @@
  * `/api/cir/audit/stream`" — we never fabricate it.
  */
 
-import type { AuditEvent } from '@cir/schemas';
+import type { AuditEvent } from '@atelier/schemas';
 
 // ---------------------------------------------------------------------------
 // SSE parser. Pure: takes a chunk of decoded text plus parser state, returns

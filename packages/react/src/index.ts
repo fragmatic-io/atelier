@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/react` — public surface of the React adapter for `@cir/runtime`.
+ * `@atelier/react` — public surface of the React adapter for `@atelier/runtime`.
  *
  * Phase 4b. Provides:
  *  - `<CirRuntime>` provider that puts runtime services on a React context.
@@ -13,10 +13,10 @@
  *
  * NOT exported here:
  *  - The internal `RenderNode` walker (treated as implementation detail).
- *  - Component implementations — those live in `@cir/components`.
+ *  - Component implementations — those live in `@atelier/components`.
  *
  * Test helpers (a render-with-provider wrapper) live under
- * `@cir/react/testing`. Import from that subpath in test code, never from
+ * `@atelier/react/testing`. Import from that subpath in test code, never from
  * the main entry, so production bundles stay lean.
  */
 

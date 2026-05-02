@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readPersistedBool, writePersistedBool } from '../../src/lib/persisted-state.js';
 

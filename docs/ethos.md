@@ -1,6 +1,6 @@
-# CIR Ethos — what every implementation and demo must honor
+# Atelier Ethos — what every implementation and demo must honor
 
-> **CIR's core thesis**: a UI's _layout_ is a runtime artifact. A compiler
+> **Atelier's core thesis**: a UI's _layout_ is a runtime artifact. A compiler
 > takes a recipe (declarative app description), the user's intent profile,
 > and the granted capabilities, and produces a manifest tree. The runtime
 > walks the tree against a registered binding catalog. Policies validate
@@ -24,10 +24,10 @@ goes in the commit body.
 UI is composed at runtime by the compiler, not authored as static React
 pages. Hand-written manifests exist only as **fallbacks** for offline /
 no-API-key scenarios. They must never be the primary rendering path in a
-demo that purports to showcase CIR.
+demo that purports to showcase Atelier.
 
 A demo that renders the same DOM whether the LLM ran or not is **not
-demonstrating CIR**.
+demonstrating Atelier**.
 
 ### 2. Composition, not invention
 
@@ -107,10 +107,10 @@ loading state, here's the error state, copy/pasted across every binding").
 
 ### 10. Demos are existence proofs
 
-Every demo must demonstrate something **only CIR can do**:
+Every demo must demonstrate something **only Atelier can do**:
 intent-driven recompile, policy-validated dynamic layout, ambient
 capability dispatch with rollback, etc. If a demo could be implemented
-as a static React app with the same UX, it does not belong as a CIR
+as a static React app with the same UX, it does not belong as a Atelier
 demo.
 
 ### 11. The marketplace is the product; custom bindings are a last resort
@@ -119,7 +119,7 @@ The framework's promise is "give the LLM a rich enough primitive
 marketplace and it will compose any domain UI." That promise is only
 real if hosts can ship apps **without** writing per-host React for every
 domain shape. Each per-host `ComponentBinding` registered on top of
-`@cir/components`'s `COMPONENT_BINDINGS` is a local escape hatch — a
+`@atelier/components`'s `COMPONENT_BINDINGS` is a local escape hatch — a
 place where the host has decided the LLM cannot be trusted to compose
 the shape from primitives.
 

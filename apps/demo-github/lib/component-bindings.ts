@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Octant demo — host-side `ComponentBinding`s.
  *
@@ -19,11 +19,11 @@
  *     #11 explicitly endorses accepting plainer baseline rendering over
  *     entrenching a per-host binding).
  *
- * Manifest-referenced components live entirely in `@cir/components`; the
+ * Manifest-referenced components live entirely in `@atelier/components`; the
  * `marketplace-pressure` eval gate enforces that count == 0 going forward.
  */
 
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 
 /**
  * Custom bindings the demo registers on top of `COMPONENT_BINDINGS`.

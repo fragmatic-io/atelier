@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `withUndo()` middleware — Wave 11 / Int-8.
  *
@@ -13,7 +13,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import {
   ActionDispatcher,
   ALWAYS_CONFIRM,

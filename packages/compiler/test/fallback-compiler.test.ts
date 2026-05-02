@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `FallbackCompiler`. The fallback is a thin wrapper around a
  * lookup function — these tests cover the "found", "not found", and "custom

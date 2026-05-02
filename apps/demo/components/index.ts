@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Aurora demo — host-side React components.
  *
@@ -18,10 +18,10 @@
  *
  * This file therefore exports **runtime-ambient** chrome (`Chrome`, the
  * `<AmbientUndoBar>`, the optional `<CartAddButton>` widget) only.
- * Manifest-referenced components live entirely in `@cir/components`. The
+ * Manifest-referenced components live entirely in `@atelier/components`. The
  * `marketplace-pressure` eval gate enforces that count == 0 going forward.
  */
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 
 // Wave 7a / Int-4 — optional optimistic-UI demo widget, never referenced
 // from a manifest. Hosts drop it anywhere under `<CirRuntime>`.
@@ -33,19 +33,19 @@ export { CartAddButton, type CartAddButtonProps } from './CartAddButton';
 export { Chrome, applyColorMode, nextColorMode, readColorMode } from './Chrome';
 
 // AmbientUndoBar — the runtime-ambient undo affordance. Mounted in
-// `cir-providers.tsx` outside the manifest tree. The companion
+// `atelier-providers.tsx` outside the manifest tree. The companion
 // `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy context tells
 // the validator that `reversibility_surfaced` is satisfied app-wide.
 export { UndoBar as AmbientUndoBar } from './UndoBar';
 
-// AmbientCommandPalette — Wave 11 / Int-3. Mounted in `cir-providers.tsx`
+// AmbientCommandPalette — Wave 11 / Int-3. Mounted in `atelier-providers.tsx`
 // outside the manifest tree. Auto-discovers commands from the
 // `<KeyboardProvider>` registry; Cmd+K opens it from anywhere.
 export { AmbientCommandPalette } from './AmbientCommandPalette';
 
 /**
  * Aurora ships **zero** manifest-referenced custom bindings. The merge in
- * `cir-providers.tsx` is `{ ...COMPONENT_BINDINGS, ...DEMO_BINDINGS }`;
+ * `atelier-providers.tsx` is `{ ...COMPONENT_BINDINGS, ...DEMO_BINDINGS }`;
  * with this map empty, the runtime registry is precisely the framework
  * baseline. Future custom bindings (only when a domain shape genuinely
  * earns one — see `docs/ethos.md` principle #11) get added here and the

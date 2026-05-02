@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Redis-backed Tier-3 manifest cache. Drop-in replacement for
  * `MemoryManifestStore` for production / multi-instance deployments where the

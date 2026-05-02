@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `cir import figma`.
  *
@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { BrandKitSchema } from '@cir/schemas';
+import { BrandKitSchema } from '@atelier/schemas';
 import { convertTokens, durationToMs, importFigma } from '../src/commands/import-figma.js';
 
 interface TokenLeaf {

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright (c) 2026 The CIR Authors */
+/* Copyright (c) 2026 The Atelier Authors */
 /*
- * Aurora — design system stylesheet for the CIR personalisation demo.
+ * Aurora — design system stylesheet for the Atelier personalisation demo.
  *
  * What lives here:
  *   1. Tailwind v4 import + the `@config` reference to `tailwind.config.mjs`.
@@ -9,7 +9,7 @@
  *      runtime mirrors `intent.global_preferences.color_mode` onto
  *      `<html data-color-mode>` (Wave 6 / P-1) so toggling the chrome's mode
  *      pill flips this whole sheet at once.
- *   3. `@cir/components` selector hooks (`data-cir-component=...`) re-pointed
+ *   3. `@atelier/components` selector hooks (`data-cir-component=...`) re-pointed
  *      at the Aurora tokens so the universal package picks up the brand
  *      identity without changing its variant tables.
  *
@@ -146,7 +146,7 @@ html.dark {
 }
 
 /* ------------------------------------------------------------------ */
-/* @cir/components selector hooks.                                     */
+/* @atelier/components selector hooks.                                     */
 /* The package ships zero CSS — components emit                        */
 /* `data-cir-component`/`data-variant` attrs and host adapters style.  */
 /* ------------------------------------------------------------------ */

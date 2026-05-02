@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -9,7 +9,7 @@
  * The portal is intentionally unstyled and uses semantic HTML. Hosts can
  * replace the entire confirmation flow by passing a custom
  * `ConfirmationCallback` to `<CirRuntime confirm={...}>`. We do NOT depend on
- * `@cir/components` here — keeping the adapter standalone avoids a circular
+ * `@atelier/components` here — keeping the adapter standalone avoids a circular
  * workspace dep.
  *
  * Behaviors:

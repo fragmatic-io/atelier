@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Skill eval: `skills/kpi-row-density.skill.md` parses cleanly and the
  * per-card shape predicate from `when_to_use` produces the documented
@@ -17,8 +17,8 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { defineEval } from '@cir/evals';
-import { parseSkillMarkdown } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { parseSkillMarkdown } from '@atelier/schemas';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

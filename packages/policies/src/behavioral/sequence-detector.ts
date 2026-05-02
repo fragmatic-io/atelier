@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `SequenceDetector` — first real implementation behind the
  * `BehavioralPatternDetector` seam.
@@ -38,7 +38,7 @@
  * always.
  */
 
-import type { AppId, IsoDateTimeString, Trigger, UserId } from '@cir/schemas';
+import type { AppId, IsoDateTimeString, Trigger, UserId } from '@atelier/schemas';
 import type { BehavioralPatternDetector, DetectedPattern, ObservedAction } from './detector.js';
 
 const DEFAULT_WINDOW_SIZE = 50;

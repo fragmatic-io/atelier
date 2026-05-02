@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Demo brand kit — "Aurora".
  *
@@ -25,7 +25,7 @@
  *     `apps/demo/app/globals.css` via CSS variables, not in the kit)
  */
 
-import type { BrandKit } from '@cir/schemas';
+import type { BrandKit } from '@atelier/schemas';
 
 /**
  * Aurora colour ramp. Authored as named tokens; the CSS variable layer in
@@ -207,7 +207,7 @@ export const DEMO_BRAND_KIT: BrandKit = {
   },
   /**
    * Variant whitelist extension point. Aurora intentionally inherits the
-   * universal `@cir/components` variant tables (Wave 7b's per-component
+   * universal `@atelier/components` variant tables (Wave 7b's per-component
    * `*VariantClass` records) — per-app overrides live in `globals.css` via
    * CSS variables, NOT here. Authors who want to extend Aurora with
    * app-specific component variants drop them in this map.
@@ -289,7 +289,7 @@ export const DEMO_BRAND_KIT: BrandKit = {
 
 /**
  * Re-export the typed kit under the original name for back-compat. The
- * services bag and the `cir-server` import this name.
+ * services bag and the `atelier-server` import this name.
  */
 export const brandKit = DEMO_BRAND_KIT;
 

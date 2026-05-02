@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Composition rules table — pure data, no React imports.
  *
  * `registry.ts` re-exports this so existing consumers stay unchanged.
  * The reason this file exists separately is that the Gemini compiler's
  * post-output validator runs in a Next.js server route (no React
- * runtime), and importing from `@cir/components/registry` (or the index)
+ * runtime), and importing from `@atelier/components/registry` (or the index)
  * transitively pulls in `Icon` → `IconBrandContext` → `createContext`,
  * which Next forbids on the server.
  *
- * This subpath export (`@cir/components/composition-rules`) is the
+ * This subpath export (`@atelier/components/composition-rules`) is the
  * server-safe entry. Phase 1.5 (Dynamic UI Activation) added it.
  */
 export interface CompositionRule {

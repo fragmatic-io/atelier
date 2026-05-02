@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
-import { defineEval } from '@cir/evals';
+// Copyright (c) 2026 The Atelier Authors
+import { defineEval } from '@atelier/evals';
 
 export default defineEval({
   id: 'example/sanity',

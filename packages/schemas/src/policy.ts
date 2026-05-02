@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Policy descriptor.
  *
  * A policy is a pure-function validator over a manifest, action, or data
  * binding. This schema describes only the METADATA — the actual validator
- * function is implemented per-policy in `@cir/policies` (Phase 3). See
+ * function is implemented per-policy in `@atelier/policies` (Phase 3). See
  * `/Users/vid/cir/docs/architecture.md` §Policy engine for examples.
  */
 

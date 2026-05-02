@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Manifest eval: the demo's `/today` manifest layout is structurally valid.
  *
@@ -12,8 +12,8 @@
  * Phase 5b deferral, not a layout regression.
  */
 
-import { defineEval } from '@cir/evals';
-import { RouteSchema } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { RouteSchema } from '@atelier/schemas';
 import { todayManifest } from '../../apps/demo/lib/fake-manifests';
 
 export default defineEval({

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -22,7 +22,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import { useCir } from './use-cir.js';
 
 export interface UseManifestResult {

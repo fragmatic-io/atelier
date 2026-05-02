@@ -51,7 +51,7 @@ _Already shipped (in order): R → C-Phase-1 → N-4 → marketplace pivot (Wave
 
 **Framework wins shipped alongside:**
 
-- ✅ `GenericFallbackCompiler` in `@cir/compiler` — `769c7ad` (fallback lives in framework, not per-demo)
+- ✅ `GenericFallbackCompiler` in `@atelier/compiler` — `769c7ad` (fallback lives in framework, not per-demo)
 - ✅ ETHOS principle #11 codified — in `f2ef2d9` (`docs/ethos.md`)
 - ✅ `tests/marketplace-pressure.test.ts` eval gate — ceilings only ratchet down
 
@@ -94,7 +94,7 @@ These ship before opening the repo to outside reporters. One cleanup commit, ~1 
 
 ## Wave C — Compiler evolution (NEW track)
 
-> The CIR compiler today is a single LLM call with everything in the prompt. The evolution is **single tool-using agent + validation feedback loop**, NOT a flat multi-agent orchestration. Tools + reflection capture ~80% of multi-agent benefit at ~20% of cost. Latency stays bounded; per-compile token cost drops; accuracy improves.
+> The Atelier compiler today is a single LLM call with everything in the prompt. The evolution is **single tool-using agent + validation feedback loop**, NOT a flat multi-agent orchestration. Tools + reflection capture ~80% of multi-agent benefit at ~20% of cost. Latency stays bounded; per-compile token cost drops; accuracy improves.
 
 ### Why this matters
 
@@ -118,7 +118,7 @@ Today's failure modes that get worse at scale:
 
 ### Phase C-3 — capability scoping (= Wave 10 S-1)
 
-- [ ] **C-3 / S-1** — Two-stage compile: tiny / fast model picks 30 relevant capabilities from 1-line summaries; full Pro model gets those 30 schemas. New package `@cir/capability-resolver`. With C-2 in place, `findCapability` can BE the stage-1 tiny-model call. **2 wk. HIGH.** Trigger: first host with >150 capabilities.
+- [ ] **C-3 / S-1** — Two-stage compile: tiny / fast model picks 30 relevant capabilities from 1-line summaries; full Pro model gets those 30 schemas. New package `@atelier/capability-resolver`. With C-2 in place, `findCapability` can BE the stage-1 tiny-model call. **2 wk. HIGH.** Trigger: first host with >150 capabilities.
 
 ### Phase C-4 — outline agent for multi-route apps (only when needed)
 
@@ -132,7 +132,7 @@ Today's failure modes that get worse at scale:
 
 - ❌ Flat Plan→Compose→Validate→Refine multi-agent pipeline as the default. High latency (60-90s vs today's 22s), high cost, marginal accuracy gain over C-1.
 - ❌ Per-component specialist agents ("a `<Queue>` agent, a `<Card>` agent"). Component selection is a single decision; splitting into N agents is overengineering.
-- ❌ Free-form agent loops with conversation between agents. CIR compilation is structured output, not research.
+- ❌ Free-form agent loops with conversation between agents. Atelier compilation is structured output, not research.
 
 ---
 
@@ -170,15 +170,15 @@ The framework today handles single-app, ≤200-capability registries with low-ca
 
 (Wave 7 V-1 + Wave 8 V-3 already shipped; V-6 is the remaining big chunk.)
 
-- [x] **V-1** — Real intent vault backend (`@cir/vault-server` + `@cir/vault-client`). Wire-format spec at [`docs/vault-protocol.md`](docs/vault-protocol.md). Roadmap items: SQLite adapter (gated on Node 24's stable `node:sqlite`), multi-key JWKS rotation, encryption-at-rest.
+- [x] **V-1** — Real intent vault backend (`@atelier/vault-server` + `@atelier/vault-client`). Wire-format spec at [`docs/vault-protocol.md`](docs/vault-protocol.md). Roadmap items: SQLite adapter (gated on Node 24's stable `node:sqlite`), multi-key JWKS rotation, encryption-at-rest.
 - [x] **V-3** — Permission grant UI against the real vault. Vault renders OAuth-style consent screen; CSRF bound by HMAC nonce. Per-jti revocation cascades `system.security_revocation`. Follow-up: rich consent-screen styling, on-vault profile seeding endpoint.
-- [ ] **V-6 — Marketplace primitives** (`cir://author/persona@version` addressing, ed25519 signing, TOFU trust model, review flow). **Depends on V-1 + V-4.** 4-6 wk. **The marketplace pivot (Wave M) was the architectural prerequisite — the demos prove the marketplace promise. V-6 is what turns it into a product.** Direct continuation of Wave M.
+- [ ] **V-6 — Marketplace primitives** (`atelier://author/persona@version` addressing, ed25519 signing, TOFU trust model, review flow). **Depends on V-1 + V-4.** 4-6 wk. **The marketplace pivot (Wave M) was the architectural prerequisite — the demos prove the marketplace promise. V-6 is what turns it into a product.** Direct continuation of Wave M.
 
 ---
 
 ## Wave 11 — Visual depth (path to world-class web app UI)
 
-CIR today produces competent, on-brand professional UIs. Reaching the perceived quality of best-in-class web apps requires the additive tracks below — Vis (visual system), Int (interaction), Cnt (content rendering), Nav (information architecture), Coll (collaboration / real-time), AI (inline AI surfaces). None of it re-architects; each track adds a polish dimension.
+Atelier today produces competent, on-brand professional UIs. Reaching the perceived quality of best-in-class web apps requires the additive tracks below — Vis (visual system), Int (interaction), Cnt (content rendering), Nav (information architecture), Coll (collaboration / real-time), AI (inline AI surfaces). None of it re-architects; each track adds a polish dimension.
 
 The original Linear/Supabase parity scope was deliberately broadened into a **10-app survey** so the catalog covers the breadth of what users now expect from production web tools.
 
@@ -199,7 +199,7 @@ Each entry names the specific UX trait that earned its place.
 
 ### Vis — visual system
 
-- [x] **Vis-1** — Typography depth. Shipped: `BrandTokensSchema.typography` gains optional `letter_spacing` / `line_height` scales + an `opentype` flag map (tabular numerals, ligatures, optical sizing, fractions, super/sub). `cir init`'s Tailwind template bridges to `--cir-tracking-*` / `--cir-leading-*` / `--cir-font-feature-settings` CSS variables. `<Table>` numeric columns and `<StatCard>` values emit `data-tnum="true"` for hosts to consume. Aurora kit extended as the worked example. **DONE.**
+- [x] **Vis-1** — Typography depth. Shipped: `BrandTokensSchema.typography` gains optional `letter_spacing` / `line_height` scales + an `opentype` flag map (tabular numerals, ligatures, optical sizing, fractions, super/sub). `atelier init`'s Tailwind template bridges to `--cir-tracking-*` / `--cir-leading-*` / `--cir-font-feature-settings` CSS variables. `<Table>` numeric columns and `<StatCard>` values emit `data-tnum="true"` for hosts to consume. Aurora kit extended as the worked example. **DONE.**
 - [x] **Vis-2** — Dark mode as a real surface across all 65 components. Every entry in `_variants.ts` ships paired light + `dark:` Tailwind utilities. Regression gate at `test/_variants-dark.test.ts`. **DONE.**
 - [ ] **Vis-3** — Icon resolver + `<Icon>` integration. `iconography.allowed_sets` declares which packs are allowed; need a real `<Icon set="lucide" name="archive" />` resolver layer + integration so components like `<Button icon="archive">` work without authoring per-component icon props. **1 wk.** Reference: Linear renders ~120 distinct icons across the app from a single set with consistent stroke-width.
 - [ ] **Vis-4** — Variant pass for the remaining 32 components. Wave 6 P-10 covered 24/56. The other 32 (inputs, charts, navigation primitives, niche specialised) need the same `variant` + `size` treatment. **Less work after the marketplace pivot — fewer customs to author tables for.** Now ~1.5 wk.
@@ -214,12 +214,12 @@ Each entry names the specific UX trait that earned its place.
 
 - [ ] **Int-1** — Motion layer extension beyond Wave 7 P-7. Per-component entry/exit animations, data-update animations (row shimmer on update, badge pulse on increment, count tick-up easing), respect `motion.duration_scale` from BrandKit. Linear's "0.16x" scale is the reference. **2 wk on top of P-7.**
 - [ ] **Int-2** — `<Tooltip>` primitive with proper timing. 400ms initial delay, 100ms re-show delay, 8px offset, smart re-positioning across viewport edges, fade in 100ms. The `tooltip-tone` skill exists but no primitive backs it. **3 d.**
-- [x] **Int-3** — Global keyboard registry + Cmd+K command palette everywhere. New `@cir/keyboard` package (`InMemoryKeyboardRegistry`, `InMemoryRecencyTracker`, hotkey parser/matcher with portable `cmd+k` ↔ Meta/Ctrl mapping). `<KeyboardProvider>` + `useKeyboardAction` hook in `@cir/components` (mirrors the `IconResolverContext` pattern so `<CommandPalette>` doesn't take a runtime dep on `@cir/react`). `<CommandPalette>` auto-discovers commands when no `commands` prop is passed, renders hotkey hint chips formatted per-platform, renders lucide icons via the Vis-3 resolver, weights fuzzy-match by recency. Aurora ambient-mounts `<AmbientCommandPalette>`; Cmd+K opens it from anywhere. Int-6 / Int-7 / Int-12 build on the same registry.
+- [x] **Int-3** — Global keyboard registry + Cmd+K command palette everywhere. New `@atelier/keyboard` package (`InMemoryKeyboardRegistry`, `InMemoryRecencyTracker`, hotkey parser/matcher with portable `cmd+k` ↔ Meta/Ctrl mapping). `<KeyboardProvider>` + `useKeyboardAction` hook in `@atelier/components` (mirrors the `IconResolverContext` pattern so `<CommandPalette>` doesn't take a runtime dep on `@atelier/react`). `<CommandPalette>` auto-discovers commands when no `commands` prop is passed, renders hotkey hint chips formatted per-platform, renders lucide icons via the Vis-3 resolver, weights fuzzy-match by recency. Aurora ambient-mounts `<AmbientCommandPalette>`; Cmd+K opens it from anywhere. Int-6 / Int-7 / Int-12 build on the same registry.
 - [x] **Int-4** — Optimistic UI default. Shipped in `5b882fe`. `useOptimisticAction` auto-wires for any capability with `reversible: true && low_stakes: true`.
 - [ ] **Int-5** — Onboarding microinteractions. Product-tour highlight chips, completion progress, contextual celebrations. New `<TourStep>` primitive + skill. **1.5 wk.**
 - [ ] **Int-6** — Quick-switcher (`Cmd+P`) distinct from command palette. Raycast/Arc/Linear all separate "go to anything" (Cmd+P) from "do anything" (Cmd+K). New `<QuickSwitcher>` that resolves a capability-typed `quickswitch_index` per app. Depends on Int-3. **1 wk.**
-- [ ] **Int-7** — Chord shortcuts + per-user aliases. Linear's `g i` / `g a` and Raycast's user-defined aliases. The `@cir/keyboard` registry needs a chord state machine + per-user alias overlay stored in the intent vault. **1 wk on top of Int-3.**
-- [x] **Int-8** — Undo toast on every destructive action. Shipped: `withUndo()` middleware in `@cir/runtime` (Proxy-wraps any `ActionDispatcher`, fires `UndoToastEmitter.show()` on every successful undoable dispatch); `<Toast variant="undo">` baseline (countdown progress bar + `Undo` button + dismiss + dual-toned dark mode); `useUndoToastEmitter()` + `createUndoToastEmitter()` hooks in `@cir/react` with a paired `<Sink>` host; Aurora wired (`thread.archive`, `task.complete`, `task.snooze`, `task.create_from_thread` all carry `undoable: true` + `undo_window_ms: 5000`); rollback capabilities (`thread.unarchive`, `task.reopen`, `task.unsnooze`, `task.delete`) registered. `UNDO_TOAST_AMBIENT_SATISFIER` coverage preserved.
+- [ ] **Int-7** — Chord shortcuts + per-user aliases. Linear's `g i` / `g a` and Raycast's user-defined aliases. The `@atelier/keyboard` registry needs a chord state machine + per-user alias overlay stored in the intent vault. **1 wk on top of Int-3.**
+- [x] **Int-8** — Undo toast on every destructive action. Shipped: `withUndo()` middleware in `@atelier/runtime` (Proxy-wraps any `ActionDispatcher`, fires `UndoToastEmitter.show()` on every successful undoable dispatch); `<Toast variant="undo">` baseline (countdown progress bar + `Undo` button + dismiss + dual-toned dark mode); `useUndoToastEmitter()` + `createUndoToastEmitter()` hooks in `@atelier/react` with a paired `<Sink>` host; Aurora wired (`thread.archive`, `task.complete`, `task.snooze`, `task.create_from_thread` all carry `undoable: true` + `undo_window_ms: 5000`); rollback capabilities (`thread.unarchive`, `task.reopen`, `task.unsnooze`, `task.delete`) registered. `UNDO_TOAST_AMBIENT_SATISFIER` coverage preserved.
 - [ ] **Int-9** — Bulk-action floating bar. When multi-select on `List` / `Table` / `Grid` / `Queue` engages, a floating bar appears with selection count + bulk actions + Esc to dismiss. **1 wk.** Reference: Linear, Stripe events, Airtable.
 - [ ] **Int-10** — Drag-and-drop file upload everywhere. New `<DropZone>` host overlay + `file.upload` capability hook. **1 wk.**
 - [ ] **Int-11** — Preserved scroll + view state across nav. Linear and Slack restore scroll position when you back-navigate. New `view-state` middleware that persists per-route scroll + selection + filter to `sessionStorage` (and optionally vault). **1 wk.**
@@ -244,7 +244,7 @@ Each entry names the specific UX trait that earned its place.
 
 ### Coll — collaboration & real-time
 
-Capabilities best-in-class apps ship that CIR has no track for today. **Depends on a real-time transport (S-3).**
+Capabilities best-in-class apps ship that Atelier has no track for today. **Depends on a real-time transport (S-3).**
 
 - [ ] **Coll-1** — Multiplayer presence indicators. Figma's name-tagged cursors, Linear's "X is viewing this issue" pill. New `<Presence>` primitive backed by a `presence.subscribe` capability. **1.5 wk.** Depends on S-3.
 - [ ] **Coll-2** — Live cursors on canvas / list / doc surfaces. Figma-style remote cursors with smooth interpolation + name label. **2 wk.** Depends on Coll-1.
@@ -263,7 +263,7 @@ Capabilities best-in-class apps ship that CIR has no track for today. **Depends 
 
 ### AI — inline AI surfaces
 
-The Notion-AI / Tome / Gamma generation surface is its own track. CIR's compiler is already AI-native; what's missing is the **end-user-facing AI** that lives inside content surfaces.
+The Notion-AI / Tome / Gamma generation surface is its own track. Atelier's compiler is already AI-native; what's missing is the **end-user-facing AI** that lives inside content surfaces.
 
 - [ ] **AI-1** — "Ask AI" on selection. Notion's "Ask AI" + "Summarize" + "Improve writing" floating bar over selected text. New `<SelectionActionBar>` + capability-typed prompt registry per surface. **2 wk.** Depends on Cnt-7.
 - [ ] **AI-2** — Slash-command AI shortcuts in editors. `/summarize` / `/translate` / `/brainstorm` inside the slash menu. **1 wk.** Depends on Cnt-6 + AI-1.
@@ -280,7 +280,7 @@ Kept on the roadmap; not on the personalised-web critical path. The marketplace 
 
 - [ ] **N-1** — iOS SwiftUI native renderer. **4-6 wk.**
 - [ ] **N-2** — Android Jetpack Compose native renderer. **4-6 wk.**
-- [ ] **N-3** — React Native bindings (cheaper bridge — share more with `@cir/react`). **2-3 wk.**
+- [ ] **N-3** — React Native bindings (cheaper bridge — share more with `@atelier/react`). **2-3 wk.**
 - [x] **N-4** — Marketing site / public docs. Astro + GitHub Pages. **Shipped `fe240d5`** — `apps/marketing/` (5 pages: `/`, `/ethos`, `/start`, `/architecture`, `/demos`), `actions/deploy-pages@v4` workflow at `.github/workflows/marketing-deploy.yml`, vanilla CSS + `prefers-color-scheme` dark mode. **User must enable** Settings → Pages → Source: GitHub Actions before the deploy step fires; build validates on PR regardless.
 - [ ] **N-5** — Cross-platform component variant authoring (one source → web + native). **2 wk.**
 
@@ -308,17 +308,17 @@ Bounded items, do anytime. Most can fold into a single sprint.
 ### Tooling + observability
 
 - [x] **Audit endpoint in the demo.** Wave 7c track B.
-- [ ] **`@cir/react/debug` host-side smoke test.** The subpath export is wired and the panel renders; the end-to-end developer experience (drop into a fresh Next.js app, see live events) hasn't been smoke-tested outside the monorepo.
-- [ ] **`cir init` standalone-publish hardening.** Today `cir init` and `cir components-sync` assume the CIR monorepo layout. npm-installable templates and host-project pre-flight are roadmap.
-- [ ] **Vite support in `cir init`.** Hardcoded to Next.js 15 today.
-- [ ] **`cir validate` host pre-flight.** Today shells out to `pnpm validate` blindly.
+- [ ] **`@atelier/react/debug` host-side smoke test.** The subpath export is wired and the panel renders; the end-to-end developer experience (drop into a fresh Next.js app, see live events) hasn't been smoke-tested outside the monorepo.
+- [ ] **`atelier init` standalone-publish hardening.** Today `atelier init` and `atelier components-sync` assume the Atelier monorepo layout. npm-installable templates and host-project pre-flight are roadmap.
+- [ ] **Vite support in `atelier init`.** Hardcoded to Next.js 15 today.
+- [ ] **`atelier validate` host pre-flight.** Today shells out to `pnpm validate` blindly.
 - [ ] **Eval harness wired into `pnpm validate`.** Will flip on once enough scenarios are load-bearing.
 
 ### Operational findings (from Wave 6 fan-out)
 
 - [ ] **JSON Schema export sanity check.** `pnpm schemas:dump` regenerates `.well-known/schemas/*.json` from Zod via `toJsonSchema`. Default output sometimes uses formats AJV strict mode rejects. Add CI step that loads each generated schema through AJV strict and fails on rejection.
 - [x] **Worktree isolation for parallel agents.** Implicitly resolved in Wave M — the marketplace-pivot agent fan-out used `isolation: 'worktree'` and rebased on push, eliminating cross-track contamination.
-- [ ] **Skill markdown YAML strictness.** A few skill files in Wave 6 shipped briefly with malformed YAML frontmatter. `parseSkillMarkdown` could surface a clearer error message; `cir lint skill <path>` could front-run validation.
+- [ ] **Skill markdown YAML strictness.** A few skill files in Wave 6 shipped briefly with malformed YAML frontmatter. `parseSkillMarkdown` could surface a clearer error message; `atelier lint skill <path>` could front-run validation.
 - [ ] **`BehaviorPatternDetectedTrigger` schema variant.** V-4 ships `SequenceDetector` emitting `behavior.workaround_detected` because `behavior.pattern_detected` doesn't exist yet in `TriggerSchema`. These are different concepts — promote-to-recipe should not fire on workarounds. Add the new variant in the consolidation pass.
 
 ### Marketplace + ecosystem (legacy items, mostly subsumed)

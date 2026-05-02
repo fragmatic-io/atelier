@@ -1,8 +1,8 @@
 {
-  "name": "@cir/capability-resolver",
+  "name": "@atelier/capability-resolver",
   "version": "0.0.0",
   "private": true,
-  "description": "CIR capability scoping — substring + two-stage (tiny-model) resolvers that plug into ToolUsingCompiler's SemanticSearch seam",
+  "description": "Atelier capability scoping — substring + two-stage (tiny-model) resolvers that plug into ToolUsingCompiler's SemanticSearch seam",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -19,8 +19,8 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@cir/compiler": "workspace:*",
-    "@cir/schemas": "workspace:*"
+    "@atelier/compiler": "workspace:*",
+    "@atelier/schemas": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `renderWithCir()` — Testing Library `render()` wrapper that mounts the
  * given React tree inside a `<CirRuntime>` provider with sane defaults.
@@ -14,7 +14,7 @@ import { render, type RenderResult } from '@testing-library/react';
 import { CirRuntime } from '../context/runtime-provider.js';
 import type { CirRuntimeServices } from '../context/runtime-context.js';
 import type { DataResolver } from '../data/data-resolver.js';
-import type { ConfirmationCallback } from '@cir/runtime';
+import type { ConfirmationCallback } from '@atelier/runtime';
 import { buildTestServices, type BuildTestServicesOptions } from './build-test-services.js';
 
 export interface RenderWithCirOptions {

@@ -11,7 +11,7 @@ body:
         For a brand-new capability, please use the
         [Capability proposal](./new?template=capability_proposal.yml) template instead.
 
-        See [`AGENTS.md`](../blob/main/AGENTS.md) — in CIR there is no
+        See [`AGENTS.md`](../blob/main/AGENTS.md) — in Atelier there is no
         such thing as "a feature": every change is one or more new or
         updated artifacts. Please be specific about which artifact(s)
         this affects.

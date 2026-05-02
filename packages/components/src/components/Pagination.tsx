@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Pagination — controlled 1-indexed page picker. Renders Prev / Next buttons
  * plus a numbered list with ellipsis truncation:
@@ -14,7 +14,7 @@
  * Stateless: the parent drives `currentPage` and reacts to `onPageChange`.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, navigationVariantClass, type NavigationVariant } from './_variants.js';
 
 export type PaginationVariant = NavigationVariant;

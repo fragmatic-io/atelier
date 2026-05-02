@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
- * Data resolver protocol — how components shipped through `@cir/components`
+ * Data resolver protocol — how components shipped through `@atelier/components`
  * fetch their own data when a manifest binds them to a `data.source`.
  *
  * The render walker reads a node's `data` (the verbatim binding from the
- * manifest, see `@cir/runtime/render/plan-types.ts`) and asks the
+ * manifest, see `@atelier/runtime/render/plan-types.ts`) and asks the
  * `DataResolver` for the actual records. The resolver is provided once at
  * the provider level. Hosts wire their own (REST, GraphQL, in-memory store,
  * etc.); we expose `EmptyDataResolver` as a sentinel so components can
  * function without a host wiring data — they just receive `undefined`.
  *
- * Why this lives here and not in `@cir/runtime`: the runtime is framework-
+ * Why this lives here and not in `@atelier/runtime`: the runtime is framework-
  * agnostic and does not call the resolver itself — the React render walker
  * does, because only it knows component lifecycle.
  */

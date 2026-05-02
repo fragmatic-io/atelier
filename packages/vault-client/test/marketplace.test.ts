@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { beforeEach, describe, expect, it } from 'vitest';
 import { generateKeyPairSync } from 'node:crypto';
 import {
   MemoryMarketplaceStorage,
   handleMarketplaceRequest,
   type MarketplaceStorage,
-} from '@cir/vault-server';
+} from '@atelier/vault-server';
 import {
   InMemoryTrustedKeyStore,
   MarketplaceClient,
@@ -15,7 +15,7 @@ import {
   computeMarketplaceKeyId,
   type MarketplaceKeyMaterial,
 } from '../src/index.js';
-import { parseMarketplaceAddress, type SignedBundle } from '@cir/schemas';
+import { parseMarketplaceAddress, type SignedBundle } from '@atelier/schemas';
 
 /**
  * Adapt the in-memory marketplace handler into a `fetch`-compatible
@@ -87,36 +87,36 @@ describe('MarketplaceClient — round-trip', () => {
   it('publishes a bundle and reads it back', async () => {
     const key = makeKeypair();
     const out = await client.publish(
-      'cir://acme/email-triage@1.0.0',
+      'atelier://acme/email-triage@1.0.0',
       { recipe: 'inbox-zero' },
       key,
     );
-    expect(out.address).toBe('cir://acme/email-triage@1.0.0');
+    expect(out.address).toBe('atelier://acme/email-triage@1.0.0');
     expect(out.keyId).toBe(await computeMarketplaceKeyId(key.publicKey));
 
-    const payload = await client.fetch('cir://acme/email-triage@1.0.0');
+    const payload = await client.fetch('atelier://acme/email-triage@1.0.0');
     expect(payload).toEqual({ recipe: 'inbox-zero' });
   });
 
   it('records the author key on first fetch (TOFU)', async () => {
     const key = makeKeypair();
-    await client.publish('cir://acme/recipe@1.0.0', { hello: 'world' }, key);
+    await client.publish('atelier://acme/recipe@1.0.0', { hello: 'world' }, key);
     expect(trustedKeys.get('acme')).toBeUndefined();
-    await client.fetch('cir://acme/recipe@1.0.0');
+    await client.fetch('atelier://acme/recipe@1.0.0');
     expect(trustedKeys.get('acme')).toBe(await computeMarketplaceKeyId(key.publicKey));
   });
 
   it('rejects a fetch when the cached key fingerprint does not match', async () => {
     const keyA = makeKeypair();
     const keyB = makeKeypair();
-    await client.publish('cir://acme/recipe@1.0.0', { hello: 'world' }, keyA);
-    await client.fetch('cir://acme/recipe@1.0.0');
+    await client.publish('atelier://acme/recipe@1.0.0', { hello: 'world' }, keyA);
+    await client.fetch('atelier://acme/recipe@1.0.0');
 
     // Re-publish under the same address with a NEW key (rotation event).
-    await client.publish('cir://acme/recipe@2.0.0', { hello: 'rotated' }, keyB);
+    await client.publish('atelier://acme/recipe@2.0.0', { hello: 'rotated' }, keyB);
     let caught: unknown;
     try {
-      await client.fetch('cir://acme/recipe@2.0.0');
+      await client.fetch('atelier://acme/recipe@2.0.0');
     } catch (err) {
       caught = err;
     }
@@ -130,14 +130,16 @@ describe('MarketplaceClient — round-trip', () => {
 
   it('detects a tampered bundle on fetch', async () => {
     const key = makeKeypair();
-    await client.publish('cir://acme/recipe@1.0.0', { v: 1 }, key);
+    await client.publish('atelier://acme/recipe@1.0.0', { v: 1 }, key);
     // Mutate the bundle in storage AFTER publish to simulate a bad-actor
     // mutation in the storage layer.
-    const stored = storage.get(parseMarketplaceAddress('cir://acme/recipe@1.0.0')!) as SignedBundle;
+    const stored = storage.get(
+      parseMarketplaceAddress('atelier://acme/recipe@1.0.0')!,
+    ) as SignedBundle;
     storage.put(stored.address, { ...stored, payload: { v: 'tampered' } });
     let caught: unknown;
     try {
-      await client.fetch('cir://acme/recipe@1.0.0');
+      await client.fetch('atelier://acme/recipe@1.0.0');
     } catch (err) {
       caught = err;
     }
@@ -146,18 +148,18 @@ describe('MarketplaceClient — round-trip', () => {
 
   it('honours ?signed_by= pinning', async () => {
     const key = makeKeypair();
-    await client.publish('cir://acme/recipe@1.0.0', { v: 1 }, key);
+    await client.publish('atelier://acme/recipe@1.0.0', { v: 1 }, key);
     const keyId = await computeMarketplaceKeyId(key.publicKey);
-    const payload = await client.fetch(`cir://acme/recipe@1.0.0?signed_by=${keyId}`);
+    const payload = await client.fetch(`atelier://acme/recipe@1.0.0?signed_by=${keyId}`);
     expect(payload).toEqual({ v: 1 });
   });
 
   it('rejects when ?signed_by= does not match', async () => {
     const key = makeKeypair();
-    await client.publish('cir://acme/recipe@1.0.0', { v: 1 }, key);
+    await client.publish('atelier://acme/recipe@1.0.0', { v: 1 }, key);
     let caught: unknown;
     try {
-      await client.fetch('cir://acme/recipe@1.0.0?signed_by=ffffffffffffffff');
+      await client.fetch('atelier://acme/recipe@1.0.0?signed_by=ffffffffffffffff');
     } catch (err) {
       caught = err;
     }
@@ -168,19 +170,19 @@ describe('MarketplaceClient — round-trip', () => {
     const keyA = makeKeypair();
     const keyB = makeKeypair();
     // Cache one key for `acme`.
-    await client.publish('cir://acme/r1@1.0.0', {}, keyA);
-    await client.fetch('cir://acme/r1@1.0.0');
+    await client.publish('atelier://acme/r1@1.0.0', {}, keyA);
+    await client.fetch('atelier://acme/r1@1.0.0');
     // Now publish under a new key + pin to it on the fetch — should succeed.
-    await client.publish('cir://acme/r2@1.0.0', { ok: true }, keyB);
+    await client.publish('atelier://acme/r2@1.0.0', { ok: true }, keyB);
     const keyIdB = await computeMarketplaceKeyId(keyB.publicKey);
-    const payload = await client.fetch(`cir://acme/r2@1.0.0?signed_by=${keyIdB}`);
+    const payload = await client.fetch(`atelier://acme/r2@1.0.0?signed_by=${keyIdB}`);
     expect(payload).toEqual({ ok: true });
     // TOFU cache for `acme` still points at the FIRST key (the pin doesn't update it).
     expect(trustedKeys.get('acme')).toBe(await computeMarketplaceKeyId(keyA.publicKey));
   });
 
   it('returns a useful error on a missing bundle', async () => {
-    await expect(client.fetch('cir://acme/missing@1.0.0')).rejects.toThrow(/HTTP 404/);
+    await expect(client.fetch('atelier://acme/missing@1.0.0')).rejects.toThrow(/HTTP 404/);
   });
 });
 

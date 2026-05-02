@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/capability-resolver` — public surface for Wave 10 / S-1 (also
+ * `@atelier/capability-resolver` — public surface for Wave 10 / S-1 (also
  * Wave C / Phase C-3).
  *
  * Capability scoping for the C-2 `ToolUsingCompiler`. The package ships:
  *
  *   - `CapabilityResolver` — abstract scoping contract.
  *   - `SubstringCapabilityResolver` — fast/free baseline (the same logic
- *     `@cir/compiler`'s `fallbackFindCapability` ships, but tunable +
+ *     `@atelier/compiler`'s `fallbackFindCapability` ships, but tunable +
  *     properly packaged).
  *   - `TwoStageCapabilityResolver` — production. Stage 1 calls a tiny
  *     model (Gemini Flash by default) for the top-K capability ids; the
  *     primary `ToolUsingCompiler` (Pro model) only sees those K.
  *   - `MemoryScopingCache` — in-memory cache for stage-1 results.
  *   - `semanticSearchFromResolver` / `semanticSearchFromLookup` — bridge
- *     functions exposing a resolver as `@cir/compiler`'s `SemanticSearch`.
+ *     functions exposing a resolver as `@atelier/compiler`'s `SemanticSearch`.
  *
  * Typical wire-up:
  *
@@ -23,7 +23,7 @@
  *     SubstringCapabilityResolver,
  *     TwoStageCapabilityResolver,
  *     semanticSearchFromResolver,
- *   } from '@cir/capability-resolver';
+ *   } from '@atelier/capability-resolver';
  *
  *   const resolver = process.env.CIR_CAPABILITY_SCOPING_ENABLED === '1'
  *     ? new TwoStageCapabilityResolver({ client: geminiFlashScopingClient })

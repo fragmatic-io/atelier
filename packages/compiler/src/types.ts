@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Public types for `@cir/compiler`.
+ * Public types for `@atelier/compiler`.
  *
  * The compiler is the only LLM-touching component in the hot system. Its job
  * is to turn `(capabilities + skills + components + intent + brand kit +
@@ -22,7 +22,7 @@ import type {
   Skill,
   BrandKit,
   Trigger,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 
 export interface CompileInput {
   /** The user this manifest is for. Used for audit and per-user caching. */

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Skill schema — the structured frontmatter of a `.skill.md` file.
  *
  * Mirrors the YAML in `/Users/vid/cir/docs/artifacts.md` §Skill. Only the
  * frontmatter is structured; the markdown body (the prose explanation the
  * compiler reads) is NOT validated here. A frontmatter parser lives in
- * `@cir/policies` (Phase 3).
+ * `@atelier/policies` (Phase 3).
  *
  * Skills are "a capability plus how to use it well" — the smallest unit
  * of company knowledge safely transferable to an agent (ETHOS principle 4).

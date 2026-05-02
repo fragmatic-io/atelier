@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Slider — controlled `<input type="range">`. Native widget chosen so
  * keyboard nav (Arrow / PageUp / Home / End) and ARIA (`aria-valuemin`,
@@ -8,7 +8,7 @@
  * value is conveyed elsewhere in the layout.
  */
 import { forwardRef, useId, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type SliderVariant = InputVariant;

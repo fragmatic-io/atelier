@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-side resolver. Glues compiler + manifest store + audit emission
  * into one entry point that route handlers call:
@@ -11,7 +11,7 @@
  * the store. Wire it from your trigger bus.
  */
 
-import type { AuditEvent, Manifest } from '@cir/schemas';
+import type { AuditEvent, Manifest } from '@atelier/schemas';
 import { type CompileInput, type CompilerService } from './types.js';
 import {
   type ManifestStore,

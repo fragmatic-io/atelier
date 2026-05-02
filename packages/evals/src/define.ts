@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Core eval types for `@cir/evals`.
+ * Core eval types for `@atelier/evals`.
  *
  * An eval is a single scenario: given an input, run a function, compare the
  * output to an expected value (or run a predicate). Files contributing evals
@@ -18,7 +18,7 @@
  * to depend on a builder pattern.
  */
 
-/** The five eval kinds CIR recognises. See `docs/production-concerns.md` §Evals. */
+/** The five eval kinds Atelier recognises. See `docs/production-concerns.md` §Evals. */
 export type EvalKind = 'capability' | 'skill' | 'component' | 'manifest' | 'end-to-end';
 
 /** Predicate-style assertion: receives the actual output, returns ok/not-ok. */

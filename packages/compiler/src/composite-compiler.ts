@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * CompositeCompiler — try compilers in order; fall back on error.
  *
@@ -35,7 +35,7 @@
  * design note.
  */
 
-import type { CompileBudget } from '@cir/schemas';
+import type { CompileBudget } from '@atelier/schemas';
 import type { BudgetMeter } from './budget-meter.js';
 import {
   CompilerBudgetExhaustedError,

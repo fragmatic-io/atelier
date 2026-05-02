@@ -1,6 +1,6 @@
 ---
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
@@ -78,35 +78,35 @@ PRIVATE (per user, vault)
   <h2>Packages at a glance</h2>
   <ul>
     <li>
-      <code>@cir/schemas</code> — Zod schemas + JSON Schema codegen for every CIR artifact.
+      <code>@atelier/schemas</code> — Zod schemas + JSON Schema codegen for every Atelier artifact.
     </li>
     <li>
-      <code>@cir/policies</code> — Pure-function validators + <code>PolicyRegistry</code> for
+      <code>@atelier/policies</code> — Pure-function validators + <code>PolicyRegistry</code> for
       app-supplied policies + behavioral pattern detector interface.
     </li>
     <li>
-      <code>@cir/runtime</code> — Framework-agnostic core: cache, fetcher, resolver, dispatcher,
+      <code>@atelier/runtime</code> — Framework-agnostic core: cache, fetcher, resolver, dispatcher,
       trigger bus + SSE, render-plan builder, audit sinks.
     </li>
     <li>
-      <code>@cir/components</code> — 56 baseline React primitives with composition rules and
+      <code>@atelier/components</code> — 56 baseline React primitives with composition rules and
       per-component metadata.
     </li>
     <li>
-      <code>@cir/react</code> — React adapter: <code>&lt;CirRuntime&gt;</code>, <code>&lt;CirRoute&gt;</code>,
+      <code>@atelier/react</code> — React adapter: <code>&lt;CirRuntime&gt;</code>, <code>&lt;CirRoute&gt;</code>,
       hooks, confirmation portal, SWR + optimistic UI, debug panel.
     </li>
     <li>
-      <code>@cir/compiler</code> — LLM-backed compile service: Gemini + Fallback + Composite,
+      <code>@atelier/compiler</code> — LLM-backed compile service: Gemini + Fallback + Composite,
       manifest store implementations, server-side resolver.
     </li>
     <li>
-      <code>@cir/cli</code> — Unified developer CLI:
-      <code>cir init / dev / add / components-sync / validate / import / inspect / compile /
+      <code>@atelier/cli</code> — Unified developer CLI:
+      <code>atelier init / dev / add / components-sync / validate / import / inspect / compile /
         vault</code>.
     </li>
     <li>
-      <code>@cir/vault-server</code>, <code>@cir/vault-client</code> — Reference intent vault and
+      <code>@atelier/vault-server</code>, <code>@atelier/vault-client</code> — Reference intent vault and
       typed wire client.
     </li>
   </ul>

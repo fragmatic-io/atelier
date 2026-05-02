@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the demo's reference manifests. Marketplace pivot: the layout is
  * now baseline-only — `<Queue>` for decisions and tasks (replaces the
@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { LayoutNode } from '@cir/schemas';
+import type { LayoutNode } from '@atelier/schemas';
 import { manifestForRoute, todayManifest, threadManifest } from '../lib/fake-manifests';
 
 function findFirst(node: LayoutNode, id: string): LayoutNode | null {

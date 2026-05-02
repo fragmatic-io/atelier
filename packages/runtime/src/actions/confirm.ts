@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Confirmation flow for action dispatch.
  *
@@ -16,7 +16,7 @@
  * unless the host says yes.
  */
 
-import type { ConfirmationLevel } from '@cir/schemas';
+import type { ConfirmationLevel } from '@atelier/schemas';
 
 export interface ConfirmationRequest {
   /** Capability id of the action awaiting confirmation. */

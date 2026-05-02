@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Hand-rolled argv parser for the `cir` CLI. Mirrors the conventions used by
- * `cir-schemas` and `cir-evals`: no external libraries, supports
+ * `atelier-schemas` and `atelier-evals`: no external libraries, supports
  * `--flag value`, `--flag=value`, and bare boolean flags. Positional args
  * (everything before the first `--flag`) are returned in `positionals`.
  */

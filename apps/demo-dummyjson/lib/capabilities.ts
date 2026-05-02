@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Capability bundle for the dummyjson catalog demo.
  *
@@ -18,7 +18,7 @@
  * it for confirmation/rate-limit/reversibility decisions.
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 
 export const CAPABILITIES: Record<string, Capability> = {
   'dummyjson.product.list': {

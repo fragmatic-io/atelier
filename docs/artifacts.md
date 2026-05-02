@@ -1,6 +1,6 @@
 # The Three Artifacts
 
-CIR splits everything into three things: capabilities + skills (public), intent (private), render (ephemeral). The rest of the framework follows from this split.
+Atelier splits everything into three things: capabilities + skills (public), intent (private), render (ephemeral). The rest of the framework follows from this split.
 
 ---
 
@@ -77,7 +77,7 @@ A **component catalog** is also public. It lists the UI primitives the app suppo
 }
 ```
 
-These three things — capability registry, skill library, component catalog — are the **complete public surface** of an app in CIR. Everything else (default UI, marketing pages, onboarding) is built on top of them, including by the company itself.
+These three things — capability registry, skill library, component catalog — are the **complete public surface** of an app in Atelier. Everything else (default UI, marketing pages, onboarding) is built on top of them, including by the company itself.
 
 See [`component-catalog.md`](component-catalog.md) for the 56-component baseline that covers 90% of web app patterns.
 

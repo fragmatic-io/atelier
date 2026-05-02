@@ -1,4 +1,4 @@
-# CIR Framework — Docs
+# Atelier Framework — Docs
 
 The full framework, broken into chapters. For the ten principles that govern every chapter, see [`../ETHOS.md`](../ETHOS.md).
 

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest endpoint. The runtime's `ManifestFetcher` calls
  * `GET /api/manifest/{user_id}/{app_id}/{encodedRoute}`. We delegate to the
  * server-side `ServerManifestResolver`, which:
  *   1. Checks the Tier-3 ManifestStore (server cache)
  *   2. On miss, calls the CompositeCompiler (Gemini → fallback)
- *   3. Validates the result via `@cir/policies` BASELINE_POLICIES
+ *   3. Validates the result via `@atelier/policies` BASELINE_POLICIES
  *   4. Stores the result, emits `manifest.compiled` audit
  *   5. Returns the manifest
  *
@@ -14,7 +14,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getCirServer } from '@/lib/cir-server';
+import { getCirServer } from '@/lib/atelier-server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

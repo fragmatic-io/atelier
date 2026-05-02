@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Fake data endpoint. The demo's `DataResolver` (in `lib/cir-providers.tsx`)
+ * Fake data endpoint. The demo's `DataResolver` (in `lib/atelier-providers.tsx`)
  * fetches from here based on the manifest's component data binding spec.
  *
- * In a real CIR app this would be the host's typed query layer (REST,
+ * In a real Atelier app this would be the host's typed query layer (REST,
  * GraphQL, in-process call) gated by the Action Gateway and the user's
  * granted_fields.
  */

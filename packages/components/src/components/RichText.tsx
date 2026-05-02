@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -29,7 +29,7 @@
  * truly controlled editor should reach for the Phase 6 replacement.
  */
 import { useEffect, useId, useRef, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type RichTextToolbarItem = 'bold' | 'italic' | 'link' | 'bullet';

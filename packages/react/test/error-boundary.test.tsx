@@ -2,8 +2,8 @@
 import './setup.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import type { AuditEvent } from '@cir/schemas';
-import type { AuditSink } from '@cir/runtime';
+import type { AuditEvent } from '@atelier/schemas';
+import type { AuditSink } from '@atelier/runtime';
 import { CirErrorBoundary } from '../src/error-boundary.js';
 
 function Boom({ when }: { when: boolean }): React.ReactElement {

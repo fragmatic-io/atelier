@@ -1,7 +1,7 @@
-// Test fixtures shared across @cir/react tests. Mirrors the runtime's
+// Test fixtures shared across @atelier/react tests. Mirrors the runtime's
 // fixture style.
 
-import type { Capability, Manifest } from '@cir/schemas';
+import type { Capability, Manifest } from '@atelier/schemas';
 
 export function makeManifest(overrides: Partial<Manifest> = {}): Manifest {
   return {

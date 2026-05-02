@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Reference manifests for `apps/demo` — kept as a host-authored example of
  * what a baseline-only composition looks like, exercised by
  * `test/fake-manifests.test.ts`.
  *
  * Marketplace pivot: every node here is a baseline component shipped in
- * `@cir/components`. The previous Aurora demo wired four custom bindings
+ * `@atelier/components`. The previous Aurora demo wired four custom bindings
  * (`DecisionQueue`, `TaskQueue`, `ThreadView`, `UndoBar`) — they're gone:
  *
  *   - `DecisionQueue` / `TaskQueue` → `<Queue>` baseline (capability binding +
  *     declarative `actions` array per row).
  *   - `ThreadView` → `<Stack>` + `<NavBar>` + `<Markdown>` + `<ChatThread>`
  *     pure composition.
- *   - `UndoBar` → ambient runtime service (mounted in `cir-providers.tsx`,
+ *   - `UndoBar` → ambient runtime service (mounted in `atelier-providers.tsx`,
  *     declared via `ambient_policy_satisfiers`).
  *
  * Headers compose as `<Stack direction="horizontal">` of `<Logo>` (brand
@@ -25,7 +25,7 @@
  * like" and the test suite uses it as a fixture.
  */
 
-import type { Manifest, LayoutNode } from '@cir/schemas';
+import type { Manifest, LayoutNode } from '@atelier/schemas';
 import { getStore } from './fake-data';
 
 const COMPILED_FROM = {
@@ -132,7 +132,7 @@ export function todayManifest(): Manifest {
                 },
                 {
                   component: 'Alert',
-                  props: { severity: 'info', title: 'Welcome to the CIR demo' },
+                  props: { severity: 'info', title: 'Welcome to the Atelier demo' },
                   children: [],
                 },
                 // Decision queue — Queue baseline, bound to thread.list with

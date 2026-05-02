@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Skill eval: a hand-written `.skill.md` source round-trips through
  * `parseSkillMarkdown` and produces a frontmatter object that satisfies
@@ -10,8 +10,8 @@
  * skill that exercises every required field.
  */
 
-import { defineEval } from '@cir/evals';
-import { parseSkillMarkdown } from '@cir/schemas';
+import { defineEval } from '@atelier/evals';
+import { parseSkillMarkdown } from '@atelier/schemas';
 
 const SKILL_SOURCE = `---
 name: thread-triage

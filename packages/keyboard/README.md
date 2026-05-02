@@ -1,10 +1,10 @@
-# `@cir/keyboard`
+# `@atelier/keyboard`
 
-The CIR keyboard registry — the marketplace primitive for "things the user
+The Atelier keyboard registry — the marketplace primitive for "things the user
 can do via the keyboard".
 
 This package is **pure logic**: no React, no DOM, no I/O. The React adapter
-(`<KeyboardProvider>`, `useKeyboardAction`) lives in `@cir/react`.
+(`<KeyboardProvider>`, `useKeyboardAction`) lives in `@atelier/react`.
 
 ## What's in here
 
@@ -23,7 +23,7 @@ that future tracks (Int-6 quick-switcher, Int-7 chord shortcuts, Int-12
 settings search) build on. Keeping the registry framework-agnostic means:
 
 - non-React adapters (Electron menus, native shells, voice) plug in directly
-- the React surface (`@cir/react`'s `KeyboardProvider`) stays a thin
+- the React surface (`@atelier/react`'s `KeyboardProvider`) stays a thin
   lifecycle wrapper
 - the chord state machine (Int-7) is a future addition that consumes
   `parseChord()` without touching the public API
@@ -67,7 +67,7 @@ import {
   InMemoryKeyboardRegistry,
   InMemoryRecencyTracker,
   type KeyboardServices,
-} from '@cir/keyboard';
+} from '@atelier/keyboard';
 
 const services: KeyboardServices = {
   registry: new InMemoryKeyboardRegistry(),
@@ -75,4 +75,4 @@ const services: KeyboardServices = {
 };
 ```
 
-Then pass `services` to `<KeyboardProvider services={…}>` (from `@cir/react`).
+Then pass `services` to `<KeyboardProvider services={…}>` (from `@atelier/react`).

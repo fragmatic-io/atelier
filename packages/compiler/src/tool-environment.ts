@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `ToolEnvironment` — the host-supplied context that backs the C-2 tool-using
  * compiler. The tool surface (see `tool-using-compiler.ts`) translates each
@@ -42,7 +42,7 @@
  * `search.capabilities(query, k)`; the implementation evolves underneath.
  */
 
-import type { Capability, ComponentDefinition, Manifest } from '@cir/schemas';
+import type { Capability, ComponentDefinition, Manifest } from '@atelier/schemas';
 
 /**
  * Result shape for `validateDraft`. Same `{ ok, reasons }` shape used by

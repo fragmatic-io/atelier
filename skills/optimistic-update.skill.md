@@ -10,7 +10,7 @@ when_to_use: |
   low-stakes (no payment, no public publish, no destructive irreversible
   side-effect). Typical: toggle, archive, mark-read, add-to-cart, close
   issue. The compiler resolves the capability's reversibility flag and
-  binds `useOptimisticAction` from `@cir/react`.
+  binds `useOptimisticAction` from `@atelier/react`.
 when_not_to_use: |
   Irreversible capabilities — payment, publish, send-email, delete-
   permanent, file-upload-to-public-bucket. The user must see the network
@@ -21,7 +21,7 @@ example_flow: |
   1. Confirm the capability declares `reversible: true` AND the rollback
      handle resolves. If either is missing, fall through to a
      pessimistic update with a `<Spinner>`.
-  2. Bind the action to `useOptimisticAction` from `@cir/react`. Apply
+  2. Bind the action to `useOptimisticAction` from `@atelier/react`. Apply
      the predicted next state immediately on click.
   3. On success — do nothing visible (state already reflects the change).
   4. On failure — revert the optimistic state and show a `<Toast
@@ -50,11 +50,11 @@ Irreversible → never optimistic. Failure → revert + toast with retry.
 
 ## Component reference
 
-| Surface                               | Package           | Role                                                                                            |
-| ------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------- |
-| `low_stakes` field on `Capability`    | `@cir/schemas`    | Author opts a capability into auto-optimistic UI (must be paired with `reversible: true`).      |
-| `optimisticDispatch()`                | `@cir/runtime`    | Framework-agnostic helper. Applies the predicted outcome, dispatches, rolls back on failure.    |
-| `useOptimisticAction({ capability })` | `@cir/react`      | React hook. Auto-detects the flags and runs the same loop with `busy` + `toast` state.          |
-| `<Toast>`                             | `@cir/components` | Surfaces the rollback failure with a retry CTA.                                                 |
-| `action.optimistic_applied`           | `@cir/schemas`    | Audit event emitted on synchronous apply. `trigger_chain` carries `action:<capability_id>`.     |
-| `action.optimistic_rolled_back`       | `@cir/schemas`    | Audit event emitted on rollback. `trigger_chain` carries the redacted reason — never the input. |
+| Surface                               | Package               | Role                                                                                            |
+| ------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------- |
+| `low_stakes` field on `Capability`    | `@atelier/schemas`    | Author opts a capability into auto-optimistic UI (must be paired with `reversible: true`).      |
+| `optimisticDispatch()`                | `@atelier/runtime`    | Framework-agnostic helper. Applies the predicted outcome, dispatches, rolls back on failure.    |
+| `useOptimisticAction({ capability })` | `@atelier/react`      | React hook. Auto-detects the flags and runs the same loop with `busy` + `toast` state.          |
+| `<Toast>`                             | `@atelier/components` | Surfaces the rollback failure with a retry CTA.                                                 |
+| `action.optimistic_applied`           | `@atelier/schemas`    | Audit event emitted on synchronous apply. `trigger_chain` carries `action:<capability_id>`.     |
+| `action.optimistic_rolled_back`       | `@atelier/schemas`    | Audit event emitted on rollback. `trigger_chain` carries the redacted reason — never the input. |

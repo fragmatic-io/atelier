@@ -11,7 +11,7 @@
 
 ## Background
 
-Recipes are how CIR avoids the cold-start problem: a new user doesn't compile from zero, they fork a persona.
+Recipes are how Atelier avoids the cold-start problem: a new user doesn't compile from zero, they fork a persona.
 
 For the conceptual role of recipes inside the broader artifact model, see [`../docs/artifacts.md`](../docs/artifacts.md).
 

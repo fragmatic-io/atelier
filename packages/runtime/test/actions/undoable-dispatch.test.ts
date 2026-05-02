@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Undoable-dispatch tests — Wave 7b / Int-8.
  *
@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { AuditEvent, Capability } from '@cir/schemas';
+import type { AuditEvent, Capability } from '@atelier/schemas';
 import {
   ActionDispatcher,
   DEFAULT_UNDO_WINDOW_MS,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -12,15 +12,15 @@
  * On error, emits an `audit` event of type `manifest.served` with a
  * trigger_chain entry recording the error, when an audit sink is wired
  * via the runtime services. Doing so via `manifest.served` is a deliberate
- * choice: the schema's `AuditEventType` (see `@cir/schemas/audit.ts`) does
+ * choice: the schema's `AuditEventType` (see `@atelier/schemas/audit.ts`) does
  * not include a generic `runtime.error` type today, but the boundary still
  * needs to record the failure of "we tried to render this manifest". A
  * future schema addition can specialize this.
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import type { AuditEvent } from '@cir/schemas';
-import type { AuditSink } from '@cir/runtime';
+import type { AuditEvent } from '@atelier/schemas';
+import type { AuditSink } from '@atelier/runtime';
 
 export interface CirErrorBoundaryProps {
   fallback: (error: Error) => ReactNode;

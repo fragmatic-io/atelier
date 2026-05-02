@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Wave 7 / P-9 — categorical salience.
  *
@@ -25,7 +25,7 @@
  * for salience misses lives in author judgement, not in the compiler.
  */
 
-import type { Capability, IntentProfile, LayoutNode } from '@cir/schemas';
+import type { Capability, IntentProfile, LayoutNode } from '@atelier/schemas';
 import type { NamedPolicy, PolicyResult, PolicyViolation } from '../result.js';
 import { walkManifest } from '../internal/walk-layout.js';
 

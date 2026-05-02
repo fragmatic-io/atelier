@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -10,7 +10,7 @@
  * variants table).
  */
 
-import { CirRoute } from '@cir/react';
+import { CirRoute } from '@atelier/react';
 
 export default function CheckoutPage(): React.JSX.Element {
   return <CirRoute path="/checkout" />;

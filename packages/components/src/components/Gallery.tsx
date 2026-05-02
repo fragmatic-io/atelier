@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Gallery — responsive grid of image figures. Each item renders as a
  * `<figure>` with an `<img loading="lazy">` and an optional `<figcaption>`.
@@ -19,7 +19,7 @@
  * without authoring a per-host wrapper that unwraps `product.images[]`.
  */
 import type { CSSProperties, ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, galleryVariantClass, type GalleryVariant } from './_variants.js';
 
 export interface GalleryItem {

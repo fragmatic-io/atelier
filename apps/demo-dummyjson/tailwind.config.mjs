@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tailwind config — Marigold theme, dummyjson catalog demo.
  *
@@ -14,7 +14,7 @@
  */
 export default {
   darkMode: ['class', '[data-color-mode="dark"]'],
-  // The `@cir/components` package ships its variant utility classes inline
+  // The `@atelier/components` package ships its variant utility classes inline
   // (`bg-green-100`, `text-green-800`, …). Without scanning the workspace
   // copy of those source files, Tailwind's JIT never emits the classes and
   // surfaces like the StatusBar dot render with no color (the visible

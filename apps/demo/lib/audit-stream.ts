@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Helper that backs `app/api/cir/audit/stream/route.ts`.
  *
  * Pulled out of the route file so the streaming logic is unit-testable
  * without spinning up Next.js. The route is a thin adapter that:
  *
- *   1. Pulls the demo's singleton `StreamingAuditSink` from `cir-server.ts`.
+ *   1. Pulls the demo's singleton `StreamingAuditSink` from `atelier-server.ts`.
  *   2. Parses the optional `?tenant_id` and `?type=` query filters.
  *   3. Hands all of that to `buildAuditStreamResponse()` here, which owns
  *      the `ReadableStream` lifecycle (subscribe, encode SSE frames,
@@ -33,8 +33,8 @@
  * global"; pass no filter to see everything (the default).
  */
 
-import type { AuditEvent } from '@cir/schemas';
-import type { AuditListener, StreamingAuditSink } from '@cir/runtime';
+import type { AuditEvent } from '@atelier/schemas';
+import type { AuditListener, StreamingAuditSink } from '@atelier/runtime';
 
 /** What the route handler reads off the request URL. */
 export interface AuditStreamFilters {

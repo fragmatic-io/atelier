@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `ValidationFeedbackCompiler` — Wave C / Phase C-1.
  *
@@ -58,7 +58,7 @@
  * never returned one), the retry path degenerates to a plain re-call with
  * no refinement context. Hosts adopting the wrapper should drop the inner
  * `validate` option and let the wrapper own validation; the showcase
- * wiring in `apps/demo-github/lib/cir-server.ts` does exactly that.
+ * wiring in `apps/demo-github/lib/atelier-server.ts` does exactly that.
  *
  * ## Cascade preservation
  *
@@ -83,7 +83,7 @@
  * tool the LLM can call directly inside a single agentic loop.
  */
 
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 import {
   CompilerOutputError,
   type CompileInput,

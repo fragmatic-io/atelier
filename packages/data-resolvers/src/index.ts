@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/data-resolvers` — drop-in adapters that satisfy the `DataResolver`
- * protocol from `@cir/react`.
+ * `@atelier/data-resolvers` — drop-in adapters that satisfy the `DataResolver`
+ * protocol from `@atelier/react`.
  *
  * Without these adapters every host had to hand-roll a fetch layer to
  * resolve manifest data bindings; the runtime shipped only an
@@ -20,7 +20,7 @@
  *   - {@link CompositeDataResolver}— falls through a list of resolvers.
  *   - {@link withCache}            — TTL + stale-while-revalidate wrapper.
  *
- * The `DataResolver` interface in `@cir/react` is intentionally NOT
+ * The `DataResolver` interface in `@atelier/react` is intentionally NOT
  * imported here: this package stays React-agnostic so server-side
  * resolvers can use it without bringing in a UI framework. Each adapter
  * exposes a `resolve` method that satisfies the protocol's call signature

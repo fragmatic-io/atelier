@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -19,7 +19,7 @@
  */
 
 import { useContext, useEffect, useRef, useSyncExternalStore } from 'react';
-import type { KeyboardAction, KeyboardRegistry, KeyboardServices } from '@cir/keyboard';
+import type { KeyboardAction, KeyboardRegistry, KeyboardServices } from '@atelier/keyboard';
 import { KeyboardContext } from './context.js';
 
 /** Returns the active services bag, or `null` when no provider is in scope. */

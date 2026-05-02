@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-side singleton: real compiler + Tier-3 cache + audit.
  *
@@ -25,11 +25,11 @@ import {
   ToolUsingCompiler,
   type CompilerService,
   type ManifestStore,
-} from '@cir/compiler';
-import type { CompileBudget } from '@cir/schemas';
-import { SequenceDetector } from '@cir/policies';
-import { BehavioralTap, StreamingAuditSink } from '@cir/runtime';
-import type { Capability, ComponentDefinition } from '@cir/schemas';
+} from '@atelier/compiler';
+import type { CompileBudget } from '@atelier/schemas';
+import { SequenceDetector } from '@atelier/policies';
+import { BehavioralTap, StreamingAuditSink } from '@atelier/runtime';
+import type { Capability, ComponentDefinition } from '@atelier/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
 
@@ -163,7 +163,7 @@ function buildServer(): CirServer {
         ? ['thread.archive', 'task.create_from_thread', 'task.complete', 'task.snooze']
         : [],
     responsive_targets: ['web'],
-    design_tokens: '@cir/demo/brand@0.1.0',
+    design_tokens: '@atelier/demo/brand@0.1.0',
     examples: [],
     text_render: true,
   })) as ComponentDefinition[];

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await -- stub compilers must be Promise-returning to satisfy CompilerService.compile; not every stub awaits */
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for the Wave 10 S-6 budget metering surface:
  *
@@ -18,7 +18,7 @@
  * verify here that the `code` discriminator propagates as expected.
  */
 
-import type { CompileBudget } from '@cir/schemas';
+import type { CompileBudget } from '@atelier/schemas';
 import { describe, expect, it, vi } from 'vitest';
 import {
   BudgetMeteredCompiler,

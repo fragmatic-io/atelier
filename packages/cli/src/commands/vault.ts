@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir vault dev` — boot a local intent vault server.
+ * `atelier vault dev` — boot a local intent vault server.
  *
- * Wraps `@cir/vault-server`'s `startVaultServer` with a small UX layer:
+ * Wraps `@atelier/vault-server`'s `startVaultServer` with a small UX layer:
  *   - generates an ephemeral ed25519 keypair when `VAULT_SIGNING_KEY_PEM`
  *     is unset, prints a clear warning + the generated PEM,
  *   - persists profiles + grants to a JSON file (default
  *     `./.cir-vault.json` in the current directory),
  *   - prints the JWKS URL hosts register against.
  *
- * Designed for `pnpm cir vault dev --port 4001` from the repo root.
+ * Designed for `pnpm atelier vault dev --port 4001` from the repo root.
  */
 
 /* eslint-disable no-console */
@@ -20,7 +20,7 @@ import {
   exportPrivatePem,
   loadOrGenerateKeyPair,
   startVaultServer,
-} from '@cir/vault-server';
+} from '@atelier/vault-server';
 import { resolve } from 'node:path';
 
 import { VAULT_DEV_USAGE } from '../usage.js';
@@ -65,10 +65,10 @@ export async function runVaultDev(opts: VaultDevOptions = {}): Promise<VaultDevH
   const { pair, generated } = loadOrGenerateKeyPair(env['VAULT_SIGNING_KEY_PEM']);
   if (generated) {
     console.warn(
-      'cir vault dev: VAULT_SIGNING_KEY_PEM not set — generated an ephemeral ed25519 keypair.',
+      'atelier vault dev: VAULT_SIGNING_KEY_PEM not set — generated an ephemeral ed25519 keypair.',
     );
     console.warn(
-      'cir vault dev: every restart invalidates outstanding tokens. Stash the following PEM in .env.local to persist:',
+      'atelier vault dev: every restart invalidates outstanding tokens. Stash the following PEM in .env.local to persist:',
     );
     console.warn('---');
     console.warn(exportPrivatePem(pair).trim());
@@ -86,10 +86,10 @@ export async function runVaultDev(opts: VaultDevOptions = {}): Promise<VaultDevH
   });
 
   const jwksUrl = `http://localhost:${String(running.port)}/.well-known/jwks.json`;
-  console.warn(`cir vault dev: listening on http://localhost:${String(running.port)}`);
-  console.warn(`cir vault dev: JWKS at ${jwksUrl}`);
-  console.warn(`cir vault dev: storage at ${dbPath}`);
-  console.warn(`cir vault dev: kid=${pair.kid}`);
+  console.warn(`atelier vault dev: listening on http://localhost:${String(running.port)}`);
+  console.warn(`atelier vault dev: JWKS at ${jwksUrl}`);
+  console.warn(`atelier vault dev: storage at ${dbPath}`);
+  console.warn(`atelier vault dev: kid=${pair.kid}`);
 
   return {
     port: running.port,
@@ -113,13 +113,13 @@ export async function vaultCommand(
   const sub = positionals[0];
   if (sub !== 'dev') {
     console.error(
-      `cir vault: unknown subcommand '${sub ?? ''}'. Try 'cir vault dev [--port 4001] [--db <path>]'.`,
+      `atelier vault: unknown subcommand '${sub ?? ''}'. Try 'atelier vault dev [--port 4001] [--db <path>]'.`,
     );
     return 1;
   }
   const port = flags['port'] !== undefined ? Number.parseInt(flags['port'], 10) : 4001;
   if (!Number.isFinite(port) || port < 0) {
-    console.error(`cir vault dev: invalid --port '${flags['port'] ?? ''}'`);
+    console.error(`atelier vault dev: invalid --port '${flags['port'] ?? ''}'`);
     return 1;
   }
   const handleOpts: VaultDevOptions = { port };
@@ -130,7 +130,7 @@ export async function vaultCommand(
   try {
     handle = await runVaultDev(handleOpts);
   } catch (err) {
-    console.error(`cir vault dev: failed to start — ${(err as Error).message}`);
+    console.error(`atelier vault dev: failed to start — ${(err as Error).message}`);
     return 1;
   }
 

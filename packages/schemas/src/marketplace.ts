@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Marketplace primitives — Wave 8 / V-6.
  *
- * The `cir://` addressing scheme + the signed bundle that travels over the
- * wire. The marketplace pivot (Wave M) made the demos prove the marketplace
- * promise; V-6 makes the marketplace itself a real product surface. This
- * file fixes the SHAPE of that surface — addressing, signature envelope,
- * key-id derivation — so the vault server, vault client, and any future
- * third-party host can all speak to the same wire format.
+ * The `atelier://` addressing scheme + the signed bundle that travels over
+ * the wire. The marketplace pivot (Wave M) made the demos prove the
+ * marketplace promise; V-6 makes the marketplace itself a real product
+ * surface. This file fixes the SHAPE of that surface — addressing, signature
+ * envelope, key-id derivation — so the vault server, vault client, and any
+ * future third-party host can all speak to the same wire format.
  *
  * Companion docs: `/Users/vid/cir/docs/vault-protocol.md` §"Marketplace
  * endpoints" carries the wire spec; this file is the runtime validator.
@@ -24,7 +24,7 @@ import { SemverString } from './common.js';
 const MarketplaceIdentifierRegex = /^[a-z0-9][a-z0-9._-]{0,127}$/u;
 
 /**
- * The author segment of a `cir://` address. Same shape as `UserId` /
+ * The author segment of an `atelier://` address. Same shape as `UserId` /
  * `AppId`: the vault account the bundle is published from.
  */
 export const MarketplaceAuthor = z
@@ -39,12 +39,12 @@ export const MarketplacePersona = z
 export type MarketplacePersona = z.infer<typeof MarketplacePersona>;
 
 /**
- * Parsed `cir://<author>/<persona>@<version>` address. The `scheme` is
+ * Parsed `atelier://<author>/<persona>@<version>` address. The `scheme` is
  * literal so a single `MarketplaceAddress` cannot be confused with any
  * other URI shape the framework speaks.
  */
 export const MarketplaceAddressSchema = z.object({
-  scheme: z.literal('cir'),
+  scheme: z.literal('atelier'),
   author: MarketplaceAuthor,
   persona: MarketplacePersona,
   version: SemverString,
@@ -102,7 +102,7 @@ export const SignedBundleSchema = z.object({
 export type SignedBundle = z.infer<typeof SignedBundleSchema>;
 
 /**
- * Parse a `cir://<author>/<persona>@<version>[?signed_by=<key_id>]` URI
+ * Parse an `atelier://<author>/<persona>@<version>[?signed_by=<key_id>]` URI
  * into a `MarketplaceAddress`. Returns `null` on any malformed input —
  * callers map to a 400.
  *
@@ -111,11 +111,11 @@ export type SignedBundle = z.infer<typeof SignedBundleSchema>;
  * path depending on placement, neither of which produces a useful split.
  * The grammar is small enough that a focused regex is easier to audit.
  */
-const CIR_URI_REGEX =
-  /^cir:\/\/([a-z0-9][a-z0-9._-]{0,127})\/([a-z0-9][a-z0-9._-]{0,127})@(\S+?)(?:\?(.+))?$/u;
+const ATELIER_URI_REGEX =
+  /^atelier:\/\/([a-z0-9][a-z0-9._-]{0,127})\/([a-z0-9][a-z0-9._-]{0,127})@(\S+?)(?:\?(.+))?$/u;
 
 export function parseMarketplaceAddress(uri: string): MarketplaceAddress | null {
-  const match = CIR_URI_REGEX.exec(uri);
+  const match = ATELIER_URI_REGEX.exec(uri);
   if (match === null) return null;
   const [, author, persona, version, queryRaw] = match as unknown as [
     string,
@@ -142,7 +142,7 @@ export function parseMarketplaceAddress(uri: string): MarketplaceAddress | null 
   }
 
   const address: MarketplaceAddress = {
-    scheme: 'cir',
+    scheme: 'atelier',
     author,
     persona,
     version: versionResult.data,
@@ -151,9 +151,9 @@ export function parseMarketplaceAddress(uri: string): MarketplaceAddress | null 
   return address;
 }
 
-/** Render a `MarketplaceAddress` back into its canonical `cir://` string form. */
+/** Render a `MarketplaceAddress` back into its canonical `atelier://` string form. */
 export function formatMarketplaceAddress(address: MarketplaceAddress): string {
-  const base = `cir://${address.author}/${address.persona}@${address.version}`;
+  const base = `atelier://${address.author}/${address.persona}@${address.version}`;
   if (address.signed_by !== undefined) {
     return `${base}?signed_by=${address.signed_by}`;
   }
@@ -228,7 +228,7 @@ export function signingInputForBundle(input: {
   // fetch-time pin, not a property of the bundle. Two addresses that differ
   // only in `signed_by` should produce the SAME bundle bytes.
   const addressForSigning: MarketplaceAddress = {
-    scheme: 'cir',
+    scheme: 'atelier',
     author: input.address.author,
     persona: input.address.persona,
     version: input.address.version,

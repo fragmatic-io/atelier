@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Golden test for the JSON Schema dumps.
  *
@@ -10,7 +10,7 @@
  *
  * Refresh procedure:
  *
- *     pnpm exec cir-schemas dump --out packages/schemas/test/golden/
+ *     pnpm exec atelier-schemas dump --out packages/schemas/test/golden/
  *     git diff packages/schemas/test/golden/
  *     # review the diff carefully (it's a public API change)
  *     git add packages/schemas/test/golden/
@@ -27,7 +27,7 @@ const GOLDEN_DIR = new URL('./golden/', import.meta.url).pathname;
 
 describe('golden JSON schemas', () => {
   it('are byte-identical to a fresh dump', async () => {
-    const out = await mkdtemp(join(tmpdir(), 'cir-schemas-golden-'));
+    const out = await mkdtemp(join(tmpdir(), 'atelier-schemas-golden-'));
     for (const { name, schema } of SCHEMA_REGISTRY) {
       const json = toJsonSchema(schema, { name });
       const path = join(out, `${name}.json`);

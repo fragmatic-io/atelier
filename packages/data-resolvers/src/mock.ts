@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `MockDataResolver` — returns fixture data from an in-memory map keyed by
  * capability id. For development, tests, and "show something while the

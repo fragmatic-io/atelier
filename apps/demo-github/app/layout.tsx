@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { CirProviders } from '@/lib/cir-providers';
+import { CirProviders } from '@/lib/atelier-providers';
 import { DEMO_GITHUB_BRAND_KIT } from '@/lib/brand-kit';
 
 export const metadata: Metadata = {
-  title: 'Octant — CIR demo',
+  title: 'Octant — Atelier demo',
   description:
     'Real-mutations issue triage showcase: optimistic archive, verbal-required bulk close, hover-card mention previews against the GitHub REST API.',
 };

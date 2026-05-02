@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/components` — Phase 4b baseline React components for CIR.
+ * `@atelier/components` — Phase 4b baseline React components for Atelier.
  *
  * Public surface:
  *  - 43 React components covering Layout, Display, Input, Navigation,
@@ -264,7 +264,7 @@ export type { CommandPaletteProps, CommandPaletteCommand } from './components/Co
 // Wave 11 / Int-3 — keyboard registry adapter. `KeyboardContext`,
 // `<KeyboardProvider>`, and the `useKeyboard*` hooks live here (alongside
 // `<CommandPalette>` and the `IconResolver` adapter) so the baseline
-// component library doesn't need a runtime dependency on `@cir/react`.
+// component library doesn't need a runtime dependency on `@atelier/react`.
 export {
   KeyboardContext,
   KeyboardProvider,
@@ -292,7 +292,7 @@ export type { ChatThreadProps, ChatMessage, ChatRole } from './components/ChatTh
 
 // -----------------------------------------------------------------------------
 // Icons (Wave 7b / Vis-3) — `<Icon>` plus the host-pluggable resolver
-// protocol. CIR ships zero icon packs; hosts implement `IconResolver` and
+// protocol. Atelier ships zero icon packs; hosts implement `IconResolver` and
 // wire it via `<IconResolverProvider>`.
 // -----------------------------------------------------------------------------
 export {

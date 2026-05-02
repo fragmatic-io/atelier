@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir dev` — thin wrapper around `next dev`.
+ * `atelier dev` — thin wrapper around `next dev`.
  *
  * Wave 2: assumes the host project has Next.js installed (the `init`
  * template provisions Next 15). A Vite alternative will land in Wave 3+.
@@ -26,7 +26,7 @@ export interface DevOptions {
 }
 
 /**
- * CLI entry point for `cir dev`. Spawns `next dev` (unless `--tail-only`),
+ * CLI entry point for `atelier dev`. Spawns `next dev` (unless `--tail-only`),
  * optionally tails the SSE audit stream in parallel, and returns the
  * combined exit code.
  *
@@ -74,12 +74,12 @@ export function devCommand(
       if (auditUrl !== undefined) tailOpts.auditUrl = auditUrl;
       // Fire-and-forget. Surface unhandled errors to stderr.
       runDevTail(tailOpts).catch((err: unknown) => {
-        console.error(`cir dev --tail: ${(err as Error).message}`);
+        console.error(`atelier dev --tail: ${(err as Error).message}`);
       });
     }
 
     child.on('error', (err) => {
-      console.error(`cir dev: failed to spawn 'next' — ${err.message}`);
+      console.error(`atelier dev: failed to spawn 'next' — ${err.message}`);
       resolveOuter(1);
     });
     child.on('close', (code) => {

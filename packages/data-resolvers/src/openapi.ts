@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `OpenApiDataResolver` — resolves a binding by looking up its capability's
  * `_review.imported_from` field (set by `cir import openapi`) and the

@@ -8,39 +8,45 @@ importers:
 
   .:
     devDependencies:
-      '@cir/cli':
+      '@atelier/cli':
         specifier: workspace:*
         version: link:packages/cli
-      '@cir/compiler':
+      '@atelier/compiler':
         specifier: workspace:*
         version: link:packages/compiler
-      '@cir/components':
+      '@atelier/components':
         specifier: workspace:*
         version: link:packages/components
-      '@cir/data-resolvers':
+      '@atelier/data-resolvers':
         specifier: workspace:*
         version: link:packages/data-resolvers
-      '@cir/demo':
+      '@atelier/demo':
         specifier: workspace:*
         version: link:apps/demo
-      '@cir/demo-dummyjson':
+      '@atelier/demo-dummyjson':
         specifier: workspace:*
         version: link:apps/demo-dummyjson
-      '@cir/evals':
+      '@atelier/evals':
         specifier: workspace:*
         version: link:packages/evals
-      '@cir/policies':
+      '@atelier/policies':
         specifier: workspace:*
         version: link:packages/policies
-      '@cir/react':
+      '@atelier/react':
         specifier: workspace:*
         version: link:packages/react
-      '@cir/runtime':
+      '@atelier/runtime':
         specifier: workspace:*
         version: link:packages/runtime
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:packages/schemas
+      '@atelier/vault-client':
+        specifier: workspace:*
+        version: link:packages/vault-client
+      '@atelier/vault-server':
+        specifier: workspace:*
+        version: link:packages/vault-server
       '@commitlint/cli':
         specifier: ^19.6.0
         version: 19.8.1(@types/node@22.19.17)(typescript@5.9.3)
@@ -122,34 +128,34 @@ importers:
 
   apps/demo:
     dependencies:
-      '@cir/compiler':
+      '@atelier/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
-      '@cir/components':
+      '@atelier/components':
         specifier: workspace:*
         version: link:../../packages/components
-      '@cir/data-resolvers':
+      '@atelier/data-resolvers':
         specifier: workspace:*
         version: link:../../packages/data-resolvers
-      '@cir/keyboard':
+      '@atelier/keyboard':
         specifier: workspace:*
         version: link:../../packages/keyboard
-      '@cir/policies':
+      '@atelier/policies':
         specifier: workspace:*
         version: link:../../packages/policies
-      '@cir/react':
+      '@atelier/react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@cir/runtime':
+      '@atelier/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
-      '@cir/vault-client':
+      '@atelier/vault-client':
         specifier: workspace:*
         version: link:../../packages/vault-client
-      '@cir/vault-server':
+      '@atelier/vault-server':
         specifier: workspace:*
         version: link:../../packages/vault-server
       next:
@@ -192,28 +198,28 @@ importers:
 
   apps/demo-dummyjson:
     dependencies:
-      '@cir/compiler':
+      '@atelier/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
-      '@cir/components':
+      '@atelier/components':
         specifier: workspace:*
         version: link:../../packages/components
-      '@cir/data-resolvers':
+      '@atelier/data-resolvers':
         specifier: workspace:*
         version: link:../../packages/data-resolvers
-      '@cir/policies':
+      '@atelier/policies':
         specifier: workspace:*
         version: link:../../packages/policies
-      '@cir/react':
+      '@atelier/react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@cir/runtime':
+      '@atelier/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
-      '@cir/vault-client':
+      '@atelier/vault-client':
         specifier: workspace:*
         version: link:../../packages/vault-client
       next:
@@ -241,31 +247,31 @@ importers:
 
   apps/demo-github:
     dependencies:
-      '@cir/capability-resolver':
+      '@atelier/capability-resolver':
         specifier: workspace:*
         version: link:../../packages/capability-resolver
-      '@cir/compiler':
+      '@atelier/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
-      '@cir/components':
+      '@atelier/components':
         specifier: workspace:*
         version: link:../../packages/components
-      '@cir/data-resolvers':
+      '@atelier/data-resolvers':
         specifier: workspace:*
         version: link:../../packages/data-resolvers
-      '@cir/policies':
+      '@atelier/policies':
         specifier: workspace:*
         version: link:../../packages/policies
-      '@cir/react':
+      '@atelier/react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@cir/runtime':
+      '@atelier/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
-      '@cir/vault-client':
+      '@atelier/vault-client':
         specifier: workspace:*
         version: link:../../packages/vault-client
       '@google/genai':
@@ -327,10 +333,10 @@ importers:
 
   packages/capability-resolver:
     dependencies:
-      '@cir/compiler':
+      '@atelier/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
@@ -343,16 +349,16 @@ importers:
 
   packages/cli:
     dependencies:
-      '@cir/compiler':
+      '@atelier/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@cir/components':
+      '@atelier/components':
         specifier: workspace:*
         version: link:../components
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
-      '@cir/vault-server':
+      '@atelier/vault-server':
         specifier: workspace:*
         version: link:../vault-server
     devDependencies:
@@ -377,13 +383,13 @@ importers:
 
   packages/components:
     dependencies:
-      '@cir/keyboard':
+      '@atelier/keyboard':
         specifier: workspace:*
         version: link:../keyboard
-      '@cir/runtime':
+      '@atelier/runtime':
         specifier: workspace:*
         version: link:../runtime
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
       lucide-react:
@@ -429,7 +435,7 @@ importers:
 
   packages/data-resolvers:
     dependencies:
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
@@ -445,7 +451,7 @@ importers:
 
   packages/evals:
     dependencies:
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
       fast-glob:
@@ -479,7 +485,7 @@ importers:
 
   packages/policies:
     dependencies:
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
@@ -495,17 +501,17 @@ importers:
 
   packages/react:
     dependencies:
-      '@cir/policies':
+      '@atelier/policies':
         specifier: workspace:*
         version: link:../policies
-      '@cir/runtime':
+      '@atelier/runtime':
         specifier: workspace:*
         version: link:../runtime
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
-      '@cir/components':
+      '@atelier/components':
         specifier: workspace:*
         version: link:../components
       '@testing-library/react':
@@ -538,10 +544,10 @@ importers:
 
   packages/runtime:
     dependencies:
-      '@cir/policies':
+      '@atelier/policies':
         specifier: workspace:*
         version: link:../policies
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
       idb-keyval:
@@ -594,7 +600,7 @@ importers:
 
   packages/vault-client:
     dependencies:
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
@@ -610,7 +616,7 @@ importers:
 
   packages/vault-server:
     dependencies:
-      '@cir/schemas':
+      '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:

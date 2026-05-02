@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Tests for `cir-schemas validate-data --strict`.
+ * Tests for `atelier-schemas validate-data --strict`.
  *
  * The strict mode is the CI gate: any capability with a non-empty
  * `_review.needs` array must fail validation. Hand-authored capabilities
@@ -65,11 +65,11 @@ function baseCapability(id: string): CapabilityFixture {
   };
 }
 
-describe('cir-schemas validate-data --strict', () => {
+describe('atelier-schemas validate-data --strict', () => {
   let root: string;
 
   beforeEach(async () => {
-    root = await mkdtemp(join(tmpdir(), 'cir-schemas-strict-'));
+    root = await mkdtemp(join(tmpdir(), 'atelier-schemas-strict-'));
     await mkdir(join(root, 'capabilities'), { recursive: true });
   });
 

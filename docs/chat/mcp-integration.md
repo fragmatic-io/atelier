@@ -1,19 +1,19 @@
-# MCP Integration: CIR ⊃ MCP
+# MCP Integration: Atelier ⊃ MCP
 
-CIR maps cleanly onto the [Model Context Protocol](https://modelcontextprotocol.io). If you already speak MCP, you already speak most of CIR.
+Atelier maps cleanly onto the [Model Context Protocol](https://modelcontextprotocol.io). If you already speak MCP, you already speak most of Atelier.
 
 ---
 
 ## The mapping
 
-| MCP concept          | CIR concept                       | What CIR adds                                                                              |
+| MCP concept          | Atelier concept                   | What Atelier adds                                                                          |
 | -------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
 | Tool                 | Capability                        | Stricter typing, side-effect declarations, reversibility, confirmation policy, rate limits |
 | Tool description     | Skill (partial)                   | Skills are richer: when-to-use, when-not-to-use, failure modes, examples                   |
 | Prompt               | Skill (partial)                   | Prompts can be skill primitives                                                            |
 | Resource             | Capability of kind `data`         | Same idea, typed schema                                                                    |
-| MCP Apps UI resource | Component (rendered via manifest) | CIR adds a component catalog with composition rules                                        |
-| Sampling             | Compiler service                  | CIR formalizes this as a typed, cached compile step                                        |
+| MCP Apps UI resource | Component (rendered via manifest) | Atelier adds a component catalog with composition rules                                    |
+| Sampling             | Compiler service                  | Atelier formalizes this as a typed, cached compile step                                    |
 
 ---
 
@@ -28,11 +28,11 @@ MCP gives you tools and resources. It does not give you:
 5. **A trigger system** for managing cache invalidation across versions
 6. **A policy engine** that validates UI before rendering
 
-CIR provides all six. You can think of CIR as "MCP plus the production layer."
+Atelier provides all six. You can think of Atelier as "MCP plus the production layer."
 
 ---
 
-## Migration path: from raw MCP to CIR
+## Migration path: from raw MCP to Atelier
 
 If you already have an MCP server, the migration is incremental:
 
@@ -47,9 +47,9 @@ A team can do steps 1-2 in a week. Steps 3-6 take a few months but each adds sta
 
 ---
 
-## MCP Apps as a CIR render target
+## MCP Apps as a Atelier render target
 
-When your MCP server returns an MCP Apps UI resource (HTML in a sandboxed iframe), you are rendering a **CIR manifest with `render_target: inline_chat`**. The HTML you generate is the runtime executing the manifest.
+When your MCP server returns an MCP Apps UI resource (HTML in a sandboxed iframe), you are rendering a **Atelier manifest with `render_target: inline_chat`**. The HTML you generate is the runtime executing the manifest.
 
 The pragmatic recommendation: don't generate HTML directly. Generate a manifest, and use a small client-side runtime (a script bundle in the iframe) that interprets the manifest. This gives you:
 

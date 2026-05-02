@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Shared fixtures for `@cir/compiler` tests. The Manifest fixture matches
+ * Shared fixtures for `@atelier/compiler` tests. The Manifest fixture matches
  * `apps/demo/lib/fake-manifests.ts` shape so all tests exercise a real,
  * schema-valid Manifest without re-deriving it in each file.
  */
@@ -14,7 +14,7 @@ import type {
   Manifest,
   Skill,
   Trigger,
-} from '@cir/schemas';
+} from '@atelier/schemas';
 import type { CompileInput } from '../src/types.js';
 
 const COMPILED_FROM = {

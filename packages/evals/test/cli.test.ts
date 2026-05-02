@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -34,7 +34,7 @@ function runCli(args: readonly string[], cwd: string): Promise<SpawnResult> {
   });
 }
 
-describe('cir-evals CLI', () => {
+describe('atelier-evals CLI', () => {
   it('exits 1 when fixtures include failures', async () => {
     const result = await runCli(['run', '--pattern', 'fixtures/**/*.eval.ts'], FIXTURES_DIR);
     expect(result.exitCode).toBe(1);

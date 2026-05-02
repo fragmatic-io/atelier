@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * ButtonGroup — visually groups related action buttons.
  * Variants (Wave 6 / P-10): primary, secondary (default), ghost, outline,
  * destructive. Sizes: sm, md (default), lg.
  */
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { actionVariantClass, cn, type ActionVariant, type Size } from './_variants.js';
 
 export type ButtonGroupVariant = ActionVariant;

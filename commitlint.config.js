@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
-    // CIR allows these scopes; types are conventional defaults
+    // Atelier allows these scopes; types are conventional defaults
     'scope-enum': [
       2,
       'always',

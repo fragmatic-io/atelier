@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RedisClientType } from 'redis';
 import { RedisManifestStore, type RedisManifestStoreOptions } from '../src/redis-manifest-store.js';
 import type { ManifestStoreKey, StoredManifest } from '../src/manifest-store.js';
-import type { Manifest } from '@cir/schemas';
+import type { Manifest } from '@atelier/schemas';
 
 /**
  * Tiny in-memory fake of the node-redis v5 surface we actually use. Backed by

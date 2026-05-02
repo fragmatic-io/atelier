@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `cir dev --tail` SSE plumbing.
  *
@@ -18,7 +18,7 @@ import {
   runDevTail,
   severityColor,
 } from '../src/commands/dev-tail.js';
-import type { AuditEvent } from '@cir/schemas';
+import type { AuditEvent } from '@atelier/schemas';
 
 // -----------------------------------------------------------------------------
 // Helpers.

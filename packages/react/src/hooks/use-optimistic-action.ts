@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
  * `useOptimisticAction()` — a small hook that standardizes the optimistic-UI
- * pattern across CIR components.
+ * pattern across Atelier components.
  *
  * Components like `DecisionQueue` and `TaskQueue` hand-rolled their own
  * "apply locally → call action → on failure roll back, on success show toast"
@@ -32,8 +32,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ActionResult } from '@cir/runtime';
-import type { Capability } from '@cir/schemas';
+import type { ActionResult } from '@atelier/runtime';
+import type { Capability } from '@atelier/schemas';
 
 export interface UseOptimisticActionOptions<TInput> {
   /** The action callback (typically wired by the render walker). */

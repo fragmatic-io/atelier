@@ -1,10 +1,10 @@
 {
-  "name": "@cir/marketing",
+  "name": "@atelier/marketing",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "CIR public marketing site — Astro static export, deployed to GitHub Pages.",
+  "description": "Atelier public marketing site — Astro static export, deployed to GitHub Pages.",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

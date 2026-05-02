@@ -1,6 +1,6 @@
-# @cir/components
+# @atelier/components
 
-Baseline React component library for CIR. Unstyled, semantic primitives
+Baseline React component library for Atelier. Unstyled, semantic primitives
 that fit the runtime's `ComponentBinding`. Hosts paint them via
 `data-cir-component=...` selectors and `data-variant=...` attributes
 (see `apps/demo/app/globals.css` for an example Tailwind 4 pass).
@@ -24,9 +24,9 @@ inline actions on a 320px-wide preview surface (350ms open delay /
 with the future Cnt-3 mention / issue auto-resolution work as the
 rendering surface for `#issue` and `@user` previews.
 
-| Prop        | Type     | Default     | Notes                                                                                                                                                                                    |
-| ----------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ariaLabel` | `string` | `'Preview'` | Override the rendered card's `aria-label`. Hosts wiring per-content previews should pass `"Issue #CIR-123 preview"` / `"Profile of Vid"`. Empty string is an explicit "no label" signal. |
+| Prop        | Type     | Default     | Notes                                                                                                                                                                                        |
+| ----------- | -------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ariaLabel` | `string` | `'Preview'` | Override the rendered card's `aria-label`. Hosts wiring per-content previews should pass `"Issue #Atelier-123 preview"` / `"Profile of Vid"`. Empty string is an explicit "no label" signal. |
 
 **56 components total** — the full baseline catalog enumerated in
 [`docs/component-catalog.md`](../../docs/component-catalog.md). The
@@ -37,10 +37,10 @@ single source of truth for the bindings ships from
 ## Usage
 
 ```tsx
-import { ALL_COMPONENTS, Button, Card, Stack } from '@cir/components';
+import { ALL_COMPONENTS, Button, Card, Stack } from '@atelier/components';
 
 // Hand the prebuilt registry to the runtime's render-plan builder:
-import { buildRenderPlan } from '@cir/runtime';
+import { buildRenderPlan } from '@atelier/runtime';
 const plan = buildRenderPlan(manifest, '/dashboard', ALL_COMPONENTS);
 
 // Or use the components directly for hand-rolled UIs:
@@ -63,7 +63,7 @@ compiler reads these to produce valid manifest layouts; the runtime can
 validate at render time. See `docs/component-catalog.md` §"Composition
 rules". `COMPOSITION_RULES` ships out to `/components/composition-rules.json`
 via `pnpm components:sync` and is validated against
-`CompositionRulesSchema` from `@cir/schemas`.
+`CompositionRulesSchema` from `@atelier/schemas`.
 
 ## Per-component metadata
 
@@ -179,7 +179,7 @@ action bar) the moment one row is selected. Pass `selectable: true` plus
 **Esc** to clear the selection from anywhere.
 
 ```tsx
-import { List, type BulkAction } from '@cir/components';
+import { List, type BulkAction } from '@atelier/components';
 
 const repos = [
   { id: 'r1', name: 'cir' },
@@ -232,7 +232,7 @@ Behaviour:
 
 Hosts that prefer to own selection state (e.g. to drive `Cmd/Ctrl+A`,
 or to share one selection across multiple lists) can wire the
-`useMultiSelect()` hook from [`@cir/react`](../react/README.md) and pipe
+`useMultiSelect()` hook from [`@atelier/react`](../react/README.md) and pipe
 its `selected` set straight into `selectedIds` — see the React README for
 a Linear-style sample.
 
@@ -326,7 +326,7 @@ without touching the registry.
 
 ## Icons (Wave 7b / Vis-3)
 
-`@cir/components` ships **zero icon packs**. The `<Icon>` primitive is a
+`@atelier/components` ships **zero icon packs**. The `<Icon>` primitive is a
 thin wrapper that asks a host-supplied `IconResolver` for the SVG markup
 of a `(set, name)` pair, then injects it. Three reference resolvers ship
 with the package: `MapIconResolver`, `LiteralIconResolver`, and
@@ -334,7 +334,7 @@ with the package: `MapIconResolver`, `LiteralIconResolver`, and
 
 ### Why a protocol, not a dep
 
-CIR runs in many hosts; each picks its own pack (Lucide, Phosphor,
+Atelier runs in many hosts; each picks its own pack (Lucide, Phosphor,
 Heroicons, an in-house set). Bundling a pack here would either pin every
 host to one choice or leak hundreds of KB of icon SVGs into the runtime.
 The resolver lets each host bring exactly the icons it cares about.
@@ -346,7 +346,7 @@ ships a curated default roster (~50 icons) sourced from `lucide-react` and
 honours `BrandKit.iconography.allowed_sets` at runtime:
 
 ```tsx
-import { IconResolverProvider, LucideIconResolver } from '@cir/components';
+import { IconResolverProvider, LucideIconResolver } from '@atelier/components';
 
 // Construct once at startup. `allowedSets` mirrors `iconography.allowed_sets`
 // from your brand kit; the resolver emits a one-time console warn and
@@ -369,7 +369,7 @@ import {
   Button,
   Alert,
   EmptyState,
-} from '@cir/components';
+} from '@atelier/components';
 
 // 1. Load / build your pack — anything that yields SVG strings keyed by
 //    name. The example below uses literal markup; in production you'd
@@ -464,12 +464,12 @@ export default {
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     // Tailwind must scan our shipped variant strings:
-    './node_modules/@cir/components/dist/**/*.js',
+    './node_modules/@atelier/components/dist/**/*.js',
   ],
 };
 ```
 
-`cir init` scaffolds this file automatically. Hosts that don't ship
+`atelier init` scaffolds this file automatically. Hosts that don't ship
 Tailwind (or that key on a different selector) ignore the unknown
 classes — both the light and dark utilities are inert in that case, so
 adding the `dark:` prefix never breaks a non-Tailwind host.
@@ -498,6 +498,6 @@ forget dark mode fail the gate at `pnpm test`.
 ## Tests
 
 ```sh
-pnpm --filter @cir/components test
-pnpm --filter @cir/components typecheck
+pnpm --filter @atelier/components test
+pnpm --filter @atelier/components typecheck
 ```

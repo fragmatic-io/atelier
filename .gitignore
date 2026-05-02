@@ -44,7 +44,7 @@ Thumbs.db
 *.p12
 .secrets/
 
-# Local manifests / cache (CIR-specific)
+# Local manifests / cache (Atelier-specific)
 .cir-cache/
 .manifests-local/
 local-vault/

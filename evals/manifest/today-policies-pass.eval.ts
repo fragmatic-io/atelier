@@ -1,32 +1,32 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 /**
  * Manifest eval: the demo's `/today` manifest passes the full baseline
- * policy bundle plus the @cir/components composition rules.
+ * policy bundle plus the @atelier/components composition rules.
  *
  * Mirrors the live `validate` callback assembled in
- * `apps/demo/lib/cir-providers.tsx`. If a policy fails here, the resolver
+ * `apps/demo/lib/atelier-providers.tsx`. If a policy fails here, the resolver
  * would refuse to serve the manifest in the demo — surface that on every
  * eval run instead of waiting for a Next.js dev hit.
  *
- * NOTE: Composition rules are inlined to mirror @cir/components/registry.ts.
+ * NOTE: Composition rules are inlined to mirror @atelier/components/registry.ts.
  * Importing the package directly pulls in 'use client' React TSX files that
  * fail to load under plain Node + tsx. Phase 5c can split a pure-data
  * `RULES` export out of the registry to drop this duplication.
  */
 
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import {
   BASELINE_POLICIES,
   composesAccordingTo,
   validateManifest,
   type CompositionRules,
-} from '@cir/policies';
+} from '@atelier/policies';
 import { todayManifest } from '../../apps/demo/lib/fake-manifests';
 import { CAPABILITIES } from '../../apps/demo/lib/fake-capabilities';
 import { DEMO_BRAND_KIT } from '../../apps/demo/lib/brand-kit';
 
-// Subset of @cir/components/registry.ts COMPOSITION_RULES sufficient for
+// Subset of @atelier/components/registry.ts COMPOSITION_RULES sufficient for
 // the components used in the /today manifest plus the demo extensions.
 const COMPOSITION_RULES: CompositionRules = {
   Stack: { can_contain: '*', min_children: 1, max_children: 50 },

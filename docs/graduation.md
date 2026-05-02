@@ -54,12 +54,12 @@ The signal pathway:
 Step 3 above ("aggregated patterns surface") used to be hand-wavy. As of
 Wave 6 / track V-4, it lands behind a real seam:
 
-- `SequenceDetector` in `@cir/policies` keeps a per-user sliding window
+- `SequenceDetector` in `@atelier/policies` keeps a per-user sliding window
   of recent `ObservedAction`s, hashes sub-sequences, and only surfaces
   candidates when at least two distinct users converge on the same chain
   (cross-user dedup — a single user repeating a workflow is a habit, not
   a graduation candidate).
-- `BehavioralTap` in `@cir/runtime` subscribes to a `StreamingAuditSink`
+- `BehavioralTap` in `@atelier/runtime` subscribes to a `StreamingAuditSink`
   and forwards every `action.executed` event to the detector. Privacy
   contract: only the audit `event_id` is used as the `args_fingerprint`,
   raw inputs never enter the detector.

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir import openapi <spec>` — generate CIR capabilities from an OpenAPI 3.x spec.
+ * `atelier import openapi <spec>` — generate Atelier capabilities from an OpenAPI 3.x spec.
  *
- * The OpenAPI importer reads an OpenAPI 3.x spec and emits one CIR capability
+ * The OpenAPI importer reads an OpenAPI 3.x spec and emits one Atelier capability
  * per operation under the chosen output directory. Every imported capability
  * is written as a DRAFT — it carries a `_review` envelope listing the
  * heuristic decisions (side_effects, permissions, confirmation, reversible,
  * rate_limit) that a human must audit, plus any property names that matched
- * the PII wordlist. CI's `cir-schemas validate-data --strict` refuses to
+ * the PII wordlist. CI's `atelier-schemas validate-data --strict` refuses to
  * merge any capability with a non-empty `_review.needs` list.
  *
  * Alongside each `<resource>/<verb>.json` the importer also writes a
@@ -18,7 +18,7 @@
  *
  * Usage:
  *
- *   cir import openapi <spec-url-or-path> [--out capabilities/] [--dry-run] [--force] [--strict]
+ *   atelier import openapi <spec-url-or-path> [--out capabilities/] [--dry-run] [--force] [--strict]
  *
  *   --out <dir>     Output directory (default: capabilities/).
  *   --dry-run       Print the planned files without writing any.
@@ -30,7 +30,7 @@
  *                   Use in regulated codepaths to block risky imports outright.
  *                   Default behavior is to warn and write the draft.
  *
- * Mapping (OpenAPI operation -> CIR Capability):
+ * Mapping (OpenAPI operation -> Atelier Capability):
  *
  *  - id            <operationId> if present, else `<resource>.<verb>` heuristic.
  *  - kind          'data' for GET, 'action' for POST/PUT/PATCH/DELETE.
@@ -43,7 +43,7 @@
  *  - permissions   union of all declared `security` scopes (mirrors
  *                  `<scope>:<verb>` style strings the spec already uses).
  *  - confirmation  GET -> 'none', PUT/PATCH/POST -> 'inline' (soft),
- *                  DELETE -> 'modal' (hard). The CIR schema only allows
+ *                  DELETE -> 'modal' (hard). The Atelier schema only allows
  *                  none|inline|modal|verbal_required; the brief's "soft" and
  *                  "hard" map to inline and modal respectively.
  *  - rate_limit    'x-rate-limit' extension if present, else '100/min/user'.
@@ -68,7 +68,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 
-import { CapabilitySchema, type Capability, type ReviewEnvelope } from '@cir/schemas';
+import { CapabilitySchema, type Capability, type ReviewEnvelope } from '@atelier/schemas';
 
 import { readCliVersion } from '../version.js';
 
@@ -79,7 +79,7 @@ import { readCliVersion } from '../version.js';
 // Word-boundary regex ensures `email` matches `userEmail` (camelCase) and
 // `email_address` (snake) but NOT `mail_template` (no `email` token boundary).
 //
-// Exported so future callers (e.g. Wave 4 P-CLI-2's `cir compile`) can reuse
+// Exported so future callers (e.g. Wave 4 P-CLI-2's `atelier compile`) can reuse
 // the same wordlist without forking it. Keep the list short, obvious, and
 // conservative — false positives are easier to live with than false negatives.
 // -----------------------------------------------------------------------------
@@ -849,7 +849,7 @@ function renderReviewMarkdown(args: {
   lines.push('');
   lines.push('This capability was generated automatically from an OpenAPI spec. Every');
   lines.push('heuristic decision below must be audited before this file can land on `main`.');
-  lines.push('CI (`cir-schemas validate-data --strict`) will refuse to merge it while');
+  lines.push('CI (`atelier-schemas validate-data --strict`) will refuse to merge it while');
   lines.push('the `_review` field is still present.');
   lines.push('');
   lines.push('## Heuristic decisions');
@@ -960,7 +960,7 @@ function planImport(
       }
       usedRelativePaths.add(relativePath);
 
-      // Validate against the CIR Capability schema before queueing.
+      // Validate against the Atelier Capability schema before queueing.
       const parsed = CapabilitySchema.safeParse(built.capability);
       if (!parsed.success) {
         const issues = parsed.error.issues
@@ -1036,9 +1036,9 @@ function detectOpenApiVersion(spec: OpenApiSpec): {
 // CLI entry point.
 // -----------------------------------------------------------------------------
 
-const USAGE = `usage: cir import openapi <spec> [--out <dir>] [--dry-run] [--force] [--strict]
+const USAGE = `usage: atelier import openapi <spec> [--out <dir>] [--dry-run] [--force] [--strict]
 
-Generate CIR capabilities from an OpenAPI 3.x spec. <spec> is a path or URL.
+Generate Atelier capabilities from an OpenAPI 3.x spec. <spec> is a path or URL.
 
   --out <dir>     Output directory (default: capabilities/).
   --dry-run       Print the planned files without writing.
@@ -1050,12 +1050,12 @@ Each emitted JSON ships as a DRAFT with a '_review' envelope listing the
 heuristic decisions a human must audit. Alongside every JSON, a sibling
 '<basename>.review.md' is written with a checklist for the reviewer.
 
-CI's 'cir-schemas validate-data --strict' refuses to merge any capability
+CI's 'atelier-schemas validate-data --strict' refuses to merge any capability
 whose '_review.needs' is non-empty. Clear it by auditing each item, fixing
 the JSON, dropping the '_review' field, and deleting the .review.md sidecar.`;
 
 /**
- * `cir import openapi` programmatic entry point.
+ * `atelier import openapi` programmatic entry point.
  *
  * Args: positional `<spec>` (URL or filesystem path), then any of
  * `--out <dir>`, `--dry-run`, `--force`, `--strict`.

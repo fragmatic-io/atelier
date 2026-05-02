@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `cir init [dir]` — scaffold a new CIR app.
+ * `atelier init [dir]` — scaffold a new Atelier app.
  *
  * Wave 2 limitation: the template hardcodes Next.js 15 (matching the demo
  * app). A Vite variant will land in Wave 3+. The scaffold also assumes the
- * user is operating inside the CIR monorepo so workspace deps resolve;
+ * user is operating inside the Atelier monorepo so workspace deps resolve;
  * standalone publish hardening lands in Wave 3+.
  */
 
@@ -45,7 +45,7 @@ export interface InitResult {
 }
 
 /**
- * Files written by `cir init`. Exposed so tests can assert against the same
+ * Files written by `atelier init`. Exposed so tests can assert against the same
  * list the implementation uses.
  */
 export const INIT_FILES = Object.freeze([
@@ -63,7 +63,7 @@ export const INIT_FILES = Object.freeze([
 ] as const);
 
 /**
- * Programmatic entry point for `cir init`. Returns the list of files written
+ * Programmatic entry point for `atelier init`. Returns the list of files written
  * so callers (and tests) can assert without rescanning the disk.
  */
 export async function runInit(options: InitOptions = {}): Promise<InitResult> {
@@ -128,7 +128,7 @@ export async function initCommand(
     console.log(`\nNext: cd ${dir} && pnpm install && pnpm dev`);
     return 0;
   } catch (err: unknown) {
-    console.error(`cir init failed: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(`atelier init failed: ${err instanceof Error ? err.message : String(err)}`);
     return 1;
   }
 }

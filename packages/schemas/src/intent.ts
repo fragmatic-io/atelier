@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Intent profile + conversation overlay.
  *
@@ -35,8 +35,8 @@ export type IntentRule = z.infer<typeof IntentRuleSchema>;
  * Canonical enums for the well-known personalisation signals.
  *
  * `global_preferences` is a free-form `Record<string, unknown>` so apps can
- * store any preference; these enums document the SHAPE that `@cir/components`,
- * `@cir/compiler`, and `@cir/react` honour today. Values outside the enums are
+ * store any preference; these enums document the SHAPE that `@atelier/components`,
+ * `@atelier/compiler`, and `@atelier/react` honour today. Values outside the enums are
  * not rejected by `IntentProfileSchema` — the runtime/compiler simply falls
  * back to the comfortable default. New keys may be added without a schema bump.
  */
@@ -174,7 +174,7 @@ export type PriorityRule = z.infer<typeof PriorityRuleSchema>;
  * Pattern syntax: shell-style globs over the capability id. `*` matches one
  * id segment, `**` matches any (including `.`); literal segments match
  * exactly. Authoritative matcher: `matchCapabilityGlob` in
- * `@cir/policies/baseline/salience`.
+ * `@atelier/policies/baseline/salience`.
  */
 export const PriorityOverrideSchema = z.object({
   capability_pattern: z.string().min(1),
@@ -202,7 +202,7 @@ export const IntentProfileSchema = z.object({
   cross_app_workflows: z.array(CrossAppWorkflowSchema).optional(),
   /**
    * Optional compile cost budget. When set, the host should wire a
-   * `BudgetMeter` (from `@cir/compiler`) into the `CompositeCompiler` so
+   * `BudgetMeter` (from `@atelier/compiler`) into the `CompositeCompiler` so
    * spend is enforced. Omitted means unlimited (i.e. no enforcement).
    */
   compile_budget: CompileBudgetSchema.optional(),

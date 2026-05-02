@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 /**
@@ -13,7 +13,7 @@
  * uses `type="button"` so it does not fire form submission.
  */
 import { useState, type FormEvent, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { Button } from './Button.js';
 import { cn, formVariantClass, type FormVariant } from './_variants.js';
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * End-to-end smoke eval: real Gemini → real `IntentProfile` draft.
  *
@@ -12,14 +12,14 @@
  * Mirrors `gemini-smoke.eval.ts`: same `SmokeDeps` DI seam, same
  * skip-when-no-key gating, same auth-failed branch with `redactApiKey`.
  */
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 import {
   CompositeIntentProfileCompiler,
   FallbackIntentProfileCompiler,
   GeminiIntentProfileCompiler,
   type IntentProfileCompilerService,
-} from '@cir/compiler';
-import { IntentProfileSchema, type IntentProfile } from '@cir/schemas';
+} from '@atelier/compiler';
+import { IntentProfileSchema, type IntentProfile } from '@atelier/schemas';
 import { hasRealGeminiKey, isAuthShapedError, redactApiKey } from './gemini-smoke.eval.js';
 
 interface OnboardingOutcome {

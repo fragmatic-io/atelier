@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { confirmationRequiredForDestructive } from '../src/baseline/confirmation_required_for_destructive.js';
 import { baselineContext } from './fixtures/manifest.js';
-import type { LayoutNode } from '@cir/schemas';
+import type { LayoutNode } from '@atelier/schemas';
 
 describe('confirmation_required_for_destructive', () => {
   it('passes when no destructive actions are surfaced', () => {

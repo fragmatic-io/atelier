@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Capability metadata for the demo. Mirrors the `Capability` schema in
- * `@cir/schemas`. The runtime's `ActionDispatcher` reads this to decide
+ * `@atelier/schemas`. The runtime's `ActionDispatcher` reads this to decide
  * whether confirmation is required, whether the action is reversible,
  * and what side effects to declare on the audit event.
  *
- * In a real CIR app the registry is published per-app under
+ * In a real Atelier app the registry is published per-app under
  * `/.well-known/cir.json` -> `capabilities_url` and the compiler signs it.
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 
 export const CAPABILITIES: Record<string, Capability> = {
   'thread.list': {

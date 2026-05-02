@@ -1,6 +1,6 @@
-# @cir/evals
+# @atelier/evals
 
-Eval harness for CIR. Discovers `*.eval.ts` files, executes their scenarios, and reports pass/fail. **Not a unit-test runner** — vitest owns `*.test.ts`. Evals are end-to-end scenarios that check whether the compiler produces the expected manifest given an intent + capability set.
+Eval harness for Atelier. Discovers `*.eval.ts` files, executes their scenarios, and reports pass/fail. **Not a unit-test runner** — vitest owns `*.test.ts`. Evals are end-to-end scenarios that check whether the compiler produces the expected manifest given an intent + capability set.
 
 For the framework taxonomy and trigger schedule see [`docs/production-concerns.md`](../../docs/production-concerns.md) §"Evals".
 
@@ -20,7 +20,7 @@ Eval files use the `*.eval.ts` extension and live under `evals/`. Each file expo
 
 ```ts
 // evals/capabilities/email-triage.eval.ts
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 
 export default defineEval({
   id: 'capability/email-triage/marks-action-required',
@@ -40,14 +40,14 @@ Per-spec knobs: `timeoutMs` (default 10s), `skip: 'reason'`, `todo: 'reason'`, `
 ## CLI
 
 ```sh
-pnpm exec cir-evals run                        # discover and run every eval
-pnpm exec cir-evals run --kind capability      # filter by kind (repeatable)
-pnpm exec cir-evals run --tag email --tag p1   # filter by tag (any-match)
-pnpm exec cir-evals run --filter triage        # filter by id substring
-pnpm exec cir-evals run --reporter json        # NDJSON for CI tooling
-pnpm exec cir-evals run --concurrency 4        # parallel execution
-pnpm exec cir-evals run --timeout 30000        # per-eval timeout (ms)
-pnpm exec cir-evals run --pattern 'evals/capabilities/**/*.eval.ts'
+pnpm exec atelier-evals run                        # discover and run every eval
+pnpm exec atelier-evals run --kind capability      # filter by kind (repeatable)
+pnpm exec atelier-evals run --tag email --tag p1   # filter by tag (any-match)
+pnpm exec atelier-evals run --filter triage        # filter by id substring
+pnpm exec atelier-evals run --reporter json        # NDJSON for CI tooling
+pnpm exec atelier-evals run --concurrency 4        # parallel execution
+pnpm exec atelier-evals run --timeout 30000        # per-eval timeout (ms)
+pnpm exec atelier-evals run --pattern 'evals/capabilities/**/*.eval.ts'
 ```
 
 Exit code is `0` when every eval passes, skips, or is marked todo; `1` if any fail, error, or time out. An empty result set (filter matched nothing) exits `0`.
@@ -55,7 +55,7 @@ Exit code is `0` when every eval passes, skips, or is marked todo; `1` if any fa
 ## Programmatic
 
 ```ts
-import { runEvals, ConsoleReporter } from '@cir/evals';
+import { runEvals, ConsoleReporter } from '@atelier/evals';
 
 const summary = await runEvals(
   process.cwd(),
@@ -72,7 +72,7 @@ process.exit(summary.failed === 0 ? 0 : 1);
 The repo ships an end-to-end Gemini smoke (`evals/end-to-end/gemini-smoke.eval.ts`) tagged `smoke`. It runs when `GEMINI_API_KEY` is set; otherwise it skips. PR CI never has the secret and skips silently. The nightly workflow at `.github/workflows/nightly-evals.yml` runs the same eval against the real key, and crucially distinguishes auth failures (revoked / invalid key) from a missing key — auth failures surface as `auth_failed: true` and fail the job loudly. A silent skip on a revoked key would be a regression, not a pass.
 
 ```sh
-pnpm exec cir-evals run --tag smoke   # local smoke run; requires GEMINI_API_KEY
+pnpm exec atelier-evals run --tag smoke   # local smoke run; requires GEMINI_API_KEY
 ```
 
 ## Status

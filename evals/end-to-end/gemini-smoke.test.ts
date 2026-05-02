@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Unit test for the gating predicate in `gemini-smoke.eval.ts`.
  *
- * The eval is the network witness — that runs under `cir-evals run`, not
+ * The eval is the network witness — that runs under `atelier-evals run`, not
  * vitest. This file pins only the "is the key real?" decision so we know the
  * skip path stays green on CI without a key. We do NOT call Gemini here.
  *
@@ -21,7 +21,7 @@ import smokeEval, {
   redactApiKey,
   runSmoke,
 } from './gemini-smoke.eval.js';
-import type { CompilerService, CompileResult } from '@cir/compiler';
+import type { CompilerService, CompileResult } from '@atelier/compiler';
 
 /**
  * Synthetic API key shape for the auth-error tests. Long enough to pass

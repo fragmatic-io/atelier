@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { expect, test } from '@playwright/test';
 
-test.describe('CIR demo — /today', () => {
+test.describe('Atelier demo — /today', () => {
   test('renders the welcome alert', async ({ page }) => {
     await page.goto('/today');
-    await expect(page.getByText('Welcome to the CIR demo')).toBeVisible();
+    await expect(page.getByText('Welcome to the Atelier demo')).toBeVisible();
   });
 
   test('renders the decision queue with thread rows', async ({ page }) => {

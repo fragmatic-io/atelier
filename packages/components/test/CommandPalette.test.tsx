@@ -6,7 +6,7 @@ import {
   InMemoryKeyboardRegistry,
   InMemoryRecencyTracker,
   type KeyboardServices,
-} from '@cir/keyboard';
+} from '@atelier/keyboard';
 import { CommandPalette, CommandPaletteBinding } from '../src/components/CommandPalette.js';
 import { KeyboardProvider } from '../src/keyboard/index.js';
 

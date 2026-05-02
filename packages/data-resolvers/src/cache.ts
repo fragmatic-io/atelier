@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * SWR-style cache wrapper around any `DataResolver`.
  *
@@ -11,7 +11,7 @@
  *   - When `staleWhileRevalidate` is false, expired entries are simply
  *     dropped and the next call goes through.
  *
- * Mirrors the patterns in `@cir/runtime/manifest/cache.ts` (TTL +
+ * Mirrors the patterns in `@atelier/runtime/manifest/cache.ts` (TTL +
  * `markStale`-style invalidation), without requiring the manifest cache's
  * heavyweight `ManifestCacheKey` shape.
  *

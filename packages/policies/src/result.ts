@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Core types for the policy engine.
  *
@@ -8,11 +8,11 @@
  * them into a single `PolicyResult`.
  *
  * The metadata on `NamedPolicy` mirrors the runtime `Policy` schema in
- * `@cir/schemas` — keep them aligned. See `/Users/vid/cir/docs/architecture.md`
+ * `@atelier/schemas` — keep them aligned. See `/Users/vid/cir/docs/architecture.md`
  * §"Policy engine" for the baseline policy specs this package implements.
  */
 
-import type { BrandKit, Capability, IntentProfile, Manifest } from '@cir/schemas';
+import type { BrandKit, Capability, IntentProfile, Manifest } from '@atelier/schemas';
 
 /**
  * Severity of a policy violation.
@@ -63,7 +63,7 @@ export interface AmbientPolicySatisfier {
  *
  * The mechanism is strictly opt-in / additive — components without an entry
  * in the map are unaffected. Mirrors `CompositionRole` on `ComponentBinding`
- * (`@cir/runtime`); kept independent here so `@cir/policies` does not gain
+ * (`@atelier/runtime`); kept independent here so `@atelier/policies` does not gain
  * a runtime dependency.
  *
  * Source: Wave 8 / E-A — see
@@ -137,14 +137,14 @@ export interface PolicyContext {
    * `info`-severity hint instead — the renderer is expected to supply a
    * default `<EmptyState>` / `<Skeleton>` / `<Alert>` at runtime. Bindings
    * declare the opt-in via `ComponentBinding.requiresExplicitStateSlots`
-   * (`@cir/runtime`); hosts thread the resulting set through here.
+   * (`@atelier/runtime`); hosts thread the resulting set through here.
    */
   requires_explicit_state_slots?: ReadonlySet<string> | undefined;
   /**
    * Phase 2 #2 — Action-slot map. componentId → declared `actionSlots`.
    * The `actions_match_action_slots` policy reads this to flag manifests
    * where `node.actions.length` exceeds the binding's slot count. Hosts
-   * derive it from `actionSlotsFromBindings(registry)` in `@cir/runtime`.
+   * derive it from `actionSlotsFromBindings(registry)` in `@atelier/runtime`.
    */
   action_slots?: Readonly<Record<string, readonly string[]>> | undefined;
   /**
@@ -164,7 +164,7 @@ export type Policy = (ctx: PolicyContext) => PolicyResult;
 
 /**
  * A policy with descriptive metadata. The metadata fields mirror
- * `PolicySchema` in `@cir/schemas/src/policy.ts`.
+ * `PolicySchema` in `@atelier/schemas/src/policy.ts`.
  */
 export interface NamedPolicy {
   id: string;

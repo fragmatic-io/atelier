@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * Aurora — Tailwind v4 configuration for the CIR demo.
+ * Aurora — Tailwind v4 configuration for the Atelier demo.
  *
  * Tailwind v4 is CSS-first; most theming happens via `@theme` blocks in
  * `app/globals.css`. We still ship this JS config so:

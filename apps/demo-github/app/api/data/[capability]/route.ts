@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Server-side data proxy. The browser-side `RestDataResolver` issues
  * `GET /api/data/<capability>?filter=...` requests; this route either:

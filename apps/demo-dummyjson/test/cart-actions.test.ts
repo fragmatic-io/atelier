@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Cart action handlers — the optimistic-UI surface (Wave 7a / Int-4) only
  * engages when the dispatcher resolves the action through the right path.

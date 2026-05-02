@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Brand kit for the dummyjson catalog demo — the **"Marigold"** theme.
  *
@@ -25,7 +25,7 @@
  * the same as a hard contract.
  */
 
-import type { BrandKit } from '@cir/schemas';
+import type { BrandKit } from '@atelier/schemas';
 
 export const DUMMYJSON_BRAND_KIT: BrandKit = {
   id: 'cir.demo-dummyjson',

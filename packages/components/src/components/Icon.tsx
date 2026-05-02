@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `<Icon>` — visual primitive that renders an SVG sourced from a host-
  * provided `IconResolver`. Wave 7b (Vis-3).
@@ -17,13 +17,13 @@
  *
  * Brand integration: when an `IconBrandProvider` is in scope, the `size`
  * prop is clamped to at least `config.minimumSize`. This honours
- * `BrandIconographySchema.minimum_size` from `@cir/schemas`.
+ * `BrandIconographySchema.minimum_size` from `@atelier/schemas`.
  *
  * Accessibility: pass `ariaLabel` for a meaningful icon (sets `role="img"`
  * + `aria-label`). Omit it for a decorative icon (sets `aria-hidden="true"`).
  */
 import { type CSSProperties, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { useIconResolver } from '../icons/context.js';
 import { useIconBrand } from '../icons/brand-context.js';
 

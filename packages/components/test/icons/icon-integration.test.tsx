@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Integration tests for the Wave 11 / Vis-3 `icon` prop on Button, Alert,
  * EmptyState, MetaBadge — verifies the components correctly resolve a

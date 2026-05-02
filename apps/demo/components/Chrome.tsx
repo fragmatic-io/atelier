@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -25,12 +25,12 @@
  * In dev (`process.env.NODE_ENV !== 'production'`) the chrome also mounts
  * a developer entry: a "Live audit" link, which is hidden in production
  * builds. This pattern matches `<DebugPanel>` mounting in
- * `cir-providers.tsx`: dev tooling stays out of the prod bundle.
+ * `atelier-providers.tsx`: dev tooling stays out of the prod bundle.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { StatusBar } from '@cir/components';
+import { StatusBar } from '@atelier/components';
 import {
   buildDemoProfile,
   grantedScopesFromProfile,
@@ -38,7 +38,7 @@ import {
   saveIntentProfile,
   saveIntentProfileAsync,
 } from '../lib/intent-store';
-import type { IntentProfile } from '@cir/schemas';
+import type { IntentProfile } from '@atelier/schemas';
 import { Wordmark } from './Wordmark';
 
 type ColorMode = 'light' | 'dark' | 'system';
@@ -170,7 +170,7 @@ export function Chrome({ devMode }: ChromeProps): React.JSX.Element {
       <div className="max-w-screen-md mx-auto flex items-center justify-between gap-3">
         <Link
           href="/today"
-          aria-label="CIR — back to Today"
+          aria-label="Atelier — back to Today"
           className="inline-flex items-center"
           style={{ color: 'var(--cir-color-fg)' }}
         >

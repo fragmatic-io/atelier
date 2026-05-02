@@ -2,8 +2,8 @@
 import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
-import { buildRenderPlan } from '@cir/runtime';
-import { MapComponentRegistry } from '@cir/runtime/testing';
+import { buildRenderPlan } from '@atelier/runtime';
+import { MapComponentRegistry } from '@atelier/runtime/testing';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import { RenderNode } from '../src/render/render-node.js';
 import { EmptyDataResolver, type DataBinding } from '../src/data/data-resolver.js';

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `pnpm demo` — boots the CIR vault server + the demo app together.
+ * `pnpm demo` — boots the Atelier vault server + the demo app together.
  *
  * This is the 10-minute-fresh-clone path: one command, two prefixed log
  * streams (vault | demo), Ctrl-C kills both. No external deps; uses
@@ -10,7 +10,7 @@
  * Argv:
  *   pnpm demo                                → vault on :4001, apps/demo on :3000
  *   pnpm demo --vault-port 4002 --demo-port 3001
- *   pnpm demo --app dummyjson                → boots @cir/demo-dummyjson instead
+ *   pnpm demo --app dummyjson                → boots @atelier/demo-dummyjson instead
  *
  * Pre-flight: copies `apps/demo/.env.local.example` → `apps/demo/.env.local`
  * if the latter is missing (so first-time runs don't trip on a missing
@@ -30,9 +30,9 @@ const DEMO_ENV_EXAMPLE = resolve(ROOT, 'apps/demo/.env.local.example');
  * email-triage demo; `dummyjson` boots the lens-switching catalog demo.
  */
 const APP_PACKAGES: Readonly<Record<string, string>> = Object.freeze({
-  default: '@cir/demo',
-  demo: '@cir/demo',
-  dummyjson: '@cir/demo-dummyjson',
+  default: '@atelier/demo',
+  demo: '@atelier/demo',
+  dummyjson: '@atelier/demo-dummyjson',
 });
 
 interface Args {
@@ -90,13 +90,13 @@ async function main(): Promise<void> {
   if (isDefaultApp) ensureDemoEnv();
 
   console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.error(`  CIR demo — booting vault + Next.js (${pkg})`);
+  console.error(`  Atelier demo — booting vault + Next.js (${pkg})`);
   console.error(`  vault: http://localhost:${String(args.vaultPort)}`);
   console.error(`  demo:  http://localhost:${String(args.demoPort)}`);
   console.error('  Ctrl-C kills both. First boot reads the user through onboarding.');
   console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-  const vault = spawn('pnpm', ['cir', 'vault', 'dev', '--port', String(args.vaultPort)], {
+  const vault = spawn('pnpm', ['atelier', 'vault', 'dev', '--port', String(args.vaultPort)], {
     cwd: ROOT,
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: false,

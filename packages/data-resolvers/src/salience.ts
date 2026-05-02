@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Wave 7 / P-9 — high-salience auto-emphasis.
  *
  * Wraps a `DataResolver` so that, for any binding whose source capability
  * resolves to `salience_level: 'high'` (per
- * `@cir/policies/baseline/salience#resolveSalience`), every returned row
+ * `@atelier/policies/baseline/salience#resolveSalience`), every returned row
  * gets a `emphasis: 'high'` field stamped on it before the data reaches
  * the renderer. The salience-aware containers (`<Queue>` / `<List>` /
  * `<Grid>` / `<Table>`) read the field and surface
@@ -18,7 +18,7 @@
  * Hosts can override on a per-row basis: a row that already carries an
  * `emphasis` field is left unchanged. The wrapper only fills the gap.
  */
-import type { Capability, IntentProfile } from '@cir/schemas';
+import type { Capability, IntentProfile } from '@atelier/schemas';
 import type { CapabilityLookup, DataBinding, DataResolver } from './types.js';
 import { lookupCapability } from './types.js';
 
@@ -26,9 +26,9 @@ import { lookupCapability } from './types.js';
  * Categorical salience levels, matching `Capability.salience_level`.
  *
  * Re-declared locally so this package does not take a dependency on
- * `@cir/policies` (which would create a cycle: compiler depends on
+ * `@atelier/policies` (which would create a cycle: compiler depends on
  * policies depends on data-resolvers depends on policies). The resolver
- * helper lives here as a tiny duplicate; `@cir/policies` exposes its
+ * helper lives here as a tiny duplicate; `@atelier/policies` exposes its
  * fully-typed `resolveSalience` for non-resolver consumers.
  */
 type SalienceLevel = 'high' | 'normal' | 'low';
@@ -37,10 +37,10 @@ type SalienceLevel = 'high' | 'normal' | 'low';
 const DEFAULT_LEVEL: SalienceLevel = 'normal';
 
 /**
- * Glob matcher mirroring `@cir/policies/baseline/salience#matchCapabilityGlob`.
+ * Glob matcher mirroring `@atelier/policies/baseline/salience#matchCapabilityGlob`.
  *
  * Kept tiny and duplicated here on purpose — the data-resolvers package
- * must not depend on `@cir/policies`. The two implementations share an
+ * must not depend on `@atelier/policies`. The two implementations share an
  * eval test in the policy test file.
  */
 function matchGlob(pattern: string, capabilityId: string): boolean {

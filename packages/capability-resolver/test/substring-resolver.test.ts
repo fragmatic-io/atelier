@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `SubstringCapabilityResolver`. The resolver is the cheap,
  * deterministic baseline for capability scoping. We assert:
@@ -11,7 +11,7 @@
  *   - `id` option overrides the default identifier
  */
 
-import type { Capability } from '@cir/schemas';
+import type { Capability } from '@atelier/schemas';
 import { describe, expect, it } from 'vitest';
 import { SubstringCapabilityResolver } from '../src/substring-resolver.js';
 

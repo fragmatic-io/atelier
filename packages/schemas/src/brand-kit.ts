@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * BrandKit — the design system contract.
  *
@@ -11,7 +11,7 @@
  *
  * The four layers of brand integration:
  *
- *   1. Component-level — TypeScript variant unions in `@cir/components`
+ *   1. Component-level — TypeScript variant unions in `@atelier/components`
  *      (e.g. `Button.variant: 'primary' | 'secondary' | …`). Off-brand
  *      values can't be typed.
  *
@@ -279,7 +279,7 @@ export const BrandKitSchema = z.object({
    * catches runaway loops, plus tighter per-user intent budgets for free /
    * pro / enterprise tiers.
    *
-   * See `mergeCompileBudgets` in `@cir/compiler` for the merge semantics.
+   * See `mergeCompileBudgets` in `@atelier/compiler` for the merge semantics.
    */
   compile_budget: CompileBudgetSchema.optional(),
 });

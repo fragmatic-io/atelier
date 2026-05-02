@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Per-app Vitest config — adds the `@/*` path alias the Next.js
  * `tsconfig.json` declares so test modules can resolve component imports
@@ -13,7 +13,7 @@
  * inherit it because Vitest at the time of this writing does not have a
  * stable workspace-config inheritance pattern. The `pnpm test` runner
  * runs from the repo root which uses the root config; `pnpm --filter
- * @cir/demo-github test` runs from this directory and uses this config.
+ * @atelier/demo-github test` runs from this directory and uses this config.
  */
 
 import { defineConfig } from 'vitest/config';

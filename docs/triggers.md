@@ -1,6 +1,6 @@
 # The Trigger System
 
-Triggers are the nervous system of CIR. They are how the world tells the cache to invalidate.
+Triggers are the nervous system of Atelier. They are how the world tells the cache to invalidate.
 
 For chat / agent surfaces, five additional trigger families apply (turn-level, tool result, topic shift, context threshold, sub-agent emit, schedule). See [`chat/triggers.md`](chat/triggers.md).
 

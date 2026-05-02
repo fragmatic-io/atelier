@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * WebSocket transport for the trigger bus.
  *
@@ -59,7 +59,7 @@
  * Tests inject a fake `WebSocket` implementation via `opts.webSocketImpl`.
  */
 
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import type { TriggerSubscription } from './subscription.js';
 
 /** Subset of the WHATWG WebSocket interface this transport depends on. */

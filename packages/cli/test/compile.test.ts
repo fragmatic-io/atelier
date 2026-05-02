@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `cir compile`. Uses an in-memory stub compiler injected via DI
  * (mirrors the smoke-eval pattern).
@@ -18,8 +18,8 @@ import {
   redactApiKey,
   runCompile,
 } from '../src/commands/compile.js';
-import type { Capability, Manifest } from '@cir/schemas';
-import type { CompileInput as CI, CompileResult as CR, CompilerService } from '@cir/compiler';
+import type { Capability, Manifest } from '@atelier/schemas';
+import type { CompileInput as CI, CompileResult as CR, CompilerService } from '@atelier/compiler';
 
 // -----------------------------------------------------------------------------
 // Helpers.
@@ -115,7 +115,7 @@ async function makeTree(root: string): Promise<void> {
       data_sources: [],
       actions_supported: [],
       responsive_targets: ['web'],
-      design_tokens: '@cir/components/baseline@0.1.0',
+      design_tokens: '@atelier/components/baseline@0.1.0',
       examples: [],
       text_render: true,
     },
@@ -186,7 +186,7 @@ describe('loadComponents', () => {
         data_sources: [],
         actions_supported: [],
         responsive_targets: ['web'],
-        design_tokens: '@cir/components/baseline@0.1.0',
+        design_tokens: '@atelier/components/baseline@0.1.0',
         examples: [],
         text_render: true,
       },
@@ -380,14 +380,14 @@ describe('compileCommand', () => {
     const code = await compileCommand([], {}, tmp);
     expect(code).toBe(1);
     const errOut = errSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(errOut).toContain('usage: cir compile');
+    expect(errOut).toContain('usage: atelier compile');
   });
 
   it('--help prints usage and returns 0', async () => {
     const code = await compileCommand([], { help: 'true' }, tmp);
     expect(code).toBe(0);
     const printed = logSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(printed).toContain('usage: cir compile');
+    expect(printed).toContain('usage: atelier compile');
   });
 
   it('returns 1 with redacted message on failure', async () => {
@@ -399,6 +399,6 @@ describe('compileCommand', () => {
     );
     expect(code).toBe(1);
     const errOut = errSpy.mock.calls.map((c) => String(c[0])).join('\n');
-    expect(errOut).toContain('cir compile:');
+    expect(errOut).toContain('atelier compile:');
   });
 });

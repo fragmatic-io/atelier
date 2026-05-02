@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Manifest sanity + baseline-policy compliance for `apps/demo-github`.
  *
@@ -17,7 +17,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { ManifestSchema, type IntentProfile } from '@cir/schemas';
+import { ManifestSchema, type IntentProfile } from '@atelier/schemas';
 import {
   BASELINE_POLICIES,
   resolveSalience,
@@ -26,8 +26,8 @@ import {
   RATE_LIMIT_CHIP_AMBIENT_SATISFIER,
   UNDO_TOAST_AMBIENT_SATISFIER,
   type AmbientPolicySatisfier,
-} from '@cir/policies';
-import { compositionRolesFromBindings } from '@cir/runtime';
+} from '@atelier/policies';
+import { compositionRolesFromBindings } from '@atelier/runtime';
 import {
   inboxManifest,
   issueDetailManifest,
@@ -159,7 +159,7 @@ describe('demo-github manifests', () => {
       inboxManifest(),
     ];
     const compositionRoles = compositionRolesFromBindings(DEMO_GITHUB_BINDINGS);
-    // Mirror of `AMBIENT_POLICY_SATISFIERS` in `lib/cir-providers.tsx`.
+    // Mirror of `AMBIENT_POLICY_SATISFIERS` in `lib/atelier-providers.tsx`.
     // Without these, the policy walkers would still flag the missing
     // in-tree quota anchor / rollback button — declaring the chrome's
     // ambient services lets the policies clear those obligations.

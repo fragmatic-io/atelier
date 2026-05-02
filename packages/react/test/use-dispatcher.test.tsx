@@ -2,7 +2,7 @@
 import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { ALWAYS_DECLINE } from '@cir/runtime/testing';
+import { ALWAYS_DECLINE } from '@atelier/runtime/testing';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import { useDispatcher } from '../src/hooks/use-dispatcher.js';
 import { buildTestServices } from '../src/testing/build-test-services.js';

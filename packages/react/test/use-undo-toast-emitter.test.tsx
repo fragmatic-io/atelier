@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Tests for `useUndoToastEmitter()` — Wave 11 / Int-8.
  *
@@ -16,9 +16,14 @@ import './setup.js';
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { act, fireEvent, render, screen, cleanup } from '@testing-library/react';
 import { useEffect, useMemo, useRef, type ReactElement } from 'react';
-import type { Capability } from '@cir/schemas';
-import { ActionDispatcher, withUndo, type UndoTimer, type UndoToastEmitter } from '@cir/runtime';
-import { ALWAYS_CONFIRM } from '@cir/runtime/testing';
+import type { Capability } from '@atelier/schemas';
+import {
+  ActionDispatcher,
+  withUndo,
+  type UndoTimer,
+  type UndoToastEmitter,
+} from '@atelier/runtime';
+import { ALWAYS_CONFIRM } from '@atelier/runtime/testing';
 import { CirRuntime } from '../src/context/runtime-provider.js';
 import {
   useUndoToastEmitter,

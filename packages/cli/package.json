@@ -1,8 +1,8 @@
 {
-  "name": "@cir/cli",
+  "name": "@atelier/cli",
   "version": "0.1.0",
   "private": false,
-  "description": "CIR unified developer CLI — `cir init`, `cir dev`, `cir add`, `cir validate`",
+  "description": "Atelier unified developer CLI — `atelier init`, `atelier dev`, `atelier add`, `atelier validate`",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -11,7 +11,7 @@
     ".": "./src/index.ts"
   },
   "bin": {
-    "cir": "./src/index.ts"
+    "atelier": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc -p .",
@@ -19,10 +19,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cir/compiler": "workspace:*",
-    "@cir/components": "workspace:*",
-    "@cir/schemas": "workspace:*",
-    "@cir/vault-server": "workspace:*"
+    "@atelier/compiler": "workspace:*",
+    "@atelier/components": "workspace:*",
+    "@atelier/schemas": "workspace:*",
+    "@atelier/vault-server": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

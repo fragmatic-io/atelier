@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -12,7 +12,7 @@
  */
 
 import { use } from 'react';
-import { CirRoute } from '@cir/react';
+import { CirRoute } from '@atelier/react';
 
 interface PageProps {
   params: Promise<{ id: string }>;

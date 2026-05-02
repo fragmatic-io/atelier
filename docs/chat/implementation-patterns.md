@@ -1,6 +1,6 @@
 # Implementation Patterns
 
-Eight patterns that recur in production CIR-for-chat deployments.
+Eight patterns that recur in production Atelier-for-chat deployments.
 
 ---
 
@@ -48,7 +48,7 @@ Each step's manifest is a delta on the previous. Most context is preserved acros
 
 ## Pattern 3: Voice-first agent calling typed capabilities
 
-User talks to a voice agent. Agent calls CIR capabilities under the hood.
+User talks to a voice agent. Agent calls Atelier capabilities under the hood.
 
 ```
 User (voice): "Book me the cheapest flight to Tokyo next Friday"

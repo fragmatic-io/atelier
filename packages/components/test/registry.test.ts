@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import fg from 'fast-glob';
 import { describe, expect, it } from 'vitest';
-import { CompositionRulesSchema } from '@cir/schemas';
+import { CompositionRulesSchema } from '@atelier/schemas';
 import {
   ALL_COMPONENTS,
   COMPONENT_BINDINGS,
@@ -216,7 +216,7 @@ describe('COMPOSITION_RULES', () => {
     expect(r.max_children).toBe(2);
   });
 
-  it('round-trips through @cir/schemas CompositionRulesSchema', () => {
+  it('round-trips through @atelier/schemas CompositionRulesSchema', () => {
     // Wave 4 P-Reg-1: the schema previously rejected the 'leaf' sentinel,
     // which blocked composition rules from shipping as JSON. This test
     // gates against a regression — the entire `COMPOSITION_RULES` export

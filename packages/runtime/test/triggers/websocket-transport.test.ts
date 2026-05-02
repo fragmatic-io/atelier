@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it, vi } from 'vitest';
-import type { Trigger } from '@cir/schemas';
+import type { Trigger } from '@atelier/schemas';
 import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import {
   DEFAULT_WS_RECONNECT_BACKOFF_MS,

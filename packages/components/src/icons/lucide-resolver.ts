@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 // Triple-slash directive ensures `lucide-react.d.ts` is loaded by downstream
 // package typechecks (Next.js apps walking the source entrypoint) where
 // co-located .d.ts files aren't auto-discovered. lucide-react v1.x has no
@@ -10,7 +10,7 @@
  * `LucideIconResolver` — concrete `IconResolver` backed by [Lucide](https://lucide.dev).
  *
  * Wave 11 / Vis-3. Lucide is the de-facto open-source icon set (~1500
- * icons, MIT/ISC), with consistent 24×24 grid + 2px stroke. CIR ships
+ * icons, MIT/ISC), with consistent 24×24 grid + 2px stroke. Atelier ships
  * Lucide as the reference adapter; hosts can plug other packs by
  * implementing `IconResolver` directly.
  *
@@ -42,7 +42,7 @@
  * contract of `BrandIconographySchema.allowed_sets`. Hosts wire it like:
  *
  * ```ts
- * import { LucideIconResolver } from '@cir/components';
+ * import { LucideIconResolver } from '@atelier/components';
  * const resolver = new LucideIconResolver({
  *   allowedSets: brandKit.iconography?.allowed_sets,
  * });
@@ -54,7 +54,7 @@
  *
  * ```ts
  * import { __iconNode as gitBranch } from 'lucide-react/dist/esm/icons/git-branch.mjs';
- * import { LucideIconResolver, lucideIconNodeToSvg } from '@cir/components';
+ * import { LucideIconResolver, lucideIconNodeToSvg } from '@atelier/components';
  *
  * const resolver = new LucideIconResolver({
  *   extend: { 'git-branch': lucideIconNodeToSvg(gitBranch) },
@@ -163,7 +163,7 @@ export function lucideIconNodeToSvg(iconNode: LucideIconNode): string {
 }
 
 // -----------------------------------------------------------------------------
-// Curated default roster — the icons the baseline @cir/components surface
+// Curated default roster — the icons the baseline @atelier/components surface
 // reaches for. Eagerly imported so the resolver is sync. Each entry maps a
 // kebab-case lucide name to its iconNode tuple.
 // -----------------------------------------------------------------------------

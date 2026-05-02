@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
 import {
   MarketplaceAddressSchema,
@@ -11,10 +11,10 @@ import {
 } from '../src/marketplace.js';
 
 describe('parseMarketplaceAddress', () => {
-  it('parses canonical cir:// addresses', () => {
-    const out = parseMarketplaceAddress('cir://aurora-labs/email-triage@1.0.0');
+  it('parses canonical atelier:// addresses', () => {
+    const out = parseMarketplaceAddress('atelier://aurora-labs/email-triage@1.0.0');
     expect(out).toEqual({
-      scheme: 'cir',
+      scheme: 'atelier',
       author: 'aurora-labs',
       persona: 'email-triage',
       version: '1.0.0',
@@ -22,12 +22,12 @@ describe('parseMarketplaceAddress', () => {
   });
 
   it('parses pre-release semver versions', () => {
-    const out = parseMarketplaceAddress('cir://acme/recipe@2.1.0-rc.1');
+    const out = parseMarketplaceAddress('atelier://acme/recipe@2.1.0-rc.1');
     expect(out?.version).toBe('2.1.0-rc.1');
   });
 
   it('captures ?signed_by= for explicit pinning', () => {
-    const out = parseMarketplaceAddress('cir://acme/recipe@1.0.0?signed_by=0123456789abcdef');
+    const out = parseMarketplaceAddress('atelier://acme/recipe@1.0.0?signed_by=0123456789abcdef');
     expect(out?.signed_by).toBe('0123456789abcdef');
   });
 
@@ -36,28 +36,28 @@ describe('parseMarketplaceAddress', () => {
   });
 
   it('returns null on malformed semver', () => {
-    expect(parseMarketplaceAddress('cir://acme/recipe@not-a-version')).toBeNull();
+    expect(parseMarketplaceAddress('atelier://acme/recipe@not-a-version')).toBeNull();
   });
 
   it('returns null on uppercase author', () => {
-    expect(parseMarketplaceAddress('cir://Acme/recipe@1.0.0')).toBeNull();
+    expect(parseMarketplaceAddress('atelier://Acme/recipe@1.0.0')).toBeNull();
   });
 
   it('returns null on bad signed_by fingerprint', () => {
     expect(
-      parseMarketplaceAddress('cir://acme/recipe@1.0.0?signed_by=NOT_HEX_xxxxxxxxx'),
+      parseMarketplaceAddress('atelier://acme/recipe@1.0.0?signed_by=NOT_HEX_xxxxxxxxx'),
     ).toBeNull();
   });
 
   it('round-trips through formatMarketplaceAddress', () => {
-    const uri = 'cir://acme/recipe@1.2.3';
+    const uri = 'atelier://acme/recipe@1.2.3';
     const parsed = parseMarketplaceAddress(uri);
     expect(parsed).not.toBeNull();
     expect(formatMarketplaceAddress(parsed!)).toBe(uri);
   });
 
   it('round-trips with signed_by', () => {
-    const uri = 'cir://acme/recipe@1.2.3?signed_by=0123456789abcdef';
+    const uri = 'atelier://acme/recipe@1.2.3?signed_by=0123456789abcdef';
     const parsed = parseMarketplaceAddress(uri);
     expect(parsed).not.toBeNull();
     expect(formatMarketplaceAddress(parsed!)).toBe(uri);
@@ -66,7 +66,7 @@ describe('parseMarketplaceAddress', () => {
 
 describe('MarketplaceAddressSchema', () => {
   it('accepts a parsed address', () => {
-    const addr = parseMarketplaceAddress('cir://acme/recipe@1.0.0');
+    const addr = parseMarketplaceAddress('atelier://acme/recipe@1.0.0');
     expect(MarketplaceAddressSchema.safeParse(addr).success).toBe(true);
   });
 
@@ -116,7 +116,7 @@ describe('signingInputForBundle', () => {
     const ts = '2026-05-02T12:00:00.000Z';
     const withPin = signingInputForBundle({
       address: {
-        scheme: 'cir',
+        scheme: 'atelier',
         author: 'acme',
         persona: 'recipe',
         version: '1.0.0',
@@ -126,7 +126,7 @@ describe('signingInputForBundle', () => {
       timestamp: ts,
     });
     const withoutPin = signingInputForBundle({
-      address: { scheme: 'cir', author: 'acme', persona: 'recipe', version: '1.0.0' },
+      address: { scheme: 'atelier', author: 'acme', persona: 'recipe', version: '1.0.0' },
       payload: { hello: 'world' },
       timestamp: ts,
     });
@@ -138,7 +138,7 @@ describe('SignedBundleSchema', () => {
   it('accepts a well-formed bundle', () => {
     const bundle = {
       address: {
-        scheme: 'cir' as const,
+        scheme: 'atelier' as const,
         author: 'acme',
         persona: 'recipe',
         version: '1.0.0',
@@ -155,7 +155,7 @@ describe('SignedBundleSchema', () => {
   it('rejects a short key_id', () => {
     const bundle = {
       address: {
-        scheme: 'cir' as const,
+        scheme: 'atelier' as const,
         author: 'acme',
         persona: 'recipe',
         version: '1.0.0',

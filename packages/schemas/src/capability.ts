@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Capability schema — typed action and data definitions.
  *
@@ -92,7 +92,7 @@ export const CapabilityIOSchema = z.record(z.unknown());
  * Convention: hand-authored capabilities OMIT `_review`. Imported capabilities
  * always set it, with `needs` listing the heuristic decisions a human must
  * audit before the JSON can land on `main`. CI gates against any capability
- * with non-empty `_review.needs` via `cir-schemas validate-data --strict`.
+ * with non-empty `_review.needs` via `atelier-schemas validate-data --strict`.
  *
  * The runtime treats `_review` as opaque metadata and ignores it during
  * dispatch. The underscore prefix is a visual marker that this is review
@@ -117,7 +117,7 @@ export const ReviewEnvelopeSchema = z.object({
   imported_from: z.string().min(1),
   /** ISO-8601 timestamp of import. */
   imported_at: z.string().datetime({ offset: true }),
-  /** `@cir/cli` version that produced the import. */
+  /** `@atelier/cli` version that produced the import. */
   importer_version: z.string().min(1),
 });
 
@@ -189,7 +189,7 @@ export const CapabilitySchema = z.object({
    *    present but not what the user came here for.
    *
    * The data resolver promotes high-salience bindings to `emphasis: 'high'`
-   * on each row by default (see `@cir/data-resolvers`), and the
+   * on each row by default (see `@atelier/data-resolvers`), and the
    * `salience_resolved` policy advises authors to compose hierarchy-
    * respecting layouts when a high-salience capability is bound. The
    * user's `IntentProfile.priority_overrides` can override this per-user.

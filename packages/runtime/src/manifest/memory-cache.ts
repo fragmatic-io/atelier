@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * In-memory implementation of `ManifestCache`. Backed by a plain `Map` keyed
  * by the serialized cache key string. No persistence; cleared on process

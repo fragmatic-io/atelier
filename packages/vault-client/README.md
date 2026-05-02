@@ -1,13 +1,13 @@
-# @cir/vault-client
+# @atelier/vault-client
 
-Typed wire client for [`@cir/vault-server`](../vault-server/). Mints grants, reads + writes profile slices through a scoped token, verifies signatures locally via the JWKS, and surfaces typed errors so callers can branch cleanly between "re-grant", "fall back", and "fail loud".
+Typed wire client for [`@atelier/vault-server`](../vault-server/). Mints grants, reads + writes profile slices through a scoped token, verifies signatures locally via the JWKS, and surfaces typed errors so callers can branch cleanly between "re-grant", "fall back", and "fail loud".
 
 > Wave 7 / track V-1. See the [wire-format spec](../../docs/vault-protocol.md) for the contract.
 
 ## Quick start
 
 ```ts
-import { VaultClient } from '@cir/vault-client';
+import { VaultClient } from '@atelier/vault-client';
 
 const vault = new VaultClient({
   vaultUrl: process.env.NEXT_PUBLIC_VAULT_URL ?? 'http://localhost:4001',
@@ -73,7 +73,7 @@ import {
   VaultUnauthorizedError,
   VaultUnreachableError,
   VaultTokenExpiredError,
-} from '@cir/vault-client';
+} from '@atelier/vault-client';
 
 try {
   await vault.getProfile();

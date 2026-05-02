@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * EmptyState — semantic placeholder. Variants (Wave 6 / P-10): bordered,
  * elevated, ghost (default), tinted.
@@ -13,7 +13,7 @@
  * (`<EmptyState icon="inbox">`) or a `{ set, name }` bag.
  */
 import type { ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, contentVariantClass, iconSizePx, type ContentVariant } from './_variants.js';
 import { Icon } from './Icon.js';
 import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * GET /api/cir/cache-stats — returns the Tier-3 manifest store's stats.
  * Polled by the demo's DebugPanel.
  */
 
 import { NextResponse } from 'next/server';
-import type { ManifestStoreKey, StoredManifest } from '@cir/compiler';
-import { getCirServer } from '@/lib/cir-server';
+import type { ManifestStoreKey, StoredManifest } from '@atelier/compiler';
+import { getCirServer } from '@/lib/atelier-server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

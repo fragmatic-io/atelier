@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * `semanticSearchFromResolver` — bridge from a `CapabilityResolver` to
- * `@cir/compiler`'s `SemanticSearch` seam, so the C-2 `ToolUsingCompiler`
+ * `@atelier/compiler`'s `SemanticSearch` seam, so the C-2 `ToolUsingCompiler`
  * can consume a scoping resolver without modification.
  *
  * The compiler calls `search.capabilities(query, k)` synchronously when
@@ -40,8 +40,8 @@
  * The agent never sees an exception.
  */
 
-import type { Capability } from '@cir/schemas';
-import type { SemanticSearch, CapabilityRef } from '@cir/compiler';
+import type { Capability } from '@atelier/schemas';
+import type { SemanticSearch, CapabilityRef } from '@atelier/compiler';
 import { DEFAULT_SCOPING_K, type CapabilityResolver, type ScopeRequest } from './types.js';
 
 /**
@@ -65,7 +65,7 @@ export interface SemanticSearchFromResolverOptions {
 
 /**
  * Wrap `resolver` so the request-scoped result is observable through
- * `@cir/compiler`'s `SemanticSearch.capabilities(query, k)` seam.
+ * `@atelier/compiler`'s `SemanticSearch.capabilities(query, k)` seam.
  *
  * The returned object exposes:
  *

@@ -1,6 +1,6 @@
 # evals/
 
-**Test cases for every artifact.** Capabilities, skills, components, manifests, recipes, and end-to-end flows. A CIR system with weak evals produces weird interfaces and erodes trust; a CIR system with strong evals can iterate fast on the compiler without breaking users.
+**Test cases for every artifact.** Capabilities, skills, components, manifests, recipes, and end-to-end flows. A Atelier system with weak evals produces weird interfaces and erodes trust; a Atelier system with strong evals can iterate fast on the compiler without breaking users.
 
 ## Layout
 
@@ -25,16 +25,16 @@ See [`../docs/production-concerns.md`](../docs/production-concerns.md) — secti
 
 ## Runner
 
-vitest is configured to pick up `*.test.ts` only. Eval files use the `*.eval.ts` extension and run through the dedicated harness shipped in [`@cir/evals`](../packages/evals/README.md):
+vitest is configured to pick up `*.test.ts` only. Eval files use the `*.eval.ts` extension and run through the dedicated harness shipped in [`@atelier/evals`](../packages/evals/README.md):
 
 ```sh
-pnpm exec cir-evals run                        # discover and run every eval
-pnpm exec cir-evals run --kind capability      # filter by kind
-pnpm exec cir-evals run --filter email-triage  # filter by id substring
-pnpm exec cir-evals run --reporter json        # NDJSON for CI
+pnpm exec atelier-evals run                        # discover and run every eval
+pnpm exec atelier-evals run --kind capability      # filter by kind
+pnpm exec atelier-evals run --filter email-triage  # filter by id substring
+pnpm exec atelier-evals run --reporter json        # NDJSON for CI
 ```
 
-The repo also exposes `pnpm evals` as a shortcut for `cir-evals run` against the workspace root. The harness is **not** wired into `pnpm validate` yet — that gate flips on once enough scenarios have landed for the suite to be load-bearing.
+The repo also exposes `pnpm evals` as a shortcut for `atelier-evals run` against the workspace root. The harness is **not** wired into `pnpm validate` yet — that gate flips on once enough scenarios have landed for the suite to be load-bearing.
 
 ## Adding an eval
 
@@ -46,7 +46,7 @@ The repo also exposes `pnpm evals` as a shortcut for `cir-evals run` against the
 6. Reference the artifact's version explicitly so old evals don't silently follow a schema bump.
 
 ```ts
-import { defineEval } from '@cir/evals';
+import { defineEval } from '@atelier/evals';
 
 export default defineEval({
   id: 'capability/email-triage/marks-action-required',
@@ -60,7 +60,7 @@ export default defineEval({
 
 ## What ships in this repo
 
-The [`@cir/evals`](../packages/evals/README.md) harness + `cir-evals` CLI, plus a starter set of real cases against the demo:
+The [`@atelier/evals`](../packages/evals/README.md) harness + `atelier-evals` CLI, plus a starter set of real cases against the demo:
 
 - **capability/** — pin side effects, reversibility, rollback ids, and the snooze input shape on the demo's `CAPABILITIES` record.
 - **manifest/** — validate the `/today` manifest's routes against `RouteSchema`, run `BASELINE_POLICIES` + composition rules over it, and assert every component id maps to a registered binding.

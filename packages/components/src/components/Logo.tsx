@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 /**
  * Logo — brand mark + wordmark primitive.
@@ -29,7 +29,7 @@
  * inside a Stack, never as a child of NavBar.
  */
 import type { CSSProperties, ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn } from './_variants.js';
 
 export type LogoSize = 'sm' | 'md' | 'lg' | 'xl';

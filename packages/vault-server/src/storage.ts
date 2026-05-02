@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * Storage adapter for the vault server.
  *
@@ -14,7 +14,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import type { IntentProfile } from '@cir/schemas';
+import type { IntentProfile } from '@atelier/schemas';
 
 /** A persisted grant record. The token itself is signed and not stored
  * (we only need the metadata to enforce revocation and audit). */

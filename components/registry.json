@@ -2,7 +2,7 @@
   "Accordion": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "AccordionProps",
     "responsive_targets": ["web"],
@@ -11,7 +11,7 @@
   "ActionMenu": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ActionMenuProps",
     "responsive_targets": ["web"],
@@ -20,7 +20,7 @@
   "Alert": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "AlertProps",
     "responsive_targets": ["web"],
@@ -29,7 +29,7 @@
   "Breadcrumb": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "BreadcrumbProps",
     "responsive_targets": ["web"],
@@ -38,7 +38,7 @@
   "BulkActionBar": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "BulkActionBarProps",
     "responsive_targets": ["web"],
@@ -47,7 +47,7 @@
   "Button": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ButtonProps",
     "responsive_targets": ["web"],
@@ -56,7 +56,7 @@
   "ButtonGroup": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ButtonGroupProps",
     "responsive_targets": ["web"],
@@ -65,7 +65,7 @@
   "Calendar": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "CalendarProps",
     "responsive_targets": ["web"],
@@ -74,7 +74,7 @@
   "Card": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "CardProps",
     "responsive_targets": ["web"],
@@ -83,7 +83,7 @@
   "Chart": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ChartProps",
     "responsive_targets": ["web"],
@@ -92,7 +92,7 @@
   "ChatThread": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ChatThreadProps",
     "responsive_targets": ["web"],
@@ -101,7 +101,7 @@
   "CodeBlock": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "CodeBlockProps",
     "responsive_targets": ["web"],
@@ -110,7 +110,7 @@
   "CodeEditor": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "CodeEditorProps",
     "responsive_targets": ["web"],
@@ -119,7 +119,7 @@
   "CodeView": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "CodeViewProps",
     "responsive_targets": ["web"],
@@ -128,7 +128,7 @@
   "CommandPalette": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "CommandPaletteProps",
     "responsive_targets": ["web"],
@@ -137,7 +137,7 @@
   "ConfirmDialog": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ConfirmDialogProps",
     "responsive_targets": ["web"],
@@ -146,7 +146,7 @@
   "Container": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "ContainerProps",
     "responsive_targets": ["web"],
@@ -155,7 +155,7 @@
   "DateInput": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "DateInputProps",
     "responsive_targets": ["web"],
@@ -164,7 +164,7 @@
   "DetailView": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "DetailViewProps",
     "responsive_targets": ["web"],
@@ -173,7 +173,7 @@
   "DiffView": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "DiffViewProps",
     "responsive_targets": ["web"],
@@ -182,7 +182,7 @@
   "Drawer": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "DrawerProps",
     "responsive_targets": ["web"],
@@ -191,7 +191,7 @@
   "EmptyState": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "EmptyStateProps",
     "responsive_targets": ["web"],
@@ -200,7 +200,7 @@
   "FileUpload": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "FileUploadProps",
     "responsive_targets": ["web"],
@@ -209,7 +209,7 @@
   "FilterBar": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "FilterBarProps",
     "responsive_targets": ["web"],
@@ -218,7 +218,7 @@
   "Form": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "FormProps",
     "responsive_targets": ["web"],
@@ -227,7 +227,7 @@
   "Gallery": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "GalleryProps",
     "responsive_targets": ["web"],
@@ -236,7 +236,7 @@
   "Grid": {
     "actions_supported": [],
     "data_sources": ["dummyjson.product.list"],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/dummyjson-shopper.json"],
     "props_schema": "GridProps",
     "responsive_targets": ["web"],
@@ -245,7 +245,7 @@
   "HoverCard": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "HoverCardProps",
     "responsive_targets": ["web"],
@@ -254,7 +254,7 @@
   "Icon": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "IconProps",
     "responsive_targets": ["web"],
@@ -263,7 +263,7 @@
   "KPIRow": {
     "actions_supported": [],
     "data_sources": ["dummyjson.product.list"],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "KPIRowProps",
     "responsive_targets": ["web"],
@@ -272,7 +272,7 @@
   "Kanban": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "KanbanProps",
     "responsive_targets": ["web"],
@@ -281,7 +281,7 @@
   "List": {
     "actions_supported": [],
     "data_sources": ["github.repo.list", "dummyjson.product.list", "dummyjson.product.search"],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "ListProps",
     "responsive_targets": ["web"],
@@ -290,7 +290,7 @@
   "Logo": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "LogoProps",
     "responsive_targets": ["web"],
@@ -299,7 +299,7 @@
   "Map": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "MapProps",
     "responsive_targets": ["web"],
@@ -308,7 +308,7 @@
   "Markdown": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "MarkdownProps",
     "responsive_targets": ["web"],
@@ -317,7 +317,7 @@
   "MetaBadge": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "MetaBadgeProps",
     "responsive_targets": ["web"],
@@ -326,7 +326,7 @@
   "Modal": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ModalProps",
     "responsive_targets": ["web"],
@@ -335,7 +335,7 @@
   "MultiSelect": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "MultiSelectProps",
     "responsive_targets": ["web"],
@@ -344,7 +344,7 @@
   "NavBar": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "NavBarProps",
     "responsive_targets": ["web"],
@@ -353,7 +353,7 @@
   "NumberInput": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "NumberInputProps",
     "responsive_targets": ["web"],
@@ -362,7 +362,7 @@
   "Pagination": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "PaginationProps",
     "responsive_targets": ["web"],
@@ -371,7 +371,7 @@
   "Progress": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ProgressProps",
     "responsive_targets": ["web"],
@@ -380,7 +380,7 @@
   "Queue": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [
       "/recipes/aurora-decisions.json",
       "/recipes/github-reviewer.json",
@@ -393,7 +393,7 @@
   "RichText": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "RichTextProps",
     "responsive_targets": ["web"],
@@ -402,7 +402,7 @@
   "Search": {
     "actions_supported": [],
     "data_sources": ["dummyjson.product.search"],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/dummyjson-shopper.json"],
     "props_schema": "SearchProps",
     "responsive_targets": ["web"],
@@ -411,7 +411,7 @@
   "Select": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "SelectProps",
     "responsive_targets": ["web"],
@@ -420,7 +420,7 @@
   "Sidebar": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "SidebarProps",
     "responsive_targets": ["web"],
@@ -429,7 +429,7 @@
   "Skeleton": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "SkeletonProps",
     "responsive_targets": ["web"],
@@ -438,7 +438,7 @@
   "Slider": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "SliderProps",
     "responsive_targets": ["web"],
@@ -447,7 +447,7 @@
   "Spinner": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "SpinnerProps",
     "responsive_targets": ["web"],
@@ -456,7 +456,7 @@
   "Split": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "SplitProps",
     "responsive_targets": ["web"],
@@ -465,7 +465,7 @@
   "Stack": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": ["/recipes/github-reviewer.json", "/recipes/dummyjson-shopper.json"],
     "props_schema": "StackProps",
     "responsive_targets": ["web"],
@@ -474,7 +474,7 @@
   "StatCard": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "StatCardProps",
     "responsive_targets": ["web"],
@@ -483,7 +483,7 @@
   "StatusBar": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "StatusBarProps",
     "responsive_targets": ["web"],
@@ -492,7 +492,7 @@
   "Stepper": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "StepperProps",
     "responsive_targets": ["web"],
@@ -501,7 +501,7 @@
   "Table": {
     "actions_supported": [],
     "data_sources": ["github.repo.list", "dummyjson.product.list"],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TableProps",
     "responsive_targets": ["web"],
@@ -510,7 +510,7 @@
   "Tabs": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TabsProps",
     "responsive_targets": ["web"],
@@ -519,7 +519,7 @@
   "TextInput": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TextInputProps",
     "responsive_targets": ["web"],
@@ -528,7 +528,7 @@
   "TimeInput": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TimeInputProps",
     "responsive_targets": ["web"],
@@ -537,7 +537,7 @@
   "Timeline": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TimelineProps",
     "responsive_targets": ["web"],
@@ -546,7 +546,7 @@
   "Toast": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ToastProps",
     "responsive_targets": ["web"],
@@ -555,7 +555,7 @@
   "Toggle": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "ToggleProps",
     "responsive_targets": ["web"],
@@ -564,7 +564,7 @@
   "Tooltip": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TooltipProps",
     "responsive_targets": ["web"],
@@ -573,7 +573,7 @@
   "Tree": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TreeProps",
     "responsive_targets": ["web"],
@@ -582,7 +582,7 @@
   "Wizard": {
     "actions_supported": [],
     "data_sources": [],
-    "design_tokens": "@cir/components/baseline@0.1.0",
+    "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "WizardProps",
     "responsive_targets": ["web"],

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
 /**
- * The CIR runtime services bag for the demo, plus the React provider tree.
+ * The Atelier runtime services bag for the demo, plus the React provider tree.
  *
  * What's wired:
- *  - Component registry: @cir/components baseline + apps/demo/components
+ *  - Component registry: @atelier/components baseline + apps/demo/components
  *    (DecisionQueue, TaskQueue) merged into one MapComponentRegistry
  *  - Action registry: handlers POST to /api/action/{capability}
  *  - Manifest fetcher: GET /api/manifest/{user}/{app}/{route}
  *  - Memory cache (browser-side; IndexedDB is overkill for the demo)
- *  - Resolver with policy validation via @cir/policies BASELINE_POLICIES
+ *  - Resolver with policy validation via @atelier/policies BASELINE_POLICIES
  *  - In-memory trigger bus + cache invalidation wiring
  *  - Console audit sink (open devtools to see events)
  *  - DataResolver: GET /api/data/{capability}?filter=...&group_by=...
@@ -33,19 +33,19 @@ import {
   withUndo,
   type ActionExecutionContext,
   type ConfirmationCallback,
-} from '@cir/runtime';
+} from '@atelier/runtime';
 import {
   COMPONENT_BINDINGS,
   COMPOSITION_RULES,
   IconResolverProvider,
   KeyboardProvider,
   LucideIconResolver,
-} from '@cir/components';
+} from '@atelier/components';
 import {
   InMemoryKeyboardRegistry,
   InMemoryRecencyTracker,
   type KeyboardServices,
-} from '@cir/keyboard';
+} from '@atelier/keyboard';
 import {
   CirRuntime,
   CompileBadge,
@@ -53,15 +53,15 @@ import {
   createUndoToastEmitter,
   useReactConfirmation,
   type DataBinding,
-} from '@cir/react';
-import { CompositeDataResolver, MockDataResolver, RestDataResolver } from '@cir/data-resolvers';
+} from '@atelier/react';
+import { CompositeDataResolver, MockDataResolver, RestDataResolver } from '@atelier/data-resolvers';
 import {
   validateManifest,
   BASELINE_POLICIES,
   composesAccordingTo,
   UNDO_TOAST_AMBIENT_SATISFIER,
-} from '@cir/policies';
-import type { IntentProfile, Manifest } from '@cir/schemas';
+} from '@atelier/policies';
+import type { IntentProfile, Manifest } from '@atelier/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
 import { loadIntentProfile } from './intent-store';
@@ -122,7 +122,7 @@ const githubRepoFixtures = [
     full_name: 'fragmatic-io/demo',
     private: false,
     html_url: 'https://github.com/fragmatic-io/demo',
-    description: 'CIR demo app',
+    description: 'Atelier demo app',
     stargazers_count: 12,
     open_issues_count: 1,
     updated_at: '2026-04-29T09:00:00Z',
@@ -275,7 +275,7 @@ interface BuiltServices {
 }
 
 function buildServices(confirm: ConfirmationCallback): BuiltServices {
-  // Component registry: combine @cir/components baseline + demo extensions
+  // Component registry: combine @atelier/components baseline + demo extensions
   const registry = new MapComponentRegistry({
     ...COMPONENT_BINDINGS,
     ...DEMO_BINDINGS,

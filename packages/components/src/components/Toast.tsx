@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 The CIR Authors
+// Copyright 2026 The Atelier Authors
 
 'use client';
 /**
@@ -10,7 +10,7 @@
  *    severity variants. `severity` is a legacy alias for `variant`.
  *  - `undo` — Wave 11 / Int-8. A dark high-contrast toast with a countdown
  *    progress bar and an `Undo` action button. Pair with the `withUndo()`
- *    middleware (`@cir/runtime`) and `useUndoToastEmitter()` (`@cir/react`)
+ *    middleware (`@atelier/runtime`) and `useUndoToastEmitter()` (`@atelier/react`)
  *    for the full reversible-action affordance Linear / Gmail ship.
  *
  * `variant="undo"` props:
@@ -25,7 +25,7 @@
  *  - `actionLabel` — text on the Undo button. Default `Undo`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import type { AlertSeverity } from './Alert.js';
 import { cn, toastVariantClass, type ToastVariant } from './_variants.js';
 

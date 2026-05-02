@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -19,8 +19,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Button, Card, Container, Stack } from '@cir/components';
-import type { IntentProfile } from '@cir/schemas';
+import { Alert, Button, Card, Container, Stack } from '@atelier/components';
+import type { IntentProfile } from '@atelier/schemas';
 import { DEMO_USER_ID } from '@/lib/intent-store';
 
 export const SESSION_DRAFT_KEY = 'cir.demo.intent.draft';

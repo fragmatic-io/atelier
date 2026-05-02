@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
- * `@cir/schemas` — public surface.
+ * `@atelier/schemas` — public surface.
  *
  * All schema objects (`*Schema`) and inferred types are re-exported here.
  * Consumers can import either the runtime validator or the type alone:
  *
- *   import { CapabilitySchema, type Capability } from '@cir/schemas';
+ *   import { CapabilitySchema, type Capability } from '@atelier/schemas';
  *
  * See `/Users/vid/cir/docs/artifacts.md` for the canonical examples each
  * schema mirrors.
@@ -69,7 +69,7 @@ export {
 // Manifest component contract (schema-validated per-binding prop shape)
 // See ETHOS principle #7. Consumed by the runtime registry (opt-in field on
 // `ComponentBinding`) and the `manifest_component_contract_satisfied`
-// policy in `@cir/policies`.
+// policy in `@atelier/policies`.
 // -----------------------------------------------------------------------------
 export {
   ManifestComponentContractSchema,
@@ -232,7 +232,7 @@ export { toJsonSchema, type ToJsonSchemaOptions } from './json-schema.js';
 
 // -----------------------------------------------------------------------------
 // Marketplace primitives — Wave 8 / V-6
-// `cir://author/persona@version` addressing + ed25519-signed bundle envelope.
+// `atelier://author/persona@version` addressing + ed25519-signed bundle envelope.
 // See `/Users/vid/cir/docs/vault-protocol.md` §"Marketplace endpoints".
 // -----------------------------------------------------------------------------
 export {

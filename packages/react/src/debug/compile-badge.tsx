@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 
 'use client';
 
@@ -23,8 +23,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import type { AuditEvent } from '@cir/schemas';
-import type { StreamingAuditSink } from '@cir/runtime';
+import type { AuditEvent } from '@atelier/schemas';
+import type { StreamingAuditSink } from '@atelier/runtime';
 
 export interface CompileBadgeProps {
   /** Filter by manifest_id; omit to show the latest event regardless. */

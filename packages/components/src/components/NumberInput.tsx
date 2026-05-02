@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 The CIR Authors
+// Copyright (c) 2026 The Atelier Authors
 /**
  * NumberInput — labelled numeric field. Controlled-only (`value` + `onChange`)
  * by design: numeric inputs come with too many empty/invalid edge cases to
@@ -13,7 +13,7 @@
  * users can paste anything.
  */
 import { forwardRef, useId, type ReactNode } from 'react';
-import type { ComponentBinding } from '@cir/runtime';
+import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
 
 export type NumberInputVariant = InputVariant;
