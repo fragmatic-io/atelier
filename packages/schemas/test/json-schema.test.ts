@@ -10,8 +10,8 @@ describe('toJsonSchema', () => {
     const out = toJsonSchema(CapabilitySchema, { name: 'capability' });
     expect(out['$id']).toBe('https://cir.dev/schemas/capability.json');
     expect(out['$schema']).toBe('https://json-schema.org/draft/2019-09/schema');
-    const properties = out['properties'];
-    expect(properties).toBeDefined();
+    const properties = (out['properties'] ?? {}) as Record<string, unknown>;
+    expect(out['properties']).toBeDefined();
     expect(properties['id']).toBeDefined();
     expect(properties['kind']).toBeDefined();
     expect(properties['side_effects']).toBeDefined();
