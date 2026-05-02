@@ -339,7 +339,28 @@ Heroicons, an in-house set). Bundling a pack here would either pin every
 host to one choice or leak hundreds of KB of icon SVGs into the runtime.
 The resolver lets each host bring exactly the icons it cares about.
 
-### Plugging in a pack
+### Plugging in the reference Lucide pack (Wave 11 / Vis-3)
+
+For most hosts the fastest path is the built-in `LucideIconResolver`, which
+ships a curated default roster (~50 icons) sourced from `lucide-react` and
+honours `BrandKit.iconography.allowed_sets` at runtime:
+
+```tsx
+import { IconResolverProvider, LucideIconResolver } from '@cir/components';
+
+// Construct once at startup. `allowedSets` mirrors `iconography.allowed_sets`
+// from your brand kit; the resolver emits a one-time console warn and
+// returns null for any set outside the allow-list.
+const resolver = new LucideIconResolver({
+  allowedSets: brandKit.iconography?.allowed_sets,
+});
+
+export function App({ children }: { children: React.ReactNode }) {
+  return <IconResolverProvider resolver={resolver}>{children}</IconResolverProvider>;
+}
+```
+
+### Plugging in a custom pack
 
 ```tsx
 import {
@@ -380,18 +401,23 @@ build-time codegen emits naturally.
 // Direct use — pass `(set, name)` plus optional sizing / a11y.
 <Icon set="lucide" name="archive" size={20} ariaLabel="Archive item" />;
 
-// Integrated — Button / Alert / EmptyState accept an `icon` prop.
-<Button icon={{ set: 'lucide', name: 'archive' }}>Archive</Button>;
+// Integrated — Button / Alert / EmptyState / MetaBadge accept an `icon`
+// prop. The bare-string form (recommended) resolves against the default
+// `'lucide'` set:
+<Button icon="archive">Archive</Button>;
 
-<Alert severity="warning" icon={{ set: 'lucide', name: 'alert-triangle' }} title="Heads up">
+<Alert severity="warning" title="Heads up">
   Your draft will expire in 5 minutes.
 </Alert>;
+// ↑ no `icon` prop — Alert auto-derives `'alert-triangle'` from severity.
 
-<EmptyState
-  title="Inbox zero"
-  description="No new messages."
-  icon={{ set: 'lucide', name: 'inbox' }}
-/>;
+<EmptyState title="Inbox zero" description="No new messages." icon="inbox" />;
+
+<MetaBadge icon="circle-dot" label="online" variant="live" />;
+
+// The legacy `{ set, name }` shape also still works for hosts that wire
+// non-default packs:
+<Button icon={{ set: 'phosphor', name: 'gear' }}>Settings</Button>;
 ```
 
 If the resolver returns `null` for `(set, name)`, `<Icon>` renders a

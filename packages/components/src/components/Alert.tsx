@@ -8,21 +8,46 @@
  * (e.g. `info-circle`, `alert-triangle`). Resolved via the host's
  * `IconResolver`; decorative (aria-hidden) since severity is already
  * conveyed by the `role` and the title/body text.
+ *
+ * Wave 11 / Vis-3 finalisation:
+ *   - `icon` accepts a bare string (`<Alert icon="alert-triangle">`) or a
+ *     `{ set, name }` bag.
+ *   - When `icon` is omitted, a default is auto-derived from the
+ *     severity (`info` → `'info'`, `success` → `'circle-check'`,
+ *     `warning`/`error` → `'alert-triangle'`). Pass `icon={null}` to
+ *     opt out of the default for a bare alert without artwork.
  */
 import type { ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
 import { cn, displayVariantClass, iconSizePx, type DisplayVariant } from './_variants.js';
 import { Icon } from './Icon.js';
+import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';
 
 export type AlertSeverity = 'info' | 'success' | 'warning' | 'error';
 export type AlertVariant = DisplayVariant;
+
+/**
+ * Default lucide icon name per severity. Lined up with names the
+ * `LucideIconResolver` default roster recognises out of the box.
+ */
+const SEVERITY_DEFAULT_ICON: Readonly<Record<AlertSeverity, string>> = Object.freeze({
+  info: 'info',
+  success: 'circle-check',
+  warning: 'alert-triangle',
+  error: 'alert-triangle',
+});
 
 export interface AlertProps {
   severity?: AlertSeverity;
   variant?: AlertVariant;
   title?: string;
-  /** Optional leading icon. Decorative; severity is already conveyed by role + text. */
-  icon?: { set: string; name: string };
+  /**
+   * Optional leading icon. Accepts a bare string (resolved against the
+   * default `'lucide'` set) or `{ set, name }`. When omitted, the icon
+   * defaults to the severity default (see `SEVERITY_DEFAULT_ICON`). Pass
+   * `null` to render an alert without any leading icon.
+   */
+  icon?: IconRef | null;
   className?: string;
   children?: ReactNode;
 }
@@ -37,6 +62,10 @@ export function Alert({
 }: AlertProps): ReactNode {
   const v: AlertVariant = variant ?? severity ?? 'info';
   const role = v === 'error' || v === 'warning' ? 'alert' : 'status';
+  // Resolve effective icon: explicit `null` opts out, explicit value wins,
+  // `undefined` falls through to the severity default.
+  const effectiveIcon: IconRef | null =
+    icon === null ? null : icon !== undefined ? icon : SEVERITY_DEFAULT_ICON[v];
   return (
     <div
       role={role}
@@ -45,11 +74,16 @@ export function Alert({
       data-variant={v}
       className={cn(displayVariantClass[v], className)}
     >
-      {icon !== undefined ? (
-        <span data-cir-part="alert-icon" style={{ marginRight: 8 }}>
-          <Icon set={icon.set} name={icon.name} size={iconSizePx.md} />
-        </span>
-      ) : null}
+      {effectiveIcon !== null
+        ? (() => {
+            const ref = normalizeIconRef(effectiveIcon);
+            return (
+              <span data-cir-part="alert-icon" style={{ marginRight: 8 }}>
+                <Icon set={ref.set} name={ref.name} size={iconSizePx.md} />
+              </span>
+            );
+          })()
+        : null}
       {title !== undefined ? <strong data-cir-part="alert-title">{title}</strong> : null}
       {children !== undefined ? <div data-cir-part="alert-body">{children}</div> : null}
     </div>

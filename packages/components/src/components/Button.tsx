@@ -8,6 +8,11 @@
  * children. The icon is decorative (aria-hidden) so the button's accessible
  * name still comes from `children` or an explicit `aria-label`.
  *
+ * Wave 11 / Vis-3 finalisation: `icon` accepts EITHER a bare string
+ * (`<Button icon="archive">`) — resolved against the default
+ * `'lucide'` set — OR a `{ set, name }` object for hosts that wire a
+ * non-default pack. Both shapes go through `IconResolverContext`.
+ *
  * Phase 2 #1 — manifest contract is schema-validated. `ButtonBinding`
  * declares `manifestContract`; the `manifest_component_contract_satisfied`
  * policy walks the manifest tree and rejects unknown / wrong-typed props
@@ -32,6 +37,7 @@ import {
   type Size,
 } from './_variants.js';
 import { Icon } from './Icon.js';
+import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';
 
 export type ButtonVariant = ActionVariant;
 export type ButtonSize = Size;
@@ -47,8 +53,13 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   variant?: ButtonVariant;
   size?: ButtonSize;
   type?: 'button' | 'submit' | 'reset';
-  /** Optional leading icon. Resolved via `IconResolverContext`; decorative (aria-hidden). */
-  icon?: { set: string; name: string };
+  /**
+   * Optional leading icon. Accepts a bare string (`'archive'`) which
+   * resolves against the default `'lucide'` set, or `{ set, name }` for
+   * hosts that wire a non-default pack. Resolved via `IconResolverContext`;
+   * decorative (aria-hidden).
+   */
+  icon?: IconRef;
   children?: ReactNode;
   /**
    * Manifest contract slot for the button's accessible name. Manifests
@@ -113,9 +124,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       onClick={handleClick}
       {...rest}
     >
-      {icon !== undefined ? (
-        <Icon set={icon.set} name={icon.name} size={BUTTON_ICON_SIZE[size]} />
-      ) : null}
+      {icon !== undefined
+        ? (() => {
+            const ref = normalizeIconRef(icon);
+            return <Icon set={ref.set} name={ref.name} size={BUTTON_ICON_SIZE[size]} />;
+          })()
+        : null}
       {resolvedChildren}
     </button>
   );
@@ -135,14 +149,17 @@ export const ButtonBinding: ComponentBinding = {
   actionSlots: ['onPrimaryAction'],
   manifestContract: {
     description:
-      'Action primitive. Manifests typically supply `label` (rendered as button text); `children` is permitted for hosts that nest react-nodes. `variant`, `size`, `type` enumerate the visual contract. `icon` is a `{ set, name }` bag. The capability dispatcher (`actions: ["…"]`) is wired by the renderer to `onPrimaryAction` via `actionSlots` — manifests never declare `onPrimaryAction` directly.',
+      'Action primitive. Manifests typically supply `label` (rendered as button text); `children` is permitted for hosts that nest react-nodes. `variant`, `size`, `type` enumerate the visual contract. `icon` is either a kebab-case lucide name string (e.g. `"archive"`) — resolved against the default `"lucide"` set — or a `{ set, name }` bag for hosts that wire non-default packs. The capability dispatcher (`actions: ["…"]`) is wired by the renderer to `onPrimaryAction` via `actionSlots` — manifests never declare `onPrimaryAction` directly.',
     allowed_props: {
       label: 'string',
       children: 'react-node',
       variant: 'string',
       size: 'string',
       type: 'string',
-      icon: 'object',
+      // `icon` is `string | { set, name }`; the contract type tag is a
+      // single string, so we use `'unknown'` to permit either shape and
+      // rely on the runtime normaliser. The shape is documented above.
+      icon: 'unknown',
       className: 'string',
       style: 'object',
       // Generic accessibility / DOM hooks that flow through `...rest`.

@@ -298,6 +298,22 @@ export type { IconBrandConfig, IconBrandProviderProps } from './icons/brand-cont
 export { LiteralIconResolver, MapIconResolver, NoopIconResolver } from './icons/resolver.js';
 export type { IconResolver } from './icons/resolver.js';
 
+// Wave 11 / Vis-3: concrete `LucideIconResolver` adapter. Hosts that ship
+// the lucide pack import this directly; other packs implement
+// `IconResolver` themselves.
+export {
+  LucideIconResolver,
+  LUCIDE_DEFAULT_ROSTER,
+  LUCIDE_SET_ID,
+  lucideIconNodeToSvg,
+} from './icons/lucide-resolver.js';
+export type { LucideIconResolverOptions, LucideIconNode } from './icons/lucide-resolver.js';
+
+// Shared `IconRef` shape — the discriminated `string | { set, name }`
+// shape every component's `icon` prop accepts.
+export { DEFAULT_ICON_SET, normalizeIconRef } from './icons/icon-ref.js';
+export type { IconRef } from './icons/icon-ref.js';
+
 export type { IconSize } from './components/_variants.js';
 export { iconSizePx } from './components/_variants.js';
 

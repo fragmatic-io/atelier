@@ -18,6 +18,11 @@
  *   - `dot` true, no content   → just a colored circle indicator
  *   - none of the above        → returns null (no empty host element)
  *
+ * Wave 11 / Vis-3: optional `icon` prop renders a leading icon BEFORE the
+ * dot/content. Sized down to `iconSizePx.xs` (12px) and given a thinner
+ * stroke (1.5) to match the badge's compact density. Accepts a bare string
+ * (`<MetaBadge icon="circle-dot" label="online">`) or a `{ set, name }` bag.
+ *
  * Variants reuse the standard severity tokens (info/success/warning/danger)
  * via the `metaBadgeVariantClass` table; `default` is a neutral gray pill;
  * `live` adds a cyan accent for streaming / "live" / unread indicators.
@@ -27,9 +32,18 @@
  */
 import type { CSSProperties, ReactNode } from 'react';
 import type { ComponentBinding } from '@cir/runtime';
-import { cn, metaBadgeVariantClass, type MetaBadgeVariant } from './_variants.js';
+import { cn, iconSizePx, metaBadgeVariantClass, type MetaBadgeVariant } from './_variants.js';
+import { Icon } from './Icon.js';
+import { normalizeIconRef, type IconRef } from '../icons/icon-ref.js';
 
 export type { MetaBadgeVariant } from './_variants.js';
+
+/**
+ * Stroke width applied to MetaBadge icons. Slightly thinner than the
+ * `<Icon>` default (1.75) so the icon doesn't visually outweigh the
+ * 11px badge text at compact density.
+ */
+const META_BADGE_ICON_STROKE_WIDTH = 1.5;
 
 export interface MetaBadgeProps {
   /** Text label (e.g., "unread", "API"). */
@@ -40,6 +54,12 @@ export interface MetaBadgeProps {
   variant?: MetaBadgeVariant;
   /** When true, prepends a small colored dot before the content. Useful for "live" / pulse indicators. */
   dot?: boolean;
+  /**
+   * Optional leading icon. Decorative; rendered before the dot/content at
+   * `iconSizePx.xs` (12px) with a thinner stroke (1.5) to match badge
+   * density. Accepts a bare string (`'circle-dot'`) or a `{ set, name }` bag.
+   */
+  icon?: IconRef;
   className?: string;
 }
 
@@ -62,13 +82,17 @@ export function MetaBadge({
   count,
   variant = 'default',
   dot = false,
+  icon,
   className,
 }: MetaBadgeProps): ReactNode {
   const content = composeContent(count, label);
   const hasContent = content.length > 0;
+  const hasIcon = icon !== undefined;
 
-  // No content and no dot → render nothing rather than an empty host span.
-  if (!hasContent && !dot) return null;
+  // No content, no dot, no icon → render nothing rather than an empty host
+  // span. (Authors that want an icon-only chip get it because `hasIcon`
+  // keeps the badge alive.)
+  if (!hasContent && !dot && !hasIcon) return null;
 
   const pillStyle: CSSProperties = {
     display: 'inline-flex',
@@ -90,6 +114,21 @@ export function MetaBadge({
       className={cn(metaBadgeVariantClass[variant], className)}
       style={pillStyle}
     >
+      {hasIcon
+        ? (() => {
+            const ref = normalizeIconRef(icon);
+            return (
+              <span data-cir-part="metabadge-icon" style={{ display: 'inline-flex' }}>
+                <Icon
+                  set={ref.set}
+                  name={ref.name}
+                  size={iconSizePx.xs}
+                  strokeWidth={META_BADGE_ICON_STROKE_WIDTH}
+                />
+              </span>
+            );
+          })()
+        : null}
       {dot ? (
         <span
           data-cir-part="metabadge-dot"
@@ -125,14 +164,18 @@ export const MetaBadgeBinding: ComponentBinding = {
     description:
       'Small inline status pill for counts, labels, severity, or "live"/"unread" state. ' +
       'Renders `${count}`, `${label}`, or `${count} ${label}` (e.g. "5 unread") with an optional ' +
-      'leading dot indicator. Variants: default | info | success | warning | danger | live. ' +
+      'leading dot indicator and an optional leading `icon` (lucide kebab-case name). ' +
+      'Variants: default | info | success | warning | danger | live. ' +
       'Subsumes the ad-hoc `<small>` + tinted-span pattern demos used to hand-roll for cart quota ' +
-      'chips, "live" pills, and unread counts. Returns null when neither label/count nor dot is set.',
+      'chips, "live" pills, and unread counts. Returns null when neither label/count, dot, nor icon is set.',
     allowed_props: {
       label: 'string',
       count: 'number',
       variant: 'string',
       dot: 'boolean',
+      // `icon` is `string | { set, name }`; the contract type tag is a
+      // single string, so we use `'unknown'` to permit either shape.
+      icon: 'unknown',
       className: 'string',
     },
   },

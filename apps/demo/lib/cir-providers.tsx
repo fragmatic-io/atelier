@@ -33,7 +33,12 @@ import {
   type ActionExecutionContext,
   type ConfirmationCallback,
 } from '@cir/runtime';
-import { COMPONENT_BINDINGS, COMPOSITION_RULES } from '@cir/components';
+import {
+  COMPONENT_BINDINGS,
+  COMPOSITION_RULES,
+  IconResolverProvider,
+  LucideIconResolver,
+} from '@cir/components';
 import {
   CirRuntime,
   CompileBadge,
@@ -139,6 +144,18 @@ const composite = new CompositeDataResolver(
 );
 
 const dataResolver = composite.resolve;
+
+/**
+ * Wave 11 / Vis-3 — host-wired icon pack. Aurora's `iconography.allowed_sets`
+ * lists `'lucide'`, so the demo wires `LucideIconResolver` once at module
+ * eval and threads it through `<IconResolverProvider>`. Components like
+ * `<Button icon="archive">` resolve the name against this resolver; anything
+ * outside the curated roster falls back to a layout-stable placeholder + a
+ * one-time console warn.
+ */
+const iconResolver = new LucideIconResolver({
+  allowedSets: DEMO_BRAND_KIT.iconography?.allowed_sets,
+});
 
 interface BuiltServices {
   services: CirServices;
@@ -273,17 +290,27 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
 
   return (
     <>
-      <CirRuntime services={services} dataResolver={dataResolver}>
-        {children}
-        {/*
-          Ambient undo bar — mounted INSIDE <CirRuntime> so it can read the
-          dispatcher via `useCir()`, but OUTSIDE the manifest tree so it's
-          not a manifest-referenced custom binding. The companion
-          `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy context
-          tells `reversibility_surfaced` the obligation is covered.
-        */}
-        <AmbientUndoBar />
-      </CirRuntime>
+      {/*
+        Wave 11 / Vis-3 — `<IconResolverProvider>` wraps the runtime so every
+        manifest-rendered `<Icon>` (including those inside `<Button icon>`,
+        `<Alert icon>`, `<EmptyState icon>`, `<MetaBadge icon>`) resolves
+        against the host's `LucideIconResolver`. Aurora's brand kit pins
+        `iconography.allowed_sets: ['lucide']`; the resolver enforces that
+        at runtime.
+      */}
+      <IconResolverProvider resolver={iconResolver}>
+        <CirRuntime services={services} dataResolver={dataResolver}>
+          {children}
+          {/*
+            Ambient undo bar — mounted INSIDE <CirRuntime> so it can read the
+            dispatcher via `useCir()`, but OUTSIDE the manifest tree so it's
+            not a manifest-referenced custom binding. The companion
+            `UNDO_TOAST_AMBIENT_SATISFIER` declaration on the policy context
+            tells `reversibility_surfaced` the obligation is covered.
+          */}
+          <AmbientUndoBar />
+        </CirRuntime>
+      </IconResolverProvider>
       <Portal />
       <DebugPanel sink={audit} />
       <div
