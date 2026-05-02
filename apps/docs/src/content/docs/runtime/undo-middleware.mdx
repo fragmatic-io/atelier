@@ -1,0 +1,160 @@
+---
+title: Undo middleware
+description: withUndo — Proxy-wraps any ActionDispatcher to emit undo toasts.
+---
+
+`withUndo()` is the runtime middleware that turns every reversible capability dispatch into an undo-able interaction. It Proxy-wraps any `ActionDispatcher`, fires `UndoToastEmitter.show()` on successful undoable dispatches, and stays out of the way otherwise.
+
+## The signature
+
+```ts
+import { withUndo, type ActionDispatcher } from '@atelier/runtime';
+import type { UndoToastEmitter } from '@atelier/react';
+
+export function withUndo(
+  inner: ActionDispatcher,
+  options: {
+    emitter: UndoToastEmitter;
+    defaultWindowMs?: number; // default 5000
+    capabilities?: Map<string, Capability>;
+  },
+): ActionDispatcher;
+```
+
+## What it does
+
+1. **Intercepts every dispatch.** The Proxy preserves the inner dispatcher's behaviour — same input shape, same output shape, same error semantics.
+2. **Reads the capability metadata.** If `reversible && undoable`, the wrapper queues an undo toast event after the dispatch resolves.
+3. **Tracks the rollback capability.** When the user clicks Undo within the window, the wrapper dispatches `capability.rollback` with a synthesized input.
+4. **Stays silent otherwise.** Capabilities without `reversible` or `undoable` flags pass through untouched.
+
+## Code
+
+```ts
+import { withUndo } from '@atelier/runtime';
+import { createUndoToastEmitter, UndoToastSink } from '@atelier/react';
+
+const undoEmitter = createUndoToastEmitter();
+
+const dispatcher = withUndo(rawDispatcher, {
+  emitter: undoEmitter,
+  defaultWindowMs: 5000,
+});
+
+// Wire the sink in your layout:
+// <UndoToastSink emitter={undoEmitter} />
+```
+
+## The capability declaration
+
+```json
+{
+  "id": "thread.archive",
+  "reversible": true,
+  "rollback": "thread.unarchive",
+  "undoable": true,
+  "undo_window_ms": 5000
+}
+```
+
+`reversible: true` enables the rollback wiring. `undoable: true` enables the toast emission. `undo_window_ms` overrides the default 5000ms window for this specific capability.
+
+## The rollback synthesis
+
+The wrapper synthesizes the rollback input from the original dispatch:
+
+```text
+original:  thread.archive({ thread_id: 't_xxx' })
+rollback:  thread.unarchive({ thread_id: 't_xxx' })
+```
+
+For the common case (rollback takes the same shape as the original), this works. For asymmetric rollbacks (the rollback needs the result of the original, e.g. `archived_at` to know what to undo), the host supplies a synthesizer:
+
+```ts
+const dispatcher = withUndo(rawDispatcher, {
+  emitter: undoEmitter,
+  rollbackSynthesizer: (original, result) => {
+    if (original.capability_id === 'task.complete') {
+      return {
+        capability_id: 'task.reopen',
+        input: { task_id: original.input.task_id, completed_at: result.completed_at },
+      };
+    }
+    return null; // fall back to default
+  },
+});
+```
+
+## The toast event shape
+
+```ts
+export interface UndoToastEvent {
+  id: string;
+  capability_id: string; // the original capability
+  message: string; // "Archived 'Investor update Q2'"
+  windowMs: number;
+  onUndo: () => Promise<void>; // fires the rollback when called
+  onCommit?: () => void; // fires after the window elapses
+}
+```
+
+The sink renders the toast; the user's interaction calls `onUndo` or the timer calls `onCommit`.
+
+## Multiple stacked undos
+
+Undo toasts stack. If the user fires three reversible actions within 5 seconds, three toasts queue:
+
+```text
+"Archived thread A"        [Undo] (4s)
+"Archived thread B"        [Undo] (3s)
+"Completed task X"         [Undo] (2s)
+```
+
+Clicking Undo on any toast rolls back that specific action without affecting the others. This mirrors Linear / Slack / Notion's undo patterns.
+
+## What about failed dispatches?
+
+If the original dispatch fails (the wrapper's inner dispatcher throws), no undo toast emits. The error propagates to the caller; the optimistic UI rolls back; the user sees an `<Alert>`.
+
+## What about failed rollbacks?
+
+If the rollback dispatch fails (rare — the runtime authored the input from the original), the toast persists with an error chip. The user can retry the rollback or dismiss.
+
+## Audit semantics
+
+```text
+action.dispatched      capability_id=thread.archive
+undo.toast_shown       capability_id=thread.archive  audit_id_original=evt_xxx
+# user clicks Undo:
+action.dispatched      capability_id=thread.unarchive  rollback_for=thread.archive
+undo.completed         original_audit_id=evt_xxx  rollback_audit_id=evt_yyy
+# OR — window elapses:
+undo.committed         original_audit_id=evt_xxx
+```
+
+The audit log shows the full timeline. `pnpm atelier dev --tail` surfaces it live.
+
+## The ambient satisfier
+
+When `withUndo()` is wired, the host also registers `UNDO_TOAST_AMBIENT_SATISFIER` so the policy `reversibility_surfaced` is satisfied for every reversible capability — without requiring a `<Toast>` node in every manifest:
+
+```ts
+const services = configureCirRuntime({
+  dispatcher: withUndo(rawDispatcher, { emitter: undoEmitter, defaultWindowMs: 5000 }),
+  ambientSatisfiers: [UNDO_TOAST_AMBIENT_SATISFIER],
+});
+```
+
+This is principle #4 in code form — ambient satisfiers declare what they cover; the validator sees them.
+
+## Pitfalls
+
+- **Don't forget the `<UndoToastSink>`.** Wiring `withUndo()` without a sink emits events into the void; nothing renders. Mount the sink at the layout root.
+- **Don't wrap twice.** Stacking two `withUndo()` calls fires two toasts per dispatch. Wrap once.
+- **Don't compose `withUndo()` outside `withRateLimit()`.** The rate limit should reject at the dispatch boundary, before the undo wrapper sees a successful dispatch. Conventional order: `withAudit(withRateLimit(withUndo(raw)))`.
+
+## Next
+
+- [Components → Undo toast](/components/undo-toast/) — the visible surface.
+- [Runtime → Action dispatcher](/runtime/dispatcher/) — the pre-wrapper surface.
+- [Concepts → Policy](/concepts/policy/) — `reversibility_surfaced` + ambient satisfiers.

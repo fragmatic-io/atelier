@@ -1,0 +1,104 @@
+name: site-deploy
+
+# Builds the @atelier/marketing AND @atelier/docs Astro sites and deploys them
+# to GitHub Pages as ONE merged artifact under a single Pages source.
+#
+# Layout in the deployed artifact:
+#   /                   — apps/marketing/dist/  (the brand-pitch site)
+#   /docs/              — apps/docs/dist/       (this Starlight developer docs site)
+#
+# Why one workflow: GitHub Pages allows one source per repo. Two independent
+# deploy-pages workflows would race; last write wins, the loser's surface
+# disappears. Merging into a single artifact in one workflow avoids that.
+#
+# REQUIRES (one-time, repo-owner action):
+#   Settings → Pages → Source: "GitHub Actions"
+# Until that toggle is flipped, the deploy step will fail with a clear
+# message from actions/configure-pages — the build steps still run, so
+# PRs get build-time validation regardless.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/marketing/**'
+      - 'apps/docs/**'
+      - '.github/workflows/site-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build marketing + docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build marketing site
+        env:
+          # configure-pages sets `base_path` to the Pages base
+          # (e.g. /atelier on fragmatic-io.github.io/atelier, or / for a
+          # custom domain). Marketing lands at the root of that base.
+          MARKETING_BASE: ${{ steps.pages.outputs.base_path }}
+          MARKETING_SITE: ${{ steps.pages.outputs.origin }}
+        run: pnpm --filter @atelier/marketing build
+
+      - name: Build docs site
+        env:
+          # Docs lives at /<base>/docs — concatenate.
+          DOCS_BASE: ${{ steps.pages.outputs.base_path }}/docs
+          DOCS_SITE: ${{ steps.pages.outputs.origin }}
+        run: pnpm --filter @atelier/docs build
+
+      - name: Merge artifacts
+        # Marketing → /, docs → /docs/. The docs build emits its own subpath
+        # in `base`, so files inside apps/docs/dist already reference
+        # /atelier/docs/* correctly; we just nest the directory under the
+        # marketing artifact.
+        run: |
+          mkdir -p _site
+          cp -r apps/marketing/dist/. _site/
+          mkdir -p _site/docs
+          cp -r apps/docs/dist/. _site/docs/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

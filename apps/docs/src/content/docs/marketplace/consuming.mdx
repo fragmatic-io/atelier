@@ -1,0 +1,215 @@
+---
+title: Consuming
+description: Consumer walkthrough — fetch, verify, install.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+This page walks a consumer through fetching, verifying, and installing a marketplace bundle.
+
+## What you're consuming
+
+A `SignedBundle` from a publisher you may or may not have interacted with before. Your job:
+
+1. Verify the signature.
+2. Reconcile against your TOFU cache (or a pinned fingerprint).
+3. Inspect the recipe + scopes.
+4. Walk the user through consent.
+5. Install.
+
+## The walkthrough
+
+<Steps>
+
+1. **Resolve the address.**
+
+   ```ts
+   import { parseMarketplaceAddress } from '@atelier/schemas';
+
+   const address = parseMarketplaceAddress('atelier://acme/founder-inbox@1.0.0');
+   ```
+
+   `parseMarketplaceAddress` validates the URI shape and throws on malformed input.
+
+2. **Fetch the bundle.**
+
+   ```ts
+   import { MarketplaceClient, LocalStorageTrustedKeyStore } from '@atelier/vault-client';
+
+   const client = new MarketplaceClient({
+     vaultUrl: 'https://vault.example',
+     trustedKeys: new LocalStorageTrustedKeyStore(),
+   });
+
+   try {
+     const payload = await client.fetch(address);
+     console.log(payload.recipe); // RecipeSchema-shaped
+     console.log(payload.skills); // Array of skills
+   } catch (err) {
+     // Three possible errors:
+     //   SignatureMismatchError       — signature didn't verify
+     //   MarketplaceTrustError        — TOFU mismatch (key rotated)
+     //   MalformedBundleError         — bundle structure invalid
+     handle(err);
+   }
+   ```
+
+   The `client.fetch` flow:
+   1. `GET /vault/marketplace/<author>/<persona>@<version>` from the vault.
+   2. Verify the signature locally.
+   3. Check the TOFU cache — record on first contact, throw `MarketplaceTrustError` on mismatch.
+   4. (If `?signed_by=` was present) check the pin matches `bundle.key_id`.
+   5. Return the payload.
+
+3. **Inspect the recipe.**
+
+   ```ts
+   const { recipe, skills } = payload;
+   console.log('Persona:', recipe.persona);
+   console.log('Capabilities granted:', recipe.capability_grants);
+   console.log(
+     'Skills bundled:',
+     skills.map((s) => s.name),
+   );
+   ```
+
+   This is what your consent UI needs to surface. The user is about to grant scopes for these capabilities; they should see them.
+
+4. **Present consent.**
+
+   ```tsx
+   function ConsentScreen({ recipe, skills, onApprove, onDeny }) {
+     return (
+       <Modal>
+         <h2>Install {recipe.persona}?</h2>
+         <p>{recipe.description}</p>
+         <h3>Capabilities granted</h3>
+         <ul>
+           {recipe.capability_grants.map((c) => (
+             <li key={c}>{c}</li>
+           ))}
+         </ul>
+         <h3>Skills</h3>
+         <ul>
+           {skills.map((s) => (
+             <li key={s.name}>
+               {s.name} — {s.description}
+             </li>
+           ))}
+         </ul>
+         <ButtonGroup>
+           <Button variant="ghost" onClick={onDeny}>
+             Cancel
+           </Button>
+           <Button variant="primary" onClick={onApprove}>
+             Install
+           </Button>
+         </ButtonGroup>
+       </Modal>
+     );
+   }
+   ```
+
+5. **Install.**
+
+   ```ts
+   import { installRecipeBundle } from '@atelier/runtime';
+
+   await installRecipeBundle({
+     recipe: payload.recipe,
+     skills: payload.skills,
+     brandKit: payload.brand_kit,
+     services: yourCirRuntimeServices,
+   });
+   ```
+
+   `installRecipeBundle`:
+   1. Writes the recipe to `recipes/<persona>.json`.
+   2. Writes the skills to `skills/<name>.skill.md`.
+   3. Writes the brand kit (if any) to `brand_kits/<persona>.json`.
+   4. Refreshes the runtime services so the next compile sees the new files.
+   5. Emits `recipe.installed` on the trigger bus so any subscriber can react.
+
+6. **Trigger a recompile.**
+
+   ```ts
+   await services.triggerBus.publish({
+     type: 'user.recompile_route',
+     user_id,
+     route: '/today',
+   });
+   ```
+
+   The browser refetches; the new manifest reflects the just-installed recipe.
+
+</Steps>
+
+## Pinned fetch
+
+For high-stakes deployments where the consumer wants explicit-key-pinning rather than TOFU:
+
+```ts
+const pinnedAddress = parseMarketplaceAddress(
+  'atelier://acme/founder-inbox@1.0.0?signed_by=8f3a2b1c4d5e6f70',
+);
+
+const payload = await client.fetch(pinnedAddress);
+//   bypasses TOFU; throws MarketplaceTrustError on fingerprint mismatch.
+```
+
+The TOFU cache is not consulted; not updated. The pinned fingerprint is the source of truth.
+
+## TOFU cache management
+
+```ts
+const knownAuthors = await client.trustedKeys.list();
+//   [{ author: 'acme', key_id: '8f3a2b1c4d5e6f70' }, ...]
+
+await client.trustedKeys.delete('acme');
+//   forget acme's fingerprint; next fetch re-establishes TOFU.
+
+await client.trustedKeys.set('acme', '8f3a2b1c4d5e6f70');
+//   pin acme to a specific fingerprint manually.
+```
+
+Useful when:
+
+- A user wants to "reset trust" with an author whose key has rotated.
+- Bootstrapping a new consumer with a curated allowlist (see [TOFU → Strict posture](/marketplace/tofu/#strict-posture-fail-closed-on-first-use)).
+
+## Errors and how to surface them
+
+| Error                    | UX surface                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `MalformedBundleError`   | "This bundle is malformed and can't be installed." (rare; usually a vault bug)               |
+| `SignatureMismatchError` | "This bundle's signature didn't verify. Don't install." (serious — possible tampering)       |
+| `MarketplaceTrustError`  | "This author's signing key changed. Inspect both fingerprints out-of-band before accepting." |
+| Network errors           | "Couldn't reach the vault. Try again later."                                                 |
+
+## CLI surface (roadmap)
+
+The CLI surface for this flow is roadmap. Today it's a JS API. Once V-6 polish lands:
+
+```bash
+pnpm atelier marketplace fetch atelier://acme/founder-inbox@1.0.0
+# Inspect what's in the bundle.
+
+pnpm atelier marketplace install atelier://acme/founder-inbox@1.0.0
+# Walks consent + installs.
+
+pnpm atelier marketplace trust list
+pnpm atelier marketplace trust set <author> <key_id>
+pnpm atelier marketplace trust delete <author>
+```
+
+## What you DON'T do
+
+- **Don't bypass signature verification.** If the signature doesn't verify, the bundle is suspect. Reject.
+- **Don't auto-accept TOFU mismatches.** A key change is a serious event; surface it to the user.
+- **Don't grant scopes the recipe doesn't ask for.** The recipe's `capability_grants` is the canonical list. Anything extra is host overreach.
+
+## Next
+
+- [Marketplace → Trust on first use](/marketplace/tofu/) — how the TOFU cache works under the hood.
+- [Marketplace → Signing](/marketplace/signing/) — what verification actually checks.
+- [Marketplace → Publishing](/marketplace/publishing/) — the author side.

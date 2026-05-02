@@ -1,0 +1,222 @@
+---
+title: Observability
+description: StreamingAuditSink, DebugPanel, CompileBadge — every state transition is recorded.
+---
+
+Atelier's audit pipeline is the source of truth. Every compile, every action dispatch, every policy validation, every trigger fires through it. Without the audit pipeline, you have a magic box LLM compiler. With it, you have an engineering system.
+
+## The audit event shape
+
+```ts
+{
+  "event_id": "evt_xxxx",
+  "timestamp": "2026-05-02T12:00:00.000Z",
+  "user_id": "demo-user",
+  "app_id": "cir.demo",
+  "type": "manifest.compiled",
+  "actor": "user" | "agent" | "system",
+  "before_state_hash": "...",
+  "after_state_hash": "...",
+  "trigger_chain": ["intent.preference_changed:scope=density"],
+  "token_cost": 11423,
+  "duration_ms": 2841,
+  "policy_evaluations": [
+    { "policy": "reversibility_surfaced", "ok": true, "duration_ms": 0.4 },
+    { "policy": "data_access_within_grant", "ok": true, "duration_ms": 0.2 }
+  ],
+  "manifest_id": "m_8f3a2b1c"
+}
+```
+
+Every event carries the same envelope: `event_id`, `timestamp`, `user_id`, `app_id`, `type`, `actor`. Type-specific fields fill the rest.
+
+## The event types
+
+| Type                   | Fired when                                          |
+| ---------------------- | --------------------------------------------------- |
+| `manifest.requested`   | Resolver receives a request.                        |
+| `manifest.cache_hit`   | T4 / T3 cache served.                               |
+| `manifest.cache_miss`  | Both caches missed; compile path triggered.         |
+| `compile.started`      | Compiler begins.                                    |
+| `compile.tool_call`    | Tool-using compiler invokes a tool (Wave C-2).      |
+| `compile.refinement`   | Validation feedback retry (Wave C-1).               |
+| `compile.completed`    | Compile finishes successfully.                      |
+| `compile.budget_check` | `BudgetMeteredCompiler` reads counter.              |
+| `compile.budget_added` | Tokens added to counter.                            |
+| `compile.rejected`     | Budget exceeded / output error / cascaded fallback. |
+| `manifest.compiled`    | Manifest emitted, validated, stored.                |
+| `manifest.served`      | Manifest delivered to renderer.                     |
+| `manifest.invalidated` | Trigger bus invalidated cache entries.              |
+| `policy.evaluated`     | Single policy check.                                |
+| `action.requested`     | Dispatcher receives action.                         |
+| `action.confirmed`     | Confirmation flow accepted.                         |
+| `action.dispatched`    | Backend call initiated.                             |
+| `action.completed`     | Backend call returned successfully.                 |
+| `action.failed`        | Backend call failed; rollback (if any) follows.     |
+| `trigger.published`    | Bus received a publish.                             |
+| `trigger.handled`      | Subscribers ran.                                    |
+| `undo.toast_shown`     | `withUndo()` middleware emitted.                    |
+| `undo.completed`       | User clicked Undo within window; rollback fired.    |
+| `undo.committed`       | Window elapsed; action committed.                   |
+
+## The sinks
+
+```ts
+import { StreamingAuditSink, CompositeAuditSink } from '@atelier/runtime';
+
+const sink = new CompositeAuditSink([
+  new StreamingAuditSink(), // for SSE clients
+  new HttpForwardingSink({ url: 'https://logs.example/atelier' }), // structured logs
+  new ConsoleSink({ level: 'info' }), // dev
+]);
+```
+
+`StreamingAuditSink` is the canonical surface. Emits to anyone subscribed (browsers, the `<DebugPanel>`, `pnpm atelier dev --tail`).
+
+## SSE endpoint
+
+```ts
+// app/api/cir/audit/stream/route.ts
+import { services } from '@/lib/cir-server';
+
+export async function GET(req: Request) {
+  return services.auditSink.toSseResponse(req);
+}
+```
+
+A long-lived SSE stream. Clients subscribe via `EventSource`:
+
+```ts
+const es = new EventSource('/api/cir/audit/stream');
+es.addEventListener('audit', (e) => console.log(JSON.parse(e.data)));
+```
+
+## `<DebugPanel>` (dev only)
+
+```tsx
+import { DebugPanel } from '@atelier/react/debug';
+
+<CirRuntime services={services}>
+  {children}
+  {process.env.NODE_ENV === 'development' && <DebugPanel />}
+</CirRuntime>;
+```
+
+Renders a floating panel:
+
+- Live audit-event stream (filterable by type).
+- Manifest tree inspector for the current route.
+- Cache state (T4 hits / misses).
+- Trigger bus history.
+- Compile-budget chip.
+
+## `<CompileBadge>` (always-on)
+
+```tsx
+import { CompileBadge } from '@atelier/react';
+
+<CompileBadge />;
+```
+
+A small chip in the chrome that surfaces:
+
+- Last compile's `token_cost` + `duration_ms`.
+- Cache state (`hit` / `miss`).
+- Refinement attempt count (Wave C-1).
+- Budget remaining (when `BudgetMeteredCompiler` is wired).
+
+This is principle #5: visible compilation. The user can see when the LLM ran.
+
+## `pnpm atelier dev --tail`
+
+Tail the SSE audit stream from a terminal:
+
+```bash
+pnpm atelier dev --tail-only
+```
+
+Output:
+
+```text
+[12:00:01] manifest.requested  user=demo-user route=/today
+[12:00:01] manifest.cache_miss key=manifest:demo-user:cir.demo:/today:cap_3:int_4
+[12:00:01] compile.started      route=/today compiler=ToolUsingCompiler
+[12:00:03] compile.tool_call    name=lookupCapability args={id:'thread.list'}
+[12:00:04] compile.completed    tokens=11423 duration_ms=2841
+[12:00:04] policy.evaluated     name=reversibility_surfaced result=ok
+[12:00:04] manifest.compiled    id=m_8f3a2b1c
+[12:00:04] manifest.served      id=m_8f3a2b1c
+```
+
+Add `--filter=compile` to subset; `--json` for machine-parseable.
+
+## Forwarding to a log aggregator
+
+```ts
+class HttpForwardingSink implements AuditSink {
+  constructor(private url: string) {}
+
+  async write(event: AuditEvent): Promise<void> {
+    fetch(this.url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(event),
+    }).catch(() => {}); // fire-and-forget
+  }
+}
+```
+
+Forward to BigQuery / DataDog / Honeycomb / Logtail. Index by `user_id` + `type` for typical queries.
+
+## Privacy
+
+Audit events do NOT carry:
+
+- The user's intent profile contents.
+- The free-text onboarding description.
+- The manifest payload (only `manifest_id` + `before_state_hash` / `after_state_hash`).
+- Action input bodies.
+
+What they carry: ids, timings, durations, token counts, policy outcomes. Sufficient for ops; insufficient to reconstruct the user's data.
+
+## Retention
+
+The reference `StreamingAuditSink` does not persist — it only fans out. For durable retention, forward to a sink that writes to your storage. Common patterns:
+
+- 30 days hot in BigQuery / Snowflake.
+- 1 year cold in S3 / GCS.
+- Compliance-driven retention (HIPAA / SOC 2) handled by your existing log infra.
+
+## Querying
+
+Typical queries:
+
+```sql
+-- Average compile duration by route over the last 7 days
+SELECT route, AVG(duration_ms)
+FROM audit_events
+WHERE type = 'manifest.compiled'
+  AND timestamp > DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+GROUP BY route
+ORDER BY 2 DESC;
+
+-- Top 10 users by token spend last 24h
+SELECT user_id, SUM(token_cost)
+FROM audit_events
+WHERE type = 'manifest.compiled'
+  AND timestamp > DATE_SUB(NOW(), INTERVAL 24 HOUR)
+GROUP BY user_id
+ORDER BY 2 DESC
+LIMIT 10;
+
+-- Policy violation rate by policy
+SELECT policy_name, COUNT(*) FILTER (WHERE NOT ok) / COUNT(*) AS violation_rate
+FROM (SELECT UNNEST(policy_evaluations) FROM audit_events) AS policies
+GROUP BY policy_name;
+```
+
+## Next
+
+- [Operations → Cost control](/operations/cost-control/) — using audit data to enforce budgets.
+- [Operations → Performance](/operations/performance/) — using audit data to spot cache misses.
+- [Compiler → Budget enforcement](/compiler/budget/) — `BudgetMeteredCompiler` reads / writes audit events.

@@ -1,0 +1,68 @@
+---
+title: Why Atelier?
+description: Problem space, alternatives, who it's for.
+---
+
+## The problem
+
+Modern software ships static interfaces. A team of designers and engineers decides what the inbox looks like, what the dashboard shows, what the settings page contains — and that's what every user sees. If the user wants something different, they file a feature request and wait quarters.
+
+This is fundamentally backwards once an LLM can reliably translate user intent into a UI specification. The compiler can do it on demand, per user, per route, recomputed only when something material changes.
+
+## Why not just hand-write React per user?
+
+Three reasons:
+
+1. **Token cost.** Free-form HTML/CSS/JSX generation is hundreds of tokens per element. A component name (`<Queue>`) is 1-3 tokens. A 60-component catalog covers 90% of web app patterns at a fraction of the cost.
+2. **Safety.** Components are pre-vetted for accessibility, responsive behaviour, security. Free-form HTML is an XSS vector waiting to happen.
+3. **Consistency.** When every screen is composed from the same primitive vocabulary, the user gets a coherent experience: same motion, same density, same a11y conventions.
+
+## Why not just stuff everything in one giant prompt?
+
+That's how Atelier started. It works at small scale. It breaks at:
+
+- **>200 capabilities.** Token budget blown; the LLM ignores half.
+- **>50 components.** Same problem.
+- **Validation cascades.** When a manifest violates a policy, the LLM never gets to fix its own mistake — it falls through to a deterministic fallback.
+- **Multi-route apps.** Each route is compiled independently; chrome and brand drift across routes.
+
+Wave C (compiler evolution) replaces "single big prompt" with **a single tool-using agent + validation feedback loop**. The agent calls `lookupCapability`, `findComponent`, `validateDraft` as it composes. Tools + reflection capture ~80% of multi-agent benefit at ~20% of cost.
+
+## Who is this for?
+
+**You ship a SaaS product.** Your customers complain that the UI is too dense / too sparse / too cluttered / too sterile. Different cohorts want different shapes. Customisation toggles plus feature flags become unmaintainable. Atelier's intent profile collapses that into one architecture: the user describes what they want, the compiler emits it.
+
+**You ship a developer tool.** Your power users build their own Linear / Notion / Raycast workflows. You want them to compose new views without writing React. The marketplace primitive — `atelier://author/persona@version` — turns recipe-publishing into a first-class operation.
+
+**You ship a horizontal platform.** B2B vertical apps need quick spin-ups. The vertical-specific UX shouldn't require an engineering team per vertical. Atelier's recipes + skills lets a domain expert author the persona; the compiler does the rest.
+
+## Alternatives
+
+| Tool / pattern                          | Strength                           | Where it falls short for personalised UI                                                                                                                |
+| --------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plain React / Vue / Svelte              | Best-in-class authoring experience | Static. Personalisation = feature flags + props.                                                                                                        |
+| Server-driven UI (Airbnb / Lyft / Meta) | Layout JSON over the wire          | Hand-authored on the server. No LLM compile loop. No intent vault.                                                                                      |
+| v0 / Bolt / Tambo / A2UI                | Free-form generation               | Generates net-new apps from a prompt. Doesn't continuously personalise an existing app's UI per user. No baseline component vocabulary, no marketplace. |
+| Rete / no-code builders                 | Drag-and-drop                      | The user authors layouts. Doesn't translate intent into structure automatically.                                                                        |
+| MCP                                     | Capability protocol                | Just the capability layer. No render layer, no intent vault, no compile loop. Atelier sits on top of MCP-style capability definitions.                  |
+
+Atelier picks one specific niche: **continuously recompile an existing app's UI per user, on demand, against a known capability surface and a known component vocabulary.** It is not for net-new app generation; it is for personalising what already exists.
+
+## What you give up
+
+- **Hand-pixel control.** The compiler picks the components. If you want a 6px-margin between two specific items on `/today` for `vid@`, you write a recipe rule, not a CSS file.
+- **Authored UX choreography.** Multi-step flows that depend on micro-interactions can be hard to express in a recipe. You'll find yourself writing skills + custom bindings for those.
+- **Fully offline.** The compiler is online by default. There's a `FallbackCompiler` that ships hand-written manifests for offline / no-key boot — but the primary path involves an LLM call.
+- **Compiler-free dev loop.** During development, the cold path takes 200ms-3s. Most of that is the LLM round-trip. The hot path is sub-frame; the cold path is the trade-off.
+
+## What you get
+
+- **Per-user UI without per-user code.** The compiler emits a manifest the user actually wants, not the one a designer guessed.
+- **Cache invalidation as a first-class architecture.** Triggers, not stale-while-revalidate prayers.
+- **Auditable everything.** Every compile, every action, every policy validation fires through a `StreamingAuditSink`.
+- **A marketplace.** Recipes are signed bundles. `atelier://acme/email-triage@1.0.0` is a thing you can publish, consume, and trust.
+
+## Next
+
+- [Read the ethos](/introduction/ethos/) — the eleven principles that make Atelier opinionated rather than just-another-framework.
+- [Installation](/getting-started/installation/) — the from-zero walkthrough.

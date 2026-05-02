@@ -1,0 +1,185 @@
+---
+title: Publishing
+description: Author walkthrough — sign and publish a bundle.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+This page walks an author through publishing a marketplace bundle end-to-end. The CLI surface is roadmap; today the flow is direct against the vault server.
+
+## What you're publishing
+
+A `SignedBundle`:
+
+```json
+{
+  "address": {
+    "scheme": "atelier",
+    "author": "acme",
+    "persona": "email-triage",
+    "version": "1.0.0"
+  },
+  "payload": {
+    "recipe": {
+      /* RecipeSchema-shaped */
+    },
+    "skills": [
+      { "name": "email-triage", "version": "1.0.0", "markdown": "..." },
+      { "name": "task-extraction", "version": "1.0.0", "markdown": "..." }
+    ],
+    "brand_kit": {
+      /* optional */
+    }
+  },
+  "timestamp": "2026-05-02T12:00:00.000Z",
+  "signature": "...",
+  "public_key": "...",
+  "key_id": "..."
+}
+```
+
+## The walkthrough
+
+<Steps>
+
+1. **Author your recipe + skills + brand kit.**
+
+   ```bash
+   pnpm atelier init my-bundle
+   cd my-bundle
+   # edit recipes/founder-inbox.json + skills/*.skill.md
+   ```
+
+2. **Generate a signing key (one-time per author).**
+
+   ```bash
+   node -e "
+     const crypto = require('crypto');
+     const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+     require('fs').writeFileSync('~/.atelier/keys/acme.private.pem', privateKey.export({ format: 'pem', type: 'pkcs8' }));
+     require('fs').writeFileSync('~/.atelier/keys/acme.public.pem', publicKey.export({ format: 'pem', type: 'spki' }));
+   "
+   chmod 600 ~/.atelier/keys/acme.private.pem
+   ```
+
+   The `atelier marketplace keygen` subcommand will ship; until then this one-liner does it.
+
+3. **Build the bundle payload.**
+
+   ```ts
+   // build-bundle.ts
+   import { canonicalJsonStringify } from '@atelier/schemas';
+   import * as fs from 'node:fs';
+   import * as crypto from 'node:crypto';
+
+   const recipe = JSON.parse(fs.readFileSync('recipes/founder-inbox.json', 'utf-8'));
+   const skills = fs.readdirSync('skills').map((file) => {
+     const markdown = fs.readFileSync(`skills/${file}`, 'utf-8');
+     const name = file.replace('.skill.md', '');
+     return { name, version: '1.0.0', markdown };
+   });
+
+   const address = {
+     scheme: 'atelier' as const,
+     author: 'acme',
+     persona: 'founder-inbox',
+     version: '1.0.0',
+   };
+
+   const payload = { recipe, skills };
+   const timestamp = new Date().toISOString();
+
+   const canonical = canonicalJsonStringify({ address, payload, timestamp });
+
+   const privateKey = crypto.createPrivateKey({
+     key: fs.readFileSync(process.env.HOME + '/.atelier/keys/acme.private.pem'),
+     format: 'pem',
+   });
+   const publicKey = crypto.createPublicKey(privateKey).export({ format: 'der', type: 'spki' });
+   const publicKeyB64 = publicKey.toString('base64');
+   const signature = crypto.sign(null, Buffer.from(canonical), privateKey).toString('base64');
+   const key_id = crypto.createHash('sha256').update(publicKey).digest('hex').slice(0, 16);
+
+   const bundle = {
+     address,
+     payload,
+     timestamp,
+     signature,
+     public_key: publicKeyB64,
+     key_id,
+   };
+
+   fs.writeFileSync('bundle.json', JSON.stringify(bundle, null, 2));
+   ```
+
+4. **Publish to the vault.**
+
+   ```bash
+   curl -X POST http://localhost:4001/vault/marketplace/publish \
+     -H 'content-type: application/json' \
+     -d @bundle.json
+   ```
+
+   On success: `201 Created` with `{ address, key_id }`.
+
+   On failure:
+   - `400 { error: 'malformed bundle', issues: [...] }` — schema mismatch.
+   - `400 { error: 'signature verification failed', reason: '...' }` — signature didn't verify against the embedded public key.
+   - `400 { error: 'key_id mismatch' }` — `key_id` is not `sha256(public_key)[:16]`.
+
+5. **Verify the publish.**
+
+   ```bash
+   curl http://localhost:4001/vault/marketplace/acme/founder-inbox@1.0.0
+   ```
+
+   You should see the bundle round-tripped verbatim. The vault stores what you sent; it never re-signs.
+
+</Steps>
+
+## What the vault checks
+
+When a bundle hits `POST /vault/marketplace/publish`:
+
+1. **Schema parse.** The body must match `SignedBundleSchema`. Malformed → 400.
+2. **Signature verification.** The signature must verify against the embedded public key over the canonical JSON of `{ address, payload, timestamp }`. Bad signature → 400.
+3. **Key id derivation.** `key_id` must equal `sha256(public_key)[:16]`. Mismatch → 400.
+4. **Address validation.** Author / persona / version must match the canonical regex / semver shape. Malformed → 400.
+5. **Store.** If everything passes, the bundle is stored verbatim under `(author, persona, version)`. Republishing the same key overwrites.
+
+The vault never re-signs. It's a durable storage + re-serving surface, not a re-attestation authority.
+
+## Authoring workflow tips
+
+- **Bump `version` for every change.** Per-version immutability is a follow-up; until then the recommended discipline is to bump for any publish.
+- **Sign canonical JSON, not pretty JSON.** The encoder sorts keys at every depth; `JSON.stringify(value, null, 2)` does NOT produce canonical output.
+- **Test verification before publish.** Run `verifySignature(canonical, signature, publicKey)` locally; if that fails, the publish will fail too.
+- **Don't ship private keys.** The bundle carries the public key; the private key never leaves your environment.
+- **Document the bundle.** Recipes are dense; consumers want to know what scopes they're granting and what skills are included before they install. A `README.md` alongside each bundle helps.
+
+## Distribution beyond a single vault
+
+Today, a publish targets one vault. Multi-vault distribution (mirroring across hosts) is roadmap. The signed bundle's authenticity travels with the bytes — any Atelier-compatible vault can serve it once it has the bytes — but discovery / federation is V-6+.
+
+## Republishing semantics
+
+| Scenario                                                    | Result                                                                    |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Republish same `<author>/<persona>@<version>` with same key | Overwrites; consumers see new bytes on next fetch.                        |
+| Republish with a different key                              | Same overwrite; consumers' TOFU cache rejects on next fetch (key change). |
+| Publish a new version                                       | New bundle; old version still fetchable.                                  |
+
+Per-version immutability is roadmap.
+
+## Status
+
+- ✅ **V-6 MVP** — addressing, ed25519 signing, TOFU trust model. Server and client implementations.
+- ⏳ **CLI surface** — `atelier marketplace keygen / publish / fetch` subcommands.
+- ⏳ **Per-version immutability**.
+- ⏳ **Mirroring / federation**.
+
+## Next
+
+- [Marketplace → Consuming](/marketplace/consuming/) — what happens on the fetch side.
+- [Marketplace → Trust on first use](/marketplace/tofu/) — how consumers verify your key.
+- [Marketplace → Signing](/marketplace/signing/) — the canonical JSON contract.

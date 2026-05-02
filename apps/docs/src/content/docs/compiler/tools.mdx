@@ -1,0 +1,154 @@
+---
+title: Compiler tools
+description: The nine tools the agent calls during a compile.
+---
+
+The tool-using compiler exposes nine tools to the LLM agent. The agent calls them via Gemini's function-calling protocol. The host provides the implementations through a `ToolEnvironment`.
+
+## The nine tools
+
+| Tool                      | Purpose                                                                    | Phase |
+| ------------------------- | -------------------------------------------------------------------------- | ----- |
+| `lookupCapability`        | Get a capability's full schema by id.                                      | C-2   |
+| `findCapability`          | Substring / semantic search across the capability registry by description. | C-2   |
+| `listCapabilities`        | Flat list of all capability ids and one-line summaries (used for scoping). | C-2   |
+| `findComponent`           | Search the component catalog by hint ("queue with grouping").              | C-2   |
+| `inspectComponent`        | Get a component's full prop schema, composition rules, slot contracts.     | C-2   |
+| `listComponents`          | Flat list of all 67 baseline components.                                   | C-2   |
+| `validateDraft`           | Run the draft manifest through the policy engine; return ok or violations. | C-2   |
+| `inspectExistingManifest` | Read a prior manifest for the same user/route (cross-route coherence).     | C-2   |
+| `listSiblingRoutes`       | List the other routes in the recipe (so chrome / nav stay consistent).     | C-2   |
+
+Two more are deferred:
+
+- `explainViolation` — rolled into the violation strings the validator already returns.
+- `findRecipe` — gated on V-6 / C-5 (marketplace retrieval).
+
+## The `ToolEnvironment` interface
+
+```ts
+import type { Capability, Component, Manifest } from '@atelier/schemas';
+
+export interface ToolEnvironment {
+  capabilities: {
+    lookup(id: string): Promise<Capability | null>;
+    find(query: string): Promise<Capability[]>;
+    list(): Promise<Array<{ id: string; summary: string }>>;
+  };
+  components: {
+    find(hint: string): Promise<Component[]>;
+    inspect(name: string): Promise<Component | null>;
+    list(): Promise<Array<{ name: string; summary: string }>>;
+  };
+  manifests: {
+    inspect(input: { user_id: string; route: string }): Promise<Manifest | null>;
+    listSiblingRoutes(input: { recipe_id: string }): Promise<string[]>;
+  };
+  policies: {
+    validate(draft: Manifest): Promise<{ ok: true } | { ok: false; violations: string[] }>;
+  };
+}
+```
+
+`@atelier/compiler` exports `makeToolEnvironment(...)` that wires the default in-memory implementations. Hosts swap in their own when capabilities live in a database or the registry is served from a CDN.
+
+## Code: a custom tool environment
+
+```ts
+import { makeToolEnvironment } from '@atelier/compiler';
+import type { ToolEnvironment } from '@atelier/compiler';
+
+const env: ToolEnvironment = makeToolEnvironment({
+  capabilities: loadCapabilities('./capabilities'),
+  components: COMPONENT_BINDINGS_METADATA,
+  policies: BASELINE_POLICIES,
+});
+
+// Override `find` with vector search:
+env.capabilities.find = async (query: string) => {
+  const hits = await vectorClient.search('capability_index', { query, k: 10 });
+  return hits.map((h) => h.metadata as Capability);
+};
+```
+
+This is the seam C-3 (capability scoping) and C-5 (marketplace RAG) plug into. The substring fallback ships out of the box; production deploys swap in vector search when registries grow past ~1000 capabilities.
+
+## Tool declarations to the LLM
+
+The compiler ships these as Gemini function declarations:
+
+```ts
+const TOOL_DECLARATIONS = [
+  {
+    name: 'lookupCapability',
+    description:
+      'Get a capability schema by id. Use this when the recipe grants a capability and you need its full input/output/permissions.',
+    parameters: {
+      type: 'object',
+      properties: { id: { type: 'string' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'findComponent',
+    description:
+      'Search the component catalog by a free-form hint. Returns up to 5 candidate components with summaries.',
+    parameters: {
+      type: 'object',
+      properties: { hint: { type: 'string' } },
+      required: ['hint'],
+    },
+  },
+  // ... (full list in @atelier/compiler/src/tools/declarations.ts)
+];
+```
+
+## Validation as a tool
+
+`validateDraft` is the most interesting one. It's the same policy engine that gates the final emit, exposed as a tool the LLM can call _during_ composition:
+
+```text
+agent: I'll draft a layout with <Stack> + <Queue> + <Card>...
+agent (tool call): validateDraft({ ...draft })
+tool reply: { ok: false, violations: ['reversibility_surfaced: thread.archive lacks undo affordance'] }
+agent: Right — I'll add the ambient UndoToast satisfier or include a manifest <Toast variant="undo"> node.
+agent (tool call): validateDraft({ ...patched_draft })
+tool reply: { ok: true }
+agent: Final answer: { manifest: ... }
+```
+
+This is the same loop Wave C-1's `ValidationFeedbackCompiler` runs externally, but now the LLM can fix issues mid-compose without needing the wrapper. The wrapper still catches the case where the LLM's final emit has a violation (a post-hoc check); the in-loop tool-call lets the agent self-correct earlier.
+
+## Substring fallback for C-5
+
+Today's `findCapability` and `findComponent` fall back to substring search across descriptions. This is the seam C-5 RAG swaps in for: replace the substring matcher with a vector-search-backed alternative once recipes are vector-indexed in the marketplace.
+
+## Showcase
+
+The demo runs the tool-using compiler behind `CIR_COMPILER_TOOLS_ENABLED=1`:
+
+```bash
+CIR_COMPILER_TOOLS_ENABLED=1 pnpm --filter @atelier/demo dev
+```
+
+The audit stream shows every tool call:
+
+```text
+[12:00:01] compile.started     compiler=ToolUsingCompiler
+[12:00:02] compile.tool_call   name=listCapabilities  duration_ms=12
+[12:00:02] compile.tool_call   name=findComponent     args={hint:'queue with grouping by date'}
+[12:00:03] compile.tool_call   name=inspectComponent  args={name:'Queue'}
+[12:00:04] compile.tool_call   name=lookupCapability  args={id:'thread.list'}
+[12:00:05] compile.tool_call   name=validateDraft     duration_ms=4
+[12:00:05] compile.completed   tokens=14820 duration_ms=4133 tool_calls=5
+```
+
+## Bounded step limit
+
+The agent loop has a hard step ceiling (default 8 tool-call rounds, configurable). If the agent doesn't converge — keeps calling tools without emitting — the wrapper throws `CompilerOutputError`, which cascades through `CompositeCompiler` to the deterministic fallback. Users never see a stuck UI.
+
+## Next
+
+- [Compiler → Validation feedback](/compiler/validation-feedback/) — what happens when `validateDraft` says "no".
+- [Compiler → Capability scoping](/compiler/capability-scoping/) — Wave C-3 / S-1 swap-in for `findCapability`.
+- [Compiler → Budget enforcement](/compiler/budget/) — `BudgetMeteredCompiler` wraps everything above.

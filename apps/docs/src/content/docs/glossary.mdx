@@ -1,0 +1,116 @@
+---
+title: Glossary
+description: The vocabulary, defined.
+---
+
+This page is the canonical reference for Atelier vocabulary. Every term has a single page elsewhere with the full treatment; this page is the index.
+
+## A
+
+**Action.** A capability dispatch initiated by the user. Routed through `ActionDispatcher`. May render a confirmation surface, may emit an undo toast, fires audit events. See [Runtime → Action dispatcher](/runtime/dispatcher/).
+
+**Action slot.** A named callback prop on a component (`onPrimaryAction`, `onSecondaryAction`, etc.) the renderer wires to a manifest's `actions` array. See ETHOS principle #8.
+
+**Ambient satisfier.** A runtime service that satisfies a policy obligation without requiring a manifest node for it. Canonical example: `UNDO_TOAST_AMBIENT_SATISFIER`. See [Concepts → Policy](/concepts/policy/#ambient-satisfiers).
+
+**Atelier.** The product brand. Built on the CIR architectural pattern. `https://github.com/fragmatic-io/atelier`.
+
+**Audit sink.** A consumer of audit events. `StreamingAuditSink` is the canonical surface; `CompositeAuditSink` fans out. See [Operations → Observability](/operations/observability/).
+
+## B
+
+**Brand kit.** A JSON document matching `BrandTokensSchema`. Tokens for color, typography, density, elevation, motion, voice. See [Concepts → Brand kit](/concepts/brand-kit/).
+
+**Budget enforcement.** `BudgetMeteredCompiler` from `@atelier/compiler`. Per-user / per-app token budget. See [Compiler → Budget enforcement](/compiler/budget/).
+
+## C
+
+**Capability.** A typed action or data resource the app exposes. JSON file matching `CapabilitySchema`. Public, signed, versioned. See [Concepts → Capability](/concepts/capability/).
+
+**Cache cascade.** T5 (browser memory) → T4 (browser IndexedDB) → T3 (server `ManifestStore`) → compile. See [Operations → Performance](/operations/performance/#caching-tiers).
+
+**CIR.** Capability · Intent · Render. The architectural pattern Atelier is built on. See [What is Atelier?](/introduction/what-is-atelier/).
+
+**ComponentBinding.** A registered React component the compiler can pick from. `@atelier/components` ships 67 baselines. Custom bindings are a last resort. See [Components → Catalog](/components/catalog/).
+
+**Composition rule.** A component's `can_contain` / `min_children` / `max_children` declaration. Enforced at compile and at render. See [Components → Composition rules](/components/composition-rules/).
+
+**`ConfirmDialog`.** The component that renders modal / verbal-phrase confirmation surfaces. See [Components → Catalog](/components/catalog/).
+
+## D
+
+**Data resolver.** Maps a manifest's data binding to actual data. `@atelier/data-resolvers`. See [Runtime → Data resolver](/runtime/data-resolver/).
+
+**Density.** A user preference for component spacing (`compact` / `cozy` / `spacious`). Resolved per-route via `resolveDensity(intent, route)`. See [Concepts → Brand kit](/concepts/brand-kit/) and [Concepts → Intent](/concepts/intent/).
+
+**Diff mode.** Compiler optimization where the prior manifest is included in the prompt and only the diff is requested. 70-90% token savings.
+
+## E
+
+**Edge cache (Tier 2).** Capabilities, skills, components — signed, versioned, infinite-TTL per version. See [Operations → Performance](/operations/performance/).
+
+**ETHOS.** The eleven principles every Atelier implementation honours. See [Introduction → Ethos](/introduction/ethos/).
+
+## I
+
+**IconResolver.** The Vis-3 indirection layer between component code and SVG icon implementations. See [Components → Icons](/components/icons/).
+
+**Intent profile.** The user's lenses, vocabulary, rules, density preference, dark-mode preference, salience overrides. Lives in the vault. See [Concepts → Intent](/concepts/intent/).
+
+## L
+
+**Lens.** A named subview shape declared in `intent.lenses`. `email: 'founder_inbox'` is a lens. See [Concepts → Intent](/concepts/intent/).
+
+## M
+
+**Manifest.** The compiler's output. JSON tree the runtime walks. Cached, versioned, recomputed only on trigger. See [Concepts → Manifest](/concepts/manifest/).
+
+**Marketplace.** The distribution surface for signed recipe + skill bundles. `atelier://author/persona@version`. See [Marketplace → Overview](/marketplace/overview/).
+
+## P
+
+**Persona.** A recipe that targets a specific user shape. `founder` / `student` / `recruiter` are personas. See [Concepts → Recipe](/concepts/recipe/).
+
+**Policy.** A pure function that validates a manifest. `BASELINE_POLICIES` ships seven; `PolicyRegistry` lets apps add custom. See [Concepts → Policy](/concepts/policy/).
+
+**Pre-compiled recipe.** A persona-specific manifest pre-warmed for new users. See [Operations → Cost control](/operations/cost-control/).
+
+## R
+
+**Recipe.** The file humans author. JSON matching `RecipeSchema`. Declares intent surfaces, capability grants, candidate skills, policy obligations. See [Concepts → Recipe](/concepts/recipe/).
+
+**`reversible`.** A capability flag indicating that a rollback capability can undo it. Drives `withUndo()` middleware. See [Concepts → Capability](/concepts/capability/).
+
+## S
+
+**Salience.** A categorical signal (`low` / `medium` / `high`) for capability emphasis. `Capability.salience_level` + `intent.priority_overrides` + `resolveSalience` resolver. See [Concepts → Intent](/concepts/intent/).
+
+**Skill.** Markdown with YAML frontmatter. Capability + usage knowledge. See [Concepts → Skill](/concepts/skill/).
+
+**Soft invalidation.** A manifest is marked stale but still served; recompiled in the background. See [Operations → Performance](/operations/performance/#soft-invalidation).
+
+## T
+
+**Trigger.** An event that causes cache invalidation. Schema / intent / behavioral / explicit / system. See [Concepts → Trigger](/concepts/trigger/).
+
+**TriggerBus.** The runtime's invalidation pipeline. `InMemoryTriggerBus` for dev; `RedisTriggerBus` (S-4) for multi-region. See [Runtime → Trigger bus](/runtime/trigger-bus/).
+
+**TOFU.** Trust on first use. The marketplace's trust model. The first fetch from an author records the `key_id` fingerprint; subsequent fetches must match. See [Marketplace → Trust on first use](/marketplace/tofu/).
+
+**Tool-using compiler.** The Wave C-2 architecture. Single LLM agent + nine tools. See [Compiler → Tools](/compiler/tools/).
+
+## U
+
+**Undo middleware.** `withUndo()` from `@atelier/runtime`. Proxy-wraps any `ActionDispatcher` to emit undo toast events. See [Runtime → Undo middleware](/runtime/undo-middleware/).
+
+## V
+
+**Validation feedback.** The Wave C-1 retry loop — the compiler is re-prompted with policy violations and asked to patch. See [Compiler → Validation feedback](/compiler/validation-feedback/).
+
+**Vault.** The user-owned store for the intent profile. `@atelier/vault-server` is the reference; the wire format is at [`docs/vault-protocol.md`](https://github.com/fragmatic-io/atelier/blob/main/docs/vault-protocol.md).
+
+**Variant.** A semantic axis for component visual treatment (`primary` / `secondary` / `ghost` / `destructive`). See [Components → Variants](/components/variants/).
+
+**Virtualization.** `<VirtualList>` / `<VirtualTable>` from `@atelier/components`. Backed by `@tanstack/react-virtual`. See [Components → Virtualization](/components/virtualization/).
+
+**Voice.** The brand kit's tone declaration. Read by the compiler when generating copy. See [Concepts → Brand kit](/concepts/brand-kit/).

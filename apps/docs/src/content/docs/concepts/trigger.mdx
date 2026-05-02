@@ -1,0 +1,156 @@
+---
+title: Trigger
+description: The trigger bus and how invalidation cascades.
+---
+
+Triggers are the nervous system of Atelier. They are how the world tells the cache to invalidate. Without them, you have a magic-box LLM compiler with no story for "what changed?". With them, you have a system where compile happens rarely and is always justified.
+
+## The taxonomy
+
+### Schema triggers (app-emitted)
+
+- `capability.added`, `.changed`, `.removed`, `.version_bumped`
+- `component.added`, `.changed`, `.removed`, `.version_bumped`
+- `skill.added`, `.changed`, `.removed`
+- `policy.changed`
+
+### Intent triggers (user-emitted)
+
+- `intent.preference_changed { scope }`
+- `intent.lens_switched { app, lens }`
+- `intent.rule_added`, `.removed`, `.modified`
+- `intent.vocabulary_updated`
+
+### Behavioral triggers (system-detected, optional)
+
+- `behavior.workaround_detected` — user does the same multi-step thing 3+ times → suggest a recompile.
+- `behavior.feature_unused` — user never uses 80% of the surface → suggest a simplification recompile.
+- `behavior.error_pattern` — repeated dead-ends → suggest a different layout.
+
+### Explicit triggers (user-initiated)
+
+- `user.recompile_route { route }`
+- `user.recompile_all`
+- `user.revert_manifest { manifest_id }`
+- `user.try_lens { lens_name }`
+
+### System triggers (rare)
+
+- `system.compiler_upgraded` — only invalidates if eval shows divergence.
+- `system.security_revocation` — emergency invalidation when a vault grant is revoked.
+
+## The pipeline
+
+```text
+Trigger emitted
+  ↓
+Trigger Bus
+  ↓
+Routing rules:
+  - which manifests does this affect?
+  - which users are subscribed?
+  - which routes are hot vs cold?
+  ↓
+Invalidation:
+  - hot routes  → recompile immediately, push update
+  - warm routes → mark stale, recompile on next access
+  - cold routes → mark stale, no action until accessed
+  ↓
+Notification:
+  - clients with active sessions get a manifest_updated event
+  - runtime fetches new manifest, swaps in atomically
+```
+
+## The default bus
+
+`@atelier/runtime` ships `InMemoryTriggerBus` for single-process deploys. The interface:
+
+```ts
+export interface TriggerBus {
+  publish(trigger: Trigger): Promise<void>;
+  subscribe(pattern: TriggerPattern, handler: (t: Trigger) => void): () => void;
+}
+```
+
+Production multi-region deploys swap to a distributed bus (`RedisTriggerBus` is roadmap S-4; the seam is the same interface).
+
+## Code: publishing a trigger
+
+```ts
+import { InMemoryTriggerBus } from '@atelier/runtime';
+
+const bus = new InMemoryTriggerBus();
+
+await bus.publish({
+  type: 'intent.preference_changed',
+  user_id: 'demo-user',
+  scope: 'global_preferences.density',
+  emitted_at: new Date().toISOString(),
+});
+```
+
+## Code: subscribing
+
+```ts
+const unsubscribe = bus.subscribe('intent.*', async (trigger) => {
+  if (trigger.type === 'intent.preference_changed') {
+    await manifestStore.invalidate({
+      user_id: trigger.user_id,
+      depends_on_intent_scope: trigger.scope,
+    });
+  }
+});
+```
+
+## SSE wire transport
+
+The runtime ships `StreamingAuditSink` and an SSE-based `TriggerBus` adapter so triggers cascade across browser tabs and across host processes (when paired with a server-side fan-out). The demo's `/api/triggers/publish` endpoint is the host-side ingress; the browser's `EventSource` listens for `manifest_updated` events and re-fetches.
+
+## What invalidates what
+
+| Trigger                      | Invalidates                                                    |
+| ---------------------------- | -------------------------------------------------------------- |
+| Capability schema changed    | All manifests using `cap_<old_version>` for that app           |
+| Capability removed           | All manifests referencing the capability — fail loudly         |
+| Component added              | Nothing (additive)                                             |
+| Component removed            | All manifests using that component — fail loudly               |
+| Skill content changed        | Manifests compiled with affected skill (semantic invalidation) |
+| Policy added/strengthened    | All manifests for that app — re-validate                       |
+| Policy relaxed               | Nothing                                                        |
+| Intent profile slice changed | Manifests dependent on that slice                              |
+| User explicit recompile      | The specific manifest                                          |
+| User reverts manifest        | None — serves prior cached manifest                            |
+
+See the full matrix in [`docs/caching.md`](https://github.com/fragmatic-io/atelier/blob/main/docs/caching.md).
+
+## Behavioral triggers — the subtle one
+
+A user repeatedly does the same workaround. Example:
+
+- User opens email
+- User clicks "Create task from this"
+- User pastes the email subject as task title
+- User sets due date matching the email's mention of "Friday"
+
+If this pattern repeats 3+ times within a week, the system can emit:
+
+```ts
+{
+  type: 'behavior.workaround_detected',
+  user_id, app_id,
+  pattern: 'thread_to_task_with_extracted_date',
+  occurrences: 4,
+  proposed_capability: 'task.create_from_thread',
+  proposed_recompile: ['/today', '/inbox']
+}
+```
+
+The agent surfaces a one-line suggestion: _"Want me to set this up automatically? I noticed you've done this 4 times this week."_ The user accepts → intent profile updated → manifest recompiled. The workflow gets faster.
+
+This is how the system learns without spying. Behavioral signals are observed but not stored beyond the suggestion; once the user decides, the signal is discarded. The `BehavioralPatternDetector` interface exists in `@atelier/policies`; concrete heuristics ship later.
+
+## Next
+
+- [Runtime → Trigger bus](/runtime/trigger-bus/) — the implementation surface.
+- [Concepts → Manifest](/concepts/manifest/) — what gets invalidated.
+- [Operations → Performance](/operations/performance/) — cache hit rates and trigger frequency.

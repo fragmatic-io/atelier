@@ -1,0 +1,142 @@
+---
+title: Your first app
+description: Boot the Aurora demo and watch a real compile fire.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+This page walks you through Aurora — the canonical Atelier demo — end to end. By the time you're done, you'll have seen every part of the framework do its job.
+
+## What is Aurora?
+
+Aurora is a personalisation showcase. It is not a productivity app pretending to be useful — it's a deliberate end-to-end demonstration that the framework's pieces work together.
+
+It ships **zero custom React components**. Every screen is composed by the LLM compiler from the 67 baseline primitives in `@atelier/components`. If you change the user's intent (density, dark mode, vocabulary, lens), the manifest recompiles and the layout reshapes structurally — not just stylistically.
+
+## Boot
+
+```bash
+# from the repo root
+pnpm --filter @atelier/demo dev
+# → http://localhost:3000
+```
+
+Or with the orchestrated vault + demo together:
+
+```bash
+pnpm demo
+# vault: http://localhost:4001  (consent UI)
+# demo:  http://localhost:3000
+```
+
+## The first-boot path
+
+<Steps>
+
+1. **`/onboarding`** — clean profile state. The vault has no grant for this app.
+2. **Click "Or describe yourself in your own words →".** Type something like:
+
+   ```text
+   I'm a founder. Investor and customer emails should surface above newsletters.
+   I prefer compact density and dark mode. Never auto-send anything; drafts only.
+   ```
+
+3. **Submit.** The host POSTs your text to `/api/cir/onboarding/compile`, which calls `compileIntentProfile()` (Gemini, with a deterministic fallback). About 2-3 seconds later you land on `/onboarding/review` with a draft `IntentProfile` that already has:
+   - `global_preferences.density: "compact"`
+   - `global_preferences.color_mode: "dark"`
+   - `lenses.email: "founder_inbox"`
+   - A `rules` entry capturing the investor / customer surfacing preference
+   - A locked `*` rule capturing "never auto-send"
+
+   <Aside type="note">
+     The free-text description is request-scoped. It's never logged, never persisted. Only the
+     structured `IntentProfile` it compiled into ends up in the vault.
+   </Aside>
+
+4. **Edit and save.** The review screen is editable. Tweak anything; click "Looks good".
+5. **The host requests a vault grant.** A consent screen renders (on the vault, not the host) listing the scopes the demo wants: `lens.today`, `lens.thread`, `vocabulary.read`, `preferences.read`. Click "Approve".
+6. **Token minted; redirect to `/today`.** This route fires the cold-path compile.
+
+</Steps>
+
+## Watching the compile
+
+Open a second terminal:
+
+```bash
+pnpm atelier dev --tail-only
+```
+
+Visit `/today`. You'll see a sequence like:
+
+```text
+[12:00:01] manifest.requested  user=demo-user route=/today
+[12:00:01] manifest.cache_miss key=manifest:demo-user:cir.demo:/today:cap_3:int_4
+[12:00:01] compile.started      route=/today compiler=GeminiCompiler
+[12:00:03] compile.tool_call    name=lookupCapability args={id:'thread.list'}
+[12:00:03] compile.tool_call    name=findComponent args={hint:'queue with grouping'}
+[12:00:04] compile.tool_call    name=validateDraft args={...}
+[12:00:04] compile.completed    tokens=11423 duration_ms=2841
+[12:00:04] policy.evaluated     name=reversibility_surfaced result=ok
+[12:00:04] policy.evaluated     name=composes_hierarchy_for_long_lists result=ok
+[12:00:04] manifest.compiled    id=m_8f3a2b1c
+[12:00:04] manifest.served      id=m_8f3a2b1c
+```
+
+That's the cold path. Reload the page; this time you'll see only `manifest.cache_hit` followed by `manifest.served`. Token cost: **zero**.
+
+## Try the runtime
+
+### Switch density
+
+Visit `/settings/intent`. Toggle **density** between `compact`, `cozy`, and `spacious`. Each click:
+
+- Fires `intent.preference_changed { scope: 'global_preferences.density' }` on the trigger bus.
+- Invalidates the cached manifest for `/today`.
+- Re-renders by recompiling. Watch the audit tail.
+
+The structure changes. `<Queue>` rows tighten under `compact`. Cards get more breathing room under `spacious`. **The layout reshapes — it isn't a CSS toggle.**
+
+### Archive a thread
+
+Click **Archive** on any thread on `/today`. A modal renders (because `thread.archive`'s capability declares `confirmation: 'modal'`). Confirm. Two things happen:
+
+1. Optimistic UI: the row disappears immediately.
+2. An ambient `<Toast variant="undo">` pops up with a 5-second countdown. Click **Undo** and the row reappears; the framework dispatches the rollback capability `thread.unarchive`.
+
+This is principle #4 (policies enforce) and principle #9 (resolver fallbacks) in action: the policy `reversibility_surfaced` is satisfied not by a manifest node but by the ambient `UndoToastEmitter` declaring `UNDO_TOAST_AMBIENT_SATISFIER`.
+
+### Recompile from outside
+
+```bash
+curl -XPOST http://localhost:3000/api/triggers/publish \
+  -H 'content-type: application/json' \
+  -d '{"type":"user.recompile_route","user_id":"demo-user","manifest_id":"m_demo_today","route":"/today"}'
+```
+
+The browser refetches via SSE. The audit tail shows the full chain: `trigger.published → manifest.invalidated → compile.started → manifest.compiled → manifest.served`.
+
+## The shape of the code
+
+```text
+apps/demo/
+├── app/                       # Next.js 15 App Router
+│   ├── api/cir/compile/       # the host's compile endpoint
+│   ├── api/cir/audit/stream/  # SSE audit tail
+│   ├── api/triggers/publish/  # the trigger-bus ingress
+│   └── (routes)/              # all routes are <CirRoute path="..." />
+├── lib/
+│   ├── cir-server.ts          # registers compiler + dispatcher + policies + resolver
+│   ├── intent-store.ts        # vault client (with localStorage fallback in dev)
+│   └── fake-manifests.ts      # the FallbackCompiler's hand-written reference manifests
+├── recipes/                   # the persona recipe(s) the compiler reads from
+└── capabilities/              # this demo's typed actions + data
+```
+
+Every Atelier app has roughly this shape: a `lib/cir-server.ts` that wires the runtime (compilers, dispatcher, policies, resolver, audit sinks), recipes per persona, and the host framework (Next.js here, but the runtime is framework-agnostic).
+
+## Next
+
+- [Your first recipe](/getting-started/your-first-recipe/) — author a recipe yourself.
+- [Concepts → Capability](/concepts/capability/) — what those `.json` files in `capabilities/` mean.
+- [Compiler → Overview](/compiler/overview/) — what just happened during that 2-3 second cold compile.

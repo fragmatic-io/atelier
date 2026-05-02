@@ -1,0 +1,189 @@
+---
+title: Trigger bus
+description: InMemoryTriggerBus + future RedisTriggerBus.
+---
+
+The `TriggerBus` is the runtime's invalidation pipeline. Every cache invalidation, every recompile, every cross-tab notification flows through it.
+
+## The interface
+
+```ts
+export interface TriggerBus {
+  publish(trigger: Trigger): Promise<void>;
+  subscribe(pattern: TriggerPattern, handler: (t: Trigger) => void): () => void;
+  // optional:
+  subscribeAll?(handler: (t: Trigger) => void): () => void;
+}
+
+export type TriggerPattern = string; // 'intent.*' / 'capability.*' / 'user.recompile_route'
+```
+
+## The default
+
+`InMemoryTriggerBus` ships with `@atelier/runtime`:
+
+```ts
+import { InMemoryTriggerBus } from '@atelier/runtime';
+
+const bus = new InMemoryTriggerBus();
+
+const unsubscribe = bus.subscribe('intent.*', async (trigger) => {
+  console.log('intent change:', trigger);
+});
+
+await bus.publish({
+  type: 'intent.preference_changed',
+  user_id: 'demo-user',
+  scope: 'global_preferences.density',
+  emitted_at: new Date().toISOString(),
+});
+
+// Later:
+unsubscribe();
+```
+
+In-process, single-Node only. Suitable for development and single-process deploys.
+
+## SSE adapter
+
+For cross-process broadcast (host → all browsers), the runtime ships an SSE adapter:
+
+```ts
+import { createSseTriggerStream } from '@atelier/runtime';
+
+// Host:
+const sse = createSseTriggerStream({ bus });
+app.get('/api/cir/audit/stream', sse.handler);
+
+// Browser side (in @atelier/react):
+import { useTriggerStream } from '@atelier/react';
+
+function App() {
+  useTriggerStream({ url: '/api/cir/audit/stream' });
+  return <YourAppRoot />;
+}
+```
+
+The browser's `EventSource` listens; on `manifest_updated`, the runtime invalidates the affected manifest and re-fetches.
+
+## Pattern matching
+
+```ts
+bus.subscribe('intent.*', handler); // any intent.* trigger
+bus.subscribe('intent.preference_changed', h); // exact match
+bus.subscribe('user.recompile_*', h); // user.recompile_route, user.recompile_all
+bus.subscribe('*', h); // every trigger (use sparingly)
+```
+
+The matcher is glob-style (`*` matches one segment). Future versions may support `**` (multiple segments).
+
+## What the resolver subscribes to
+
+`ManifestResolver` subscribes to:
+
+- `capability.*` — invalidate manifests using the affected capability version.
+- `component.*` — invalidate manifests using removed / deprecated components.
+- `skill.*` — semantic invalidation.
+- `intent.*` — invalidate user's manifests.
+- `policy.*` — re-validate (and recompile if invalid).
+- `user.recompile_*` — explicit recompile.
+
+The handler computes which manifest keys are affected and calls `manifestStore.invalidate(predicate)`.
+
+## RedisTriggerBus (S-4 roadmap)
+
+For multi-process / multi-region deploys, the seam is the same `TriggerBus` interface. Wave S-4 ships `RedisTriggerBus`:
+
+```ts
+import { RedisTriggerBus } from '@atelier/runtime';
+
+const bus = new RedisTriggerBus({ url: process.env.REDIS_URL });
+```
+
+Pub/sub via Redis channels; every subscriber across the cluster receives the trigger. Latency: &lt;10ms within a region; ~50ms cross-region.
+
+A `NATSTriggerBus` is a sibling option for hosts already running NATS.
+
+## The trigger schema
+
+Every trigger conforms to `TriggerSchema`:
+
+```ts
+export const TriggerSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('capability.changed'),
+    app_id: z.string(),
+    capability_id: z.string(),
+    old_version: z.string(),
+    new_version: z.string(),
+    emitted_at: z.string(),
+  }),
+  z.object({
+    type: z.literal('intent.preference_changed'),
+    user_id: z.string(),
+    scope: z.string(),
+    emitted_at: z.string(),
+  }),
+  // ... more variants
+]);
+```
+
+The full taxonomy is in [Concepts → Trigger](/concepts/trigger/).
+
+## Wiring a custom trigger source
+
+```ts
+// When the user clicks "Switch to founder lens":
+async function onLensSwitch(lens: string) {
+  await intentStore.update({ 'lenses.email': lens });
+  await bus.publish({
+    type: 'intent.lens_switched',
+    user_id,
+    app: 'mail.example.com',
+    lens,
+    emitted_at: new Date().toISOString(),
+  });
+}
+```
+
+The bus carries the trigger; the resolver subscribes; the cache invalidates; the next request hits compile.
+
+## Audit integration
+
+The bus emits an audit event on every publish:
+
+```text
+trigger.published   type=intent.preference_changed user=demo-user
+trigger.handled     type=intent.preference_changed handlers=3
+manifest.invalidated keys=4
+```
+
+`<DebugPanel>` surfaces the trigger flow live.
+
+## Server-side ingress
+
+The demo's `/api/triggers/publish` endpoint is the host-side trigger-bus ingress:
+
+```ts
+// app/api/triggers/publish/route.ts
+import { services } from '@/lib/cir-server';
+
+export async function POST(req: Request) {
+  const trigger = await req.json();
+  await services.triggerBus.publish(trigger);
+  return Response.json({ ok: true });
+}
+```
+
+Anyone with HTTP access can publish (auth-gate this in production). External systems (CI bumping a capability schema, an admin tool tweaking an intent rule) drop triggers here.
+
+## Pitfalls
+
+- **Don't subscribe to `*` from many handlers.** Each handler runs synchronously. Many `*` subscribers turn every publish into N synchronous handlers; latency adds up.
+- **Don't fire triggers in tight loops.** Each trigger has overhead; batch when possible.
+- **Don't store trigger state on the bus.** Triggers are events; consumers compute state. The bus is fan-out, not history.
+
+## Next
+
+- [Concepts → Trigger](/concepts/trigger/) — the taxonomy.
+- [Operations → Performance](/operations/performance/) — cache hit rate vs trigger frequency.

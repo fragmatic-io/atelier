@@ -1,0 +1,118 @@
+---
+title: Skill
+description: Markdown with frontmatter — usage knowledge that pairs with capabilities.
+---
+
+A **skill** is a capability plus the knowledge required to use it well. It's the difference between "the LLM has access to `task.create`" and "the LLM knows when extracting a task from a thread is appropriate, and when it's just summarising the thread incorrectly."
+
+Skills are markdown files with YAML frontmatter. They live in `skills/<name>.skill.md`.
+
+## Anatomy
+
+```yaml
+---
+name: email-triage
+version: 1.4.0
+description: Categorize an email thread by urgency and required action
+capabilities_used:
+  - thread.read
+  - thread.classify
+  - task.create
+  - calendar.suggest_event
+when_to_use: |
+  When the user opens a thread that contains explicit asks,
+  deadlines, or commitments. Not for newsletters or notifications.
+when_not_to_use: |
+  Marketing emails. Auth codes. Receipts.
+  System notifications. Anything from no-reply addresses.
+example_flow: |
+  1. Read thread content + sender context
+  2. Classify: action_required | informational | scheduling | follow_up
+  3. If action_required, propose task.create with extracted ask
+  4. If scheduling, propose calendar.suggest_event with extracted date
+  5. Always present as suggestion, never auto-execute
+known_failure_modes:
+  - Confusing FYI emails for action items
+  - Misreading scheduling polls as confirmed events
+  - Treating thread quotes as new asks
+---
+# Email triage
+
+Optional long-form description. Pulled into the compiler prompt at lower priority
+than the frontmatter. Use this for examples, edge cases, vocabulary notes.
+```
+
+## Why skills exist
+
+The compiler is an LLM. LLMs are bad at following arbitrary instructions stuffed into a system prompt. They're better at reading a focused, well-named skill that says "this is when to fire this capability and this is when not to."
+
+Three reasons skills are first-class:
+
+1. **Skill density beats prompt density.** A well-written skill replaces hundreds of tokens of compiler reasoning. Investing in good skills is the highest-leverage token optimisation. Ship skills as carefully as you ship APIs.
+2. **Reviewability.** Skills are markdown. They're code-reviewable. The team can argue about whether `email-triage` should fire on threads with quoted text.
+3. **Versioning.** Skills are versioned. Bumping `email-triage` from `1.4.0` to `1.5.0` invalidates manifests compiled from the old version (semantic invalidation).
+
+## What goes where
+
+| Frontmatter field     | Purpose                                                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `name`                | Stable identifier. Referenced by recipes (`candidate_skills: [...]`) and manifests (`compiled_from.skill_versions`). |
+| `version`             | Semver. Drives semantic invalidation.                                                                                |
+| `description`         | One-line summary. Used by the compiler's `findSkill` tool (when C-5 lands) and the editor's preview.                 |
+| `capabilities_used`   | Which capabilities this skill composes from. The compiler can index by this — "skills that use `task.create`".       |
+| `when_to_use`         | Free-form prose. Conditions under which this skill applies.                                                          |
+| `when_not_to_use`     | The complement. Equally important — over-firing is the most common skill failure mode.                               |
+| `example_flow`        | Step-by-step prose. The compiler reads it as an exemplar, not a rigid template.                                      |
+| `known_failure_modes` | Vital. Tells the compiler what NOT to do.                                                                            |
+
+## Code: parsing a skill
+
+```ts
+import { parseSkillMarkdown } from '@atelier/schemas';
+
+const raw = await fs.readFile('skills/email-triage.skill.md', 'utf-8');
+const skill = parseSkillMarkdown(raw);
+//   skill.name === 'email-triage'
+//   skill.version === '1.4.0'
+//   skill.capabilities_used === ['thread.read', 'thread.classify', ...]
+```
+
+The schema enforces frontmatter shape. Malformed YAML is rejected at parse time with a clear error.
+
+## Skill density vs prompt bloat
+
+A common anti-pattern: cramming too much into the system prompt and writing thin, vague skills. The opposite is the play.
+
+```text
+WEAK SKILL                                STRONG SKILL
+description: Handles emails               description: Categorize an email thread
+                                          by urgency and required action; extract
+                                          tasks from explicit asks; propose
+                                          calendar events from confirmed dates.
+when_to_use: When relevant                when_to_use: When the thread contains
+                                          explicit asks, deadlines, or commitments.
+                                          Not for FYI / newsletters / notifications.
+example_flow: Use the capabilities        example_flow: 1. Read thread + sender ...
+```
+
+The strong version is 5x the bytes and 50x the leverage. The compiler's reasoning budget is finite — invest it where it matters.
+
+## When does a skill bump invalidate?
+
+| Change                                   | Manifests invalidated?                                                     |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| `description` rewrite, no semantic shift | Soft invalidation (recompile in background, swap in)                       |
+| `version` bump                           | Yes — manifests using the old version invalidate                           |
+| `when_to_use` clarification              | Soft invalidation                                                          |
+| `capabilities_used` change               | Yes — semantic shift                                                       |
+| File deletion                            | Yes — fail loudly on next compile if any recipe still references the skill |
+
+## The skill marketplace
+
+Skills, like recipes, can be marketplace primitives. The reference v0 marketplace covers signed recipe + skill bundles together. See [Marketplace → Publishing](/marketplace/publishing/).
+
+## Next
+
+- [Concepts → Capability](/concepts/capability/) — the typed surface a skill composes against.
+- [Concepts → Recipe](/concepts/recipe/) — where skills are listed as `candidate_skills`.
+- [Compiler → Tools](/compiler/tools/) — how the agent discovers skills at compile time.

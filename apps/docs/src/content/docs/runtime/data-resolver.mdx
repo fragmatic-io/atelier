@@ -1,0 +1,214 @@
+---
+title: Data resolver
+description: Resolvers, cursor pagination, virtualization integration.
+---
+
+The `DataResolver` is the runtime surface that maps a manifest's data binding to actual data. Capabilities declare `kind: 'data'` and a pagination strategy; the resolver fetches; components consume.
+
+## The interface
+
+```ts
+export interface DataResolver {
+  fetch(binding: DataBinding): Promise<unknown>;
+  fetchPage?(binding: DataBinding, cursor: string | null): Promise<CursorPaginatedResult>;
+  subscribe?(binding: DataBinding): AsyncIterable<unknown>; // S-3 roadmap
+}
+
+export interface DataBinding {
+  source: string; // capability id, e.g. 'thread.list'
+  filter?: string;
+  sort?: string;
+  group_by?: string;
+  pagination?: 'none' | 'cursor';
+}
+
+export interface CursorPaginatedResult {
+  items: unknown[];
+  next_cursor: string | null;
+  prev_cursor?: string | null;
+}
+```
+
+## The default
+
+`@atelier/data-resolvers` ships:
+
+- `InMemoryDataResolver` — a Map of `source → fetcher`.
+- `paginate()` — wraps a page fetcher into a `CursorPaginatedResult`-emitting source.
+- `withHighSalienceEmphasis` — Wave M auto-emphasis for high-salience items.
+
+```ts
+import { InMemoryDataResolver, paginate } from '@atelier/data-resolvers';
+
+const resolver = new InMemoryDataResolver({
+  'thread.list': async (binding) => {
+    return await db.threads.find(binding.filter ?? '');
+  },
+  'repo.list': paginate(async (cursor) => {
+    const result = await fetch(`/api/repos?cursor=${cursor ?? ''}`).then((r) => r.json());
+    return {
+      items: result.items,
+      next_cursor: result.next_cursor,
+      prev_cursor: result.prev_cursor,
+    };
+  }),
+});
+```
+
+## Code: consuming in React
+
+```tsx
+import { useDataBinding } from '@atelier/react';
+
+function MyList({ binding }) {
+  const { data, loading, error } = useDataBinding(binding);
+  if (loading) return <Skeleton />;
+  if (error) return <Alert tone="danger">{error.message}</Alert>;
+  if (!data?.length) return <EmptyState />;
+  return data.map((item) => <Row key={item.id} {...item} />);
+}
+```
+
+The hook reads the binding's `source` from the manifest, calls `resolver.fetch`, and binds the result to component state. Loading / empty / error fallbacks come from the resolver pipeline (principle #9).
+
+## Cursor pagination (S-2)
+
+```tsx
+import { useDataBindingPaginated } from '@atelier/react';
+
+function MyVirtualList({ binding }) {
+  const { items, fetchNext, fetchPrev, hasMore } = useDataBindingPaginated(binding);
+  return <VirtualList items={items} onFetchMore={fetchNext} onFetchPrev={fetchPrev} />;
+}
+```
+
+The hook handles cursor management; `<VirtualList>` triggers `onFetchMore` at scroll edges. See [Components → Virtualization](/components/virtualization/).
+
+## Salience auto-emphasis (Wave M / P-9)
+
+```ts
+import { withHighSalienceEmphasis } from '@atelier/data-resolvers';
+
+const resolver = new InMemoryDataResolver({
+  'issue.list': withHighSalienceEmphasis(rawIssueListResolver, {
+    salienceLevelOf: (item) => item.salience_level,
+  }),
+});
+```
+
+Items returned with `salience_level: 'high'` get `emphasis: true` automatically. The Octant demo's `issue.list` / `issue.close` / `issue.archive` carry `salience_level: 'high'` for assigned-to-me items; the data resolver flags them; `<Queue>` renders them with emphasis.
+
+## Empty / loading / error slots (P-8)
+
+The walker substitutes manifest-supplied state slots if present, else the resolver's defaults. The resolver pipeline owns the defaults:
+
+```ts
+import { defaultEmptyState, defaultErrorState, defaultLoadingState } from '@atelier/data-resolvers';
+
+// these are the fallbacks injected when the manifest doesn't specify
+```
+
+Manifests opt _out_ ("show nothing instead of an empty state"), not _in_. This is principle #9. See [Components → Composition rules](/components/composition-rules/) for slot semantics.
+
+## SWR integration
+
+For "stale-while-revalidate" semantics, wrap the resolver:
+
+```ts
+import { withSwr } from '@atelier/data-resolvers';
+
+const resolver = withSwr(rawResolver, {
+  revalidateOn: ['focus', 'reconnect'],
+  staleAfterMs: 60_000,
+});
+```
+
+The hook serves stale data immediately, kicks off a revalidate in the background, and updates state when the new data arrives.
+
+## Live subscriptions (S-3 roadmap)
+
+For real-time data, the `subscribe` method returns an `AsyncIterable<T>`:
+
+```ts
+const resolver: DataResolver = {
+  // ...
+  async *subscribe(binding) {
+    const stream = subscribeToWebsocket(binding);
+    for await (const update of stream) {
+      yield update;
+    }
+  },
+};
+```
+
+The React adapter's `useDataBinding` hook will iterate; updates arrive without polling. **Status: roadmap. Wave S-3 gates Coll-1..5 (multiplayer, presence, comments).**
+
+## Data-aware components
+
+Several baseline components are data-aware — they accept a `data` prop with a `DataBinding` and consume the resolver directly:
+
+| Component      | Data-aware?              |
+| -------------- | ------------------------ |
+| `List`         | yes                      |
+| `Table`        | yes                      |
+| `Grid`         | yes (Wave M)             |
+| `Gallery`      | yes (Wave M)             |
+| `Card`         | yes (tile shape, Wave M) |
+| `Queue`        | yes                      |
+| `VirtualList`  | yes (cursor)             |
+| `VirtualTable` | yes (cursor)             |
+| `Kanban`       | yes                      |
+| `Calendar`     | yes                      |
+| `Timeline`     | yes                      |
+| `Tree`         | yes                      |
+| `ChatThread`   | yes                      |
+| `KPIRow`       | yes                      |
+| `StatCard`     | optional                 |
+
+Non-data-aware components consume children, not bindings.
+
+## Code: a custom resolver
+
+```ts
+import {
+  type DataResolver,
+  type DataBinding,
+  type CursorPaginatedResult,
+} from '@atelier/data-resolvers';
+
+export class HttpDataResolver implements DataResolver {
+  constructor(private base: string) {}
+
+  async fetch(binding: DataBinding): Promise<unknown> {
+    const url = this.urlFor(binding);
+    const res = await fetch(url);
+    if (!res.ok) throw new ResolverError('fetch_failed', res.status);
+    return res.json();
+  }
+
+  async fetchPage(binding: DataBinding, cursor: string | null): Promise<CursorPaginatedResult> {
+    const url = `${this.urlFor(binding)}&cursor=${cursor ?? ''}`;
+    const res = await fetch(url);
+    return res.json();
+  }
+
+  private urlFor(binding: DataBinding): string {
+    const params = new URLSearchParams();
+    if (binding.filter) params.set('filter', binding.filter);
+    if (binding.sort) params.set('sort', binding.sort);
+    return `${this.base}/${binding.source}?${params}`;
+  }
+}
+```
+
+## Pitfalls
+
+- **Don't put compute in `fetch`.** The resolver should be a thin shim over a backend. Heavy work belongs in the backend or in middleware.
+- **Don't ignore `binding.filter`.** Skipping the filter at fetch time means the component receives more data than it needs and filters client-side, which defeats the point.
+- **Don't return `null` for empty.** Return `[]`. The walker handles empty arrays gracefully; `null` triggers error paths.
+
+## Next
+
+- [Components → Virtualization](/components/virtualization/) — `<VirtualList>` cursor wiring.
+- [Concepts → Capability](/concepts/capability/) — `expected_count` drives the virtualization nudge.
+- [Operations → Performance](/operations/performance/) — when to add SWR / when to skip.

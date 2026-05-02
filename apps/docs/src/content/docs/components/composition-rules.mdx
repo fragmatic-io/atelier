@@ -1,0 +1,154 @@
+---
+title: Composition rules
+description: can_contain, min_children, max_children — the structural contract.
+---
+
+Every component declares what it can contain and what it can be contained by. The compiler reads these rules to produce valid manifests. The runtime enforces them on render. The validator double-checks them at compile time.
+
+## The schema
+
+```ts
+import { z } from 'zod';
+
+export const CompositionRuleSchema = z.object({
+  can_contain: z.union([z.literal('*'), z.array(z.string())]),
+  min_children: z.number().int().nonnegative().optional(),
+  max_children: z.number().int().positive().optional(),
+  required_children: z.array(z.string()).optional(),
+  forbidden_children: z.array(z.string()).optional(),
+});
+```
+
+## Examples from the catalog
+
+```json
+{
+  "Stack": {
+    "can_contain": "*",
+    "min_children": 1,
+    "max_children": 50
+  },
+  "Card": {
+    "can_contain": ["Stack", "Grid", "DetailView", "Markdown", "Chart"]
+  },
+  "Form": {
+    "can_contain": [
+      "TextInput",
+      "NumberInput",
+      "DateInput",
+      "Select",
+      "MultiSelect",
+      "FileUpload",
+      "RichText"
+    ],
+    "auto_actions": ["submit", "cancel"]
+  },
+  "Tabs": {
+    "can_contain": ["TabPanel"],
+    "min_children": 2,
+    "max_children": 12
+  },
+  "Modal": {
+    "can_contain": "*",
+    "max_children": 1,
+    "forbidden_children": ["Modal", "Drawer"]
+  }
+}
+```
+
+The full file is generated from `@atelier/components` metadata via `pnpm components:sync` and lives at `components/composition-rules.json` in any Atelier app.
+
+## How the compiler reads them
+
+The agent's `findComponent` and `inspectComponent` tools both surface composition rules. When the compiler is composing children for a `<Card>`, it knows the legal child set is `[Stack, Grid, DetailView, Markdown, Chart]` — anything else is rejected.
+
+```text
+agent: I want to put a <Queue> inside a <Card>...
+agent (tool call): inspectComponent({name: 'Card'})
+tool reply: {
+  composition: { can_contain: ['Stack', 'Grid', 'DetailView', 'Markdown', 'Chart'] },
+  ...
+}
+agent: <Queue> isn't legal inside <Card>. I'll wrap it in <Stack>:
+       <Card><Stack><Queue/></Stack></Card>
+```
+
+This is the LLM doing the right thing because the tool surfaced the constraint. Without the tool call, it would try to invent a structure and the validator would reject it; with the tool call, it composes correctly the first time.
+
+## Renderer enforcement
+
+Even when the compiler emits a structurally invalid manifest (e.g. a `<Modal>` containing a `<Modal>`), the runtime catches it before render:
+
+```ts
+function walk(node: ManifestNode): JSX.Element {
+  const rule = COMPOSITION_RULES[node.component];
+  for (const child of node.children ?? []) {
+    if (!isLegalChild(rule, child.component)) {
+      throw new ManifestStructureError(`${child.component} not allowed inside ${node.component}`);
+    }
+  }
+  // ... render
+}
+```
+
+In practice the compile-time validator catches almost everything. Renderer-time errors are the safety net for genuinely malformed manifests (e.g. the host swapped in a buggy custom compiler).
+
+## Slot contracts (Wave 7 P-8)
+
+Beyond `can_contain`, components can declare named slots:
+
+```ts
+const QueueContract = {
+  slots: {
+    empty: { component: 'EmptyState', optional: true },
+    loading: { component: 'Skeleton', optional: true },
+    error: { component: 'Alert', optional: true },
+  },
+};
+```
+
+Manifests opt _out_ ("show nothing instead of an empty state"), not _in_ ("here's the empty state to use, here's the loading state, here's the error state, copy/pasted across every binding"). This is principle #9.
+
+The walker substitutes manifest-supplied slots if present, else the resolver's defaults. Wave 7 P-8 closed inline branches stripped from data-bound primitives — the resolver pipeline supplies `empty` / `loading` / `error` by default; manifests override.
+
+## Adding composition rules to a custom binding
+
+When you genuinely justify a custom binding (rare — see [baseline-vs-custom](/components/baseline-vs-custom/)):
+
+```ts
+import { type ComponentBinding } from '@atelier/components';
+
+const MyCustomBinding: ComponentBinding = {
+  name: 'MyCustomThing',
+  Component: MyCustomReactComponent,
+  contract: {
+    /* ... */
+  },
+  composition: {
+    can_contain: ['Stack', 'Card'],
+    min_children: 0,
+    max_children: 5,
+  },
+};
+```
+
+The validator picks up your custom rules automatically. The compiler's `inspectComponent` tool surfaces them.
+
+## Code: validating a manifest tree against the rules
+
+```ts
+import { validateComposition } from '@atelier/policies';
+import { COMPOSITION_RULES } from '@atelier/components';
+
+const result = validateComposition(manifest, COMPOSITION_RULES);
+//   result.ok === true | false
+//   result.violations === ['Modal cannot contain Modal at routes[0].layout.children[2]']
+```
+
+This is the same function `BASELINE_POLICIES`'s `composition_rules_satisfied` policy calls.
+
+## Next
+
+- [Components → Catalog](/components/catalog/) — the 67 baselines and their compositions.
+- [Components → Variants](/components/variants/) — variant axes.
+- [Concepts → Policy](/concepts/policy/) — how composition rules are validated.

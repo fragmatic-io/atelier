@@ -6,7 +6,7 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  pageKey?: 'home' | 'ethos' | 'start' | 'architecture' | 'demos';
+  pageKey?: 'home' | 'ethos' | 'start' | 'architecture' | 'demos' | 'docs';
 }
 
 const { title, description, pageKey } = Astro.props;
@@ -51,6 +51,11 @@ const link = (path: string) => `${base}${path}`;
             aria-current={pageKey === 'architecture' ? 'page' : undefined}>Architecture</a
           >
           <a href={link('/demos')} aria-current={pageKey === 'demos' ? 'page' : undefined}>Demos</a>
+          <a
+            href={link('/docs/')}
+            aria-current={pageKey === 'docs' ? 'page' : undefined}
+            aria-label="Atelier developer docs">Docs →</a
+          >
           <a
             href="https://github.com/fragmatic-io/atelier"
             rel="noopener noreferrer"

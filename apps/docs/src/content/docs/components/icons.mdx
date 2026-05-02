@@ -1,0 +1,117 @@
+---
+title: Icons
+description: Vis-3 IconResolver + Lucide.
+---
+
+Wave Vis-3 introduces a real `<Icon>` integration. `iconography.allowed_sets` in the brand kit declares which packs are allowed; the resolver renders `<Icon set="lucide" name="archive" />` without authoring per-component icon props.
+
+## The pattern
+
+Components like `<Button icon="archive">` go through the resolver:
+
+```tsx
+<Button icon="archive" variant="ghost">Archive</Button>
+<MetaBadge icon="check-circle" tone="success">Done</MetaBadge>
+<List pinIcon="pin" />
+```
+
+The string `"archive"` is looked up against the brand kit's `iconography.allowed_sets`; the matching SVG renders inline. No host code imports lucide directly per-component.
+
+## The brand kit declaration
+
+```json
+// brand_kits/aurora.json
+{
+  "iconography": {
+    "allowed_sets": ["lucide"],
+    "default_size": "1em",
+    "stroke_width": "1.5"
+  }
+}
+```
+
+Multiple sets allowed; the resolver picks the first set that has the requested name.
+
+## The `IconResolver` context
+
+```tsx
+import { IconResolverContext, LucideIconResolver } from '@atelier/components';
+
+function App() {
+  return (
+    <IconResolverContext.Provider value={LucideIconResolver}>
+      <YourAppRoot />
+    </IconResolverContext.Provider>
+  );
+}
+```
+
+The components consume the context. If no resolver is wired, components fall back to a generic placeholder icon (a small box) and emit a console warning.
+
+## Why a resolver layer
+
+Three reasons:
+
+1. **Tree-shaking.** Lucide ships ~1500 icons. Hosts only want the ~100 they use. The resolver imports per-name, lazily.
+2. **Set-agnosticism.** Tomorrow's host might ship `phosphor` or `tabler` instead of `lucide`. Components don't care; they ask the resolver for `"archive"`.
+3. **Brand kit coupling.** `stroke_width` and `default_size` flow from the brand kit through the resolver. Single point of control.
+
+## Custom icon sets
+
+To ship a custom icon set:
+
+```ts
+import { type IconResolver } from '@atelier/components';
+
+const MyCustomResolver: IconResolver = {
+  name: 'my-app-icons',
+  resolve(name: string): React.ComponentType<IconProps> | null {
+    const map: Record<string, React.ComponentType<IconProps>> = {
+      'my-glyph': MyGlyphSvg,
+      // ...
+    };
+    return map[name] ?? null;
+  },
+};
+
+// Wire alongside Lucide:
+<IconResolverContext.Provider value={composeResolvers([LucideIconResolver, MyCustomResolver])}>
+```
+
+## What components consume icons today
+
+- `<Button>` — `icon` prop (leading or trailing).
+- `<MetaBadge>` — `icon` prop.
+- `<NavBar>` / `<Sidebar>` — nav-item icons.
+- `<List>` / `<Queue>` / `<Table>` — `pinIcon` for pinned-section glyph.
+- `<Toast>` — variant-driven default icons (success / warning / danger).
+- `<EmptyState>` — `icon` prop in addition to optional `illustration`.
+- `<CommandPalette>` — per-command icons.
+
+## Consistent stroke width
+
+Linear renders ~120 distinct icons across the app from a single set with consistent stroke-width. Atelier inherits the discipline: the brand kit's `stroke_width` is the single source of truth. Per-icon overrides exist but are flagged in review.
+
+## Pitfall: icon names that don't exist
+
+If you reference an icon that the resolver can't find, the default behaviour is the placeholder + console warning (degrades gracefully). For stricter hosts, override the resolver to throw:
+
+```ts
+const StrictResolver: IconResolver = {
+  ...LucideIconResolver,
+  resolve(name) {
+    const icon = LucideIconResolver.resolve(name);
+    if (!icon) throw new Error(`Unknown icon: ${name}`);
+    return icon;
+  },
+};
+```
+
+## Status
+
+- ⏳ **Vis-3** — Icon resolver layer + Lucide integration. **1 wk.** Roadmap.
+
+## Next
+
+- [Concepts → Brand kit](/concepts/brand-kit/) — `iconography` configuration.
+- [Components → Variants](/components/variants/) — variants and icons compose on `<Button>` etc.

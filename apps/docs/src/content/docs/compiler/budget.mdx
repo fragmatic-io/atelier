@@ -1,0 +1,164 @@
+---
+title: Budget enforcement (S-6)
+description: Per-user / per-app token budget with deterministic cascade.
+---
+
+`BudgetMeteredCompiler` from `@atelier/compiler` wraps any compiler and enforces a per-user / per-app token budget. Throws `BudgetExceededError` when crossed; the host typically maps this to a `429` plus a "you've hit your daily personalisation budget" UX surface.
+
+This is Wave S-6, shipped in `bc92956`.
+
+## Why budgets matter
+
+Power users will customise aggressively. That's fine — they're the most valuable signal source. But:
+
+- Without a budget: a single user accidentally triggering 100 recompiles in a minute (e.g. by holding down the lens-switcher button) burns $10 of LLM credit silently.
+- With a budget: the same scenario throws `BudgetExceededError` after the configured ceiling, the dispatcher cascades to the fallback compiler, the user sees a small "you're customising fast — slowing down" toast, and the host's bill stays bounded.
+
+## The wrapper
+
+```ts
+import { BudgetMeteredCompiler } from '@atelier/compiler';
+import type { BudgetCounter } from '@atelier/compiler';
+
+const compiler = new BudgetMeteredCompiler(innerCompiler, {
+  budget: { tokens: 50_000, window_ms: 86_400_000 }, // 50k tokens / 24h
+  counter: yourBudgetCounter,
+  keyOf: (input) => `${input.app_id}:${input.user_id}`,
+});
+```
+
+`BudgetMeteredCompiler` runs around any inner compiler (typically `ValidationFeedbackCompiler` wrapping `ToolUsingCompiler`). On every compile:
+
+1. Read the current usage for the key from the `counter`.
+2. If usage already exceeds the budget, throw `BudgetExceededError` immediately.
+3. Run the inner compiler.
+4. Add the resulting `token_cost` to the counter.
+
+## The `BudgetCounter` interface
+
+```ts
+export interface BudgetCounter {
+  read(key: string, window_ms: number): Promise<number>;
+  add(key: string, delta: number, window_ms: number): Promise<void>;
+}
+```
+
+Two reference implementations ship:
+
+- `MemoryBudgetCounter` — in-process map; resets when the process restarts.
+- `RedisBudgetCounter` — Redis with a sliding window via `INCRBY` + `EXPIRE`.
+
+Hosts wire whichever fits their deploy.
+
+## `BudgetExceededError`
+
+```ts
+export class BudgetExceededError extends Error {
+  code = 'BUDGET_EXCEEDED';
+  budget: { tokens: number; window_ms: number };
+  current: number;
+  reset_at: string; // ISO 8601
+}
+```
+
+The host typically catches this in the `/api/cir/compile` endpoint and returns:
+
+```ts
+} catch (err) {
+  if (err instanceof BudgetExceededError) {
+    return Response.json(
+      { error: 'budget_exceeded', current: err.current, reset_at: err.reset_at },
+      { status: 429 },
+    );
+  }
+  throw err;
+}
+```
+
+The runtime sees the `429`, surfaces a soft toast, and keeps serving the prior cached manifest.
+
+## Cascade through Composite
+
+If you wire `BudgetMeteredCompiler` _outside_ the cascade:
+
+```ts
+const compiler = new BudgetMeteredCompiler(new CompositeCompiler([llmCompiler, fallbackCompiler]), {
+  budget,
+  counter,
+});
+```
+
+The budget counts every compile attempt — good if you want hard ceilings.
+
+If you wire it _inside_ the cascade:
+
+```ts
+const compiler = new CompositeCompiler([
+  new BudgetMeteredCompiler(llmCompiler, { budget, counter }),
+  fallbackCompiler,
+]);
+```
+
+The fallback is uncounted — good if you want LLM-cost ceilings but unlimited fallback rendering. **This is the recommended wiring** because the fallback is deterministic and free.
+
+## `mergeCompileBudgets`
+
+When you want layered budgets — e.g. per-user AND per-org — wrap multiple `BudgetMeteredCompiler` instances:
+
+```ts
+import { BudgetMeteredCompiler, mergeCompileBudgets } from '@atelier/compiler';
+
+const userBudget = new BudgetMeteredCompiler(inner, {
+  budget: { tokens: 50_000, window_ms: 86_400_000 },
+  counter: counter,
+  keyOf: (input) => `user:${input.user_id}`,
+});
+
+const orgBudget = new BudgetMeteredCompiler(userBudget, {
+  budget: { tokens: 5_000_000, window_ms: 86_400_000 },
+  counter: counter,
+  keyOf: (input) => `org:${input.org_id}`,
+});
+
+// orgBudget is the outer wrapper; both budgets count.
+```
+
+`mergeCompileBudgets(b1, b2, ...)` is a helper that combines budget records when the host wants to surface "you've used 12% of your personal allowance and your org has used 78% of the team allowance". Useful for the budget UI on `/settings/billing`.
+
+## Demo wiring
+
+The demo wires `BudgetMeteredCompiler` behind `CIR_COMPILE_BUDGET_ENABLED=1` (default off so the dev flow stays unconstrained):
+
+```bash
+CIR_COMPILE_BUDGET_ENABLED=1 \
+CIR_COMPILE_BUDGET_TOKENS=20000 \
+CIR_COMPILE_BUDGET_WINDOW_MS=3600000 \
+pnpm --filter @atelier/demo dev
+```
+
+20k tokens / hour for the demo user. Hit the limit by spamming the lens switcher; watch the audit stream show `compile.rejected` events.
+
+## Audit events
+
+```text
+compile.budget_check    user_id=demo-user current=18420 budget=20000
+compile.started
+compile.completed       tokens=2412
+compile.budget_added    user_id=demo-user delta=2412 new_total=20832
+compile.budget_check    user_id=demo-user current=20832 budget=20000
+compile.rejected        reason=BudgetExceeded reset_at=2026-05-02T14:00:00Z
+```
+
+`<CompileBadge>` surfaces the budget chip ("17.4k / 20k tokens this hour").
+
+## Pitfalls
+
+- **Don't put `BudgetMeteredCompiler` outside `CompositeCompiler`.** That counts fallback renders against the user's LLM budget, which is wrong (the fallback doesn't call the LLM).
+- **Pick the window carefully.** A 24h window is generous; a 1h window forces aggressive throttling. Match the window to your LLM provider's billing granularity.
+- **The counter must be shared across processes.** `MemoryBudgetCounter` only works in single-process deploys. For multi-process / multi-region, use `RedisBudgetCounter`.
+
+## Next
+
+- [Compiler → Validation feedback](/compiler/validation-feedback/) — how retry counts roll up into `token_cost`.
+- [Operations → Cost control](/operations/cost-control/) — token economics in production.
+- [Operations → Observability](/operations/observability/) — the audit pipeline that records every `compile.budget_*` event.

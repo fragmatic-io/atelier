@@ -1,0 +1,63 @@
+---
+title: What is Atelier?
+description: The CIR pattern, Atelier as a product, and the marketplace promise.
+---
+
+Atelier is a **product brand** built on the **CIR architectural pattern**:
+
+- **C**apability — typed actions and data the app exposes (signed, versioned, public).
+- **I**ntent — the user's lenses, vocabulary, density preferences, rules (private, durable, vault-stored).
+- **R**ender — a `Manifest` JSON document produced by an LLM compiler, walked by a dumb client, cached, versioned, recomputed only on trigger.
+
+Both names appear in this documentation. **Atelier** is what you ship; **CIR** is the architectural shorthand you use when explaining how the pieces fit together.
+
+## The one-line thesis
+
+Software ships **capabilities and skills**. Users keep **intent**. Agents emit **UI as ephemeral output** — cached, versioned, recomputed only on trigger.
+
+The first is public, signed by the company, versioned like a database schema. The second is private, durable, owned by the user, portable across apps. The third is disposable — a manifest the runtime renders, never the source of truth. "UI" here means any rendered surface: a web page, a native screen, an inline chat component, a voice prompt, a spatial overlay.
+
+Get this separation right and 90% of software's flexibility problems collapse into one architecture.
+
+## The five public artifacts
+
+These are owned by the app. Signed. Versioned. Cacheable at the edge.
+
+- **Capabilities** (`@atelier/schemas` `CapabilitySchema`) — typed actions + data resources.
+- **Skills** (markdown with YAML frontmatter) — usage knowledge, when-to / when-not-to-use.
+- **Components** (`@atelier/components`) — 67 baseline React primitives plus per-component metadata.
+- **Policies** (`@atelier/policies`) — pure-function validators, baseline + custom.
+- **Brand kit** (`BrandTokensSchema`) — design tokens, typography, density, motion, voice.
+
+## The one private artifact
+
+- **Intent profile** (lives in the vault) — the user's lenses, vocabulary, rules, density preference, dark-mode preference, cross-app workflows. Apps request scoped read access; never write.
+
+## The ephemeral output
+
+- **Manifest** — JSON tree. Compiled once on cold path; cached at three tiers (server `ManifestStore`, browser memory, browser IndexedDB). The runtime walks it. The renderer maps node IDs to registered `ComponentBinding`s. Actions dispatch through the `ActionDispatcher` (modal confirm, optimistic UI, undo).
+
+## The marketplace promise
+
+Atelier's wager: **give the LLM a rich enough primitive marketplace and it will compose any domain UI from baseline components alone.** No per-host React. No bespoke `IssueQueue` / `ProductCard` / `ThreadView` bindings.
+
+That promise is verifiable. The three reference demos — Aurora (productivity), Octant (GitHub issues), Marigold (e-commerce) — all ship **zero custom bindings** as of the marketplace pivot (Wave M, 2026-05-02). A demo's custom-binding count is the single best smell test for whether the framework's marketplace promise is being kept.
+
+## Where this docs site fits
+
+```text
+github.com/fragmatic-io/atelier
+├── README.md                 # repo intro
+├── docs/                     # internal architecture chapters (the source for this site)
+├── apps/marketing/           # the brand-pitch site at /atelier/
+├── apps/docs/                # ← this Starlight docs site at /atelier/docs/
+└── packages/                 # 14 published packages
+```
+
+This site is the **developer documentation** — for someone who wants to install Atelier, build something on it, or understand how a specific subsystem (compiler, runtime, vault, marketplace) actually works. The pitch site at [`/atelier/`](https://fragmatic-io.github.io/atelier/) covers the brand and ethos.
+
+## Next
+
+- [Why Atelier?](/introduction/why-atelier/) — problem space, alternatives, who it's for.
+- [The eleven principles](/introduction/ethos/) — falsifiable rules every implementation honours.
+- [Installation](/getting-started/installation/) — from `git clone` to a personalised UI in 10 minutes.

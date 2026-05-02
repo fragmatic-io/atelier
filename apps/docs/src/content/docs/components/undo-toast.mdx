@@ -1,0 +1,130 @@
+---
+title: Undo toast
+description: Int-8 — withUndo middleware + <Toast variant="undo">.
+---
+
+Wave Int-8 makes undo a first-class action surface across the framework. Every reversible capability dispatch automatically renders a `<Toast variant="undo">` with a 5-second countdown; clicking **Undo** dispatches the rollback capability.
+
+## The wiring
+
+```ts
+import { withUndo, type ActionDispatcher } from '@atelier/runtime';
+import { createUndoToastEmitter } from '@atelier/react';
+
+const undoEmitter = createUndoToastEmitter();
+
+const dispatcher: ActionDispatcher = withUndo(rawDispatcher, {
+  emitter: undoEmitter,
+  defaultWindowMs: 5000,
+});
+```
+
+`withUndo()` is a Proxy wrapper around any `ActionDispatcher`. On every successful undoable dispatch (capability declares `reversible: true`), it emits a `UndoToastEvent` on the supplied emitter. The matching `<Sink>` host component renders the toast.
+
+## The capability declaration
+
+```json
+// capabilities/thread.archive.json
+{
+  "id": "thread.archive",
+  "kind": "action",
+  "version": "1.0.0",
+  "side_effects": ["mutates:thread_state"],
+  "reversible": true,
+  "rollback": "thread.unarchive",
+  "undoable": true,
+  "undo_window_ms": 5000,
+  "low_stakes": true
+}
+```
+
+The combination `reversible: true && undoable: true` triggers the toast surface. `low_stakes: true` enables `useOptimisticAction` auto-wiring (Int-4) so the UI updates immediately without waiting for the dispatch to resolve.
+
+## The `<Toast variant="undo">`
+
+```tsx
+<Toast variant="undo">
+  Archived "Investor update Q2 2026"
+  <Toast.Action onClick={onUndo}>Undo</Toast.Action>
+  <Toast.Countdown ms={5000} />
+</Toast>
+```
+
+The countdown progress bar drains over 5 seconds. Clicking **Undo** before then fires the rollback capability (`thread.unarchive` in this case); the dispatcher executes it; the original action effectively never happened. After 5 seconds, the toast auto-dismisses; the action is committed.
+
+## The ambient satisfier
+
+`UNDO_TOAST_AMBIENT_SATISFIER` in `@atelier/runtime` declares that when the host wires `withUndo()`, the policy `reversibility_surfaced` is satisfied for every reversible capability — without requiring a `<Toast>` node in every manifest:
+
+```ts
+export const UNDO_TOAST_AMBIENT_SATISFIER = {
+  id: 'UNDO_TOAST_AMBIENT_SATISFIER',
+  satisfies: ['reversibility_surfaced'],
+};
+```
+
+This is principle #4 in action: ambient runtime services that satisfy obligations declare _which_ obligations they satisfy and let the validator see them. Without this, every reversible action would need an explicit `<Toast>` node in the manifest — bloat for no reason.
+
+## Code: tying it together in a host
+
+```ts
+// lib/cir-server.ts
+import { configureCirRuntime, withUndo, UNDO_TOAST_AMBIENT_SATISFIER } from '@atelier/runtime';
+import { createUndoToastEmitter } from '@atelier/react';
+
+const undoEmitter = createUndoToastEmitter();
+
+const services = configureCirRuntime({
+  // ... compiler, resolver, policies, manifestStore ...
+  dispatcher: withUndo(rawDispatcher, { emitter: undoEmitter, defaultWindowMs: 5000 }),
+  ambientSatisfiers: [UNDO_TOAST_AMBIENT_SATISFIER],
+});
+```
+
+```tsx
+// app/layout.tsx
+import { UndoToastSink } from '@atelier/react';
+
+export default function RootLayout({ children }) {
+  return (
+    <CirRuntime services={services}>
+      {children}
+      <UndoToastSink emitter={undoEmitter} />
+    </CirRuntime>
+  );
+}
+```
+
+`<UndoToastSink>` renders the toast at a fixed location (typically bottom-right). One sink per app. The emitter / sink pattern lets you swap the visual treatment without changing dispatcher wiring.
+
+## The undo timeline
+
+```text
+T+0     User clicks "Archive"
+T+1ms   Optimistic UI updates (row removed from list)
+T+5ms   withUndo() proxy dispatches thread.archive
+T+50ms  Dispatch resolves; capability succeeds
+T+50ms  UndoToastEvent emitted
+T+55ms  <UndoToastSink> renders <Toast variant="undo">
+T+0..5s Countdown drains
+        - User clicks Undo: thread.unarchive dispatches; row re-appears
+        - Or 5 seconds elapse: toast dismisses; action committed
+```
+
+## What happens if the user undoes mid-dispatch?
+
+Rare in practice (the dispatch typically resolves in &lt;100ms). When it happens, the rollback is queued behind the original dispatch and fires after it resolves. The user sees the row come back; the audit log records both `thread.archive.dispatched` and `thread.unarchive.dispatched`.
+
+## Aurora demo wiring
+
+The Aurora demo wires undo for `thread.archive`, `task.complete`, `task.snooze`, `task.create_from_thread` — all with `undo_window_ms: 5000`. Their rollback capabilities (`thread.unarchive`, `task.reopen`, `task.unsnooze`, `task.delete`) are registered alongside.
+
+## Status
+
+- ✅ **Int-8** — Shipped. `withUndo()` middleware in `@atelier/runtime`; `<Toast variant="undo">` baseline; `useUndoToastEmitter()` hooks; Aurora wired.
+
+## Next
+
+- [Runtime → Undo middleware](/runtime/undo-middleware/) — the `withUndo()` implementation surface.
+- [Runtime → Action dispatcher](/runtime/dispatcher/) — what `withUndo()` proxies.
+- [Concepts → Policy](/concepts/policy/) — `reversibility_surfaced` + ambient satisfiers.

@@ -1,0 +1,167 @@
+---
+title: Contributing
+description: How to contribute to Atelier.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This page is the short-form contributor guide. The repo's `CONTRIBUTING.md` and `AGENTS.md` are the longer-form references.
+
+## Getting set up
+
+```bash
+git clone https://github.com/fragmatic-io/atelier.git
+cd atelier
+pnpm install
+pnpm validate           # license headers + typecheck + lint + format + components:check + tests
+```
+
+`pnpm validate` is the gate. If it passes, your local environment is ready.
+
+## Development loop
+
+```bash
+pnpm test:watch         # vitest in watch mode
+pnpm typecheck:watch    # tsc --build --watch
+pnpm demo               # boots vault + Aurora demo
+pnpm atelier dev --tail # tail audit events
+```
+
+Most changes touch one package + one demo. Tests and typecheck both watch the workspace.
+
+## What lives where
+
+```text
+atelier/
+├── packages/                # 14 published @atelier/* packages
+├── apps/
+│   ├── demo/                # Aurora — the personalisation showcase
+│   ├── demo-dummyjson/      # Marigold — e-commerce
+│   ├── demo-github/         # Octant — GitHub issues
+│   ├── marketing/           # /atelier/ pitch site
+│   └── docs/                # /atelier/docs/ — this site
+├── docs/                    # internal architecture chapters (the SOURCE for the docs site)
+├── capabilities/            # typed action+data definitions
+├── skills/                  # markdown skills with YAML frontmatter
+├── recipes/                 # default manifests per persona
+├── components/              # registry.json + composition-rules.json
+├── policies/                # app-defined declarative policies
+├── tests/                   # cross-package integration tests + marketplace pressure gate
+└── evals/                   # eval scenarios
+```
+
+## Conventions
+
+### Commit messages
+
+Conventional commits. Header ≤ 100 chars. Body ≥ 1 paragraph for non-trivial changes.
+
+```text
+feat(compiler): tool-using agent with 9 tools
+
+ToolUsingCompiler wraps GeminiAgentClient and drives a bounded agent loop
+against a host-supplied ToolEnvironment. Nine tools landed: lookupCapability,
+findCapability, listCapabilities, findComponent, inspectComponent,
+listComponents, validateDraft, inspectExistingManifest, listSiblingRoutes.
+
+Co-Authored-By: ...
+```
+
+The scope (`compiler` / `runtime` / `react` / `components` / `schemas` / `policies` / `evals` / `cli` / `vault-server` / `vault-client` / `keyboard` / `data-resolvers` / `capability-resolver` / `marketing`) matches the package or area. Commitlint enforces the enum.
+
+### License headers
+
+Every TS / JS / CSS file starts with:
+
+```ts
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The Atelier Authors
+```
+
+`pnpm fix:license-headers` adds them; `pnpm check:license-headers` enforces them in CI.
+
+### Tests
+
+- Vitest. Co-located with source (`packages/components/src/Foo.tsx` + `packages/components/test/Foo.test.tsx`).
+- happy-dom for component tests.
+- Test count is monotone. PRs that drop the count are rejected.
+
+### Schema discipline
+
+Shipped artifacts (capabilities, skills, components, policies, recipes) must validate against their schemas in CI:
+
+```bash
+pnpm exec atelier-schemas validate-data --strict
+```
+
+`--strict` rejects `_review` envelope drafts. CI runs this on every PR.
+
+## Honouring the ETHOS
+
+Read [`ETHOS.md`](https://github.com/fragmatic-io/atelier/blob/main/ETHOS.md) before opening a non-trivial PR. The eleven principles are falsifiable. Every PR description that touches `apps/**`, the compiler, or the policy stack should answer:
+
+- **Which principles does this PR honour?**
+- **Which does it violate, and why?**
+- **What follow-up brings the violations back into compliance?**
+
+Pragmatic violations are fine. Unflagged ones aren't.
+
+## Marketplace pressure gate
+
+`tests/marketplace-pressure.test.ts` caps each demo's custom-binding count and ratchets it down. **Adding a new custom binding without first attempting (a) baseline promotion or (b) composition fails the gate.** Lowering the ceiling by deleting a binding is the only way to grow the marketplace.
+
+## When to add a custom binding
+
+Almost never. Read [Components → Baseline vs custom](/components/baseline-vs-custom/) first. The marketplace pivot collapsed 17 custom bindings across the three reference demos to **zero**. If you find yourself authoring one, ask:
+
+1. Is this a duplicate of a baseline component? **Delete and use the baseline.**
+2. Is this app chrome (header / wordmark)? **Compose `<Stack(Logo, NavBar, StatusBar)>`.**
+3. Is this a domain shape (queue / card / list / gallery)? **Promote to baseline, don't entrench another custom.**
+
+## Adding a baseline component
+
+The pattern (set by Wave M's `<Queue>` and `<Logo>` promotions):
+
+1. Spec the contract. Props, action slots, slots for state, composition role, density-awareness.
+2. Implement under `packages/components/src/<Name>/`.
+3. Register in `COMPONENT_BINDINGS`.
+4. Add metadata + composition rule.
+5. Update the catalog summary so the compiler knows when to pick it.
+6. Add tests (`packages/components/test/<Name>.test.tsx`).
+7. Migrate at least one demo to consume it (replacing a custom binding ideally).
+8. Lower the marketplace pressure ceiling.
+9. Update `docs/component-catalog.md` and this site.
+
+## Code review
+
+PRs are reviewed against:
+
+- ETHOS principles.
+- Schema validity (`validate-data --strict`).
+- Test count (monotone).
+- License headers (CI gate).
+- Type safety (no `any`; `as` casts flagged in review).
+- Marketplace pressure (the gate enforces).
+
+## Pull request hygiene
+
+- One coherent change per PR. Don't bundle.
+- Title follows commit-message convention.
+- Description references issues / TODO entries.
+- Screenshots if the change affects user-visible UX.
+- Audit-stream excerpt if the change affects the framework's observability.
+
+## Reporting security issues
+
+Do NOT open a public issue. Email `v@fragmatic.io` (the maintainer mailbox) or use GitHub's [private security advisory](https://github.com/fragmatic-io/atelier/security/advisories).
+
+## License
+
+MIT. By contributing you agree your contributions are licensed under MIT.
+
+## See also
+
+- [`CONTRIBUTING.md`](https://github.com/fragmatic-io/atelier/blob/main/CONTRIBUTING.md) — long-form contributor guide.
+- [`AGENTS.md`](https://github.com/fragmatic-io/atelier/blob/main/AGENTS.md) — coding-agent instructions.
+- [`CODE_OF_CONDUCT.md`](https://github.com/fragmatic-io/atelier/blob/main/CODE_OF_CONDUCT.md) — community expectations.
+- [`ETHOS.md`](https://github.com/fragmatic-io/atelier/blob/main/ETHOS.md) — falsifiable principles.

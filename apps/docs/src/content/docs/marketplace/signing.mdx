@@ -1,0 +1,144 @@
+---
+title: Signing
+description: ed25519 + canonical JSON — what the signature covers.
+---
+
+Marketplace bundles are signed with ed25519. The signature covers the canonical JSON of `{ address, payload, timestamp }`. Canonical here means **sorted-key at every depth** so two semantically-identical objects always serialise to byte-identical inputs.
+
+## The reference encoder
+
+`canonicalJsonStringify` in `@atelier/schemas/src/marketplace.ts` is ~20 lines:
+
+```ts
+export function canonicalJsonStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return '[' + value.map(canonicalJsonStringify).join(',') + ']';
+  }
+  const keys = Object.keys(value).sort();
+  return (
+    '{' +
+    keys.map((k) => JSON.stringify(k) + ':' + canonicalJsonStringify((value as any)[k])).join(',') +
+    '}'
+  );
+}
+```
+
+Do not pull in `json-stable-stringify`. The encoder is small enough to live alongside the schemas.
+
+## Why canonical JSON
+
+Two bundles with the same fields but different key order would otherwise produce different signatures. JSON.stringify isn't deterministic across runtimes / Node versions; canonical JSON is.
+
+## What the signature covers
+
+```ts
+const canonical = canonicalJsonStringify({
+  address: bundle.address,
+  payload: bundle.payload,
+  timestamp: bundle.timestamp,
+});
+
+const signature = ed25519.sign(canonical, privateKey);
+```
+
+The `address` passed to the signer omits any optional `?signed_by=` pin. That parameter is a fetch-time pin, not a property of the bundle — two addresses that differ only in `signed_by` produce identical bundle bytes.
+
+## Verifying
+
+```ts
+import { verifySignature, canonicalJsonStringify } from '@atelier/schemas/marketplace';
+
+function verifyBundle(bundle: SignedBundle): boolean {
+  const canonical = canonicalJsonStringify({
+    address: bundle.address,
+    payload: bundle.payload,
+    timestamp: bundle.timestamp,
+  });
+  return verifySignature(canonical, bundle.signature, bundle.public_key);
+}
+```
+
+Both the vault server and the client run this check. The vault rejects malformed bundles at publish; the client rejects malformed bundles at fetch.
+
+## The `key_id` fingerprint
+
+```text
+key_id = sha256(public_key)[:16]   // first 16 hex chars
+```
+
+The fingerprint is a stable handle for the public key. It's what the consumer's TOFU cache stores; it's what the `?signed_by=` pin refers to.
+
+## Generating a signing key
+
+```bash
+# Using node's crypto API
+node -e "
+  const crypto = require('crypto');
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+  console.log('private:', privateKey.export({ format: 'pem', type: 'pkcs8' }));
+  console.log('public:',  publicKey.export({ format: 'pem', type: 'spki' }));
+"
+```
+
+The `@atelier/cli` will ship a `atelier marketplace keygen` subcommand once V-6 lands publish flows. For now, ed25519 is a stable primitive in `node:crypto` and the keygen is one command.
+
+## Storing the private key
+
+The author's private key never leaves their machine (or their vault — if the vault is acting as the signing authority). The vault server only ever sees the public key, the signature, and the canonical input.
+
+Two storage patterns:
+
+- **Local file.** `~/.atelier/keys/<author>.private.pem`. Permission `0600`. Backed up.
+- **Hardware-backed (recommended for high-stakes).** YubiKey / TPM. The CLI's signing flow signs via the hardware module without exporting the key.
+
+## Rotation
+
+Publish a new key by signing the next version of the bundle with the new key. Consumers see the change as a TOFU mismatch; their UI surfaces both fingerprints; the user accepts the new key explicitly.
+
+A future ergonomic upgrade: signed key-rotation announcements (a `key.rotate` bundle from the same author signed by the OLD key, declaring the new key id). Today, rotation is bare.
+
+## What the bundle looks like on the wire
+
+```json
+{
+  "address": {
+    "scheme": "atelier",
+    "author": "acme",
+    "persona": "email-triage",
+    "version": "1.0.0"
+  },
+  "payload": {
+    "recipe": {
+      /* RecipeSchema-shaped */
+    },
+    "skills": [
+      /* skills */
+    ],
+    "brand_kit": {
+      /* optional */
+    }
+  },
+  "timestamp": "2026-05-02T12:00:00.000Z",
+  "signature": "MEUCIQDx...",
+  "public_key": "MCowBQYDK2VwAyEAr8m...",
+  "key_id": "8f3a2b1c4d5e6f70"
+}
+```
+
+## Errors
+
+| Error                    | Cause                                                     |
+| ------------------------ | --------------------------------------------------------- |
+| `MalformedBundleError`   | Bundle structure violates `SignedBundleSchema`.           |
+| `SignatureMismatchError` | The signature doesn't verify against the public key.      |
+| `KeyIdMismatchError`     | `key_id` is not `sha256(public_key)[:16]`.                |
+| `MarketplaceTrustError`  | TOFU cache shows a different fingerprint for this author. |
+
+The vault returns 400 with the matching error code; the client throws the matching error class.
+
+## Next
+
+- [Marketplace → Trust on first use](/marketplace/tofu/) — how `key_id` flows into the TOFU cache.
+- [Marketplace → Publishing](/marketplace/publishing/) — author walkthrough.
+- [Marketplace → Consuming](/marketplace/consuming/) — consumer walkthrough.

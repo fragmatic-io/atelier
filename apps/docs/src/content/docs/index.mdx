@@ -1,0 +1,84 @@
+---
+title: Atelier
+description: Capability · Intent · Render. The developer documentation for Atelier.
+template: splash
+hero:
+  tagline: Capability · Intent · Render — a production architecture for dynamic software interfaces.
+  actions:
+    - text: Get started
+      link: /getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: Read the ethos
+      link: /introduction/ethos/
+      icon: open-book
+    - text: GitHub
+      link: https://github.com/fragmatic-io/atelier
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+> **Capabilities and skills are the public artifact.**
+> **Intent is the private artifact.**
+> **UI is ephemeral output.**
+
+Software ships **capabilities and skills** (typed actions, data, usage knowledge). Users keep **intent** (preferences, lenses, rules). Agents emit **UI as ephemeral output** — a `Manifest` JSON document the runtime renders. Cached. Versioned. Recomputed only on trigger.
+
+Atelier is the integration of pieces that already exist — MCP-style capabilities, skills, JSON manifest UI, intent profiles, multi-tier caching, pub-sub triggers — into one principled architecture. **Compile rarely, render constantly.**
+
+## Three jumps
+
+<CardGrid>
+  <LinkCard
+    title="From zero to a running demo"
+    description="Clone the repo, install, boot vault + Next.js, watch the Aurora demo compile. Roughly 10 minutes."
+    href="/getting-started/installation/"
+  />
+  <LinkCard
+    title="Concepts in 20 minutes"
+    description="Capability, Intent, Manifest, Recipe, Skill, Brand kit, Policy, Trigger — the eight nouns that make the framework cohere."
+    href="/concepts/capability/"
+  />
+  <LinkCard
+    title="The compiler"
+    description="A single tool-using agent with a validation-feedback loop. Nine tools, retries on policy violation, budget-metered."
+    href="/compiler/overview/"
+  />
+</CardGrid>
+
+## What is Atelier?
+
+Atelier is the product brand. The architectural pattern underneath is **CIR** — Capability, Intent, Render. A small, well-structured catalog of UI primitives plus an LLM compiler can produce any domain UI from a recipe + the user's intent profile + the granted capabilities.
+
+The bet: the next decade of software is built on **capability surfaces** and **ephemeral interfaces**, with users (or agents acting for them) composing what they actually need from a stable substrate.
+
+The interface is not the product. The capability is.
+
+<CardGrid>
+  <Card title="Read the ETHOS" icon="approve-check-circle">
+    Eleven principles every implementation honours. The marketplace pivot (#11) is what turns the framework promise into a product.
+
+    [Read the ethos →](/introduction/ethos/)
+
+  </Card>
+  <Card title="Build something" icon="rocket">
+    `pnpm atelier init` scaffolds a new Atelier app with vault, capabilities, skills, recipes, and a Next.js host wired to the runtime.
+
+    [Installation →](/getting-started/installation/)
+
+  </Card>
+  <Card title="Marketplace" icon="puzzle">
+    `atelier://author/persona@version` addressing, ed25519 signed bundles, TOFU trust on first use. Ship a recipe, not a custom binding.
+
+    [Marketplace overview →](/marketplace/overview/)
+
+  </Card>
+  <Card title="See the roadmap" icon="list-format">
+    Wave M (marketplace pivot) shipped 2026-05-02. Compiler tools (C-2) shipped. Capability scoping (C-3 / S-1) is next.
+
+    [Roadmap →](/roadmap/)
+
+  </Card>
+</CardGrid>

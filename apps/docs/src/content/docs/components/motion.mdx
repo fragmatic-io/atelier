@@ -1,0 +1,111 @@
+---
+title: Motion
+description: Int-1 hooks + Modal/Drawer/Toast/HoverCard transitions.
+---
+
+Atelier's motion layer is the foundation track P-7 (shipped) and the catalog extension Int-1 (roadmap). The contract is: components have entry/exit animations and data-update animations; the brand kit's `motion.duration_scale` and `motion.ease.*` drive them; `prefers-reduced-motion: reduce` is honoured automatically.
+
+## The motion tokens
+
+```json
+// brand_kits/aurora.json
+{
+  "motion": {
+    "duration_scale": "0.16",
+    "ease": {
+      "default": "cubic-bezier(0.2, 0, 0, 1)",
+      "exit": "cubic-bezier(0.4, 0, 1, 1)"
+    },
+    "respect_prefers_reduced": true
+  }
+}
+```
+
+`duration_scale` is the multiplier on a base duration (180ms). Linear's "0.16x" is the reference — snappy, never twitchy.
+
+## Components with built-in motion
+
+| Component   | Animation                                                       |
+| ----------- | --------------------------------------------------------------- |
+| `Modal`     | Backdrop fade + content scale-up on open; reverse on close.     |
+| `Drawer`    | Slide-in from edge; spring on open, eased on close.             |
+| `Toast`     | Slide-up + fade; auto-dismiss with progress bar (`Int-8` undo). |
+| `HoverCard` | Fade + tiny offset on enter; immediate exit on leave.           |
+| `Tooltip`   | 100ms opacity fade after the delay (Int-2).                     |
+| `Accordion` | Height-animated expand/collapse.                                |
+| `Tabs`      | Underline slide between active tabs.                            |
+| `Skeleton`  | Subtle pulse animation while data is loading.                   |
+
+## Code: tapping the motion hook
+
+```tsx
+import { useMotion } from '@atelier/react';
+
+function MyComponent() {
+  const motion = useMotion(); // reads from brand kit
+  return (
+    <div
+      style={{
+        transition: `opacity ${180 * Number(motion.duration_scale)}ms ${motion.ease.default}`,
+      }}
+    >
+      ...
+    </div>
+  );
+}
+```
+
+Almost no host code needs this directly — the baseline components consume the tokens internally. The hook is for genuine custom-binding scenarios.
+
+## `prefers-reduced-motion`
+
+When the user has `prefers-reduced-motion: reduce`, every component skips entry/exit animations entirely. The renderer detects this via media query and propagates a `data-reduced-motion="true"` flag onto the route wrapper; CSS variables fall to instantaneous transitions.
+
+## Data-update animations (Int-1)
+
+The roadmap track Int-1 extends motion to data updates:
+
+- **Row shimmer on update.** When a `<List>` / `<Table>` / `<Queue>` row's data changes, a brief background shimmer marks the change.
+- **Badge pulse on increment.** When a `<MetaBadge>` count goes up, a quick pulse signals it.
+- **Count tick-up easing.** When a `<StatCard>` value changes, the number eases between values rather than snapping.
+
+These honour `motion.duration_scale` and `prefers-reduced-motion: reduce` like the rest. Status: roadmap. Wave 11 / Int-1.
+
+## Authoring motion in a recipe
+
+Recipes don't author motion. The brand kit does. If you want to lengthen all entry animations across the app:
+
+```json
+{
+  "motion": { "duration_scale": "0.24" }
+}
+```
+
+Every component's `Modal` / `Drawer` / `Toast` etc. animation slows by that factor. Single point of control.
+
+## What we deliberately don't do
+
+- **Free-form `framer-motion` annotations in manifests.** Manifests stay declarative; motion is brand-kit policy, not per-node decoration.
+- **Per-component motion overrides.** If `<Modal>` needs different timing than `<Drawer>`, that's a brand-kit-level distinction (the elevation system might supply the difference), not a manifest-time choice.
+- **Spring physics presets.** Cubic beziers cover 95% of cases and compose better with timing tokens.
+
+## Linear's "0.16x" rule
+
+Linear's whole motion system is built around a small handful of duration multipliers. We adopted the same convention because:
+
+1. **Consistency.** Two components animating at slightly different durations feel jittery.
+2. **Single dial.** Tuning is one number, not 30.
+3. **Predictability.** The user's eye learns the timing within seconds and trusts it.
+
+`0.16x` of 1000ms is 160ms — fast enough to feel instant, slow enough to communicate change.
+
+## Status
+
+- ✅ **P-7** — Foundation: `useMotion`, brand-kit tokens, `prefers-reduced-motion` integration, paired transitions on `Modal` / `Drawer` / `Toast` / `HoverCard`.
+- ⏳ **Int-1** — Catalog extension: per-component data-update animations.
+
+## Next
+
+- [Concepts → Brand kit](/concepts/brand-kit/) — where motion tokens live.
+- [Components → Undo toast](/components/undo-toast/) — Int-8's animated countdown.
+- [Components → Variants](/components/variants/) — visual variation; complementary to motion.

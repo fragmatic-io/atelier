@@ -1,0 +1,108 @@
+---
+title: Pinned content
+description: Nav-3 — sticky pinned items in <List> / <Queue> / <Table>.
+---
+
+Wave Nav-3 ships sticky pinned content within scroll regions. `<List>` and `<Table>` already partitioned + stuck pinned items since Wave 7b; the gap was `<Queue>` (per-item `pinned: true` rendered `data-pinned="true"` but didn't partition or stick). Nav-3 closes that gap.
+
+## The shape
+
+```tsx
+<Queue
+  data={{ source: 'thread.list', filter: 'pinned = true OR pinned = false' }}
+  pinIcon="pin" // or null to disable, or { set, name } for an IconRef
+  pinAriaLabel="Pinned"
+  showPinnedSeparator={true}
+/>
+```
+
+When the data source returns items with `pinned: true`, the renderer:
+
+1. **Partitions** pinned items to the top of each group's visible rows.
+2. **Sticks** them via `position: sticky; top: 0; z-index: 10`.
+3. **Adds a faint separator** between the pinned block and the unpinned tail.
+
+## Per-item declaration
+
+The data binding's items carry the `pinned` flag:
+
+```ts
+{
+  id: 't_xxx',
+  subject: 'Investor update Q2',
+  pinned: true,   // ← drives partition + stick
+  // ...
+}
+```
+
+The data resolver's emit format determines this. Hosts can supply pinned items either by query (`WHERE pinned = true`) or by deriving the flag client-side.
+
+## `pinIcon` options
+
+Three shapes:
+
+- **`undefined`** — Unicode pushpin glyph (📌). Default.
+- **`null`** — disable the glyph entirely.
+- **`IconRef`** — `'pin'` (string) or `{ set: 'lucide', name: 'pin' }` for explicit set selection. Renders via the Vis-3 `IconResolver`.
+
+```tsx
+<Queue pinIcon={null}                     /> // no glyph
+<Queue pinIcon="pin"                      /> // resolver picks first set
+<Queue pinIcon={{ set: 'lucide', name: 'pin' }} /> // explicit
+```
+
+## Density-aware
+
+The pinned section emits `data-cir-density="<density>"` so host CSS can tune the sticky offset under `compact`:
+
+```css
+[data-cir-density='compact'] .queue-pinned {
+  top: 4px; /* tighter sticky offset under compact density */
+}
+```
+
+## Shipped across `<List>` / `<Queue>` / `<Table>`
+
+All three baseline collection components:
+
+- **`<List>`** — pinned section at the top of each group.
+- **`<Queue>`** — pinned section partitions to the top of the visible rows; emphasis flag (Wave M) interacts naturally.
+- **`<Table>`** — pinned rows pinned to the top of the table body.
+
+## Code: rendering pinned items
+
+The walker handles the partition automatically. Authors don't compose two trees:
+
+```tsx
+<Queue data={...} pinIcon="pin" />
+// Renderer reads each item's `pinned` flag and:
+// 1. Partitions [pinned items] before [unpinned items]
+// 2. Wraps the pinned block in <div data-section="pinned" style={{ position: 'sticky', top: 0 }}>
+// 3. Inserts <div data-section="separator"> if showPinnedSeparator (default)
+// 4. Renders the unpinned tail
+```
+
+## Pin emphasis interaction (Wave M)
+
+`<Queue>`'s per-item `emphasis: true` flag (mirrors `pinned: true` for non-sticky highlighting) renders alongside pinning:
+
+```ts
+{
+  id: 't_xxx',
+  subject: 'Critical incident',
+  pinned: true,
+  emphasis: true,
+}
+```
+
+Pinned + emphasis = sticky-and-emphasised. Pinned alone = sticky-but-normal. Emphasis alone = normal-position-but-emphasised.
+
+## Status
+
+- ✅ **Nav-3** — Shipped. `<List>` + `<Table>` (Wave 7b); `<Queue>` (Nav-3).
+
+## Next
+
+- [Components → Catalog](/components/catalog/) — `<Queue>` entry.
+- [Components → Breadcrumb trail](/components/breadcrumb-trail/) — Nav-4.
+- [Components → Sidebar persistence](/components/sidebar-persistence/) — Nav-2.
