@@ -10,19 +10,21 @@
 
 ## At a glance
 
-| Wave    | Scope                                                                                                                                                     | Status         | Priority            | Est        | Depends on     |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------- | ---------- | -------------- |
-| **M**   | Marketplace pivot — promote `<Queue>` / `<Logo>` / `<MetaBadge>` to baseline; collapse 15 customs across 3 demos to **0**; ETHOS principle #11; eval gate | ✅ **shipped** | —                   | done       | —              |
-| **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                     | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
-| **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture)                | 📅 **next**    | HIGH                | 4 wk       | M              |
-| **7**   | Personalisation — P-3, P-4, P-7, P-9 (P-1 / P-8 / DD shipped)                                                                                             | 🟡 in flight   | mixed               | 4 wk       | C-Phase-1      |
-| **10**  | Scale tracks — S-1, S-2, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-6 ✅ shipped                                                                               | 📅 planned     | mixed               | 8 wk       | C-Phase-2      |
-| **8**   | Vault marketplace — V-6 (V-1, V-3 ✅ shipped)                                                                                                             | 📅 planned     | MEDIUM              | 4-6 wk     | C, 7           |
-| **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items; Vis-2, Int-4, Int-13, Cnt-8 ✅ shipped)                                                      | 📅 partial     | varies              | 6-10 mo    | C, P-7, S-3    |
-| **12+** | Multi-platform + marketing — N-1..N-5                                                                                                                     | 📅 planned     | LOWER               | 12-16 wk   | M (now proven) |
-| **Op**  | Operational + hardening debt — small, bounded items, do anytime                                                                                           | 📅 open        | LOWER               | <1 wk each | —              |
+| Wave    | Scope                                                                                                                                                          | Status         | Priority            | Est        | Depends on     |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------- | ---------- | -------------- |
+| **M**   | Marketplace pivot — promote `<Queue>` / `<Logo>` / `<MetaBadge>` to baseline; collapse 15 customs across 3 demos to **0**; ETHOS principle #11; eval gate      | ✅ **shipped** | —                   | done       | —              |
+| **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                          | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
+| **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture; **C-1 ✅ shipped**) | 🟡 partial     | HIGH                | 3 wk left  | M              |
+| **7**   | Personalisation — P-3, P-4, P-7, P-9 (P-1 / P-8 / DD shipped)                                                                                                  | 🟡 in flight   | mixed               | 4 wk       | C-Phase-1      |
+| **10**  | Scale tracks — S-1, S-2, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-6 ✅ shipped                                                                                    | 📅 planned     | mixed               | 8 wk       | C-Phase-2      |
+| **8**   | Vault marketplace — V-6 (V-1, V-3 ✅ shipped)                                                                                                                  | 📅 planned     | MEDIUM              | 4-6 wk     | C, 7           |
+| **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items; Vis-2, Int-4, Int-13, Cnt-8 ✅ shipped)                                                           | 📅 partial     | varies              | 6-10 mo    | C, P-7, S-3    |
+| **12+** | Multi-platform + marketing — N-1..N-5 (**N-4 ✅ shipped**)                                                                                                     | 🟡 partial     | LOWER               | 12-16 wk   | M (now proven) |
+| **Op**  | Operational + hardening debt — small, bounded items, do anytime                                                                                                | 📅 open        | LOWER               | <1 wk each | —              |
 
-**Recommended sequence:** R (<1 day) → C-Phase-1 (1 wk, biggest single-day win) → C-Phase-2 (2 wk) → S-1 (when first host hits >150 capabilities) → P-9 (reintroduce salience as policy) → Vis-3 (icon resolver) → 11.x polish picks → N-4 (marketing site) → V-6 (marketplace) → balance of 11 / 12.
+**Recommended sequence (next):** **C-Phase-2 (tools, 2 wk)** → S-1 (when first host hits >150 capabilities) → P-9 (reintroduce salience as policy) → Vis-3 (icon resolver) → 11.x polish picks → V-6 (marketplace) → balance of 11 / 12.
+
+_Already shipped (in order): R → C-Phase-1 → N-4 → marketplace pivot (Wave M) + adjacent (P-8, S-6) before that._
 
 ---
 
@@ -108,11 +110,7 @@ Today's failure modes that get worse at scale:
 
 ### Phase C-1 — validation feedback loop (1 wk; biggest single-day win)
 
-- [ ] **C-1** — On policy violation in the validate hook, re-prompt the SAME LLM with `{draft, violations}` and ask it to patch. Bound to 2-3 retries before cascading to `GenericFallbackCompiler`. Track via the existing `compile.budget_used` audit event so visibility is preserved.
-  - Smallest cheapest highest-leverage change.
-  - Empirical: retry-with-violations recovers ~70% of single-shot failures.
-  - **No deps.** Self-contained in `packages/compiler`.
-  - 1 wk including tests + audit-event wiring.
+- [x] **C-1** — On policy violation in the validate hook, re-prompt the SAME LLM with `{draft, violations}` and ask it to patch. Bound to 2-3 retries before cascading to `GenericFallbackCompiler`. Track via the existing `compile.budget_used` audit event so visibility is preserved. **Shipped `497e99d`** — `ValidationFeedbackCompiler` mirrors the `BudgetMeteredCompiler` wrapper pattern from S-6; new `priorDraft` + `violations` fields on `CompileInput`; refinement-prompt path in `prompts/builder.ts`; demo wiring + tests; cumulative `token_cost`/`duration_ms`/reasoning across attempts; cascade-friendly via `CompilerOutputError`.
 
 ### Phase C-2 — tool-using compiler (2 wk; real architecture shift)
 
@@ -311,7 +309,7 @@ Kept on the roadmap; not on the personalised-web critical path. The marketplace 
 - [ ] **N-1** — iOS SwiftUI native renderer. **4-6 wk.**
 - [ ] **N-2** — Android Jetpack Compose native renderer. **4-6 wk.**
 - [ ] **N-3** — React Native bindings (cheaper bridge — share more with `@cir/react`). **2-3 wk.**
-- [ ] **N-4** — Marketing site / public docs. Astro or similar, GitHub Pages. **1-2 wk.** **Probably the right next-after-Wave-R move** — gives the marketplace pivot story a public home.
+- [x] **N-4** — Marketing site / public docs. Astro + GitHub Pages. **Shipped `fe240d5`** — `apps/marketing/` (5 pages: `/`, `/ethos`, `/start`, `/architecture`, `/demos`), `actions/deploy-pages@v4` workflow at `.github/workflows/marketing-deploy.yml`, vanilla CSS + `prefers-color-scheme` dark mode. **User must enable** Settings → Pages → Source: GitHub Actions before the deploy step fires; build validates on PR regardless.
 - [ ] **N-5** — Cross-platform component variant authoring (one source → web + native). **2 wk.**
 
 ---
