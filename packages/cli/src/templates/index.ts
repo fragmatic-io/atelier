@@ -132,12 +132,20 @@ export default nextConfig;
 }
 
 /**
- * Tailwind config (Vis-2). Pairs with `<CirRoute>`'s
+ * Tailwind config (Vis-2 + Vis-1). Pairs with `<CirRoute>`'s
  * `useColorModeFromIntent`, which mirrors the user's
  * `intent.global_preferences.color_mode` onto `<html data-color-mode>`.
  * The `class` strategy in the array is the bridge for hosts that toggle
  * `class="dark"` on `<html>` directly; the
  * `[data-color-mode="dark"]` selector is what `<CirRoute>` writes.
+ *
+ * Wave 11 / Vis-1 — typography depth. When the host projects the brand
+ * kit's `typography.letter_spacing` / `typography.line_height` to
+ * `--cir-tracking-*` / `--cir-leading-*` CSS variables (typically in
+ * `globals.css`, alongside `--cir-color-*`), the entries below let the
+ * Tailwind utility classes (`tracking-tight`, `leading-normal`, …)
+ * resolve to the brand-kit tokens automatically. Hosts that do not
+ * declare these scales keep the Tailwind defaults.
  */
 export function tailwindConfigTemplate(): string {
   return `// SPDX-License-Identifier: MIT
@@ -152,7 +160,31 @@ const config = {
     './components/**/*.{ts,tsx}',
     './node_modules/@cir/components/dist/**/*.js',
   ],
-  theme: { extend: {} },
+  theme: {
+    extend: {
+      // Vis-1 — typography depth. The runtime projects the brand kit's
+      // typography.letter_spacing / line_height entries to CSS variables;
+      // the utilities below resolve to those variables when present and
+      // fall through to the bare value otherwise.
+      letterSpacing: {
+        tight: 'var(--cir-tracking-tight, -0.02em)',
+        normal: 'var(--cir-tracking-normal, 0)',
+        wide: 'var(--cir-tracking-wide, 0.04em)',
+      },
+      lineHeight: {
+        tight: 'var(--cir-leading-tight, 1.25)',
+        normal: 'var(--cir-leading-normal, 1.5)',
+        loose: 'var(--cir-leading-loose, 1.75)',
+      },
+      // Vis-1 — OpenType feature settings. The runtime composes a single
+      // \`font-feature-settings\` value from the brand kit's typography.opentype
+      // flags and assigns it to --cir-font-feature-settings on :root. Tailwind
+      // utilities can opt in via fontFeatureSettings: 'cir' on a class.
+      fontFeatureSettings: {
+        cir: 'var(--cir-font-feature-settings, normal)',
+      },
+    },
+  },
   plugins: [],
 };
 

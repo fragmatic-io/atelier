@@ -75,7 +75,38 @@
     'JetBrains Mono', 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, monospace;
 
+  /* Typography depth (Wave 11 / Vis-1). Projected from
+     `BrandKit.tokens.typography.letter_spacing` / `.line_height` /
+     `.opentype`. The Tailwind config maps `tracking-{key}` /
+     `leading-{key}` utilities back to these variables. */
+  --cir-tracking-tight: -0.02em;
+  --cir-tracking-normal: 0;
+  --cir-tracking-wide: 0.04em;
+  --cir-leading-tight: 1.25;
+  --cir-leading-normal: 1.5;
+  --cir-leading-loose: 1.7;
+  /* Aurora declares `tabular_numerals: true` + `ligatures: 'common'`. The
+     value is composed from BrandKit.tokens.typography.opentype: with `tnum`
+     and common `liga` enabled. Body inherits via the rule below. */
+  --cir-font-feature-settings: 'tnum' 1, 'liga' 1;
+
   color-scheme: light dark;
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography depth (Wave 11 / Vis-1).                                 */
+/* The body inherits the brand kit's font-feature-settings, and any    */
+/* element marked `data-tnum="true"` (e.g. <Table> numeric cells,      */
+/* <StatCard> values) opts into tabular numerals regardless of any     */
+/* surrounding override. Body line-height defaults to the kit's        */
+/* `normal` step (1.5) so <Markdown> / paragraph copy reads properly.  */
+/* ------------------------------------------------------------------ */
+body {
+  font-feature-settings: var(--cir-font-feature-settings);
+  line-height: var(--cir-leading-normal);
+}
+[data-tnum='true'] {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ------------------------------------------------------------------ */

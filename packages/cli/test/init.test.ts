@@ -66,4 +66,21 @@ describe('runInit()', () => {
     // utility classes we ship from `_variants.ts`.
     expect(tw).toContain('@cir/components');
   });
+
+  it('bridges typography depth tokens to CSS variables (Vis-1)', async () => {
+    await runInit({ dir: '.', cwd: tmp });
+    const tw = await readFile(join(tmp, 'tailwind.config.mjs'), 'utf8');
+    // Letter-spacing utility map points at --cir-tracking-* variables.
+    expect(tw).toContain('letterSpacing');
+    expect(tw).toContain('--cir-tracking-tight');
+    expect(tw).toContain('--cir-tracking-normal');
+    expect(tw).toContain('--cir-tracking-wide');
+    // Line-height utility map points at --cir-leading-* variables.
+    expect(tw).toContain('lineHeight');
+    expect(tw).toContain('--cir-leading-tight');
+    expect(tw).toContain('--cir-leading-normal');
+    expect(tw).toContain('--cir-leading-loose');
+    // OpenType feature settings bridge.
+    expect(tw).toContain('--cir-font-feature-settings');
+  });
 });

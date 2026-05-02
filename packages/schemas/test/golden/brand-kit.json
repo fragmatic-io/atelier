@@ -34,6 +34,41 @@
             },
             "weight": {
               "$ref": "#/properties/tokens/properties/colors"
+            },
+            "letter_spacing": {
+              "$ref": "#/properties/tokens/properties/colors"
+            },
+            "line_height": {
+              "$ref": "#/properties/tokens/properties/colors"
+            },
+            "opentype": {
+              "type": "object",
+              "properties": {
+                "tabular_numerals": {
+                  "type": "boolean"
+                },
+                "ligatures": {
+                  "type": "string",
+                  "enum": [
+                    "common",
+                    "discretionary",
+                    "none"
+                  ]
+                },
+                "optical_sizing": {
+                  "type": "boolean"
+                },
+                "fractions": {
+                  "type": "boolean"
+                },
+                "superscript": {
+                  "type": "boolean"
+                },
+                "subscript": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
             }
           },
           "required": [

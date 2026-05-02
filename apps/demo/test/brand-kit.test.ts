@@ -106,6 +106,36 @@ describe('Aurora brand kit', () => {
     expect(stack.startsWith('Inter')).toBe(true);
   });
 
+  // -------------------------------------------------------------------------
+  // Wave 11 / Vis-1 — typography depth.
+  // -------------------------------------------------------------------------
+
+  it('declares a Linear-style letter_spacing scale (Vis-1)', () => {
+    const ls = DEMO_BRAND_KIT.tokens.typography.letter_spacing;
+    expect(ls).toBeDefined();
+    if (!ls) return;
+    expect(ls['tight']).toBe('-0.02em');
+    expect(ls['normal']).toBe('0');
+    expect(ls['wide']).toBe('0.04em');
+  });
+
+  it('declares a Linear-tight line_height scale (Vis-1)', () => {
+    const lh = DEMO_BRAND_KIT.tokens.typography.line_height;
+    expect(lh).toBeDefined();
+    if (!lh) return;
+    expect(lh['tight']).toBe('1.25');
+    expect(lh['normal']).toBe('1.5');
+    expect(lh['loose']).toBe('1.7');
+  });
+
+  it('declares OpenType feature flags with tabular numerals on (Vis-1)', () => {
+    const ot = DEMO_BRAND_KIT.tokens.typography.opentype;
+    expect(ot).toBeDefined();
+    if (!ot) return;
+    expect(ot.tabular_numerals).toBe(true);
+    expect(ot.ligatures).toBe('common');
+  });
+
   it('shape narrows to BrandKit at the type level (compiles + rejects extras)', () => {
     // Compile-time test: the literal must be assignable to BrandKit.
     const kit: BrandKit = DEMO_BRAND_KIT;

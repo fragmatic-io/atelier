@@ -51,6 +51,17 @@ const PINNED_KEY = 'pinned';
 export interface TableColumn {
   key: string;
   header: string;
+  /**
+   * Wave 11 / Vis-1 — when `true`, cells in this column emit
+   * `data-tnum="true"`. Hosts whose brand kit declares
+   * `tokens.typography.opentype.tabular_numerals: true` activate
+   * `font-variant-numeric: tabular-nums` on these cells via a single CSS
+   * rule (see `apps/demo/app/globals.css` for the worked example). When the
+   * brand kit does not declare the flag, the marker is inert.
+   */
+  numeric?: boolean;
+  /** Optional cell alignment. Cells get `text-align: <align>` when set. */
+  align?: 'left' | 'right' | 'center';
 }
 
 export type TableRowSpec = Record<string, ReactNode> & {
@@ -271,11 +282,21 @@ export function Table({
       <thead>
         <tr>
           {checkboxHeader}
-          {columns.map((c) => (
-            <th key={c.key} scope="col" style={cellStyle}>
-              {c.header}
-            </th>
-          ))}
+          {columns.map((c) => {
+            const headerStyle: CSSProperties = c.align
+              ? { ...cellStyle, textAlign: c.align }
+              : cellStyle;
+            return (
+              <th
+                key={c.key}
+                scope="col"
+                style={headerStyle}
+                data-tnum={c.numeric === true ? 'true' : undefined}
+              >
+                {c.header}
+              </th>
+            );
+          })}
         </tr>
       </thead>
       <tbody>
@@ -303,16 +324,25 @@ export function Table({
                   {renderItem(row, i)}
                 </td>
               ) : (
-                columns.map((c, ci) => (
-                  <td key={c.key} style={pinnedCellStyle}>
-                    {ci === 0 ? (
-                      <span data-pin-indicator="true" aria-hidden="true">
-                        {PIN_GLYPH}{' '}
-                      </span>
-                    ) : null}
-                    {row[c.key] ?? ''}
-                  </td>
-                ))
+                columns.map((c, ci) => {
+                  const colStyle: CSSProperties = c.align
+                    ? { ...pinnedCellStyle, textAlign: c.align }
+                    : pinnedCellStyle;
+                  return (
+                    <td
+                      key={c.key}
+                      style={colStyle}
+                      data-tnum={c.numeric === true ? 'true' : undefined}
+                    >
+                      {ci === 0 ? (
+                        <span data-pin-indicator="true" aria-hidden="true">
+                          {PIN_GLYPH}{' '}
+                        </span>
+                      ) : null}
+                      {row[c.key] ?? ''}
+                    </td>
+                  );
+                })
               )}
             </tr>
           );
@@ -342,11 +372,20 @@ export function Table({
                   {renderItem(row, i)}
                 </td>
               ) : (
-                columns.map((c) => (
-                  <td key={c.key} style={cellStyle}>
-                    {row[c.key] ?? ''}
-                  </td>
-                ))
+                columns.map((c) => {
+                  const colStyle: CSSProperties = c.align
+                    ? { ...cellStyle, textAlign: c.align }
+                    : cellStyle;
+                  return (
+                    <td
+                      key={c.key}
+                      style={colStyle}
+                      data-tnum={c.numeric === true ? 'true' : undefined}
+                    >
+                      {row[c.key] ?? ''}
+                    </td>
+                  );
+                })
               )}
             </tr>
           );

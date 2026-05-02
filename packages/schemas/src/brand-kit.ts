@@ -55,6 +55,37 @@ import { CompileBudgetSchema } from './intent.js';
 
 const TokenScale = z.record(z.string(), z.string());
 
+/**
+ * Wave 11 / Vis-1: OpenType feature flags. Brand kits opt into typographic
+ * features the renderer projects to `font-feature-settings` on the body. All
+ * flags are optional and default off — pre-existing kits stay valid.
+ *
+ * Feature tags follow the OpenType registry:
+ *   - `tnum` (tabular numerals) — fixed-width digits for numeric cells
+ *   - `liga` / `dlig` — common / discretionary ligatures
+ *   - `opsz` (optical sizing) — variable-font feature; size-aware glyph forms
+ *   - `frac` — replace `1/2`-style strings with rendered fractions
+ *   - `sups` / `subs` — superscript / subscript figure substitution
+ *
+ * Reference: Linear and Stripe both globally enable `tnum` so every numeric
+ * cell aligns vertically; we expose the same affordance per-app.
+ */
+export const BrandOpenTypeSchema = z.object({
+  /** `tnum` — fixed-width digits. Component opt-ins (e.g. `<Table>` numeric cells) consume this flag. */
+  tabular_numerals: z.boolean().optional(),
+  /** `liga` / `dlig` — common, discretionary, or none. */
+  ligatures: z.enum(['common', 'discretionary', 'none']).optional(),
+  /** `opsz` — variable-fonts only. */
+  optical_sizing: z.boolean().optional(),
+  /** `frac` — fraction substitution. */
+  fractions: z.boolean().optional(),
+  /** `sups` — superscript figure substitution. */
+  superscript: z.boolean().optional(),
+  /** `subs` — subscript figure substitution. */
+  subscript: z.boolean().optional(),
+});
+export type BrandOpenType = z.infer<typeof BrandOpenTypeSchema>;
+
 export const BrandTokensSchema = z.object({
   colors: TokenScale,
   spacing: TokenScale,
@@ -62,6 +93,27 @@ export const BrandTokensSchema = z.object({
     font_stack: z.string(),
     scale: TokenScale,
     weight: TokenScale.optional(),
+    /**
+     * Wave 11 / Vis-1: letter-spacing scale per step (e.g.
+     * `{ tight: '-0.02em', normal: '0', wide: '0.04em' }`). Optional —
+     * existing kits without it stay valid; the runtime projects each entry
+     * to a `--cir-tracking-{key}` CSS variable.
+     */
+    letter_spacing: TokenScale.optional(),
+    /**
+     * Wave 11 / Vis-1: line-height scale per step (e.g.
+     * `{ tight: '1.2', normal: '1.5', loose: '1.75' }`). Values are unitless
+     * multipliers (or any valid CSS line-height string). Projected to
+     * `--cir-leading-{key}` CSS variables.
+     */
+    line_height: TokenScale.optional(),
+    /**
+     * Wave 11 / Vis-1: OpenType feature flag map. The runtime composes a
+     * `font-feature-settings` declaration from the active flags and applies
+     * it at the document root. Components opt in via attribute markers (e.g.
+     * `data-tnum="true"` on numeric cells in `<Table>` / `<KPIRow>`).
+     */
+    opentype: BrandOpenTypeSchema.optional(),
   }),
   motion: z
     .object({

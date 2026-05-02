@@ -165,6 +165,34 @@ export const DEMO_BRAND_KIT: BrandKit = {
         semibold: '600',
         bold: '700',
       },
+      // Wave 11 / Vis-1 — typography depth.
+      //
+      // Letter-spacing: Linear-style — slightly tightened headings, neutral
+      // body, optional wide for all-caps labels (status, eyebrows). Values
+      // are projected to --cir-tracking-{key} CSS variables.
+      letter_spacing: {
+        tight: '-0.02em',
+        normal: '0',
+        wide: '0.04em',
+      },
+      // Line-height: Linear-tight rhythm. The `normal` step is what
+      // <Markdown> body copy and most paragraph slots inherit; `tight`
+      // is for dense list rows / table cells; `loose` for marketing copy.
+      // Projected to --cir-leading-{key} CSS variables.
+      line_height: {
+        tight: '1.25',
+        normal: '1.5',
+        loose: '1.7',
+      },
+      // OpenType: Linear + Stripe both globally enable `tnum` so every
+      // numeric cell aligns vertically. Common ligatures are on by
+      // default for body copy. The runtime composes these into a single
+      // `font-feature-settings` declaration on :root; <Table> numeric
+      // cells and <StatCard> values pick it up via data-tnum="true".
+      opentype: {
+        tabular_numerals: true,
+        ligatures: 'common',
+      },
     },
     motion: {
       duration: {

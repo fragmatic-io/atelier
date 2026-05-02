@@ -59,9 +59,15 @@ export function StatCard({
       style={style}
     >
       <p data-cir-part="stat-label">{label}</p>
-      <p data-cir-part="stat-value">{value}</p>
+      {/* Wave 11 / Vis-1 — KPI values are always numeric. We mark them with
+          data-tnum="true" so brand kits that declare opentype.tabular_numerals
+          can activate font-variant-numeric: tabular-nums via a single CSS
+          rule. The marker is inert for kits that don't opt in. */}
+      <p data-cir-part="stat-value" data-tnum="true">
+        {value}
+      </p>
       {delta !== undefined ? (
-        <p data-cir-part="stat-delta" data-trend={delta.trend}>
+        <p data-cir-part="stat-delta" data-trend={delta.trend} data-tnum="true">
           <span aria-hidden="true">{TREND_GLYPH[delta.trend]}</span> <span>{delta.value}</span>
         </p>
       ) : null}

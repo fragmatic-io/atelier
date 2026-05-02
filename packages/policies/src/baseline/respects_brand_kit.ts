@@ -20,6 +20,12 @@
  *      brand kit declares the relevant scale AND the manifest carries an
  *      inline value the check is interested in.
  *
+ *   Wave 11 / Vis-1 — typography depth. The kit's `tokens.typography` may
+ *   carry `letter_spacing`, `line_height`, and `opentype` sub-fields. These
+ *   are runtime-only (projected to CSS variables / `font-feature-settings`)
+ *   and require no policy enforcement: there is no inline manifest analogue
+ *   to flag against. Pre-existing kits without them keep validating.
+ *
  *      - `border-radius` / `borderRadius` props (or `radius` keys nested in
  *        `style`) must match a value in `radius_scale`.
  *      - `box-shadow` / `boxShadow` props (or `shadow` keys nested in
