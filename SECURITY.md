@@ -7,7 +7,8 @@ CIR ships infrastructure that compiles and serves user interfaces from typed cap
 **Do not open a public issue.** Instead:
 
 1. Open a [private security advisory](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability) on the GitHub repository, **or**
-2. Email **security@cir.dev** (placeholder until a permanent address is established).
+<!-- TODO: switch to a shared security@ mailbox once the team grows beyond one person. -->
+2. Email **v@fragmatic.io** (monitored maintainer mailbox).
 
 Please include:
 

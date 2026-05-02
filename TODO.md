@@ -13,7 +13,7 @@
 | Wave    | Scope                                                                                                                                                     | Status         | Priority            | Est        | Depends on     |
 | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------- | ---------- | -------------- |
 | **M**   | Marketplace pivot — promote `<Queue>` / `<Logo>` / `<MetaBadge>` to baseline; collapse 15 customs across 3 demos to **0**; ETHOS principle #11; eval gate | ✅ **shipped** | —                   | done       | —              |
-| **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                     | ⚠️ **open**    | HIGH (release gate) | <1d total  | —              |
+| **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                     | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
 | **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture)                | 📅 **next**    | HIGH                | 4 wk       | M              |
 | **7**   | Personalisation — P-3, P-4, P-7, P-9 (P-1 / P-8 / DD shipped)                                                                                             | 🟡 in flight   | mixed               | 4 wk       | C-Phase-1      |
 | **10**  | Scale tracks — S-1, S-2, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-6 ✅ shipped                                                                               | 📅 planned     | mixed               | 8 wk       | C-Phase-2      |
@@ -81,12 +81,12 @@
 
 These ship before opening the repo to outside reporters. One cleanup commit, ~1 hour.
 
-- [ ] **Security contact** — `security@cir.dev` placeholder in [`SECURITY.md`](SECURITY.md). Replace with real monitored mailbox.
-- [ ] **Conduct contact** — `conduct@cir.dev` placeholder in [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Replace with real address (or share the security mailbox).
-- [ ] **Branch protection on `main`** — require CI green, require PR review, no force-push.
-- [ ] **CI Node matrix** — widen from `[22]` → `[22, 24]` once Node 24 hits LTS.
-- [ ] **`actionlint` on Dependabot** — decide whether to scope to Dependabot PRs (currently only `push` + `pull_request`).
-- [ ] **Project board / discussions / wiki** — set preferences once the team grows beyond one.
+- [x] **Security contact** — `security@cir.dev` placeholder in [`SECURITY.md`](SECURITY.md) replaced with `v@fragmatic.io` (monitored maintainer mailbox). Note in file to switch to a shared `security@` once the team grows.
+- [x] **Conduct contact** — `conduct@cir.dev` placeholder in [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) replaced with `v@fragmatic.io`. Note in file to switch to a shared `conduct@` once the team grows.
+- [ ] **Branch protection on `main`** — require CI green, require PR review, no force-push. _GitHub-settings; user enacts via `gh`._
+- [x] **CI Node matrix** — widened from `[22]` → `[22, 24]` in `.github/workflows/ci.yml` (Node 24 became LTS 2025-10).
+- [x] **`actionlint` on Dependabot** — conservative path taken: Dependabot PRs stay IN scope of the existing `pull_request` trigger so its workflow-YAML mutations get linted. Documented in `.github/workflows/actionlint.yml` (no `pull_request_target`, no Dependabot skip).
+- [ ] **Project board / discussions / wiki** — set preferences once the team grows beyond one. _GitHub-settings; user enacts via UI / `gh`._
 
 ---
 

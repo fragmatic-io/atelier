@@ -15,7 +15,9 @@ We will not tolerate sustained disrespect, personal attacks, or behavior that ma
 
 ## Reporting
 
-If you experience or witness unacceptable behavior, contact the maintainers at **conduct@cir.dev** (placeholder until a real address is established — open a private GitHub security advisory in the meantime).
+<!-- TODO: switch to a shared conduct@ mailbox once the team grows beyond one person. -->
+
+If you experience or witness unacceptable behavior, contact the maintainers at **v@fragmatic.io** (monitored maintainer mailbox) — or open a private GitHub security advisory in the meantime.
 
 Reports will be reviewed and investigated promptly and fairly. Maintainers are obligated to respect the privacy and safety of the reporter.
 
