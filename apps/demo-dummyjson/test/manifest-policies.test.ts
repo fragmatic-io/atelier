@@ -3,11 +3,20 @@
 /**
  * Manifest ↔ baseline-policy contract for the dummyjson catalog demo.
  *
- * Marketplace pivot: `<ProductCard>` and `<ProductGrid>` are gone — the
- * `/browse` body composes baseline `<Grid data={products}>` + a single
- * `<Card>` template child. The data-aware Grid threads each product onto
- * the Card's `data` prop and the runtime forwards `onAction` per-item
- * via `actionSlots: ['onAction']` on both bindings.
+ * Marketplace pivot — closing chapter. The three remaining commerce
+ * customs (`<ProductDetail>`, `<CartItemList>`, `<CheckoutWizard>`) are
+ * gone. Every Marigold route composes baseline primitives:
+ *
+ *   - `/browse`    → `<Grid data={products}>` over a `<Card>` template
+ *   - `/product/N` → `<Stack(Gallery, Card, DetailView)>` all bound to the
+ *                    same single-product binding
+ *   - `/cart`      → `<Queue data={cart.list}>` (subsumes the inbox /
+ *                    line-items pattern via `compositionRole: 'list'`)
+ *   - `/checkout`  → `<Stack>` of three `<Form>`s, one per step
+ *
+ * Marigold ships zero customs. The `composition_roles` map is empty —
+ * baseline `<Queue>` already declares its own `'list'` role, no host
+ * override needed.
  *
  * Pre-Phase-2 the manifests carried two band-aid nodes solely to satisfy
  * policy walkers: a hidden `<StatCard>` style of quota anchor, and an
@@ -24,11 +33,6 @@
  *     mutation; the host declares the ambient `<UndoToast>` so
  *     `reversibility_surfaced` is satisfied without in-tree rollback
  *     `<Button>`s.
- *
- * `<CartItemList>` declares `compositionRole: 'list'` (see
- * `lib/component-bindings.ts`). The policy engine reads the
- * `composition_roles` map off `PolicyContext` so it treats
- * `<CartItemList>` like the baseline `<List>` for composition allow-listing.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -50,17 +54,13 @@ import type { Density } from '@cir/components';
 
 /**
  * Mirror of `DEMO_DUMMYJSON_COMPOSITION_ROLES` from
- * `lib/component-bindings.ts`. We do not import that module directly
- * because it pulls in the React component factories via `@/components/*`
- * — those tsx imports would fail under vitest's module resolver in this
- * harness without a per-app vitest config. Keeping the role map mirrored
- * here is fine: the field shape is small and any drift trips the
- * binding-roles test below.
+ * `lib/component-bindings.ts`. Marketplace pivot — closing chapter:
+ * Marigold ships zero customs, so the role map is empty. Baseline
+ * `<Queue>` declares its own `'list'` role internally; no host
+ * override needed.
  */
 const DEMO_DUMMYJSON_COMPOSITION_ROLES: Readonly<Record<string, 'list' | 'grid' | 'table'>> =
-  Object.freeze({
-    CartItemList: 'list',
-  });
+  Object.freeze({});
 
 // `COMPONENT_BINDINGS` import is here strictly to mirror `cir-providers.tsx`'s
 // runtime configuration — keeps the test honest about what the live demo
@@ -243,11 +243,12 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
       'Timeline',
       'Gallery',
       'Tree',
-      // Custom bindings that play list/detail roles. ProductGrid was
-      // retired in the marketplace pivot — the baseline `<Grid>` is the
-      // data-bound node now.
-      'CartItemList',
-      'ProductDetail',
+      // Marketplace pivot — closing chapter: every Marigold route binds
+      // baseline data-aware primitives (Grid, Queue, Gallery, DetailView,
+      // List). `<Queue>` joins the data-bound set since the cart line
+      // items render through it. The retired `<CartItemList>` /
+      // `<ProductDetail>` references are gone.
+      'Queue',
     ]);
     const missing: string[] = [];
 
@@ -286,13 +287,12 @@ describe('demo-dummyjson manifests vs. BASELINE_POLICIES', () => {
     expect(missing).toEqual([]);
   });
 
-  it('CartItemList is recognised as a List via composition_roles', () => {
-    // The `composes_according_to_rules` policy looks up `node.component`
-    // against the rule map. Without `composition_roles`, CartItemList
-    // would be unknown — but with the role map threaded through it
-    // inherits the baseline `List` rule (`can_contain: '*'`).
-    expect(DEMO_DUMMYJSON_COMPOSITION_ROLES['CartItemList']).toBe('list');
-    // ProductGrid was retired — the role map no longer carries it.
-    expect(DEMO_DUMMYJSON_COMPOSITION_ROLES['ProductGrid']).toBeUndefined();
+  it('composition_roles map is empty — Marigold ships zero customs', () => {
+    // Marketplace pivot — closing chapter. `<CartItemList>`,
+    // `<ProductDetail>`, and `<CheckoutWizard>` are retired; the role
+    // map mirroring `lib/component-bindings.ts` is `Object.freeze({})`.
+    // Baseline `<Queue>` declares its own `'list'` role internally;
+    // no host-side override needed.
+    expect(Object.keys(DEMO_DUMMYJSON_COMPOSITION_ROLES)).toEqual([]);
   });
 });

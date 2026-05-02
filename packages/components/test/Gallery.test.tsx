@@ -72,4 +72,49 @@ describe('Gallery', () => {
     expect(root?.className).toContain('overflow-x-auto');
     expect(root?.className).toContain('snap-x');
   });
+
+  // -- Data-aware (marketplace pivot) ----------------------------------------
+  it('derives items from a product-shape `data` object (images[] + title)', () => {
+    const product = {
+      id: 42,
+      title: 'Nice phone',
+      images: ['/a.jpg', '/b.jpg'],
+      thumbnail: '/thumb.jpg',
+    };
+    const { container } = render(<Gallery data={product} />);
+    const imgs = container.querySelectorAll('img');
+    expect(imgs.length).toBe(2);
+    expect(imgs[0]?.getAttribute('src')).toBe('/a.jpg');
+    expect(imgs[1]?.getAttribute('src')).toBe('/b.jpg');
+    // alt defaults to the parent object's title.
+    expect(imgs[0]?.getAttribute('alt')).toBe('Nice phone');
+  });
+
+  it('falls back to thumbnail when images[] is missing on a product-shape data', () => {
+    const product = { title: 'Sold out', thumbnail: '/only.jpg' };
+    const { container } = render(<Gallery data={product} />);
+    const imgs = container.querySelectorAll('img');
+    expect(imgs.length).toBe(1);
+    expect(imgs[0]?.getAttribute('src')).toBe('/only.jpg');
+  });
+
+  it('accepts an array-of-strings as `data` (each becomes a src)', () => {
+    const { container } = render(<Gallery data={['/x.jpg', '/y.jpg', '/z.jpg']} />);
+    expect(container.querySelectorAll('img').length).toBe(3);
+  });
+
+  it('explicit `items` always wins over `data`', () => {
+    const { container } = render(<Gallery items={ITEMS} data={['/ignore.jpg']} />);
+    expect(container.querySelectorAll('img').length).toBe(3);
+  });
+
+  it('renders empty when neither items nor a recognised data shape is supplied', () => {
+    const { container } = render(<Gallery data={null} />);
+    expect(container.querySelectorAll('img').length).toBe(0);
+  });
+
+  it('binding declares manifestContract with `data` allowed', () => {
+    expect(GalleryBinding.manifestContract).toBeDefined();
+    expect(GalleryBinding.manifestContract?.allowed_props['data']).toBe('unknown');
+  });
 });

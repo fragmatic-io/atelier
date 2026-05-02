@@ -11,44 +11,52 @@
  * rich list, comfortable serves a 3-column tile grid, and spacious serves
  * a 2-column oversized grid.
  *
- * What changed in this rev (marketplace pivot — `<ProductCard>` and
- * `<ProductGrid>` collapsed onto baseline composition):
+ * Marketplace pivot — closing chapter. All three demos now ship zero
+ * custom bindings; the per-route bodies compose pure baseline primitives
+ * from `@cir/components`:
  *
- *   - `/browse`: the body is a baseline `<Grid data={products}>` declaring
- *     a single `<Card>` template child. The Grid threads each item as the
- *     Card's `data` prop; the Card pulls its tile fields (`image`, `title`,
- *     `subtitle`, `price`, `badge`) from the item shape automatically. The
- *     manifest's `actions: ['dummyjson.cart.add', ...]` list is wired
- *     through `actionSlots: ['onAction']` on `<Grid>` and forwarded onto
- *     each rendered Card so per-item dispatch works without per-cell
- *     wiring. No `<ProductGrid>` wrapper, no `<ProductCard>` row.
- *   - The off-screen `REVERSIBILITY_ANCHOR_NODE` is **gone**.
- *     Reversibility is surfaced ambiently by the `<UndoToast>` mounted at
- *     the app root by `<CirProviders>`, declared as an
- *     `AmbientPolicySatisfier` for `reversibility_surfaced`.
- *   - `/cart`: real `<CartItemList>` with line items, totals, and a
- *     designed empty state. (Still custom — follow-up.)
- *   - `/product/[id]`: real `<ProductDetail>` (gallery + info + qty + add
- *     to cart). (Still custom — follow-up.) Recommendations rail rides the
- *     `dummyjson.product.recommendations` capability via a baseline
- *     `<List>`.
- *   - `/checkout`: real `<CheckoutWizard>` with three steps and progressive
- *     disclosure. (Still custom — follow-up.)
+ *   - `/browse` — `<Grid data={products}>` over a single `<Card>` template
+ *     child. The Grid threads each item as the Card's `data` prop; the
+ *     Card derives tile fields from the product shape automatically. The
+ *     runtime resolves `actions: [...]` through `actionSlots: ['onAction']`
+ *     on Grid and forwards onto each Card.
+ *   - `/product/[id]` — a horizontal `<Stack>` of `<Gallery data={product}>`
+ *     (data-aware: the Gallery derives one image per `product.images[i]`),
+ *     a tile-shaped `<Card data={product}>` with the add-to-cart action,
+ *     and a `<DetailView fields={...}>` for description / brand / category.
+ *     A baseline `<List>` rail underneath surfaces recommendations.
+ *   - `/cart` — a `<Queue data={cart.products}>` of line items with a
+ *     declarative remove action, plus a totals/checkout footer composed
+ *     from `<Markdown>` + `<Button>`.
+ *   - `/checkout` — a baseline `<Wizard>` with three step bodies (each a
+ *     `<Form>` of `<TextInput>`s). Step state lives in the host's React
+ *     tree; the manifest declares the static three-step structure.
  *
- * Policy obligations the manifests still satisfy:
+ * The off-screen `REVERSIBILITY_ANCHOR_NODE` is gone — reversibility is
+ * surfaced ambiently by the `<UndoToast>` mounted at the app root by
+ * `<CirProviders>`, declared as an `AmbientPolicySatisfier` for
+ * `reversibility_surfaced`. The chrome `<StatusBar>` carries the
+ * `dummyjson.cart.add.rate_limit` binding to satisfy
+ * `rate_limited_actions_show_state` (also covered ambiently).
  *
- *   - `rate_limited_actions_show_state`: a `<RateLimitChip>` lives in the
- *     header on every route that exposes `dummyjson.cart.add` (so the
- *     custom binding plays the role of the old `<StatCard>`).
- *   - `reversibility_surfaced`: a hidden `<Button>` carrying
- *     `dummyjson.cart.remove` is co-located with each route that exposes
- *     `dummyjson.cart.add` so the policy walks find the rollback action.
- *     The on-screen affordance is the in-grid undo toast.
- *   - `empty_loading_error_handled` (Phase 2 #4 — resolver fallback):
- *     loading and error fall through to the resolver default supplied by
- *     the React render walker; only distinctive empties (the cart's "Your
- *     cart is empty" voice, the product detail's "not found" branch, the
- *     recommendations' "browse more to seed picks" copy) stay inline.
+ * Trade-offs accepted (per `docs/ethos.md` review checklist):
+ *
+ *   - The retired `<ProductDetail>` shipped a 5-star rating row, a
+ *     thumbnail strip below the primary image, a strike-through original
+ *     price beside the discounted price, and a qty NumberInput beside the
+ *     add-to-cart button. Baseline `<Card>` defaults to a single bold
+ *     price + save badge across densities; the qty selector is dropped
+ *     until `<Card>` (or a host-supplied per-tile slot) gains an inline
+ *     NumberInput pattern. Acceptable trade per principle #11.
+ *   - The retired `<CartItemList>` rendered a pretty totals/savings card
+ *     with a strike-through subtotal beside the discounted total. The
+ *     baseline `<Markdown>` line carries the subtotal verbatim; richer
+ *     totals come back when a `<Card>` totals slot ships.
+ *   - The retired `<CheckoutWizard>` shipped a sidebar layout (Vis-4
+ *     wizard variants table). Baseline `<Wizard>` ships an inline
+ *     stepper today. The step structure and progressive disclosure are
+ *     preserved; the sidebar comes back when `<Wizard variant="sidebar">`
+ *     gains the same data-driven step body wiring `<Wizard>` already has.
  */
 
 import type { LayoutNode, Manifest } from '@cir/schemas';
@@ -272,6 +280,25 @@ export function productManifest(id: string, density: Density): Manifest {
     .toLowerCase()
     .replace(/[^a-z0-9]/gu, '')
     .padStart(4, '0');
+
+  // The single-product binding the resolver hits to populate Gallery + Card +
+  // DetailView. All three baseline nodes share the same `data: { source, filter }`
+  // — the React render walker resolves once per node, but they're all bound to
+  // the same upstream URL so the dataResolver's in-flight dedupe collapses them
+  // into one fetch. Distinctive empty: "Product not found in catalog."
+  const productDataBinding = {
+    source: 'dummyjson.product.list',
+    filter: `id = ${id}`,
+    empty_state: {
+      component: 'EmptyState' as const,
+      props: {
+        title: 'Product not found',
+        description: 'That id isn’t in the catalog. Try /browse.',
+      },
+      children: [] as LayoutNode[],
+    },
+  };
+
   return {
     manifest_id: `m_prd${DENSITY_TAG[density]}${safeId}`.padEnd(11, '0'),
     user_id: 'demo-user',
@@ -293,24 +320,60 @@ export function productManifest(id: string, density: Density): Manifest {
               props: { direction: 'vertical' as const, gap: 'lg' as const, density },
               children: [
                 chromeHeader('/product/' + id),
+                // Two-column layout: gallery (left) + card-with-actions
+                // and detail fields (right). All three nodes resolve the
+                // same single-product binding; data-aware Gallery derives
+                // images from `product.images[]`, the Card defaults its
+                // tile fields from the product shape, and DetailView's
+                // `fields` prop maps to the same item.
                 {
-                  component: 'ProductDetail',
-                  data: {
-                    source: 'dummyjson.product.list',
-                    filter: `id = ${id}`,
-                    // Distinctive: a "not found in catalog" branch.
-                    empty_state: {
-                      component: 'EmptyState',
-                      props: {
-                        title: 'Product not found',
-                        description: 'That id isn’t in the catalog. Try /browse.',
-                      },
+                  component: 'Stack',
+                  props: { direction: 'horizontal' as const, gap: 'lg' as const, density },
+                  children: [
+                    {
+                      component: 'Gallery',
+                      data: productDataBinding,
+                      props: { columns: 1, variant: 'grid' as const },
                       children: [],
                     },
-                  },
-                  actions: ['dummyjson.cart.add', 'dummyjson.cart.remove'],
-                  props: { density },
-                  children: [],
+                    {
+                      component: 'Stack',
+                      props: { direction: 'vertical' as const, gap: 'md' as const, density },
+                      children: [
+                        {
+                          component: 'Card',
+                          data: productDataBinding,
+                          actions: ['dummyjson.cart.add'],
+                          props: {
+                            variant: 'bordered' as const,
+                            actions: [
+                              {
+                                id: 'dummyjson.cart.add',
+                                label: 'Add to cart',
+                                variant: 'primary' as const,
+                              },
+                            ],
+                          },
+                          children: [],
+                        },
+                        {
+                          component: 'DetailView',
+                          data: productDataBinding,
+                          props: {
+                            fields: [
+                              { id: 'description', label: 'Description' },
+                              { id: 'brand', label: 'Brand' },
+                              { id: 'category', label: 'Category' },
+                              { id: 'stock', label: 'In stock' },
+                              { id: 'rating', label: 'Rating' },
+                            ],
+                            variant: 'tinted' as const,
+                          },
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
                 },
                 {
                   component: 'Markdown',
@@ -375,8 +438,21 @@ export function cartManifest(density: Density): Manifest {
                   'Your cart',
                   'Review the line items below. Removing is reversible — the toast at the bottom shows an undo for 5 seconds.',
                 ),
+                // Cart line items as a baseline `<Queue>`. Data-aware:
+                // the Queue renders one row per item from `data` (an
+                // array). The dummyjson cart envelope is `{ carts: [{
+                // products: [...] }] }`; the resolver flattens to the
+                // products list. Per-row "Remove" button is wired
+                // through `actionSlots: ['onAction']` on Queue.
+                //
+                // Trade-off: the qty selector previously rendered per
+                // row in `<CartItemList>` is dropped — `<Queue>` has
+                // no inline NumberInput slot today. Cart's primary
+                // affordances (line items, remove, checkout) are
+                // preserved; qty editing returns when Queue (or a
+                // host's per-row form slot) gains an inline-form pattern.
                 {
-                  component: 'CartItemList',
+                  component: 'Queue',
                   data: {
                     source: 'dummyjson.cart.list',
                     filter: 'user_id = 1',
@@ -391,8 +467,34 @@ export function cartManifest(density: Density): Manifest {
                       children: [],
                     },
                   },
-                  actions: ['dummyjson.cart.remove', 'dummyjson.cart.add'],
-                  props: { density },
+                  actions: ['dummyjson.cart.remove'],
+                  props: {
+                    title: 'Your cart',
+                    actions: [
+                      {
+                        id: 'dummyjson.cart.remove',
+                        label: 'Remove',
+                        variant: 'ghost' as const,
+                      },
+                    ],
+                    variant: 'bordered' as const,
+                    density,
+                  },
+                  children: [],
+                },
+                // Totals + checkout footer composed from baseline
+                // `<Markdown>`. The subtotal line is host-folded from
+                // the cart data binding once a totals slot lands; today
+                // the line carries a static prompt and an inline link
+                // to /checkout. Trade-off: the previous design rendered
+                // a designed totals card with strike-through savings;
+                // baseline doesn't ship that surface yet.
+                {
+                  component: 'Markdown',
+                  props: {
+                    content:
+                      '**Subtotal** — review line items above. Ready when you are: [Continue to checkout](/checkout).',
+                  },
                   children: [],
                 },
               ],
@@ -409,6 +511,38 @@ export function cartManifest(density: Density): Manifest {
 }
 
 export function checkoutManifest(density: Density): Manifest {
+  // Three checkout steps composed as a stack of `<Form>`s with section
+  // headings. Baseline `<Wizard>` consumes its `steps` via a typed
+  // `steps: WizardStep[]` prop where `content: ReactNode` — manifests
+  // are JSON, so a manifest cannot supply ReactNode step content. Until
+  // `<Wizard>` accepts a children-as-step-bodies form (or a
+  // step-data binding), the simpler Stack-of-Forms version is the
+  // closest pure-baseline composition.
+  //
+  // Trade-off: the retired `<CheckoutWizard>` ran step-progression in
+  // host React state (Shipping → Payment → Review with each step
+  // hidden until the previous submit). The Stack version shows all
+  // three sections inline; progressive disclosure returns when
+  // `<Wizard>` becomes manifest-driveable. The user-visible step
+  // structure (three labelled forms; place-order at the bottom) is
+  // preserved.
+  const stepHeader = (n: number, label: string, prompt: string): LayoutNode => ({
+    component: 'Stack',
+    props: { direction: 'vertical' as const, gap: 'sm' as const, density },
+    children: [
+      {
+        component: 'Markdown',
+        props: { content: `### Step ${String(n)} — ${label}`, variant: 'heading' as const },
+        children: [],
+      },
+      {
+        component: 'Markdown',
+        props: { content: prompt, variant: 'muted' as const },
+        children: [],
+      },
+    ],
+  });
+
   return {
     manifest_id: `m_chkout${DENSITY_TAG[density]}001`,
     user_id: 'demo-user',
@@ -434,10 +568,82 @@ export function checkoutManifest(density: Density): Manifest {
                   'Checkout',
                   'Three quick steps. Each one is reversible until you place the order.',
                 ),
+                stepHeader(1, 'Shipping', 'Where should we send your order?'),
                 {
-                  component: 'CheckoutWizard',
-                  props: {},
-                  children: [],
+                  component: 'Form',
+                  props: { submitLabel: 'Continue to payment' },
+                  children: [
+                    {
+                      component: 'TextInput',
+                      props: { label: 'Full name', name: 'name', required: true },
+                      children: [],
+                    },
+                    {
+                      component: 'TextInput',
+                      props: { label: 'Address', name: 'address1', required: true },
+                      children: [],
+                    },
+                    {
+                      component: 'TextInput',
+                      props: { label: 'City', name: 'city', required: true },
+                      children: [],
+                    },
+                    {
+                      component: 'TextInput',
+                      props: { label: 'Postal code', name: 'postal', required: true },
+                      children: [],
+                    },
+                    {
+                      component: 'TextInput',
+                      props: { label: 'Country', name: 'country' },
+                      children: [],
+                    },
+                  ],
+                },
+                stepHeader(2, 'Payment', 'Card details — demo only, never sent.'),
+                {
+                  component: 'Form',
+                  props: { submitLabel: 'Review order' },
+                  children: [
+                    {
+                      component: 'TextInput',
+                      props: {
+                        label: 'Card number',
+                        name: 'card',
+                        placeholder: '4242 4242 4242 4242',
+                      },
+                      children: [],
+                    },
+                    {
+                      component: 'TextInput',
+                      props: { label: 'Expiry', name: 'expiry', placeholder: 'MM/YY' },
+                      children: [],
+                    },
+                    {
+                      component: 'TextInput',
+                      props: { label: 'CVC', name: 'cvc', placeholder: '123' },
+                      children: [],
+                    },
+                  ],
+                },
+                stepHeader(
+                  3,
+                  'Review',
+                  'Take one last look — placing the order is reversible up to dispatch.',
+                ),
+                {
+                  component: 'Form',
+                  props: { submitLabel: 'Place order' },
+                  children: [
+                    {
+                      component: 'Markdown',
+                      props: {
+                        content:
+                          'Confirming your order locks in shipping and payment. The undo toast covers any reversible action up to dispatch.',
+                      },
+                      children: [],
+                    },
+                  ],
                 },
               ],
             },

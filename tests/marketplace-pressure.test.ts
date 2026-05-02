@@ -51,38 +51,20 @@ import { describe, expect, it } from 'vitest';
 const MAX_CUSTOM_BINDINGS: Readonly<Record<string, number>> = Object.freeze({
   'apps/demo': 0,
   'apps/demo-github': 0,
-  'apps/demo-dummyjson': 3,
+  'apps/demo-dummyjson': 0,
 });
 
 /**
- * Domain-shape customs that remain after the marketplace pivot, with the
- * planned migration owner. Every entry here is a known follow-up — the
- * marketplace plan is to drive these to zero in subsequent commits by
- * promoting the underlying shape to baseline.
+ * Domain-shape customs that remain after the marketplace pivot. Empty
+ * across all three demos — the closing chapter retired the last
+ * commerce primitives (`<ProductDetail>` / `<CartItemList>` /
+ * `<CheckoutWizard>`) onto baseline composition. Future host-specific
+ * invariants land here with a planned-migration entry.
  */
 const KNOWN_DOMAIN_CUSTOMS_FOLLOW_UP: Readonly<Record<string, readonly string[]>> = Object.freeze({
   'apps/demo': [],
   'apps/demo-github': [],
-  'apps/demo-dummyjson': [
-    // Domain-shape commerce primitives still pending a baseline collapse.
-    // `ProductCard` and `ProductGrid` were retired this commit — the
-    // `/browse` body now composes baseline `<Grid data={...}>` + a
-    // single `<Card>` template child, with the runtime threading each
-    // product onto the Card's `data` prop and forwarding `onAction` per
-    // item. The remaining three:
-    //
-    //   - `ProductDetail` → `<DetailView>` + `<Gallery>` + `<Card>` once
-    //     those primitives gain the right commerce-tuned variants.
-    //   - `CartItemList` → `<List>` + a totals `<Card>` once the totals
-    //     surface becomes composable.
-    //   - `CheckoutWizard` → baseline `<Wizard>` + per-step `<Form>`
-    //     once Wizard accepts step data via `data`.
-    //
-    // Marketplace plan §D.
-    'ProductDetail',
-    'CartItemList',
-    'CheckoutWizard',
-  ],
+  'apps/demo-dummyjson': [],
 });
 
 interface DemoSource {
@@ -202,12 +184,18 @@ describe('marketplace pressure', () => {
     });
   }
 
-  it('Aurora and Octant both ship zero custom bindings (the marketplace-pivot proof)', () => {
-    // Two of the three demos hit zero customs after the pivot — Aurora led
-    // the migration, Octant followed by collapsing `<IssueQueue>` onto
-    // baseline `<Queue>` (per `docs/ethos.md` principle #11). DummyJSON's
-    // commerce primitives are the next migration target.
-    for (const demoName of ['apps/demo', 'apps/demo-github']) {
+  it('all three demos ship zero custom bindings (marketplace-pivot proof complete)', () => {
+    // Closing chapter of the marketplace pivot. Aurora led the
+    // migration; Octant followed by collapsing `<IssueQueue>` onto
+    // baseline `<Queue>`; Marigold finished by retiring the three
+    // remaining commerce customs (`<ProductDetail>` /
+    // `<CartItemList>` / `<CheckoutWizard>`) onto pure baseline
+    // composition (`<Stack(Gallery, Card, DetailView)>` for product
+    // detail, `<Queue data={cart}>` for the cart, `<Stack>` of
+    // `<Form>`s for the checkout flow). Per `docs/ethos.md` principle
+    // #11, the marketplace IS the product — every demo now proves it
+    // ships zero per-host React.
+    for (const demoName of ['apps/demo', 'apps/demo-github', 'apps/demo-dummyjson']) {
       const demo = DEMOS.find((d) => d.name === demoName)!;
       const text = readFileSync(resolve(REPO_ROOT, demo.source), 'utf8');
       const ids = parseBindingIds(text, demo.exportName);

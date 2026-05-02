@@ -188,14 +188,19 @@ function buildActions(): MapActionRegistry {
  *     mutation (`cart.add`, `cart.remove`); the policy validator treats
  *     this as an ambient `<UndoToast>` for `reversibility_surfaced`.
  *
- * Marketplace pivot: five custom bindings have been retired —
- * `MarigoldHeader` / `Wordmark` / `RateLimitChip` collapsed onto
- * `<Stack(Logo, NavBar, StatusBar)>`; `ProductCard` / `ProductGrid`
- * collapsed onto `<Grid data={items}>` + `<Card>` template composition
- * (the data-aware Grid threads each item onto the Card's `data` prop).
- * The data-aware Grid also lost its 'grid' compositionRole entry —
- * baseline `<Grid>` is the registered Grid binding now, no role mapping
- * needed.
+ * Marketplace pivot — closing chapter. **Marigold ships zero custom
+ * bindings.** Every per-host React tile, queue, detail surface, and
+ * wizard has either been promoted to baseline (`<Queue>` / `<Logo>`) or
+ * expressed as composition (`<Stack(Logo, NavBar, StatusBar)>` chrome,
+ * `<Grid data={products}>` over `<Card>` for the catalog,
+ * `<Stack(Gallery, Card, DetailView)>` for product detail,
+ * `<Queue data={cart}>` + `<Markdown>` totals for the cart,
+ * `<Stack>` of `<Form>`s for the checkout flow).
+ *
+ * `DEMO_DUMMYJSON_BINDINGS` is `Object.freeze({})` and the
+ * composition-roles map is empty — neither is wired into the runtime
+ * registry below, the lines stay so future host-specific invariants
+ * have an obvious place to land without restructuring providers.
  */
 const AMBIENT_POLICY_SATISFIERS: readonly AmbientPolicySatisfier[] = [
   UNDO_TOAST_AMBIENT_SATISFIER,

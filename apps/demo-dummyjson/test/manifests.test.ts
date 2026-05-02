@@ -3,16 +3,16 @@
 /**
  * Manifest builder tests for the dummyjson catalog demo.
  *
- * Marketplace pivot: `<ProductCard>` and `<ProductGrid>` are gone. The
- * `/browse` body is now a baseline `<Grid data={products}>` declaring a
- * single `<Card>` template child — the data-aware Grid threads each
- * product onto the Card's `data` prop and the Card pulls its tile fields
- * from the product shape automatically. Per-item dispatch flows through
- * `actionSlots: ['onAction']` on both bindings.
+ * Marketplace pivot — closing chapter. The three remaining commerce
+ * customs (`<ProductDetail>`, `<CartItemList>`, `<CheckoutWizard>`) have
+ * been retired. Every Marigold route composes baseline primitives:
  *
- * Cart, Product detail, and Checkout still ride custom bindings
- * (`<CartItemList>`, `<ProductDetail>`, `<CheckoutWizard>`) — those
- * collapses are follow-ups documented on the marketplace plan.
+ *   - `/browse`    → `<Grid data={products}>` over a single `<Card>` template
+ *   - `/product/N` → `<Stack(Gallery, Card, DetailView)>` all bound to the
+ *                    same `{ source: 'dummyjson.product.list', filter: 'id=N' }`
+ *   - `/cart`      → `<Queue data={cart.list}>` with a remove action +
+ *                    a `<Markdown>` totals line linking to /checkout
+ *   - `/checkout`  → `<Stack>` of three `<Form>`s (Shipping / Payment / Review)
  */
 
 import { describe, expect, it } from 'vitest';
@@ -39,6 +39,21 @@ function findFirst(node: unknown, componentName: string): Record<string, unknown
   return null;
 }
 
+function findAll(
+  node: unknown,
+  componentName: string,
+  out: Record<string, unknown>[] = [],
+): Record<string, unknown>[] {
+  if (!node || typeof node !== 'object') return out;
+  const obj = node as Record<string, unknown>;
+  if (obj['component'] === componentName) out.push(obj);
+  const children = obj['children'];
+  if (Array.isArray(children)) {
+    for (const c of children) findAll(c, componentName, out);
+  }
+  return out;
+}
+
 describe('manifestForRoute', () => {
   it('mounts a baseline <Grid> over <Card> on /browse for every density', () => {
     for (const density of ['compact', 'comfortable', 'spacious'] as const) {
@@ -63,11 +78,26 @@ describe('manifestForRoute', () => {
     }
   });
 
-  it('has no <ProductCard> / <ProductGrid> nodes anywhere (marketplace pivot)', () => {
+  it('marketplace pivot — no custom commerce nodes anywhere in any manifest', () => {
+    const customs = [
+      'ProductCard',
+      'ProductGrid',
+      'ProductDetail',
+      'CartItemList',
+      'CheckoutWizard',
+    ];
     for (const density of ['compact', 'comfortable', 'spacious'] as const) {
-      const m = browseManifest(density);
-      expect(findFirst(m.routes[0]!.layout, 'ProductCard')).toBeNull();
-      expect(findFirst(m.routes[0]!.layout, 'ProductGrid')).toBeNull();
+      const manifests = [
+        browseManifest(density),
+        productManifest('1', density),
+        cartManifest(density),
+        checkoutManifest(density),
+      ];
+      for (const m of manifests) {
+        for (const custom of customs) {
+          expect(findFirst(m.routes[0]!.layout, custom)).toBeNull();
+        }
+      }
     }
   });
 
@@ -94,16 +124,51 @@ describe('manifestForRoute', () => {
     expect(m!.routes[0]!.path).toBe('/browse');
   });
 
-  it('cart manifest mounts CartItemList bound to cart.list', () => {
+  it('/cart mounts a <Queue> bound to cart.list with a remove action', () => {
     const m = cartManifest('comfortable')!;
-    const cart = findFirst(m.routes[0]!.layout!, 'CartItemList');
-    expect(cart).not.toBeNull();
-    const data = cart!['data'] as { source: string; filter: string };
+    const queue = findFirst(m.routes[0]!.layout!, 'Queue');
+    expect(queue).not.toBeNull();
+    const data = queue!['data'] as { source: string; filter: string };
     expect(data.source).toBe('dummyjson.cart.list');
     expect(data.filter).toContain('user_id = 1');
+    const props = queue!['props'] as { actions: Array<{ id: string }> };
+    expect(props.actions[0]!.id).toBe('dummyjson.cart.remove');
+    // Capability dispatch is wired via the manifest's `actions` slot.
+    expect(queue!['actions']).toEqual(['dummyjson.cart.remove']);
   });
 
-  it('product detail manifest references the recommendations capability', () => {
+  it('/cart surfaces a checkout link in the totals footer', () => {
+    const m = cartManifest('comfortable')!;
+    // The totals/checkout footer is a baseline <Markdown> line carrying
+    // the inline link — no <Button> needed since the route is a static href.
+    const markdowns = findAll(m.routes[0]!.layout!, 'Markdown');
+    const checkoutLine = markdowns.find(
+      (md) =>
+        typeof (md['props'] as { content?: string }).content === 'string' &&
+        (md['props'] as { content: string }).content.toLowerCase().includes('checkout'),
+    );
+    expect(checkoutLine).toBeDefined();
+  });
+
+  it('/product/[id] composes <Gallery> + <Card> + <DetailView> all bound to the same product', () => {
+    const m = productManifest('15', 'comfortable')!;
+    const gallery = findFirst(m.routes[0]!.layout!, 'Gallery');
+    const card = findFirst(m.routes[0]!.layout!, 'Card');
+    const detail = findFirst(m.routes[0]!.layout!, 'DetailView');
+    expect(gallery).not.toBeNull();
+    expect(card).not.toBeNull();
+    expect(detail).not.toBeNull();
+    for (const node of [gallery!, card!, detail!]) {
+      const data = node['data'] as { source: string; filter: string };
+      expect(data.source).toBe('dummyjson.product.list');
+      expect(data.filter).toBe('id = 15');
+    }
+    // The Card declares the add-to-cart action declaratively.
+    const cardProps = card!['props'] as { actions: Array<{ id: string }> };
+    expect(cardProps.actions[0]!.id).toBe('dummyjson.cart.add');
+  });
+
+  it('/product/[id] still mounts the recommendations rail via a baseline <List>', () => {
     const m = productManifest('15', 'comfortable')!;
     const recList = findFirst(m.routes[0]!.layout!, 'List');
     expect(recList).not.toBeNull();
@@ -112,19 +177,20 @@ describe('manifestForRoute', () => {
     expect(data.filter).toContain('15');
   });
 
-  it('product detail manifest mounts ProductDetail with the focal product filter', () => {
-    const m = productManifest('15', 'comfortable')!;
-    const detail = findFirst(m.routes[0]!.layout!, 'ProductDetail');
-    expect(detail).not.toBeNull();
-    const data = detail!['data'] as { source: string; filter: string };
-    expect(data.source).toBe('dummyjson.product.list');
-    expect(data.filter).toBe('id = 15');
-  });
-
-  it('checkout manifest mounts the CheckoutWizard custom binding', () => {
+  it('/checkout composes a <Stack> of three <Form>s — one per step', () => {
     const m = checkoutManifest('comfortable')!;
-    const wiz = findFirst(m.routes[0]!.layout!, 'CheckoutWizard');
-    expect(wiz).not.toBeNull();
+    const forms = findAll(m.routes[0]!.layout!, 'Form');
+    expect(forms.length).toBe(3);
+    // Step submit labels indicate the progression.
+    const labels = forms.map((f) => (f['props'] as { submitLabel?: string }).submitLabel);
+    expect(labels).toEqual(['Continue to payment', 'Review order', 'Place order']);
+    // Each form contains its own input children — the shipping form has
+    // multiple TextInputs, the review form has a Markdown summary.
+    const shipping = forms[0]!;
+    const shippingInputs = (shipping['children'] as Array<Record<string, unknown>>).filter(
+      (c) => c['component'] === 'TextInput',
+    );
+    expect(shippingInputs.length).toBeGreaterThanOrEqual(4);
   });
 
   it('every route surfaces the rate-limit chip in the chrome header', () => {
@@ -172,14 +238,6 @@ describe('manifestForRoute', () => {
     // `lib/cir-providers.tsx`), so the manifest should be free of those
     // anchor buttons.
     const m = browseManifest('comfortable')!;
-    const findAll = (root: unknown, comp: string, out: unknown[] = []): unknown[] => {
-      if (!root || typeof root !== 'object') return out;
-      const node = root as Record<string, unknown>;
-      if (node['component'] === comp) out.push(node);
-      const children = node['children'];
-      if (Array.isArray(children)) for (const c of children) findAll(c, comp, out);
-      return out;
-    };
     const buttons = findAll(m.routes[0]!.layout!, 'Button') as Array<Record<string, unknown>>;
     const addBtn = buttons.find((b) => (b['actions'] as string[])?.includes('dummyjson.cart.add'));
     const removeBtn = buttons.find((b) =>

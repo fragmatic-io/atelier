@@ -219,12 +219,12 @@ function buildServer(): CirServer {
   //
   // Per `docs/ethos.md` principle #2 (composition, not invention), every
   // entry carries a `description` so the LLM picks the right component.
-  // Custom bindings (`ProductDetail`, `CartItemList`, `CheckoutWizard`)
-  // describe the specific UX they ship; the compiler picks them over
-  // generic `<DetailView>` / `<List>` / `<Wizard>` when the route's
-  // intent matches. `ProductCard` / `ProductGrid` were retired in the
-  // marketplace pivot — the compiler now composes `<Grid data={...}>` +
-  // `<Card>` directly.
+  // Marketplace pivot — closing chapter. Marigold ships zero customs;
+  // every shape composes from baseline. The descriptions tell the LLM
+  // explicitly which composition fits which route — see the `USE` notes
+  // on `<Card>`, `<Grid>`, `<Gallery>`, `<DetailView>`, `<Queue>`, and
+  // `<Wizard>` (the closest pure-baseline approximations of the three
+  // retired commerce primitives).
   const componentIds: Array<{ id: string; description: string }> = [
     {
       id: 'Stack',
@@ -238,9 +238,11 @@ function buildServer(): CirServer {
         'and a footer row of declarative `actions: CardAction[]` buttons. When rendered as a child ' +
         'of `<Grid data={items}>`, the runtime threads the row item via `data`; the Card defaults ' +
         'each tile field from common product-shape fields (`title`, `brand`, `thumbnail`, ' +
-        '`images[0]`, `price`, `discountPercentage`). For product browsing in this demo, COMPOSE ' +
-        '`<Grid data={...}>` over a single `<Card>` template child rather than authoring a custom ' +
-        'wrapper.',
+        '`images[0]`, `price`, `discountPercentage`). USE `<Card>` with `data` for product detail ' +
+        'surfaces — bind `data: { source: "dummyjson.product.list", filter: "id = …" }` and ' +
+        'declare an `actions: [{id: "dummyjson.cart.add", label: "Add to cart"}]` button. For ' +
+        '`/browse`, COMPOSE `<Grid data={...}>` over a single `<Card>` template child rather than ' +
+        'authoring a custom wrapper.',
     },
     {
       id: 'Container',
@@ -259,7 +261,19 @@ function buildServer(): CirServer {
     {
       id: 'List',
       description:
-        'Generic semantic <ul>. For shopping cart, prefer `CartItemList`. Use `<List>` for related-products rails or generic recommendations.',
+        'Generic semantic <ul>. Use `<List>` for related-products rails, recommendation lists, and ' +
+        'any compact list where rows have no per-row action affordances. For action queues ' +
+        '(remove, archive, reply), USE `<Queue>` instead.',
+    },
+    {
+      id: 'Queue',
+      description:
+        'Generic "items requiring action" primitive. Reads rows from `data` (resolver-supplied) ' +
+        'and renders per-row buttons from declarative `actions: QueueAction[]`. The runtime wires ' +
+        '`onAction(actionId, item)` through `actionSlots: ["onAction"]`. USE `<Queue>` for the ' +
+        'cart line items — bind `data: { source: "dummyjson.cart.list" }` and declare ' +
+        '`actions: [{id: "dummyjson.cart.remove", label: "Remove", variant: "ghost"}]`. The ' +
+        '`compositionRole: "list"` lets it sit in any place a `<List>` could.',
     },
     {
       id: 'Markdown',
@@ -282,7 +296,7 @@ function buildServer(): CirServer {
     {
       id: 'TextInput',
       description:
-        'Single-line text input. Pair with `<Form>` for submission (e.g. shipping form).',
+        'Single-line text input. Pair with `<Form>` for submission (shipping name / address / city / postal / payment fields).',
     },
     {
       id: 'Select',
@@ -342,37 +356,40 @@ function buildServer(): CirServer {
     {
       id: 'Wizard',
       description:
-        'Multi-step process indicator (Shipping → Payment → Review). For checkout, prefer `CheckoutWizard` which is data-aware.',
+        'Multi-step process indicator. Consumes its `steps` via a typed prop where each step carries ' +
+        'a ReactNode body — manifests cannot supply ReactNodes, so for `/checkout` COMPOSE a ' +
+        '`<Stack>` of three `<Form>`s (Shipping / Payment / Review) with `<Markdown>` step headers ' +
+        'until `<Wizard>` accepts manifest-driven step bodies.',
     },
-    { id: 'Form', description: 'Form root with submit semantics. Wraps inputs.' },
+    {
+      id: 'Form',
+      description:
+        'Form root with submit semantics. Wraps `<TextInput>` / `<Select>` children and appends a ' +
+        'submit button (`submitLabel` prop). USE `<Form>` for each checkout step.',
+    },
     {
       id: 'DetailView',
       description:
-        'Single-record detail surface. For products, prefer `ProductDetail` which adds gallery + qty + add-to-cart.',
+        'Single-record detail surface. Renders `fields: { id, label }[]` against a bound `data` ' +
+        'item. USE `<DetailView>` for product description / brand / category / stock alongside a ' +
+        '`<Card>` action surface and a `<Gallery>` image strip — bind all three to the same ' +
+        '`{ source: "dummyjson.product.list", filter: "id = …" }`.',
     },
-    { id: 'Gallery', description: 'Image gallery / carousel. Used inside ProductDetail.' },
+    {
+      id: 'Gallery',
+      description:
+        'Image gallery / carousel. Data-aware: when `data` is a single product object with ' +
+        '`images: string[]`, the Gallery derives one figure per image and defaults `alt` to ' +
+        '`product.title`. USE `<Gallery>` with the same single-product binding the `<Card>` and ' +
+        '`<DetailView>` use on `/product/[id]`.',
+    },
     { id: 'StatCard', description: 'Single KPI card. Rare in this demo.' },
-    // Custom bindings shipped in `apps/demo-dummyjson/components/`. Five
-    // have been retired in the marketplace pivot — `MarigoldHeader`,
-    // `Wordmark`, and `RateLimitChip` collapsed onto
-    // `<Stack(Logo, NavBar, StatusBar)>` composition; `ProductCard` and
-    // `ProductGrid` collapsed onto `<Grid data={items}>` + `<Card>`
-    // template composition.
-    {
-      id: 'ProductDetail',
-      description:
-        "Rich product detail page: gallery + info + qty + add-to-cart. PREFER over `<DetailView>` for `/product/[id]`. Bind `data: { source: 'dummyjson.product.list', filter: 'id = …' }`.",
-    },
-    {
-      id: 'CartItemList',
-      description:
-        "Cart line items with image + qty + remove + totals + designed empty state. PREFER over `<List>` for `/cart`. Bind `data: { source: 'dummyjson.cart.list' }`.",
-    },
-    {
-      id: 'CheckoutWizard',
-      description:
-        'Three-step Shipping/Payment/Review with progressive disclosure. PREFER over `<Wizard>` for `/checkout`.',
-    },
+    // Marketplace pivot — closing chapter. The three remaining commerce
+    // customs (`ProductDetail`, `CartItemList`, `CheckoutWizard`) have
+    // been retired. The compiler now composes baseline primitives for
+    // every Marigold route. See the `USE` notes on `<Card>`, `<Gallery>`,
+    // `<DetailView>`, `<Queue>`, `<Wizard>`, and `<Form>` for the
+    // patterns the LLM should pick.
   ];
   const components: ComponentDefinition[] = componentIds.map((c) => ({
     id: c.id,
