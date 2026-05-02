@@ -114,35 +114,7 @@ Today's failure modes that get worse at scale:
 
 ### Phase C-2 — tool-using compiler (2 wk; real architecture shift)
 
-- [ ] **C-2** — Convert `GeminiCompiler` from "everything in prompt" to single agent with tools. Tool surface:
-
-  ```ts
-  // Discovery (replaces all-capabilities-in-prompt)
-  lookupCapability(id: string): CapabilitySchema
-  findCapability(intent: string, k?: number): CapabilitySchema[]
-  listCapabilities(filter?: { domain?, tag? }): CapabilityRef[]
-
-  // Component selection (replaces all-components-in-prompt)
-  findComponent(role: string, intent: string): ComponentDefinition[]
-  inspectComponent(id: string): ComponentDefinition
-  listComponents(role: 'list'|'grid'|'leaf'|...): ComponentRef[]
-
-  // Validation feedback (the C-1 loop wired as a tool)
-  validateDraft(draft: Manifest): ValidationResult
-  explainViolation(v: PolicyViolation): string
-
-  // Existing-manifest awareness (diff mode + cross-route coherence)
-  inspectExistingManifest(route: string): Manifest | null
-  listSiblingRoutes(): RouteOutline[]
-
-  // Future: marketplace retrieval
-  findRecipe(description: string): RecipeRef[]   // gated on V-6
-  ```
-
-  - Prompt shrinks from ~100 KB to "here's the route + intent + your tools; ask for what you need."
-  - Same pattern Claude Agent SDK uses internally. Aligns with where Anthropic tooling has been heading.
-  - Token costs drop materially. Accuracy improves because the LLM only loads what it actually uses.
-  - **Depends on C-1.** 2 wk.
+- [x] **C-2** — `GeminiCompiler` → single tool-using agent. **MVP shipped** (this commit) — `ToolUsingCompiler` wraps `GeminiAgentClient` (a function-calling-aware sibling of `GeminiCompiler`) and drives a bounded agent loop against a host-supplied `ToolEnvironment`. Nine tools landed: `lookupCapability` / `findCapability` / `listCapabilities` (discovery), `findComponent` / `inspectComponent` / `listComponents` (component selection), `validateDraft` (C-1 validation feedback as a tool), `inspectExistingManifest` / `listSiblingRoutes` (cross-route coherence). `explainViolation` and `findRecipe` deferred (the latter gated on V-6 / C-5; the former rolled into the violation strings the validator already returns). Substring-fallback search for `findCapability` / `findComponent` is the seam C-5 RAG swaps in for. Showcased in `apps/demo` behind `CIR_COMPILER_TOOLS_ENABLED=1`. Wraps cleanly inside `ValidationFeedbackCompiler`; cascades through `CompositeCompiler` on `CompilerOutputError`. Default boot unchanged. Tests in `tool-using-compiler.test.ts` (21) + `tool-environment.test.ts` (10). Replication to other demos + production polish remain follow-ups.
 
 ### Phase C-3 — capability scoping (= Wave 10 S-1)
 
@@ -325,7 +297,7 @@ Bounded items, do anytime. Most can fold into a single sprint.
 - [ ] **`ActionDispatcher` Zod-validate input against `capability.input`.** Host is on the hook for shape validation. Documented intentionally; revisit if the dispatcher should run a Zod-ish parse.
 - [ ] **IndexedDB LRU eviction is O(n) per write.** Fine at the default cap of 200 entries; revisit with byte-accounting work.
 - [ ] **Sign capabilities/skills artifacts at publish time** per [`docs/production-concerns.md`](docs/production-concerns.md). Needs a key-management decision.
-- [ ] **TS2352 / TS2493 in `packages/compiler/test/gemini-compiler.test.ts`** lines 75 + 96. Surfaced after `2998b2c` removed the TS5097 short-circuit. ~10-line fix.
+- [x] **TS2352 / TS2493 in `packages/compiler/test/gemini-compiler.test.ts`** lines 75 + 96. Surfaced after `2998b2c` removed the TS5097 short-circuit. Fixed inline during C-2.
 
 ### Detector + adapter scaffolding
 

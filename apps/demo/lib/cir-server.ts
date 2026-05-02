@@ -16,11 +16,13 @@
 import {
   BudgetMeteredCompiler,
   CompositeCompiler,
+  GeminiAgentClient,
   GenericFallbackCompiler,
   GeminiCompiler,
   InMemoryBudgetCounter,
   MemoryManifestStore,
   ServerManifestResolver,
+  ToolUsingCompiler,
   type CompilerService,
   type ManifestStore,
 } from '@cir/compiler';
@@ -99,44 +101,6 @@ function buildServer(): CirServer {
     : undefined;
   const budgetCounter = budgetEnabled ? new InMemoryBudgetCounter() : undefined;
 
-  const compilers: CompilerService[] = [];
-  if (geminiAvailable) {
-    const gemini: CompilerService = new GeminiCompiler({
-      apiKey: apiKey!,
-      coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
-      diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
-    });
-    compilers.push(
-      demoBudget && budgetCounter
-        ? new BudgetMeteredCompiler({
-            inner: gemini,
-            counter: budgetCounter,
-            budget: demoBudget,
-            onExceeded: (reason) => {
-              // eslint-disable-next-line no-console
-              console.warn(`[cir] compile budget breached (${reason.code}): ${reason.message}`);
-            },
-          })
-        : gemini,
-    );
-  }
-  compilers.push(new GenericFallbackCompiler());
-
-  const compiler = new CompositeCompiler(compilers, {
-    onCascade: (from, err) => {
-      // eslint-disable-next-line no-console
-      console.warn(`[cir] compiler ${from} failed; cascading. err:`, err);
-    },
-  });
-
-  const store = new MemoryManifestStore({ maxEntries: 200 });
-
-  const resolver = new ServerManifestResolver({
-    compiler,
-    store,
-    audit: (e) => audit.emit(e),
-  });
-
   // Components catalog summary — what the compiler is allowed to reference.
   //
   // Marketplace pivot: Aurora's catalog is **baseline-only**. Every previous
@@ -144,6 +108,11 @@ function buildServer(): CirServer {
   // is gone — the LLM composes baseline `<Queue>` / `<ChatThread>` /
   // `<Stack>` + `<Logo>` + `<NavBar>` instead. The `marketplace-pressure`
   // eval gate enforces zero customs here going forward.
+  //
+  // Defined BEFORE the compilers block (rather than after the resolver,
+  // as it lived previously) so the C-2 `ToolUsingCompiler` path can read
+  // it as part of its `ToolEnvironment`. The downstream return statement
+  // re-exports the same array unchanged.
   const baselineIds = [
     // Layout
     'Stack',
@@ -198,6 +167,79 @@ function buildServer(): CirServer {
     examples: [],
     text_render: true,
   })) as ComponentDefinition[];
+
+  // Wave C / Phase C-2 — opt-in tool-using agent path. When the env flag
+  // is set the cold/diff `GeminiCompiler` is replaced with
+  // `ToolUsingCompiler`: the system prompt shrinks; the LLM discovers
+  // capabilities + components via tool calls; `validateDraft` /
+  // `inspectExistingManifest` / `listSiblingRoutes` are surfaced for
+  // self-correction and cross-route consistency. Default boot is
+  // unchanged (single-shot path) so the showcase is additive.
+  //
+  // The wrapper is composable: this branch can be wrapped further by
+  // `ValidationFeedbackCompiler` or `BudgetMeteredCompiler` exactly as
+  // today's `GeminiCompiler` is. We keep the budget wrap on for parity.
+  const useTools = process.env['CIR_COMPILER_TOOLS_ENABLED'] === '1';
+
+  const compilers: CompilerService[] = [];
+  if (geminiAvailable) {
+    const llmCompiler: CompilerService = useTools
+      ? new ToolUsingCompiler({
+          inner: new GeminiAgentClient({
+            apiKey: apiKey!,
+            coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
+            diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
+          }),
+          // The env binds the tools to this host's data. Aurora's demo
+          // ships zero customs and no per-route policy validator at the
+          // server level, so `validate` is omitted; the agent will see
+          // `validateDraft → { ok: true }` from the default seam.
+          env: {
+            capabilities: CAPABILITIES,
+            components,
+          },
+          onToolCall: (call) => {
+            // eslint-disable-next-line no-console
+            console.log(
+              `[cir] agent tool: ${call.name}(${JSON.stringify(call.args).slice(0, 80)})`,
+            );
+          },
+        })
+      : new GeminiCompiler({
+          apiKey: apiKey!,
+          coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
+          diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
+        });
+    compilers.push(
+      demoBudget && budgetCounter
+        ? new BudgetMeteredCompiler({
+            inner: llmCompiler,
+            counter: budgetCounter,
+            budget: demoBudget,
+            onExceeded: (reason) => {
+              // eslint-disable-next-line no-console
+              console.warn(`[cir] compile budget breached (${reason.code}): ${reason.message}`);
+            },
+          })
+        : llmCompiler,
+    );
+  }
+  compilers.push(new GenericFallbackCompiler());
+
+  const compiler = new CompositeCompiler(compilers, {
+    onCascade: (from, err) => {
+      // eslint-disable-next-line no-console
+      console.warn(`[cir] compiler ${from} failed; cascading. err:`, err);
+    },
+  });
+
+  const store = new MemoryManifestStore({ maxEntries: 200 });
+
+  const resolver = new ServerManifestResolver({
+    compiler,
+    store,
+    audit: (e) => audit.emit(e),
+  });
 
   return {
     compiler,

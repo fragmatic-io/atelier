@@ -137,6 +137,31 @@ export {
   type ValidationFeedbackValidateResult,
 } from './validation-feedback-compiler.js';
 
+// Tool-using compiler (Wave C / Phase C-2)
+export {
+  AGENT_SYSTEM_PROMPT,
+  ToolUsingCompiler,
+  buildAgentUserPrompt,
+  type AgentClient,
+  type AgentContent,
+  type AgentToolCall,
+  type AgentToolDeclaration,
+  type AgentTurnRequest,
+  type AgentTurnResponse,
+  type ToolCallObserver,
+  type ToolUsingCompilerOptions,
+} from './tool-using-compiler.js';
+export {
+  fallbackFindCapability,
+  fallbackFindComponent,
+  type CapabilityRef,
+  type RouteOutline,
+  type SemanticSearch,
+  type ToolEnvironment,
+  type ToolValidationResult,
+} from './tool-environment.js';
+export { GeminiAgentClient, type GeminiAgentClientOptions } from './gemini-agent-client.js';
+
 // Intent profile compiler (onboarding)
 export {
   CompositeIntentProfileCompiler,

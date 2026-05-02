@@ -72,7 +72,7 @@ describe('GeminiCompiler', () => {
     // matching the schema regex — eliminates one class of validation retry.
     expect(r.manifest.manifest_id).toMatch(/^m_[a-z0-9]{8,}$/);
     expect(generateContent).toHaveBeenCalledTimes(1);
-    const args = generateContent.mock.calls[0]?.[0] as { model: string };
+    const args = (generateContent.mock.calls[0] as unknown as [{ model: string }])[0];
     expect(args.model).toBe('gemini-2.5-pro');
   });
 
@@ -93,7 +93,7 @@ describe('GeminiCompiler', () => {
 
     expect(r.diff_mode).toBe(true);
     expect(r.model).toBe('diff-y');
-    const args = generateContent.mock.calls[0]?.[0] as { model: string };
+    const args = (generateContent.mock.calls[0] as unknown as [{ model: string }])[0];
     expect(args.model).toBe('diff-y');
   });
 
