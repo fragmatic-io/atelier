@@ -183,6 +183,20 @@ const config = {
       fontFeatureSettings: {
         cir: 'var(--cir-font-feature-settings, normal)',
       },
+      // Vis-7 — elevation / surface scale. The runtime projects the brand
+      // kit's elevation_scale (5 levels x { light, dark }) into
+      // --cir-shadow-{level} CSS variables, paired per data-color-mode in
+      // the host's globals.css. The Tailwind shadow utilities below resolve
+      // to those variables when present and fall through to a sensible
+      // default ramp otherwise. Components emit \`data-elevation={level}\` AND
+      // the matching \`shadow-{step}\` utility class — either path produces
+      // the right box-shadow at runtime.
+      boxShadow: {
+        sm: 'var(--cir-shadow-hover, 0 1px 2px rgba(0, 0, 0, 0.05))',
+        md: 'var(--cir-shadow-popover, 0 4px 6px -1px rgba(0, 0, 0, 0.10))',
+        lg: 'var(--cir-shadow-modal, 0 10px 15px -3px rgba(0, 0, 0, 0.10))',
+        xl: 'var(--cir-shadow-commandbar, 0 20px 25px -5px rgba(0, 0, 0, 0.10))',
+      },
     },
   },
   plugins: [],

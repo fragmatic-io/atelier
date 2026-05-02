@@ -30,7 +30,12 @@
 import { useCallback, useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { ComponentBinding } from '@atelier/runtime';
-import { bulkActionBarVariantClass, cn, type BulkActionBarVariant } from './_variants.js';
+import {
+  bulkActionBarVariantClass,
+  cn,
+  elevationClass,
+  type BulkActionBarVariant,
+} from './_variants.js';
 
 /**
  * One entry in the bulk action set. The id is the capability id (e.g.
@@ -165,7 +170,8 @@ export function BulkActionBar({
       data-cir-component="BulkActionBar"
       data-variant={variant}
       data-reduce-motion={reduceMotion ? 'true' : 'false'}
-      className={cn(bulkActionBarVariantClass[variant], className)}
+      data-elevation="popover"
+      className={cn(bulkActionBarVariantClass[variant], elevationClass.popover, className)}
       style={transitionStyle}
     >
       <span

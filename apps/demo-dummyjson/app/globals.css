@@ -55,6 +55,20 @@
   --cir-shadow-lg: 0 12px 24px -8px rgba(80, 32, 12, 0.12), 0 4px 8px -4px rgba(80, 32, 12, 0.06);
   --cir-shadow-xl: 0 24px 40px -12px rgba(80, 32, 12, 0.18), 0 8px 16px -8px rgba(80, 32, 12, 0.08);
 
+  /* Vis-7 — five-step elevation scale (resting / hover / popover / modal /
+     commandbar), paired light + dark per `BrandKit.elevation_scale`.
+     Components emit `data-elevation={level}` so hosts can target with
+     `[data-elevation="popover"] { box-shadow: var(--cir-shadow-popover); }`
+     in addition to the Tailwind utility class fallback. */
+  --cir-shadow-resting: none;
+  --cir-shadow-hover: 0 2px 6px -1px rgba(80, 32, 12, 0.1), 0 1px 2px 0 rgba(80, 32, 12, 0.05);
+  --cir-shadow-popover:
+    0 8px 16px -4px rgba(80, 32, 12, 0.14), 0 4px 8px -4px rgba(80, 32, 12, 0.08);
+  --cir-shadow-modal:
+    0 20px 40px -12px rgba(80, 32, 12, 0.22), 0 8px 16px -8px rgba(80, 32, 12, 0.1);
+  --cir-shadow-commandbar:
+    0 32px 64px -16px rgba(80, 32, 12, 0.3), 0 12px 24px -12px rgba(80, 32, 12, 0.16);
+
   /* Motion */
   --cir-duration-fast: 140ms;
   --cir-duration-normal: 220ms;
@@ -99,6 +113,14 @@ html[data-color-mode='dark'] {
   --cir-shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
   --cir-shadow-lg: 0 12px 24px -8px rgba(0, 0, 0, 0.6), 0 4px 8px -4px rgba(0, 0, 0, 0.35);
   --cir-shadow-xl: 0 24px 40px -12px rgba(0, 0, 0, 0.75), 0 8px 16px -8px rgba(0, 0, 0, 0.45);
+
+  /* Vis-7 — dark-mode elevation pair, mirrors `elevation_scale[*].dark`. */
+  --cir-shadow-resting: none;
+  --cir-shadow-hover: 0 2px 6px -1px rgba(0, 0, 0, 0.45), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --cir-shadow-popover: 0 8px 16px -4px rgba(0, 0, 0, 0.55), 0 4px 8px -4px rgba(0, 0, 0, 0.35);
+  --cir-shadow-modal: 0 20px 40px -12px rgba(0, 0, 0, 0.65), 0 8px 16px -8px rgba(0, 0, 0, 0.4);
+  --cir-shadow-commandbar:
+    0 32px 64px -16px rgba(0, 0, 0, 0.75), 0 12px 24px -12px rgba(0, 0, 0, 0.5);
 }
 
 * {

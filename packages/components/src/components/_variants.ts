@@ -497,3 +497,41 @@ export const codeViewVariantClass: Readonly<Record<CodeViewVariant, string>> = O
   embedded: 'bg-gray-100 rounded p-2 text-xs font-mono inline-block max-w-full overflow-x-auto',
   numbered: 'bg-gray-50 rounded-md p-3 text-sm font-mono overflow-x-auto',
 });
+
+// -----------------------------------------------------------------------------
+// Elevation scale — Wave 11 / Vis-7. Five canonical levels mirror
+// `BrandKit.elevation_scale` (`resting` / `hover` / `popover` / `modal` /
+// `commandbar`). Components consume this map via `cn(..., elevationClass[level])`
+// AND emit `data-elevation={level}` so hosts can opt for the CSS-variable
+// bridge (`box-shadow: var(--cir-shadow-{level})`) instead of (or alongside)
+// the Tailwind classes.
+//
+// The Tailwind class strings below are the no-CSS-config fallback: hosts that
+// pull our published `tailwind.config.mjs` template get a working dark/light
+// pair via the `--cir-shadow-{level}` variables that template registers under
+// `theme.extend.boxShadow`. Hosts that ship neither Tailwind nor the CSS
+// variables get a sensible default shadow ramp via Tailwind's built-ins.
+// -----------------------------------------------------------------------------
+export type Elevation = 'resting' | 'hover' | 'popover' | 'modal' | 'commandbar';
+
+export const elevationClass: Readonly<Record<Elevation, string>> = Object.freeze({
+  resting: '',
+  hover: 'shadow-sm',
+  popover: 'shadow-md',
+  modal: 'shadow-lg',
+  commandbar: 'shadow-xl',
+});
+
+/**
+ * Frozen tuple of every elevation level in canonical order. Mirrors
+ * `ElevationKey` from `@atelier/schemas` — duplicated here as a value so the
+ * components package does not pull a runtime dependency on schemas just for
+ * the iteration.
+ */
+export const ELEVATION_LEVELS: readonly Elevation[] = Object.freeze([
+  'resting',
+  'hover',
+  'popover',
+  'modal',
+  'commandbar',
+] as const);

@@ -100,6 +100,15 @@ const config = {
         lg: '12px',
       },
       boxShadow: {
+        // Vis-7 — five-step elevation scale, paired light/dark via CSS
+        // variables in globals.css. Components consume these via the
+        // `elevationClass` table (`shadow-sm` / `shadow-md` / `shadow-lg`
+        // / `shadow-xl`); we also keep the level-named aliases for hosts
+        // that want to read them directly.
+        sm: 'var(--cir-shadow-hover)',
+        md: 'var(--cir-shadow-popover)',
+        lg: 'var(--cir-shadow-modal)',
+        xl: 'var(--cir-shadow-commandbar)',
         resting: 'var(--cir-shadow-resting)',
         hover: 'var(--cir-shadow-hover)',
         popover: 'var(--cir-shadow-popover)',

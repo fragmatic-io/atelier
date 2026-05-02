@@ -46,7 +46,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import type { ComponentBinding } from '@atelier/runtime';
-import { cn, tooltipVariantClass, type TooltipVariant } from './_variants.js';
+import { cn, elevationClass, tooltipVariantClass, type TooltipVariant } from './_variants.js';
 
 export type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -354,7 +354,8 @@ export function Tooltip({
             data-cir-component="Tooltip"
             data-side={position.side}
             data-variant={variant}
-            className={cn(tooltipVariantClass[variant], className)}
+            data-elevation="popover"
+            className={cn(tooltipVariantClass[variant], elevationClass.popover, className)}
             style={{
               position: 'fixed',
               top: `${String(position.top)}px`,

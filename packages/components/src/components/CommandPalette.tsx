@@ -58,7 +58,12 @@ import {
 } from '@atelier/keyboard';
 import { useKeyboardServicesFromContext } from '../keyboard/context.js';
 import { Icon } from './Icon.js';
-import { cn, commandPaletteVariantClass, type CommandPaletteVariant } from './_variants.js';
+import {
+  cn,
+  commandPaletteVariantClass,
+  elevationClass,
+  type CommandPaletteVariant,
+} from './_variants.js';
 
 const EMPTY_ACTIONS: readonly KeyboardAction[] = Object.freeze([]);
 
@@ -341,8 +346,9 @@ export function CommandPalette({
       data-cir-component="CommandPalette"
       data-variant={variant}
       data-cir-source={sourceIsProp ? 'prop' : 'registry'}
+      data-elevation="commandbar"
       aria-label="Command palette"
-      className={cn(commandPaletteVariantClass[variant], className)}
+      className={cn(commandPaletteVariantClass[variant], elevationClass.commandbar, className)}
     >
       <div data-cir-part="palette-search">
         <label htmlFor={inputId} data-cir-part="palette-label">

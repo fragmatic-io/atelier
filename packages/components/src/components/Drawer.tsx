@@ -8,7 +8,7 @@
  */
 import { useEffect, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
-import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
+import { cn, elevationClass, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
 export type DrawerSide = 'left' | 'right' | 'top' | 'bottom';
 export type DrawerVariant = LayoutVariant;
@@ -51,7 +51,8 @@ export function Drawer({
       data-cir-component="Drawer"
       data-cir-side={side}
       data-variant={variant}
-      className={cn(layoutVariantClass[variant], className)}
+      data-elevation="modal"
+      className={cn(layoutVariantClass[variant], elevationClass.modal, className)}
     >
       <div
         data-cir-part="drawer-backdrop"

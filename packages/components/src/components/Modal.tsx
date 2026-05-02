@@ -8,7 +8,7 @@
  */
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
-import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
+import { cn, elevationClass, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
 export type ModalSize = 'sm' | 'md' | 'lg';
 export type ModalVariant = LayoutVariant;
@@ -75,8 +75,9 @@ export function Modal({
       data-cir-component="Modal"
       data-size={size}
       data-variant={variant}
+      data-elevation="modal"
       aria-labelledby="cir-modal-title"
-      className={cn(layoutVariantClass[variant], className)}
+      className={cn(layoutVariantClass[variant], elevationClass.modal, className)}
       style={{ width: SIZE_PX[size], maxWidth: '100%' }}
       onClick={(e): void => {
         if (e.target === dialogRef.current) onClose();

@@ -30,6 +30,7 @@ import type { ComponentBinding } from '@atelier/runtime';
 import { MetaBadge } from './MetaBadge.js';
 import {
   cn,
+  elevationClass,
   layoutVariantClass,
   actionVariantClass,
   type LayoutVariant,
@@ -239,6 +240,15 @@ export const Card = forwardRef<HTMLElement, CardProps>(function Card(
     badge !== undefined ||
     (declarativeActions !== undefined && declarativeActions.length > 0);
 
+  // Wave 11 / Vis-7 — `elevated` cards opt into the brand kit's elevation
+  // scale (`resting` level by default; hosts that want a hover lift can
+  // re-target via the `[data-elevation]` selector in their stylesheet).
+  // Other variants stay flat — `data-elevation` is only emitted for the
+  // elevated flavour so non-elevated layouts do not pick up an unintended
+  // shadow rule by accident.
+  const elevation = variant === 'elevated' ? 'resting' : undefined;
+  const elevationCls = elevation !== undefined ? elevationClass[elevation] : undefined;
+
   // Legacy path — title + ReactNode actions header + children body.
   // Preserved verbatim so pre-pivot Card callers keep working.
   if (!isTile) {
@@ -249,7 +259,8 @@ export const Card = forwardRef<HTMLElement, CardProps>(function Card(
         data-cir-component="Card"
         data-density={density}
         data-variant={variant}
-        className={cn(layoutVariantClass[variant], className)}
+        {...(elevation !== undefined ? { 'data-elevation': elevation } : {})}
+        className={cn(layoutVariantClass[variant], elevationCls, className)}
         aria-label={title}
       >
         {hasHeader ? (
@@ -281,7 +292,8 @@ export const Card = forwardRef<HTMLElement, CardProps>(function Card(
       data-density={density}
       data-variant={variant}
       data-cir-tile="true"
-      className={cn(layoutVariantClass[variant], className)}
+      {...(elevation !== undefined ? { 'data-elevation': elevation } : {})}
+      className={cn(layoutVariantClass[variant], elevationCls, className)}
       aria-label={title}
       style={{ display: 'flex', flexDirection: 'column' }}
     >

@@ -132,6 +132,20 @@ export default {
         'cir-lg': '0 12px 24px -8px rgba(80, 32, 12, 0.12), 0 4px 8px -4px rgba(80, 32, 12, 0.06)',
         'cir-xl':
           '0 24px 40px -12px rgba(80, 32, 12, 0.18), 0 8px 16px -8px rgba(80, 32, 12, 0.08)',
+        // Vis-7 — paired light/dark elevation scale via CSS variables in
+        // globals.css. Components consume these via the `elevationClass`
+        // table (`shadow-sm` / `shadow-md` / `shadow-lg` / `shadow-xl`); we
+        // also keep the level-named aliases for hosts that target them
+        // directly. The CSS variables flip per `data-color-mode`.
+        sm: 'var(--cir-shadow-hover)',
+        md: 'var(--cir-shadow-popover)',
+        lg: 'var(--cir-shadow-modal)',
+        xl: 'var(--cir-shadow-commandbar)',
+        resting: 'var(--cir-shadow-resting)',
+        hover: 'var(--cir-shadow-hover)',
+        popover: 'var(--cir-shadow-popover)',
+        modal: 'var(--cir-shadow-modal)',
+        commandbar: 'var(--cir-shadow-commandbar)',
       },
       transitionDuration: {
         'cir-fast': '140ms',

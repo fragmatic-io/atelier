@@ -49,7 +49,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import type { ComponentBinding } from '@atelier/runtime';
-import { cn, hoverCardVariantClass, type HoverCardVariant } from './_variants.js';
+import { cn, elevationClass, hoverCardVariantClass, type HoverCardVariant } from './_variants.js';
 
 export type HoverCardSide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -358,7 +358,8 @@ export function HoverCard({
             data-cir-component="HoverCard"
             data-side={position.side}
             data-variant={variant}
-            className={cn(hoverCardVariantClass[variant], className)}
+            data-elevation="popover"
+            className={cn(hoverCardVariantClass[variant], elevationClass.popover, className)}
             style={{
               position: 'fixed',
               top: `${String(position.top)}px`,
