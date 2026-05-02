@@ -106,11 +106,25 @@ export type { TimelineProps, TimelineEntry, TimelineStatus } from './components/
 export { Tree, TreeBinding } from './components/Tree.js';
 export type { TreeProps, TreeNode } from './components/Tree.js';
 
-export { CodeView, CodeViewBinding } from './components/CodeView.js';
+export {
+  CodeView,
+  CodeViewBinding,
+  FOLD_THRESHOLD,
+  FOLD_COLLAPSED_LINES,
+} from './components/CodeView.js';
 export type { CodeViewProps } from './components/CodeView.js';
 
 export { CodeBlock, CodeBlockBinding, codeBlockTextRender } from './components/CodeBlock.js';
 export type { CodeBlockProps, CodeBlockVariant } from './components/CodeBlock.js';
+
+// Wave 11 / Cnt-1 — Shiki bridge surfaces (lazy, optional peer dep). The
+// `highlight` / `clearShikiCache` exports are mostly for tests + advanced
+// hosts that want to pre-warm the cache; everyday usage flows through
+// `<CodeView language="…">`.
+export { highlight, clearShikiCache, DEFAULT_SHIKI_THEME } from './code/shiki.js';
+export type { ShikiThemePair, ShikiHighlightResult } from './code/shiki.js';
+export { useHighlightedCode } from './code/use-highlighted.js';
+export type { HighlightedCodeState } from './code/use-highlighted.js';
 
 export { DiffView, DiffViewBinding } from './components/DiffView.js';
 export type { DiffViewProps, DiffHunk, DiffKind } from './components/DiffView.js';

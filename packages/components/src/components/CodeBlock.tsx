@@ -3,19 +3,17 @@
 
 'use client';
 /**
- * CodeBlock — lightweight monospace code surface with auto-detected language
- * label, copy-to-clipboard button, and optional gutter line numbers.
+ * CodeBlock — code surface with auto-detected language label, copy-to-
+ * clipboard button, and optional gutter line numbers. Wraps `<CodeView>`
+ * for the actual code rendering — when `language` is set, `<CodeView>`
+ * lazy-loads Shiki and swaps in syntax-highlighted HTML (Wave 11 / Cnt-1).
  *
- * This is the "fast path" code component: zero-dep heuristic detection via
- * `detectLanguage`, no syntax-highlight tokeniser, ~3kb of component code.
- * Phase Cnt-1 will introduce a Shiki/Prism-grade highlighter behind a
- * feature flag — when it lands, `<Markdown>` will switch its triple-backtick
- * fence renderer over (currently `<CodeBlock>` is the default), and this
- * component continues to ship as the lightweight fallback.
+ * Pre-Cnt-1 this component owned its own `<pre>`; that body now lives in
+ * `<CodeView>` so highlighting / folding / line refs are inherited from
+ * a single render path. The chrome (toolbar, language pill, copy button)
+ * stays here because it is `<CodeBlock>`-specific.
  *
  * Design notes:
- *  - `<pre><code>` is the structural root; we set `whiteSpace: 'pre'` and
- *    `overflow-x-auto` so long lines scroll horizontally rather than reflow.
  *  - Copy button uses `navigator.clipboard.writeText` and falls back to a
  *    hidden `<textarea>` + `document.execCommand('copy')` for older browsers
  *    and HTTP-only contexts where the async clipboard API is unavailable.
@@ -25,8 +23,6 @@
  *  - `data-color-mode="dark"` on any ancestor flips the surface tokens to
  *    light-on-dark via the variant table (Tailwind hosts pick this up; non-
  *    Tailwind hosts can target `[data-cir-component="CodeBlock"]` directly).
- *  - Line numbers, when shown, ride a separate non-selectable gutter so a
- *    select-all-then-copy of the visible block does NOT include the digits.
  *
  * Markdown integration site: a future `<Markdown>` triple-backtick fence
  * renderer should call into `<CodeBlock>` directly — pass the fence body as
@@ -37,6 +33,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { detectLanguage, type DetectedLanguage } from '../lib/detect-language.js';
+import { CodeView } from './CodeView.js';
+import { DEFAULT_SHIKI_THEME, type ShikiThemePair } from '../code/shiki.js';
 import { cn, codeBlockVariantClass, type CodeBlockVariant } from './_variants.js';
 
 export type { CodeBlockVariant } from './_variants.js';
@@ -56,6 +54,23 @@ export interface CodeBlockProps {
   variant?: CodeBlockVariant;
   /** Class string forwarded to the outermost wrapper. */
   className?: string;
+  /**
+   * Wave 11 / Cnt-1: Shiki theme pair, forwarded to the inner `<CodeView>`.
+   * Defaults to GitHub light + dark; CSS picks one per `[data-color-mode]`.
+   */
+  theme?: ShikiThemePair;
+  /**
+   * Wave 11 / Cnt-1: when true and lines > 20, show a collapse/expand toggle.
+   * Mirrors Vercel deploy-log behaviour.
+   */
+  foldable?: boolean;
+  /** Wave 11 / Cnt-1: lines (1-indexed) to mark with `data-highlight="true"`. */
+  highlightLines?: readonly number[];
+  /**
+   * Wave 11 / Cnt-1: when true, every line gets `id="L<n>"` for `#L42`-style
+   * anchor deep-links (Vercel / GitHub contract).
+   */
+  linkLines?: boolean;
 }
 
 /** Time the checkmark stays visible after a successful copy. */
@@ -109,6 +124,10 @@ export function CodeBlock({
   showCopyButton = true,
   variant = 'default',
   className,
+  theme = DEFAULT_SHIKI_THEME,
+  foldable = false,
+  highlightLines,
+  linkLines = false,
 }: CodeBlockProps): ReactNode {
   const resolved: DetectedLanguage = language ?? detectLanguage(code);
   const [copied, setCopied] = useState(false);
@@ -136,7 +155,6 @@ export function CodeBlock({
     };
   }, []);
 
-  const lines = code.split('\n');
   const labelVisible = showLanguageLabel && resolved !== 'plaintext';
 
   return (
@@ -202,40 +220,25 @@ export function CodeBlock({
           ) : null}
         </div>
       ) : null}
-      <div style={{ display: 'flex', alignItems: 'stretch' }}>
-        {showLineNumbers ? (
-          <ol
-            data-cir-part="codeblock-line-numbers"
-            aria-hidden="true"
-            style={{
-              margin: 0,
-              padding: '0 8px 0 0',
-              listStyle: 'none',
-              textAlign: 'right',
-              userSelect: 'none',
-              opacity: 0.5,
-              fontFamily: 'ui-monospace, monospace',
-              minWidth: '1.5em',
-            }}
-          >
-            {lines.map((_, i) => (
-              <li key={`ln-${String(i)}`}>{i + 1}</li>
-            ))}
-          </ol>
-        ) : null}
-        <pre
-          data-cir-part="codeblock-pre"
-          style={{
-            margin: 0,
-            flex: 1,
-            fontFamily: 'ui-monospace, monospace',
-            whiteSpace: 'pre',
-            overflowX: 'auto',
-          }}
-        >
-          <code data-cir-part="codeblock-code">{code}</code>
-        </pre>
-      </div>
+      <CodeView
+        code={code}
+        // CodeView's `language` is a Shiki grammar id string, distinct from
+        // the DetectedLanguage union. `'plaintext'` short-circuits highlighting
+        // so we map it to `''` (no-language) for the inner component.
+        language={resolved === 'plaintext' ? '' : resolved}
+        showLineNumbers={showLineNumbers}
+        theme={theme}
+        foldable={foldable}
+        // `highlightLines` is conditionally spread because `exactOptionalPropertyTypes`
+        // forbids passing literal `undefined` for an optional prop. Same shape
+        // as the surrounding component-prop forwarding patterns in this package.
+        {...(highlightLines !== undefined ? { highlightLines } : {})}
+        linkLines={linkLines}
+        // Forward the variant axis so styling stays consistent. The CodeView
+        // and CodeBlock variant tables happen to share the `default` /
+        // `embedded` keys; future divergence can map explicitly.
+        variant={variant === 'embedded' ? 'embedded' : 'default'}
+      />
     </div>
   );
 }
