@@ -1,0 +1,26 @@
+{
+  "name": "@cir/keyboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CIR keyboard registry — hotkey-aware action vocabulary that powers Cmd+K, Cmd+P, and chord shortcuts. Pure logic: no React.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

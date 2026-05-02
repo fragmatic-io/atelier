@@ -261,6 +261,21 @@ export type { GalleryProps, GalleryItem } from './components/Gallery.js';
 export { CommandPalette, CommandPaletteBinding } from './components/CommandPalette.js';
 export type { CommandPaletteProps, CommandPaletteCommand } from './components/CommandPalette.js';
 
+// Wave 11 / Int-3 — keyboard registry adapter. `KeyboardContext`,
+// `<KeyboardProvider>`, and the `useKeyboard*` hooks live here (alongside
+// `<CommandPalette>` and the `IconResolver` adapter) so the baseline
+// component library doesn't need a runtime dependency on `@cir/react`.
+export {
+  KeyboardContext,
+  KeyboardProvider,
+  useKeyboard,
+  useKeyboardAction,
+  useKeyboardActions,
+  useKeyboardRegistry,
+  useKeyboardServicesFromContext,
+  type KeyboardProviderProps,
+} from './keyboard/index.js';
+
 export { Stepper, StepperBinding } from './components/Stepper.js';
 export type {
   StepperProps,

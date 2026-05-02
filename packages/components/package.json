@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@cir/keyboard": "workspace:*",
     "@cir/runtime": "workspace:*",
     "@cir/schemas": "workspace:*",
     "lucide-react": "^1.14.0",

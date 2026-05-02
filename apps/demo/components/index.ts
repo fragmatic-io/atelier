@@ -38,6 +38,11 @@ export { Chrome, applyColorMode, nextColorMode, readColorMode } from './Chrome';
 // the validator that `reversibility_surfaced` is satisfied app-wide.
 export { UndoBar as AmbientUndoBar } from './UndoBar';
 
+// AmbientCommandPalette — Wave 11 / Int-3. Mounted in `cir-providers.tsx`
+// outside the manifest tree. Auto-discovers commands from the
+// `<KeyboardProvider>` registry; Cmd+K opens it from anywhere.
+export { AmbientCommandPalette } from './AmbientCommandPalette';
+
 /**
  * Aurora ships **zero** manifest-referenced custom bindings. The merge in
  * `cir-providers.tsx` is `{ ...COMPONENT_BINDINGS, ...DEMO_BINDINGS }`;

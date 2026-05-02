@@ -131,6 +131,9 @@ importers:
       '@cir/data-resolvers':
         specifier: workspace:*
         version: link:../../packages/data-resolvers
+      '@cir/keyboard':
+        specifier: workspace:*
+        version: link:../../packages/keyboard
       '@cir/policies':
         specifier: workspace:*
         version: link:../../packages/policies
@@ -374,6 +377,9 @@ importers:
 
   packages/components:
     dependencies:
+      '@cir/keyboard':
+        specifier: workspace:*
+        version: link:../keyboard
       '@cir/runtime':
         specifier: workspace:*
         version: link:../runtime
@@ -448,6 +454,18 @@ importers:
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)(lightningcss@1.32.0)
+
+  packages/keyboard:
     devDependencies:
       tsx:
         specifier: ^4.19.2

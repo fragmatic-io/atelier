@@ -38,8 +38,14 @@ import {
   COMPONENT_BINDINGS,
   COMPOSITION_RULES,
   IconResolverProvider,
+  KeyboardProvider,
   LucideIconResolver,
 } from '@cir/components';
+import {
+  InMemoryKeyboardRegistry,
+  InMemoryRecencyTracker,
+  type KeyboardServices,
+} from '@cir/keyboard';
 import {
   CirRuntime,
   CompileBadge,
@@ -59,7 +65,7 @@ import type { IntentProfile, Manifest } from '@cir/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
 import { loadIntentProfile } from './intent-store';
-import { AmbientUndoBar, DEMO_BINDINGS } from '@/components';
+import { AmbientCommandPalette, AmbientUndoBar, DEMO_BINDINGS } from '@/components';
 
 type CirServices = Parameters<typeof CirRuntime>[0]['services'];
 
@@ -158,6 +164,104 @@ const dataResolver = composite.resolve;
 const iconResolver = new LucideIconResolver({
   allowedSets: DEMO_BRAND_KIT.iconography?.allowed_sets,
 });
+
+/**
+ * Wave 11 / Int-3 — keyboard registry seeded with one `KeyboardAction` per
+ * action-kind capability the demo grants. Every capability becomes a
+ * Cmd+K-discoverable action; the palette + chord shortcuts (future Int-7)
+ * are layered on top of this same registry.
+ *
+ * The registry is built once at module eval (not per render) so the
+ * subscription identities stay stable across React strict-mode double
+ * renders. The `<KeyboardProvider>` further down surfaces it on context.
+ *
+ * Action labels and icons are intentionally human-friendly — the palette
+ * renders these directly. Hotkeys are deliberately omitted here (the
+ * `palette.open` action self-binds Cmd+K via `<AmbientCommandPalette>`);
+ * Int-7 is when chord shortcuts (`g i`, `e` to archive) land.
+ */
+function buildKeyboardServices(): KeyboardServices {
+  const registry = new InMemoryKeyboardRegistry();
+  const ACTION_META: ReadonlyArray<{
+    id: string;
+    label: string;
+    description?: string;
+    icon?: string;
+    group: string;
+  }> = [
+    {
+      id: 'thread.archive',
+      label: 'Archive thread',
+      description: 'Move the active thread out of the inbox',
+      icon: 'archive',
+      group: 'Inbox',
+    },
+    {
+      id: 'thread.unarchive',
+      label: 'Unarchive thread',
+      icon: 'inbox',
+      group: 'Inbox',
+    },
+    {
+      id: 'task.complete',
+      label: 'Complete task',
+      icon: 'check',
+      group: 'Tasks',
+    },
+    {
+      id: 'task.reopen',
+      label: 'Reopen task',
+      icon: 'circle-dot',
+      group: 'Tasks',
+    },
+    {
+      id: 'task.snooze',
+      label: 'Snooze task',
+      icon: 'clock',
+      group: 'Tasks',
+    },
+    {
+      id: 'task.unsnooze',
+      label: 'Unsnooze task',
+      icon: 'bell',
+      group: 'Tasks',
+    },
+    {
+      id: 'task.create_from_thread',
+      label: 'Create task from thread',
+      icon: 'plus',
+      group: 'Tasks',
+    },
+    {
+      id: 'task.delete',
+      label: 'Delete task',
+      icon: 'trash-2',
+      group: 'Tasks',
+    },
+  ];
+  for (const meta of ACTION_META) {
+    registry.register({
+      id: meta.id,
+      label: meta.label,
+      ...(meta.description !== undefined ? { description: meta.description } : {}),
+      ...(meta.icon !== undefined ? { icon: meta.icon } : {}),
+      group: meta.group,
+      scope: 'global',
+      // The palette + provider wire the actual dispatcher invocation. For
+      // discovery seeding, the invoke is a no-op that logs — the demo's
+      // route-mounted UI is what fires real dispatches today.
+      invoke: () => {
+        console.info(`[cir] keyboard: ${meta.id} invoked from palette`);
+      },
+    });
+  }
+  return {
+    registry,
+    recency: new InMemoryRecencyTracker(),
+  };
+}
+
+const keyboardServices: KeyboardServices = buildKeyboardServices();
 
 interface BuiltServices {
   services: CirServices;
@@ -330,27 +434,43 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
         at runtime.
       */}
       <IconResolverProvider resolver={iconResolver}>
-        <CirRuntime services={services} dataResolver={dataResolver}>
-          {children}
-          {/*
-            Wave 11 / Int-8 — ambient undo-toast sink. The wrapped
-            dispatcher's `withUndo()` middleware fans every successful
-            undoable dispatch into `<Toast variant="undo">` instances
-            mounted here. This is the new primary undo affordance —
-            Linear-style 5-second window with a countdown bar.
-          */}
-          <UndoSink />
-          {/*
-            Ambient undo bar — mounted INSIDE <CirRuntime> so it can read the
-            dispatcher via `useCir()`, but OUTSIDE the manifest tree so it's
-            not a manifest-referenced custom binding. Kept as a fallback
-            affordance for stack-based undo (`dispatcher.undo()` /
-            `canUndo()` — covers actions that committed before the toast
-            was dismissed). The `UNDO_TOAST_AMBIENT_SATISFIER` declaration
-            on the policy context covers the obligation either way.
-          */}
-          <AmbientUndoBar />
-        </CirRuntime>
+        {/*
+          Wave 11 / Int-3 — `<KeyboardProvider>` wraps the runtime so every
+          subtree can read `KeyboardServices` from context. Hosts wire one
+          provider; downstream `useKeyboardAction()` calls register against
+          its registry. The palette below auto-discovers from this same
+          registry; Cmd+K opens it from anywhere on the page.
+        */}
+        <KeyboardProvider services={keyboardServices}>
+          <CirRuntime services={services} dataResolver={dataResolver}>
+            {children}
+            {/*
+              Wave 11 / Int-8 — ambient undo-toast sink. The wrapped
+              dispatcher's `withUndo()` middleware fans every successful
+              undoable dispatch into `<Toast variant="undo">` instances
+              mounted here. This is the new primary undo affordance —
+              Linear-style 5-second window with a countdown bar.
+            */}
+            <UndoSink />
+            {/*
+              Ambient undo bar — mounted INSIDE <CirRuntime> so it can read the
+              dispatcher via `useCir()`, but OUTSIDE the manifest tree so it's
+              not a manifest-referenced custom binding. Kept as a fallback
+              affordance for stack-based undo (`dispatcher.undo()` /
+              `canUndo()` — covers actions that committed before the toast
+              was dismissed). The `UNDO_TOAST_AMBIENT_SATISFIER` declaration
+              on the policy context covers the obligation either way.
+            */}
+            <AmbientUndoBar />
+            {/*
+              Wave 11 / Int-3 — ambient command palette. Mounted OUTSIDE the
+              manifest tree (like `<AmbientUndoBar>`); auto-discovers
+              commands from the `KeyboardProvider` registry seeded above.
+              Cmd+K opens it from anywhere; Esc closes.
+            */}
+            <AmbientCommandPalette />
+          </CirRuntime>
+        </KeyboardProvider>
       </IconResolverProvider>
       <Portal />
       <DebugPanel sink={audit} />
