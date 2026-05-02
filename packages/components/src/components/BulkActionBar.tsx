@@ -13,9 +13,12 @@
  *    list ancestor cannot clip it.
  *  - Slide-up entry / slide-down exit, ~140ms; honours
  *    `prefers-reduced-motion: reduce` (skips both transition and transform).
- *  - Esc clears the selection (hosts pass `onClear`); the bar binds the
- *    listener for the lifetime it is mounted so users learn one shortcut
- *    that works everywhere.
+ *  - Esc clears the selection (hosts pass `onClear`). When a
+ *    `<KeyboardProvider>` (Wave 11 / Int-3) is in scope we register a scoped
+ *    `bulk.clear` action so palettes can discover the shortcut and chord /
+ *    alias overrides (Int-7) can rebind it; otherwise we fall back to a
+ *    direct `keydown` listener so the shortcut still works in unwrapped
+ *    hosts. Either way, users learn one shortcut that works everywhere.
  *  - Buttons are tagged with `data-variant="destructive"` for hosts that
  *    style on `data-variant`; the utility-class string also flips so
  *    Tailwind hosts get red styling for free.
@@ -27,9 +30,18 @@
  * No external positioning deps; the bar is a single fixed element with a
  * Tailwind-friendly utility class string from `_variants.ts`.
  */
-import { useCallback, useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import type { ComponentBinding } from '@atelier/runtime';
+import { useKeyboard } from '../keyboard/hooks.js';
 import {
   bulkActionBarVariantClass,
   cn,
@@ -120,23 +132,53 @@ export function BulkActionBar({
     setMounted(true);
   }, []);
 
-  // Esc-to-clear listener; bound only while the bar is visible. Hosts can
-  // still bind their own listener at the list root (e.g. via
-  // `useMultiSelect`'s `bind`), but having the bar own one means the
-  // shortcut works even if the host forgets to wire it.
+  // Wave 11 / Int-9 + Int-3 — Esc-to-clear. When a `<KeyboardProvider>` is
+  // in scope, register a scoped `bulk.clear` action with the registry so
+  // palettes can discover the shortcut and chord / alias overrides (Int-7)
+  // can rebind it. When no provider is present we fall back to a direct
+  // `window.keydown` listener so the shortcut still works in unwrapped
+  // hosts. The action is only live while `selectionCount >= 1` — outside
+  // that window we unregister so global Esc (close modal, dismiss tooltip)
+  // is not intercepted. Stable `onClear` ref so we don't re-register on
+  // every parent render that hands a new closure.
+  const services = useKeyboard();
+  const onClearRef = useRef(onClear);
+  onClearRef.current = onClear;
+  const isVisible = selectionCount >= 1;
   useEffect(() => {
-    if (selectionCount < 1) return;
+    if (!services) return;
+    if (!isVisible) return;
+    const unregister = services.registry.register({
+      id: 'bulk.clear',
+      label: 'Clear bulk selection',
+      description: 'Clear the active bulk-action selection',
+      hotkey: 'Escape',
+      scope: 'route',
+      group: 'Edit',
+      invoke: () => onClearRef.current(),
+    });
+    return (): void => {
+      unregister();
+    };
+  }, [services, isVisible]);
+
+  useEffect(() => {
+    // Fallback path — no `<KeyboardProvider>` in scope. Bind a `window`
+    // keydown listener for the lifetime the bar is visible. Mirrors the
+    // pre-Int-3 behaviour so unwrapped hosts still get Esc-to-clear.
+    if (services) return;
+    if (!isVisible) return;
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClear();
+        onClearRef.current();
       }
     };
     window.addEventListener('keydown', onKey);
     return (): void => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [selectionCount, onClear]);
+  }, [services, isVisible]);
 
   const handleAction = useCallback(
     (id: string) => {

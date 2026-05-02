@@ -5,11 +5,17 @@ import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import {
+  InMemoryKeyboardRegistry,
+  InMemoryRecencyTracker,
+  type KeyboardServices,
+} from '@atelier/keyboard';
+import {
   BulkActionBar,
   BulkActionBarBinding,
   bulkActionBarTextRender,
   type BulkAction,
 } from '../src/components/BulkActionBar.js';
+import { KeyboardProvider } from '../src/keyboard/index.js';
 
 const sampleActions: readonly BulkAction[] = [
   { id: 'github.issue.bulk_close', label: 'Close', confirmation: 'modal' },
@@ -216,5 +222,86 @@ describe('BulkActionBar', () => {
   it('text-render is null-safe with partial props', () => {
     expect(bulkActionBarTextRender({})).toBe('[BulkActionBar: idle]');
     expect(bulkActionBarTextRender({ selectionCount: 1 })).toBe('[BulkActionBar: 1 item selected]');
+  });
+
+  // -- Wave 11 / Int-9 + Int-3 — KeyboardProvider integration --------------
+
+  describe('KeyboardProvider integration', () => {
+    function makeServices(): KeyboardServices {
+      return {
+        registry: new InMemoryKeyboardRegistry(),
+        recency: new InMemoryRecencyTracker(),
+      };
+    }
+
+    it('registers a `bulk.clear` action with the registry while visible', () => {
+      const services = makeServices();
+      render(
+        <KeyboardProvider services={services} disableEventListener>
+          <BulkActionBar
+            selectionCount={2}
+            actions={sampleActions}
+            onAction={() => undefined}
+            onClear={() => undefined}
+          />
+        </KeyboardProvider>,
+      );
+      const action = services.registry.list().find((a) => a.id === 'bulk.clear');
+      expect(action).toBeDefined();
+      expect(action?.hotkey).toBe('Escape');
+    });
+
+    it('does NOT register the action when the bar is hidden (selectionCount === 0)', () => {
+      const services = makeServices();
+      render(
+        <KeyboardProvider services={services} disableEventListener>
+          <BulkActionBar
+            selectionCount={0}
+            actions={sampleActions}
+            onAction={() => undefined}
+            onClear={() => undefined}
+          />
+        </KeyboardProvider>,
+      );
+      const action = services.registry.list().find((a) => a.id === 'bulk.clear');
+      expect(action).toBeUndefined();
+    });
+
+    it('invoking `bulk.clear` from the registry calls onClear', () => {
+      const services = makeServices();
+      const onClear = vi.fn();
+      render(
+        <KeyboardProvider services={services} disableEventListener>
+          <BulkActionBar
+            selectionCount={3}
+            actions={sampleActions}
+            onAction={() => undefined}
+            onClear={onClear}
+          />
+        </KeyboardProvider>,
+      );
+      const action = services.registry.list().find((a) => a.id === 'bulk.clear');
+      // The invoke result may be `void | Promise<void>`; we don't care about
+      // the return — we only care that `onClear` ran synchronously.
+      void action?.invoke();
+      expect(onClear).toHaveBeenCalledTimes(1);
+    });
+
+    it('unregisters when the bar unmounts', () => {
+      const services = makeServices();
+      const { unmount } = render(
+        <KeyboardProvider services={services} disableEventListener>
+          <BulkActionBar
+            selectionCount={1}
+            actions={sampleActions}
+            onAction={() => undefined}
+            onClear={() => undefined}
+          />
+        </KeyboardProvider>,
+      );
+      expect(services.registry.list().some((a) => a.id === 'bulk.clear')).toBe(true);
+      unmount();
+      expect(services.registry.list().some((a) => a.id === 'bulk.clear')).toBe(false);
+    });
   });
 });

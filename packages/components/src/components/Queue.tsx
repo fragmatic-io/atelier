@@ -39,9 +39,20 @@
  * (or falls through to `BASELINE_RESOLVER_DEFAULTS` when no slot is declared).
  * Hosts that need direct host-side React composition compose `<Skeleton>` /
  * `<Alert>` / `<EmptyState>` themselves.
+ *
+ * Wave 11 / Int-9 — opt-in multi-select. Mirrors the `<List>` / `<Table>`
+ * shape: `selectable` renders a leading checkbox per row, click toggles,
+ * Shift+Click range-selects between the last clicked anchor and the new row.
+ * When `bulkActions` is supplied AND the selection is non-empty the Queue
+ * auto-mounts a `<BulkActionBar>` via portal at bottom-center. Optimistic-hide
+ * cooperates with selection — hidden ids are dropped from the selection set
+ * automatically so a per-row archive on a selected row leaves the bar in a
+ * coherent state. Backwards compat: queues without `selectable` behave
+ * identically to pre-Int-9 builds.
  */
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { durationFor, type ComponentBinding } from '@atelier/runtime';
+import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
 import {
   cn,
   contentVariantClass,
@@ -104,6 +115,23 @@ export interface QueueProps<T = unknown> {
    * Defaults to false. Honours `prefers-reduced-motion`.
    */
   animateRowAppear?: boolean;
+  /**
+   * Wave 11 / Int-9 — opt-in multi-select. When true, every row renders a
+   * leading checkbox and reflects `data-selected` based on `selectedIds`.
+   */
+  selectable?: boolean;
+  /** Read-only set of currently-selected ids. Only consulted when `selectable` is true. */
+  selectedIds?: ReadonlySet<string>;
+  /** Called whenever the selection set changes. Hosts pass an immutable next-state. */
+  onSelectionChange?: (next: ReadonlySet<string>) => void;
+  /**
+   * Bulk actions surfaced via `<BulkActionBar>` when one or more rows are
+   * selected. When omitted, the Queue does NOT auto-mount the bar — callers
+   * can render their own bar above / outside the queue if they prefer.
+   */
+  bulkActions?: readonly BulkAction[];
+  /** Click handler for a bulk action. Receives the action's id (= capability id). */
+  onBulkAction?: (actionId: string) => void;
 }
 
 const PIN_GLYPH = '\u{1F4CC}';
@@ -166,6 +194,11 @@ export function Queue<T = unknown>({
   variant = 'ghost',
   className,
   animateRowAppear = false,
+  selectable = false,
+  selectedIds,
+  onSelectionChange,
+  bulkActions,
+  onBulkAction,
 }: QueueProps<T>): ReactNode {
   const items: readonly T[] =
     itemsProp ?? (Array.isArray(data) ? (data as readonly T[]) : ([] as readonly T[]));
@@ -179,6 +212,18 @@ export function Queue<T = unknown>({
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; text: string } | null>(
     null,
   );
+
+  // Wave 11 / Int-9 — selection state. Anchor for Shift+Click range-select
+  // is persisted across renders so the user can extend the range from any
+  // prior click. Local fallback selection makes the component usable as an
+  // uncontrolled primitive in demos.
+  const anchorRef = useRef<string | null>(null);
+  const [localSelected, setLocalSelected] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const effectiveSelected = selectedIds ?? localSelected;
+  const emitSelection = (next: ReadonlySet<string>): void => {
+    if (onSelectionChange) onSelectionChange(next);
+    else setLocalSelected(next);
+  };
 
   const flashFeedback = (tone: 'success' | 'error', text: string): void => {
     setFeedback({ tone, text });
@@ -248,6 +293,15 @@ export function Queue<T = unknown>({
           next.add(rowId);
           return next;
         });
+        // Wave 11 / Int-9 — drop the dismissed row from the selection set
+        // so the bulk-action bar count stays coherent with what's actually
+        // visible. Mirrors the marketplace pivot's `optimisticHide: true`
+        // contract.
+        if (selectable && effectiveSelected.has(rowId)) {
+          const nextSel = new Set(effectiveSelected);
+          nextSel.delete(rowId);
+          emitSelection(nextSel);
+        }
       }
     } catch (e) {
       flashFeedback('error', errorMessage(e) || 'Action failed');
@@ -255,6 +309,40 @@ export function Queue<T = unknown>({
       setBusyId(null);
       setConfirming(null);
     }
+  };
+
+  // Toggle / range-select helpers (mirror `<List>`).
+  const handleToggle = (
+    id: string,
+    visibleIdSeq: readonly string[],
+    e: React.MouseEvent | React.ChangeEvent,
+  ): void => {
+    const isShiftClick =
+      'shiftKey' in (e as unknown as { shiftKey?: boolean }) &&
+      (e as unknown as { shiftKey?: boolean }).shiftKey === true;
+    const next = new Set<string>(effectiveSelected);
+    if (isShiftClick && anchorRef.current && anchorRef.current !== id) {
+      const fromIdx = visibleIdSeq.indexOf(anchorRef.current);
+      const toIdx = visibleIdSeq.indexOf(id);
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const lo = Math.min(fromIdx, toIdx);
+        const hi = Math.max(fromIdx, toIdx);
+        for (let k = lo; k <= hi; k++) {
+          const cur = visibleIdSeq[k];
+          if (cur !== undefined) next.add(cur);
+        }
+        emitSelection(next);
+        return;
+      }
+    }
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    anchorRef.current = id;
+    emitSelection(next);
+  };
+  const handleClear = (): void => {
+    anchorRef.current = null;
+    emitSelection(new Set<string>());
   };
 
   const handleClick = async (action: QueueAction, item: T, rowId: string): Promise<void> => {
@@ -286,6 +374,7 @@ export function Queue<T = unknown>({
     }
     const busy = busyId === entry.id;
     const isNew = animateRowAppear && newIds.has(entry.id);
+    const checked = selectable && effectiveSelected.has(entry.id);
     return (
       <li
         key={entry.id}
@@ -294,8 +383,25 @@ export function Queue<T = unknown>({
         {...(emphasis !== undefined ? { 'data-emphasis': emphasis } : {})}
         {...(isNew ? { 'data-cir-new': 'true' } : {})}
         data-busy={busy ? 'true' : 'false'}
+        data-selected={selectable ? (checked ? 'true' : 'false') : undefined}
         style={rowStyle}
       >
+        {selectable ? (
+          <input
+            type="checkbox"
+            data-cir-part="queue-checkbox"
+            aria-label={`Select row ${String(entry.i + 1)}`}
+            checked={checked}
+            onClick={(e): void => {
+              handleToggle(entry.id, visibleIds, e);
+            }}
+            // `onClick` already updates state — `onChange` exists only to keep
+            // React happy about the controlled-input contract.
+            onChange={(): void => {
+              /* handled via onClick to access shiftKey */
+            }}
+          />
+        ) : null}
         {isPinned ? (
           <span data-cir-part="queue-pin" aria-hidden="true">
             {PIN_GLYPH}
@@ -369,12 +475,13 @@ export function Queue<T = unknown>({
     grouped = [{ key: '_all', label: '', rows: visibleItems }];
   }
 
-  return (
+  const section = (
     <section
       data-cir-component="Queue"
       data-density={density}
       data-cir-density={density}
       data-variant={variant}
+      data-selectable={selectable ? 'true' : 'false'}
       className={cn(contentVariantClass[variant], className)}
       aria-label={title}
     >
@@ -404,6 +511,29 @@ export function Queue<T = unknown>({
         </div>
       ))}
     </section>
+  );
+
+  // Wave 11 / Int-9 — auto-mount the floating bar when selection non-empty
+  // and `bulkActions` declared. Hosts that want the bar elsewhere should
+  // omit `bulkActions` and render their own.
+  const showBar =
+    selectable &&
+    bulkActions !== undefined &&
+    bulkActions.length > 0 &&
+    effectiveSelected.size >= 1;
+  if (!showBar) return section;
+  return (
+    <>
+      {section}
+      <BulkActionBar
+        selectionCount={effectiveSelected.size}
+        actions={bulkActions}
+        onAction={(id): void => {
+          if (onBulkAction) onBulkAction(id);
+        }}
+        onClear={handleClear}
+      />
+    </>
   );
 }
 
@@ -445,6 +575,11 @@ export const QueueBinding: ComponentBinding = {
       variant: 'string',
       className: 'string',
       animateRowAppear: 'boolean',
+      selectable: 'boolean',
+      selectedIds: 'object',
+      onSelectionChange: 'function',
+      bulkActions: 'array',
+      onBulkAction: 'function',
     },
   },
 };

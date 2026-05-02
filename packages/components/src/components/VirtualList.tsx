@@ -34,10 +34,25 @@
  *     and edge-trigger thresholds. Defaults to 200.
  *   - `onFetchMore` / `onFetchPrev` — fire once per edge crossing. The
  *     component dedupes concurrent calls via an internal flag.
+ *
+ * Wave 11 / Int-9 — multi-select. Mirrors the `<List>` shape:
+ * `selectable` renders a leading checkbox per visible row, click toggles,
+ * Shift+Click range-selects against the FULL `items` sequence (not just
+ * the viewport) so the swath survives scrolling. Auto-mounts a
+ * `<BulkActionBar>` via portal when `bulkActions` is supplied AND the
+ * selection is non-empty.
  */
-import { useCallback, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ComponentBinding } from '@atelier/runtime';
+import { BulkActionBar } from './BulkActionBar.js';
 import { cn, contentVariantClass, type ContentVariant } from './_variants.js';
 import { DEFAULT_DENSITY, DENSITY_ROW_PADDING_PX } from './density.js';
 import type { ListProps } from './List.js';
@@ -84,6 +99,12 @@ export function VirtualList<T>({
   onFetchMore,
   onFetchPrev,
   viewportHeight = 480,
+  selectable = false,
+  idOf,
+  selectedIds,
+  onSelectionChange,
+  bulkActions,
+  onBulkAction,
 }: VirtualListProps<T>): ReactNode {
   // Resolve items: explicit `items` wins; fall back to resolver-supplied `data`
   // array so the manifest's `data: { source: '...' }` binding works out of the
@@ -112,6 +133,50 @@ export function VirtualList<T>({
   const parentRef = useRef<HTMLDivElement>(null);
   const fetchMoreInFlight = useRef(false);
   const fetchPrevInFlight = useRef(false);
+
+  // Wave 11 / Int-9 — multi-select wiring (mirrors `<List>`). The virtualizer
+  // only renders viewport rows, but selection identities key by `idOf` so a
+  // row scrolled out and back in stays selected. Range-select via Shift+Click
+  // resolves indices against the FULL `items` sequence (not just the
+  // viewport) so a user can shift-select a swath that spans the visible
+  // window.
+  const idResolver = idOf ?? ((_item: T, index: number): string => String(index));
+  const anchorRef = useRef<string | null>(null);
+  const [localSelected, setLocalSelected] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const effectiveSelected = selectedIds ?? localSelected;
+  const allIds = items.map((item, i) => idResolver(item, i));
+  const emitSelection = (next: ReadonlySet<string>): void => {
+    if (onSelectionChange) onSelectionChange(next);
+    else setLocalSelected(next);
+  };
+  const handleToggle = (id: string, e: React.MouseEvent | React.ChangeEvent): void => {
+    const isShiftClick =
+      'shiftKey' in (e as unknown as { shiftKey?: boolean }) &&
+      (e as unknown as { shiftKey?: boolean }).shiftKey === true;
+    const next = new Set<string>(effectiveSelected);
+    if (isShiftClick && anchorRef.current && anchorRef.current !== id) {
+      const fromIdx = allIds.indexOf(anchorRef.current);
+      const toIdx = allIds.indexOf(id);
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const lo = Math.min(fromIdx, toIdx);
+        const hi = Math.max(fromIdx, toIdx);
+        for (let k = lo; k <= hi; k++) {
+          const cur = allIds[k];
+          if (cur !== undefined) next.add(cur);
+        }
+        emitSelection(next);
+        return;
+      }
+    }
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    anchorRef.current = id;
+    emitSelection(next);
+  };
+  const handleClear = (): void => {
+    anchorRef.current = null;
+    emitSelection(new Set<string>());
+  };
 
   const rowVirtualizer = useVirtualizer({
     count: items.length,
@@ -172,7 +237,7 @@ export function VirtualList<T>({
   // Wrapping div carries the scroll viewport so `useVirtualizer` can
   // measure. Inner spacer + absolutely-positioned rows give correct scroll
   // height without rendering off-screen DOM.
-  return (
+  const scroller = (
     <div
       ref={parentRef}
       data-cir-component="VirtualList"
@@ -183,6 +248,7 @@ export function VirtualList<T>({
       data-virtual="true"
       data-row-count={String(items.length)}
       data-total={total !== undefined ? String(total) : undefined}
+      data-selectable={selectable ? 'true' : 'false'}
       onScroll={handleScroll}
       className={cn(contentVariantClass[variant], className)}
       style={{
@@ -204,11 +270,14 @@ export function VirtualList<T>({
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const item = items[virtualRow.index] as T;
+          const id = idResolver(item, virtualRow.index);
+          const checked = selectable && effectiveSelected.has(id);
           return (
             <li
               key={virtualRow.key}
               data-cir-part="virtual-list-item"
               data-index={String(virtualRow.index)}
+              data-selected={selectable ? (checked ? 'true' : 'false') : undefined}
               ref={rowVirtualizer.measureElement}
               style={{
                 ...baseItemStyle,
@@ -219,12 +288,48 @@ export function VirtualList<T>({
                 transform: `translateY(${String(virtualRow.start)}px)`,
               }}
             >
+              {selectable ? (
+                <input
+                  type="checkbox"
+                  data-cir-part="virtual-list-checkbox"
+                  aria-label={`Select row ${String(virtualRow.index + 1)}`}
+                  checked={checked}
+                  onClick={(e): void => {
+                    handleToggle(id, e);
+                  }}
+                  onChange={(): void => {
+                    /* handled via onClick to access shiftKey */
+                  }}
+                />
+              ) : null}
               {renderItemFn(item, virtualRow.index)}
             </li>
           );
         })}
       </ul>
     </div>
+  );
+
+  // Wave 11 / Int-9 — auto-mount the floating bar when the selection is
+  // non-empty AND `bulkActions` were declared. Mirrors `<List>`.
+  const showBar =
+    selectable &&
+    bulkActions !== undefined &&
+    bulkActions.length > 0 &&
+    effectiveSelected.size >= 1;
+  if (!showBar) return scroller;
+  return (
+    <>
+      {scroller}
+      <BulkActionBar
+        selectionCount={effectiveSelected.size}
+        actions={bulkActions}
+        onAction={(id): void => {
+          if (onBulkAction) onBulkAction(id);
+        }}
+        onClear={handleClear}
+      />
+    </>
   );
 }
 VirtualList.displayName = 'VirtualList';
@@ -255,6 +360,12 @@ export const VirtualListBinding: ComponentBinding = {
       onFetchMore: 'function',
       onFetchPrev: 'function',
       viewportHeight: 'unknown',
+      selectable: 'boolean',
+      idOf: 'function',
+      selectedIds: 'object',
+      onSelectionChange: 'function',
+      bulkActions: 'array',
+      onBulkAction: 'function',
     },
   },
 };

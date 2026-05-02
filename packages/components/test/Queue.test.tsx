@@ -239,4 +239,198 @@ describe('Queue', () => {
       expect(onAction).toHaveBeenCalledWith('thread.archive', { id: 't1', title: 'Renew domain' });
     });
   });
+
+  // -- Wave 11 / Int-9 — multi-select + bulk-action bar --------------------
+
+  describe('multi-select', () => {
+    it('renders a leading checkbox per row when `selectable` is true', () => {
+      const { container } = render(<Queue items={THREE} selectable />);
+      const checkboxes = container.querySelectorAll('[data-cir-part="queue-checkbox"]');
+      expect(checkboxes.length).toBe(3);
+      expect(
+        container.querySelector('[data-cir-component="Queue"]')?.getAttribute('data-selectable'),
+      ).toBe('true');
+    });
+
+    it('does NOT render checkboxes when `selectable` is false (backwards compat)', () => {
+      const { container } = render(<Queue items={THREE} />);
+      expect(container.querySelectorAll('[data-cir-part="queue-checkbox"]').length).toBe(0);
+    });
+
+    it('click toggles selection via onSelectionChange', () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>()}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const cbs = container.querySelectorAll<HTMLInputElement>('[data-cir-part="queue-checkbox"]');
+      fireEvent.click(cbs[1]!);
+      expect(onSelectionChange).toHaveBeenCalledTimes(1);
+      const next = onSelectionChange.mock.calls[0]![0] as ReadonlySet<string>;
+      expect(Array.from(next)).toEqual(['t2']);
+    });
+
+    it('Shift+Click range-selects between the last anchor and the new row', () => {
+      const onSelectionChange = vi.fn();
+      const { container, rerender } = render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>()}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const cbs = (): NodeListOf<HTMLInputElement> =>
+        container.querySelectorAll<HTMLInputElement>('[data-cir-part="queue-checkbox"]');
+      // First click — set anchor at index 0.
+      fireEvent.click(cbs()[0]!);
+      const afterFirst = onSelectionChange.mock.calls[0]![0] as ReadonlySet<string>;
+      expect(Array.from(afterFirst)).toEqual(['t1']);
+      // Re-render with the resulting selection so Shift+Click sees a non-empty
+      // controlled set.
+      rerender(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={afterFirst}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      // Shift+Click on index 2 — should select rows 0..2 inclusive.
+      fireEvent.click(cbs()[2]!, { shiftKey: true });
+      const afterShift = onSelectionChange.mock.calls[1]![0] as ReadonlySet<string>;
+      expect(new Set(Array.from(afterShift))).toEqual(new Set(['t1', 't2', 't3']));
+    });
+
+    it('auto-mounts <BulkActionBar> when bulkActions are declared and selection non-empty', () => {
+      render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>(['t2'])}
+          bulkActions={[{ id: 'thread.bulk_archive', label: 'Archive' }]}
+        />,
+      );
+      const bar = document.body.querySelector('[data-cir-component="BulkActionBar"]');
+      expect(bar).not.toBeNull();
+      expect(bar?.textContent ?? '').toContain('1 selected');
+    });
+
+    it('does NOT mount the bar when selection is empty', () => {
+      render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>()}
+          bulkActions={[{ id: 'thread.bulk_archive', label: 'Archive' }]}
+        />,
+      );
+      expect(document.body.querySelector('[data-cir-component="BulkActionBar"]')).toBeNull();
+    });
+
+    it('bulk-action click fires onBulkAction with the action id', () => {
+      const onBulkAction = vi.fn();
+      render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>(['t1', 't2'])}
+          bulkActions={[
+            { id: 'thread.bulk_archive', label: 'Archive' },
+            { id: 'thread.bulk_delete', label: 'Delete', variant: 'destructive' },
+          ]}
+          onBulkAction={onBulkAction}
+        />,
+      );
+      const archiveBtn = document.body.querySelector<HTMLButtonElement>(
+        '[data-action-id="thread.bulk_archive"]',
+      );
+      expect(archiveBtn).not.toBeNull();
+      fireEvent.click(archiveBtn!);
+      expect(onBulkAction).toHaveBeenCalledWith('thread.bulk_archive');
+    });
+
+    it('Esc clears the selection (uses BulkActionBar fallback keydown listener)', () => {
+      const onSelectionChange = vi.fn();
+      render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>(['t1', 't2'])}
+          onSelectionChange={onSelectionChange}
+          bulkActions={[{ id: 'thread.bulk_archive', label: 'Archive' }]}
+        />,
+      );
+      fireEvent.keyDown(window, { key: 'Escape' });
+      expect(onSelectionChange).toHaveBeenCalled();
+      const last = onSelectionChange.mock.calls.at(-1)![0] as ReadonlySet<string>;
+      expect(last.size).toBe(0);
+    });
+
+    it('close (×) button on the bar clears the selection', () => {
+      const onSelectionChange = vi.fn();
+      render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>(['t1'])}
+          onSelectionChange={onSelectionChange}
+          bulkActions={[{ id: 'thread.bulk_archive', label: 'Archive' }]}
+        />,
+      );
+      const close = document.body.querySelector<HTMLButtonElement>('[data-cir-part="bulk-close"]');
+      fireEvent.click(close!);
+      const last = onSelectionChange.mock.calls.at(-1)![0] as ReadonlySet<string>;
+      expect(last.size).toBe(0);
+    });
+
+    it('optimistic-hide drops the dismissed row from the selection set', async () => {
+      const onSelectionChange = vi.fn();
+      const onAction = vi.fn(async () => {});
+      const { container } = render(
+        <Queue
+          items={THREE}
+          selectable
+          selectedIds={new Set<string>(['t1', 't2'])}
+          onSelectionChange={onSelectionChange}
+          actions={[{ id: 'thread.archive', label: 'Archive' }]}
+          onAction={onAction}
+          renderItem={(t) => <span>{t.subject}</span>}
+        />,
+      );
+      // Per-row archive on the first (selected) row should hide the row AND
+      // drop t1 from the selection so the bar count stays coherent.
+      const archiveBtns = container.querySelectorAll<HTMLButtonElement>(
+        '[data-cir-part="queue-action"]',
+      );
+      fireEvent.click(archiveBtns[0]!);
+      await waitFor(() => {
+        expect(onAction).toHaveBeenCalledWith('thread.archive', THREE[0]);
+      });
+      // The dropped id should no longer be in the most-recent selection.
+      const last = onSelectionChange.mock.calls.at(-1)![0] as ReadonlySet<string>;
+      expect(last.has('t1')).toBe(false);
+      expect(last.has('t2')).toBe(true);
+    });
+
+    it('uncontrolled mode (no selectedIds) tracks selection internally', () => {
+      const { container } = render(
+        <Queue
+          items={THREE}
+          selectable
+          bulkActions={[{ id: 'thread.bulk_archive', label: 'Archive' }]}
+        />,
+      );
+      const cbs = container.querySelectorAll<HTMLInputElement>('[data-cir-part="queue-checkbox"]');
+      // Initially no bar — selection empty.
+      expect(document.body.querySelector('[data-cir-component="BulkActionBar"]')).toBeNull();
+      fireEvent.click(cbs[0]!);
+      // After click, the local-state path should mount the bar.
+      expect(document.body.querySelector('[data-cir-component="BulkActionBar"]')).not.toBeNull();
+    });
+  });
 });

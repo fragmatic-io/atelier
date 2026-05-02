@@ -126,4 +126,44 @@ describe('VirtualList', () => {
     expect(root.getAttribute('data-variant')).toBe('elevated');
     expect(root.getAttribute('data-density')).toBe('compact');
   });
+
+  // -- Wave 11 / Int-9 — multi-select smoke --------------------------------
+  it('reflects data-selectable when `selectable` is true', () => {
+    const items = Array.from({ length: 50 }, (_, i) => ({
+      id: `r${String(i)}`,
+      title: `r${String(i)}`,
+    }));
+    const { container } = render(
+      <VirtualList
+        items={items}
+        selectable
+        idOf={(item): string => item.id}
+        viewportHeight={200}
+      />,
+    );
+    const root = container.querySelector('[data-cir-component="VirtualList"]') as HTMLElement;
+    expect(root.getAttribute('data-selectable')).toBe('true');
+    expect(root.getAttribute('data-row-count')).toBe('50');
+  });
+
+  it('exposes selection props on the manifest contract', () => {
+    expect(VirtualListBinding.manifestContract?.allowed_props['selectable']).toBe('boolean');
+    expect(VirtualListBinding.manifestContract?.allowed_props['bulkActions']).toBe('array');
+    expect(VirtualListBinding.manifestContract?.allowed_props['onBulkAction']).toBe('function');
+  });
+
+  it('mounts <BulkActionBar> when bulkActions + selectedIds non-empty', () => {
+    const items = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    render(
+      <VirtualList
+        items={items}
+        selectable
+        idOf={(item): string => item.id}
+        selectedIds={new Set<string>(['a'])}
+        bulkActions={[{ id: 'bulk.archive', label: 'Archive' }]}
+        viewportHeight={200}
+      />,
+    );
+    expect(document.body.querySelector('[data-cir-component="BulkActionBar"]')).not.toBeNull();
+  });
 });

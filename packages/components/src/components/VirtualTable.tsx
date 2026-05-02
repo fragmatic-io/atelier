@@ -22,10 +22,25 @@
  * `<VirtualTable>` is for the >500-row case where DOM count matters more
  * than literal table semantics. ARIA role attributes (`grid` / `row` /
  * `gridcell`) preserve assistive-tech semantics.
+ *
+ * Wave 11 / Int-9 — multi-select. Mirrors the `<Table>` shape: when
+ * `selectable` is true, prepends a 40px-track checkbox column to the grid
+ * (header gets a select-all checkbox; each viewport row gets its own).
+ * Range-select via Shift+Click resolves indices against the FULL `rows`
+ * sequence so the swath survives scrolling. Auto-mounts a `<BulkActionBar>`
+ * when `bulkActions` is supplied AND the selection is non-empty.
  */
-import { useCallback, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ComponentBinding } from '@atelier/runtime';
+import { BulkActionBar, type BulkAction } from './BulkActionBar.js';
 import { cn, contentVariantClass, type ContentVariant } from './_variants.js';
 import { DEFAULT_DENSITY, DENSITY_ROW_PADDING_PX, type Density } from './density.js';
 import type { TableColumn, TableRowSpec } from './Table.js';
@@ -73,6 +88,22 @@ export interface VirtualTableProps {
    * default estimate).
    */
   viewportHeight?: number | string;
+  /**
+   * Wave 11 / Int-9 — opt-in multi-select. When true, every row gets a
+   * leading checkbox cell. Mirrors `<Table>`'s shape exactly so manifests
+   * can swap the binding id with no other prop churn.
+   */
+  selectable?: boolean;
+  /** Stable id extractor used to key rows into `selectedIds`. Defaults to the row index as a string. */
+  idOf?: (row: TableRowSpec, index: number) => string;
+  /** Read-only set of currently-selected ids. Only consulted when `selectable` is true. */
+  selectedIds?: ReadonlySet<string>;
+  /** Called whenever the selection set changes. Hosts pass an immutable next-state. */
+  onSelectionChange?: (next: ReadonlySet<string>) => void;
+  /** Bulk actions surfaced via `<BulkActionBar>` when one or more rows are selected. */
+  bulkActions?: readonly BulkAction[];
+  /** Click handler for a bulk action. Receives the action's id (= capability id). */
+  onBulkAction?: (actionId: string) => void;
 }
 
 export function VirtualTable({
@@ -90,6 +121,12 @@ export function VirtualTable({
   variant = 'ghost',
   className,
   viewportHeight = 480,
+  selectable = false,
+  idOf,
+  selectedIds,
+  onSelectionChange,
+  bulkActions,
+  onBulkAction,
 }: VirtualTableProps): ReactNode {
   const rows: readonly TableRowSpec[] =
     rowsProp ?? (Array.isArray(data) ? (data as readonly TableRowSpec[]) : []);
@@ -97,6 +134,46 @@ export function VirtualTable({
   const parentRef = useRef<HTMLDivElement>(null);
   const fetchMoreInFlight = useRef(false);
   const fetchPrevInFlight = useRef(false);
+
+  // Wave 11 / Int-9 — multi-select wiring. Mirrors `<Table>` (range-select
+  // resolves against the full `rows` sequence, not just the viewport).
+  const idResolver = idOf ?? ((_row: TableRowSpec, index: number): string => String(index));
+  const anchorRef = useRef<string | null>(null);
+  const [localSelected, setLocalSelected] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const effectiveSelected = selectedIds ?? localSelected;
+  const allIds = rows.map((row, i) => idResolver(row, i));
+  const emitSelection = (next: ReadonlySet<string>): void => {
+    if (onSelectionChange) onSelectionChange(next);
+    else setLocalSelected(next);
+  };
+  const handleToggle = (id: string, e: React.MouseEvent | React.ChangeEvent): void => {
+    const isShiftClick =
+      'shiftKey' in (e as unknown as { shiftKey?: boolean }) &&
+      (e as unknown as { shiftKey?: boolean }).shiftKey === true;
+    const next = new Set<string>(effectiveSelected);
+    if (isShiftClick && anchorRef.current && anchorRef.current !== id) {
+      const fromIdx = allIds.indexOf(anchorRef.current);
+      const toIdx = allIds.indexOf(id);
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const lo = Math.min(fromIdx, toIdx);
+        const hi = Math.max(fromIdx, toIdx);
+        for (let k = lo; k <= hi; k++) {
+          const cur = allIds[k];
+          if (cur !== undefined) next.add(cur);
+        }
+        emitSelection(next);
+        return;
+      }
+    }
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    anchorRef.current = id;
+    emitSelection(next);
+  };
+  const handleClear = (): void => {
+    anchorRef.current = null;
+    emitSelection(new Set<string>());
+  };
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -138,7 +215,10 @@ export function VirtualTable({
 
   const cellPad = DENSITY_ROW_PADDING_PX[density];
   // Equal-share columns; hosts can override via `className` on the wrapper.
-  const gridTemplate = columns.map(() => 'minmax(0, 1fr)').join(' ');
+  // When `selectable`, prepend a fixed-width checkbox column so the toggles
+  // line up regardless of how many data columns are present.
+  const checkboxTrack = selectable ? '40px ' : '';
+  const gridTemplate = checkboxTrack + columns.map(() => 'minmax(0, 1fr)').join(' ');
   const cellStyle: CSSProperties = {
     paddingTop: `${String(cellPad)}px`,
     paddingBottom: `${String(cellPad)}px`,
@@ -149,7 +229,23 @@ export function VirtualTable({
     whiteSpace: 'nowrap',
   };
 
-  return (
+  // Wave 11 / Int-9 — header select-all + per-row checkbox cell. Mirrors
+  // `<Table>` exactly: checked when every row is selected, indeterminate
+  // when only some are, click toggles between "all" and "none".
+  const allSelected =
+    selectable && allIds.length > 0 && allIds.every((id) => effectiveSelected.has(id));
+  const someSelected = selectable && !allSelected && allIds.some((id) => effectiveSelected.has(id));
+  const handleSelectAll = (): void => {
+    if (allSelected) {
+      anchorRef.current = null;
+      emitSelection(new Set<string>());
+    } else {
+      anchorRef.current = null;
+      emitSelection(new Set<string>(allIds));
+    }
+  };
+
+  const grid = (
     <div
       data-cir-component="VirtualTable"
       data-density={density}
@@ -158,6 +254,7 @@ export function VirtualTable({
       data-virtual="true"
       data-row-count={String(rows.length)}
       data-total={total !== undefined ? String(total) : undefined}
+      data-selectable={selectable ? 'true' : 'false'}
       role="grid"
       aria-rowcount={total ?? rows.length}
       className={cn(contentVariantClass[variant], className)}
@@ -176,6 +273,20 @@ export function VirtualTable({
           fontWeight: 600,
         }}
       >
+        {selectable ? (
+          <div role="columnheader" data-cir-part="virtual-table-select-header" style={cellStyle}>
+            <input
+              type="checkbox"
+              data-cir-part="virtual-table-select-all"
+              aria-label="Select all rows"
+              checked={allSelected}
+              ref={(node): void => {
+                if (node) node.indeterminate = someSelected;
+              }}
+              onChange={handleSelectAll}
+            />
+          </div>
+        ) : null}
         {columns.map((c) => {
           const headerStyle: CSSProperties = c.align
             ? { ...cellStyle, textAlign: c.align }
@@ -213,12 +324,15 @@ export function VirtualTable({
         >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const row = rows[virtualRow.index] as TableRowSpec;
+            const id = idResolver(row, virtualRow.index);
+            const checked = selectable && effectiveSelected.has(id);
             return (
               <div
                 key={virtualRow.key}
                 role="row"
                 data-cir-part="virtual-table-row"
                 data-index={String(virtualRow.index)}
+                data-selected={selectable ? (checked ? 'true' : 'false') : undefined}
                 ref={rowVirtualizer.measureElement}
                 style={{
                   position: 'absolute',
@@ -230,6 +344,21 @@ export function VirtualTable({
                   gridTemplateColumns: gridTemplate,
                 }}
               >
+                {selectable ? (
+                  <div role="gridcell" data-cir-part="virtual-table-select-cell" style={cellStyle}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select row ${String(virtualRow.index + 1)}`}
+                      checked={checked}
+                      onClick={(e): void => {
+                        handleToggle(id, e);
+                      }}
+                      onChange={(): void => {
+                        /* handled via onClick to access shiftKey */
+                      }}
+                    />
+                  </div>
+                ) : null}
                 {renderItem
                   ? renderItem(row, virtualRow.index)
                   : columns.map((c) => {
@@ -253,6 +382,28 @@ export function VirtualTable({
         </div>
       </div>
     </div>
+  );
+
+  // Wave 11 / Int-9 — auto-mount the floating bar when selection non-empty
+  // and `bulkActions` declared.
+  const showBar =
+    selectable &&
+    bulkActions !== undefined &&
+    bulkActions.length > 0 &&
+    effectiveSelected.size >= 1;
+  if (!showBar) return grid;
+  return (
+    <>
+      {grid}
+      <BulkActionBar
+        selectionCount={effectiveSelected.size}
+        actions={bulkActions}
+        onAction={(id): void => {
+          if (onBulkAction) onBulkAction(id);
+        }}
+        onClear={handleClear}
+      />
+    </>
   );
 }
 VirtualTable.displayName = 'VirtualTable';
@@ -279,6 +430,12 @@ export const VirtualTableBinding: ComponentBinding = {
       caption: 'string',
       density: 'string',
       variant: 'string',
+      selectable: 'boolean',
+      idOf: 'function',
+      selectedIds: 'object',
+      onSelectionChange: 'function',
+      bulkActions: 'array',
+      onBulkAction: 'function',
       className: 'string',
       total: 'number',
       estimateSize: 'number',

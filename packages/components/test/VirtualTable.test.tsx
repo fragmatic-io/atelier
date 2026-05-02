@@ -110,4 +110,33 @@ describe('VirtualTable', () => {
     expect(cap?.textContent).toBe('Products');
     expect(cap?.getAttribute('role')).toBe('caption');
   });
+
+  // -- Wave 11 / Int-9 — multi-select smoke --------------------------------
+  it('reflects data-selectable + emits select-all header when `selectable`', () => {
+    const rows = [{ name: 'Ada', age: 30 }];
+    const { container } = render(<VirtualTable columns={COLS} rows={rows} selectable />);
+    const root = container.querySelector('[data-cir-component="VirtualTable"]') as HTMLElement;
+    expect(root.getAttribute('data-selectable')).toBe('true');
+    expect(container.querySelector('[data-cir-part="virtual-table-select-all"]')).not.toBeNull();
+  });
+
+  it('exposes selection props on the manifest contract', () => {
+    expect(VirtualTableBinding.manifestContract?.allowed_props['selectable']).toBe('boolean');
+    expect(VirtualTableBinding.manifestContract?.allowed_props['bulkActions']).toBe('array');
+    expect(VirtualTableBinding.manifestContract?.allowed_props['onBulkAction']).toBe('function');
+  });
+
+  it('mounts <BulkActionBar> when bulkActions + selectedIds non-empty', () => {
+    const rows = [{ name: 'Ada', age: 30 }];
+    render(
+      <VirtualTable
+        columns={COLS}
+        rows={rows}
+        selectable
+        selectedIds={new Set<string>(['0'])}
+        bulkActions={[{ id: 'bulk.archive', label: 'Archive' }]}
+      />,
+    );
+    expect(document.body.querySelector('[data-cir-component="BulkActionBar"]')).not.toBeNull();
+  });
 });
