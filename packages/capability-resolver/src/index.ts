@@ -82,3 +82,18 @@ export {
   type PrimedSemanticSearch,
   type SemanticSearchFromResolverOptions,
 } from './adapter.js';
+
+export {
+  InMemoryEmbeddingIndex,
+  cosineSimilarity,
+  type EmbeddingClient,
+  type EmbeddingIndex,
+  type InMemoryEmbeddingIndexOptions,
+} from './embedding-index.js';
+
+export {
+  EmbeddingCapabilityResolver,
+  type EmbeddingCapabilityResolverOptions,
+  type EmbeddingErrorObserver,
+  type EmbeddingScopeObserver,
+} from './embedding-resolver.js';

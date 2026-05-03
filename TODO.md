@@ -16,7 +16,7 @@
 | **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                          | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
 | **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture; **C-1 ✅ shipped**) | 🟡 partial     | HIGH                | 3 wk left  | M              |
 | **7**   | Personalisation — P-3, P-4, P-7 (P-1 / P-8 / P-9 / DD shipped)                                                                                                 | 🟡 in flight   | mixed               | 3 wk       | C-Phase-1      |
-| **10**  | Scale tracks — S-1, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-2 + S-6 ✅ shipped                                                                                   | 🟡 partial     | mixed               | 6 wk       | C-Phase-2      |
+| **10**  | Scale tracks — S-1, S-4 (HIGH); S-7 (MEDIUM); S-2 + S-3 + S-5 + S-6 ✅ shipped                                                                                 | 🟡 partial     | mixed               | 4 wk       | C-Phase-2      |
 | **8**   | Vault marketplace — V-6 (V-1, V-3 ✅ shipped)                                                                                                                  | 📅 planned     | MEDIUM              | 4-6 wk     | C, 7           |
 | **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items; Vis-2, Int-2, Int-3, Int-4, Int-11, Int-13, Cnt-1, Cnt-3, Cnt-8, Nav-4 ✅ shipped)                | 📅 partial     | varies              | 6-10 mo    | C, P-7, S-3    |
 | **12+** | Multi-platform + marketing — N-1..N-5 (**N-4 ✅ shipped**)                                                                                                     | 🟡 partial     | LOWER               | 12-16 wk   | M (now proven) |
@@ -156,13 +156,13 @@ The framework today handles single-app, ≤200-capability registries with low-ca
 
 - [ ] **S-1 — Capability scoping (two-stage compile).** See `Wave C / Phase C-3` above for the integrated plan; `findCapability` is the natural surface. 2 wk. **HIGH.**
 - [x] **S-2 — Virtualized List/Table + cursor pagination on `DataResolver`.** Shipped. `<VirtualList>` + `<VirtualTable>` (under `@tanstack/react-virtual`) mirror the `<List>` / `<Table>` surface and emit `onFetchMore` / `onFetchPrev` at scroll edges; backed by a new `CursorPaginatedResult` envelope on `DataBinding` + `paginate()` helper in `@atelier/data-resolvers`. The `composes_hierarchy_for_long_lists` policy now nudges the swap to the virtual variant when a bound capability's `expected_count > VIRTUAL_THRESHOLD` (default 500). New `Capability.expected_count?` field declares the cardinality once at the capability layer. Catalog 65 → 67. Marigold showcase via `apps/demo-dummyjson/test/virtual-pagination.test.ts`. Back-compat across the whole protocol: bindings without `pagination` default to `'none'`; resolvers returning plain arrays continue to work.
-- [ ] **S-3 — Streaming subscriptions on `DataResolver`.** `resolver.subscribe(binding)` returns `AsyncIterable<T>` for live data. **1.5 wk. MEDIUM.** Gates Coll-1..5.
+- [x] **S-3 — Streaming subscriptions on `DataResolver`.** Shipped. `DataResolver` extended with optional `subscribe(binding) → AsyncIterable<unknown>` (back-compat: legacy resolvers untouched; the property is optional on the function shape, same idiom `withCache(...)` uses for `.size()` / `.evict()`). Two transports in `@atelier/data-resolvers/subscriptions`: `SseSubscriptionResolver` (Server-Sent Events; mirrors the runtime's `SseTriggerTransport` `EventSourceLike` seam, default transparent reconnect on transport error, `urlFor(binding)` returns `undefined` to opt a binding out) and `InMemorySubscriptionResolver` (test / fixture path, factory-driven). `consumeSubscription(iterable, opts)` helper for hosts that want a callback + cleanup function. New `useSubscription({ resolver, binding })` hook in `@atelier/react` owns the iterator's lifecycle (open on mount, `iterator.return()` on unmount / binding change), exposes `{ data, loading, error, reconnect }`. **Unblocks Coll-1..5** (multiplayer presence / cursors / comments / follow-mode / selection halos).
 - [x] **S-4 — Distributed `TriggerBus` (`RedisTriggerBus` primary, `NATSTriggerBus` optional).** Shipped. `RedisTriggerBus` (Redis pub/sub, channel `atelier:triggers:<app_id>`) and `NATSTriggerBus` (subject `atelier.triggers.<app_id>`) both implement the existing `TriggerSubscription` seam. Wire envelope `{ v: 1, origin, trigger }` with origin-id self-echo suppression so emitter handlers fire exactly once. Minimal `RedisLike{Publisher,Subscriber}` / `NATSLikeConnection` interfaces — no hard `ioredis` / `nats` dep; hosts pass any client that satisfies the shape. Local fan-out delegates to `InMemoryTriggerBus` so error semantics, wildcard subscribe, and registration order all match.
-- [ ] **S-5 — Hierarchical capability registry + generated index + incremental validation.** Allow nested paths + auto-generated `_index.json` summarising ids/versions/paths + CI re-validates only changed files (via `git diff`). **1 wk. MEDIUM.**
+- [x] **S-5 — Hierarchical capability registry + generated index + incremental validation.** Shipped. Capability JSON files now live at arbitrary depth under `capabilities/` (`capabilities/github/issue/list.json` is fine; `id` stays canonical). New `CapabilityIndexSchema` in `@atelier/schemas` (registered in the schema dump + `validate-data` registry). New `pnpm capabilities:index` (write) + `pnpm capabilities:index:check` (CI gate, drift detection with `__GENERATED_AT__` timestamp normalization) hooked into `pnpm validate` / `validate:fast`. Per-directory + root `_index.json` summarises `{ id, version, path }` entries plus immediate-child `subdirectories`. New `pnpm capabilities:validate-changed` runs `git diff --name-only origin/main...HEAD` (or `--cached` for staged), filters to `capabilities/**.json`, validates ONLY the changed set — sub-second on the common PR. `validate-data`'s `PathDispatchEntry` extended with `basenameOverrides` so any-depth `_index.json` files dispatch to `capability-index` without enumerating each nested path. 24 new tests across `scripts/test/{generate-capability-index,validate-capabilities-incremental}.test.ts`.
 - [x] **S-6 — Compile cost budget enforcement.** `BudgetMeteredCompiler`, `BudgetCounter`, `mergeCompileBudgets`, `BudgetExceededError.code`. `bc92956`. Demo wiring env-gated.
-- [ ] **S-7 — Capability vector embeddings (RAG variant of S-1).** Higher-quality scoping when registries grow past ~1000 capabilities. **3 wk. LOWER** — defer until S-1's quality ceiling is hit.
+- [x] **S-7 — Capability vector embeddings (RAG variant of S-1).** Higher-quality scoping when registries grow past ~1000 capabilities. Shipped as `EmbeddingCapabilityResolver` + `InMemoryEmbeddingIndex` in `@atelier/capability-resolver` — same `CapabilityResolver` seam as S-1, swap in without touching `ToolUsingCompiler` / `semanticSearchFromResolver`. Pluggable `EmbeddingClient` (no hard dep on a specific embedding provider — hosts plug in OpenAI / Cohere / Gemini / local sentence transformers); brute-force cosine search adequate to ~10k vectors with `Float32Array` math; `serialize` / `load` round-trip so boot doesn't re-embed. Cascades to the substring fallback on cold-start, client error, or all-stale hits — same idiom as S-1's `TwoStageCapabilityResolver`. 41 new tests (28 index + 13 resolver).
 
-**Recommended order for "real-app scale":** S-1 → S-5 → S-4 → S-3 → S-7. (S-2 + S-6 already done.)
+**Recommended order for "real-app scale":** S-1 → S-4 → S-7. (S-2 + S-3 + S-5 + S-6 already done.)
 
 ---
 
@@ -244,13 +244,13 @@ Each entry names the specific UX trait that earned its place.
 
 ### Coll — collaboration & real-time
 
-Capabilities best-in-class apps ship that Atelier has no track for today. **Depends on a real-time transport (S-3).**
+Capabilities best-in-class apps ship that Atelier has no track for today. **S-3 (real-time transport) ✅ shipped — Coll-1..5 unblocked.** Pair `useSubscription({ resolver, binding })` with `SseSubscriptionResolver` / `InMemorySubscriptionResolver` from `@atelier/data-resolvers`.
 
-- [ ] **Coll-1** — Multiplayer presence indicators. Figma's name-tagged cursors, Linear's "X is viewing this issue" pill. New `<Presence>` primitive backed by a `presence.subscribe` capability. **1.5 wk.** Depends on S-3.
-- [ ] **Coll-2** — Live cursors on canvas / list / doc surfaces. Figma-style remote cursors with smooth interpolation + name label. **2 wk.** Depends on Coll-1.
-- [ ] **Coll-3** — Threaded comments anchored to content. Notion / Figma / Linear all ship comments that anchor to a specific node. New `comment_anchor` schema + `<CommentThread>` primitive. **2.5 wk.** Depends on Cnt-3.
-- [ ] **Coll-4** — Real-time follow-mode / observe-mode. Figma's "follow Vid". Bounded scope: read-only follow on doc / canvas surfaces. **2 wk.** Depends on Coll-1.
-- [ ] **Coll-5** — Selection halos for collaborative selection. **1 wk.** Depends on Coll-1.
+- [ ] **Coll-1** — Multiplayer presence indicators. Figma's name-tagged cursors, Linear's "X is viewing this issue" pill. New `<Presence>` primitive backed by a `presence.subscribe` capability. **1.5 wk.** S-3 ✅ unblocked.
+- [ ] **Coll-2** — Live cursors on canvas / list / doc surfaces. Figma-style remote cursors with smooth interpolation + name label. **2 wk.** Depends on Coll-1. S-3 ✅ unblocked.
+- [ ] **Coll-3** — Threaded comments anchored to content. Notion / Figma / Linear all ship comments that anchor to a specific node. New `comment_anchor` schema + `<CommentThread>` primitive. **2.5 wk.** Depends on Cnt-3. S-3 ✅ unblocked.
+- [ ] **Coll-4** — Real-time follow-mode / observe-mode. Figma's "follow Vid". Bounded scope: read-only follow on doc / canvas surfaces. **2 wk.** Depends on Coll-1. S-3 ✅ unblocked.
+- [ ] **Coll-5** — Selection halos for collaborative selection. **1 wk.** Depends on Coll-1. S-3 ✅ unblocked.
 
 ### Nav — navigation & information architecture
 
@@ -302,7 +302,7 @@ Bounded items, do anytime. Most can fold into a single sprint.
 ### Detector + adapter scaffolding
 
 - [ ] **Behavioral pattern detector implementations.** The `BehavioralPatternDetector` interface and `NoopBehavioralDetector` ship; no real detector heuristics ship.
-- [ ] **Live-query subscriptions.** SWR + optimistic UI cover the common cases today; live subscriptions are future work. Closes alongside S-3.
+- [x] **Live-query subscriptions.** Shipped as Wave 10 / S-3 — `DataResolver.subscribe(binding) → AsyncIterable<unknown>` + `useSubscription` hook + SSE / in-memory transports. SWR + optimistic UI still cover the common cases; subscriptions layer on top for live presence / cursors / comments.
 - [ ] **Cross-app workflow compilation.** Single-app compile is shipped; "Gmail + Calendar + Linear in one lens" needs a neutral compiler host. See [`docs/open-questions.md`](docs/open-questions.md) §1.
 
 ### Tooling + observability
