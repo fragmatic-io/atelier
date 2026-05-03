@@ -158,4 +158,9 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   // components when capability cardinality crosses the virtual threshold).
   VirtualList: { can_contain: 'leaf' },
   VirtualTable: { can_contain: 'leaf' },
+  // Wave 11 / Cnt-9 — ActivityFeed renders typed events from the `events`
+  // prop (Linear-style activity / Stripe events log). Per-row diff +
+  // payload toggles render `<DiffView>` and a JSON `<pre>` inline; manifest
+  // authors do not embed manifest-level children.
+  ActivityFeed: { can_contain: 'leaf' },
 });

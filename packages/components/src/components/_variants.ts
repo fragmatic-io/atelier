@@ -558,6 +558,20 @@ export const diffViewVariantClass: Readonly<Record<DiffViewVariant, string>> = O
 });
 
 // -----------------------------------------------------------------------------
+// ActivityFeed — `default` is a vertical list with avatar gutter, `compact`
+// tightens the row rhythm (Linear-style dense feed), `cards` wraps each event
+// in a bordered surface (Stripe events log).
+// -----------------------------------------------------------------------------
+export type ActivityFeedVariant = 'default' | 'compact' | 'cards';
+
+export const activityFeedVariantClass: Readonly<Record<ActivityFeedVariant, string>> =
+  Object.freeze({
+    default: 'flex flex-col gap-3',
+    compact: 'flex flex-col gap-1 text-sm',
+    cards: 'flex flex-col gap-2',
+  });
+
+// -----------------------------------------------------------------------------
 // CodeView — `default` standalone block, `embedded` inline-block flavour
 // suitable for inline code references, `numbered` always shows line numbers.
 // -----------------------------------------------------------------------------

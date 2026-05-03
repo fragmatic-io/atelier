@@ -17,6 +17,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "ActivityFeed": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "ActivityFeedProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "Alert": {
     "actions_supported": [],
     "data_sources": [],

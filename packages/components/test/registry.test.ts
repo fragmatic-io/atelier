@@ -12,6 +12,7 @@ import {
 const EXPECTED = [
   'Accordion',
   'ActionMenu',
+  'ActivityFeed',
   'Alert',
   'BlockEditor',
   'BlockMenu',
@@ -220,6 +221,8 @@ describe('COMPOSITION_RULES', () => {
       // binding; manifest authors do not embed children.
       'VirtualList',
       'VirtualTable',
+      // Wave 11 / Cnt-9 — ActivityFeed renders typed events from props.
+      'ActivityFeed',
     ] as const) {
       expect(COMPOSITION_RULES[leaf]?.can_contain).toBe('leaf');
     }

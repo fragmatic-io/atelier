@@ -21,6 +21,7 @@ import { MapComponentRegistry, type ComponentBinding } from '@atelier/runtime';
 
 import { AccordionBinding } from './components/Accordion.js';
 import { ActionMenuBinding } from './components/ActionMenu.js';
+import { ActivityFeedBinding } from './components/ActivityFeed.js';
 import { AlertBinding } from './components/Alert.js';
 import { BlockEditorBinding } from './components/BlockEditor.js';
 import { BlockMenuBinding } from './components/BlockMenu.js';
@@ -95,6 +96,7 @@ import { WizardBinding } from './components/Wizard.js';
 export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Object.freeze({
   Accordion: AccordionBinding,
   ActionMenu: ActionMenuBinding,
+  ActivityFeed: ActivityFeedBinding,
   Alert: AlertBinding,
   BlockEditor: BlockEditorBinding,
   BlockMenu: BlockMenuBinding,

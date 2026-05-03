@@ -6,6 +6,9 @@
   "ActionMenu": {
     "can_contain": "leaf"
   },
+  "ActivityFeed": {
+    "can_contain": "leaf"
+  },
   "Alert": {
     "can_contain": "leaf"
   },

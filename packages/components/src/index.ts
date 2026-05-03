@@ -192,6 +192,25 @@ export type {
   LegacyDiffRow,
 } from './components/DiffView.js';
 
+// Wave 11 / Cnt-9 — Activity feed with diff visualization. Linear-style
+// typed-event timeline (`status_changed`, `label_added`, …) with collapse-
+// by-default `<DiffView>` + Stripe-style structured payload disclosure.
+// Adjacent same-`group` events collapse into a stacked row. `onLoadMore` is
+// debounced via in-flight ref so threshold crossings fire once.
+export {
+  ActivityFeed,
+  ActivityFeedBinding,
+  activityFeedTextRender,
+  groupAdjacentEvents,
+  LOAD_MORE_THRESHOLD_PX,
+} from './components/ActivityFeed.js';
+export type {
+  ActivityFeedProps,
+  ActivityEvent,
+  ActivityActor,
+  ActivityDiff,
+} from './components/ActivityFeed.js';
+
 export { Map, MapBinding } from './components/Map.js';
 export type { MapProps, MapMarker } from './components/Map.js';
 

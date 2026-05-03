@@ -11,6 +11,16 @@ describe('TEXT_RENDERERS', () => {
   it('every renderer returns a non-empty string for plausible props', () => {
     const samples: Readonly<Record<string, unknown>> = {
       Accordion: { items: [{ id: 'a', header: 'h', content: 'c' }] },
+      ActivityFeed: {
+        events: [
+          {
+            id: 'e1',
+            type: 'status_changed',
+            label: 'changed status to In Progress',
+            timestamp: '2026-05-02T12:00:00Z',
+          },
+        ],
+      },
       Calendar: { ariaLabel: 'Pick a date', month: '2026-04' },
       ChatThread: {
         messages: [{ id: 'm1', role: 'user', content: 'hi' }],

@@ -15,6 +15,7 @@
  */
 import { accordionTextRender } from './components/Accordion.js';
 import { actionMenuTextRender } from './components/ActionMenu.js';
+import { activityFeedTextRender } from './components/ActivityFeed.js';
 import { alertTextRender } from './components/Alert.js';
 import { blockEditorTextRender } from './components/BlockEditor.js';
 import { blockMenuTextRender } from './components/BlockMenu.js';
@@ -92,6 +93,7 @@ export type TextRenderer<TProps = unknown> = (props: TProps) => string;
 export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.freeze({
   Accordion: accordionTextRender as TextRenderer,
   ActionMenu: actionMenuTextRender as TextRenderer,
+  ActivityFeed: activityFeedTextRender as TextRenderer,
   Alert: alertTextRender as TextRenderer,
   BlockEditor: blockEditorTextRender as TextRenderer,
   BlockMenu: blockMenuTextRender as TextRenderer,
