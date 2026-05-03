@@ -28,12 +28,48 @@
  * doing so would clobber the caret on every keystroke. Hosts that need a
  * truly controlled editor should reach for the Phase 6 replacement.
  */
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { cn, inputVariantClass, type InputVariant } from './_variants.js';
+import type { EmbedRegistry } from '../embeds/registry.js';
+import type { EmbedDisplay } from '../embeds/resolver.js';
 
 export type RichTextToolbarItem = 'bold' | 'italic' | 'link' | 'bullet';
 export type RichTextVariant = InputVariant;
+
+/**
+ * Wave 11 / Int-15 — smart paste opt-in. When supplied, the editor's
+ * paste handler routes through the `EmbedRegistry` (Cnt-4): if the
+ * pasted text contains a URL the registry can resolve within
+ * `unfurlTimeoutMs` (default 1500 ms), the host's `onUnfurl` callback
+ * fires with the original URL + the resolved display payload — the
+ * host decides whether to splice an embed card into the document, drop
+ * a link card alongside the inserted text, or do nothing. The default
+ * paste behaviour is NEVER cancelled here (the editor still inserts
+ * the raw text); the unfurl callback runs alongside so the host can
+ * compose its own UI on top.
+ *
+ * Mirrors the `useSmartPaste` hook in `@atelier/react` shape-for-shape.
+ * RichText talks to the registry directly (rather than importing the
+ * hook) to avoid the components → react dep cycle.
+ */
+export interface RichTextSmartPaste {
+  embedRegistry: EmbedRegistry;
+  /**
+   * Fires when a pasted URL resolved through the registry within the
+   * timeout. The handler is responsible for whatever UI should follow
+   * (insert an embed card, render a side-panel preview, etc.). Errors
+   * thrown here are swallowed so a faulty handler can't tear down the
+   * editor on paste.
+   */
+  onUnfurl: (event: { url: string; display: EmbedDisplay }) => void;
+  /**
+   * Bound on the registry race. Default 1500 ms — generous enough for
+   * the oEmbed fallback over a fast-ish network, tight enough that the
+   * user doesn't perceive lag. `<= 0` disables unfurl.
+   */
+  unfurlTimeoutMs?: number;
+}
 
 export interface RichTextProps {
   value: string;
@@ -44,9 +80,36 @@ export interface RichTextProps {
   ariaDescribedBy?: string;
   className?: string;
   variant?: RichTextVariant;
+  /**
+   * Wave 11 / Int-15 opt-in. When supplied, paste events scan the
+   * clipboard text for a URL and dispatch to the registry; on resolve,
+   * `onUnfurl` fires. See `RichTextSmartPaste` for the contract.
+   */
+  pasteSmart?: RichTextSmartPaste;
 }
 
 const DEFAULT_TOOLBAR: readonly RichTextToolbarItem[] = ['bold', 'italic', 'link', 'bullet'];
+
+const SMART_PASTE_DEFAULT_TIMEOUT_MS = 1500;
+
+/**
+ * Detect the first URL in a string — `http://` / `https://` schemes only
+ * (the only schemes the embed resolvers handle). Trailing prose
+ * punctuation is trimmed so "see https://example.com." doesn't include
+ * the period. Mirrors the helper of the same name in
+ * `@atelier/react/hooks/use-smart-paste`.
+ */
+export function detectFirstUrlForPaste(text: string): string | null {
+  const match = /https?:\/\/[^\s<>"']+/i.exec(text);
+  if (match === null) return null;
+  let url = match[0];
+  url = url.replace(/[.,;:!?\]}]+$/u, '');
+  while (url.endsWith(')') && !url.slice(0, -1).includes('(')) {
+    url = url.slice(0, -1);
+    url = url.replace(/[.,;:!?\]}]+$/u, '');
+  }
+  return url.length > 0 ? url : null;
+}
 
 const ALLOWED_TAGS = new Set([
   'B',
@@ -119,10 +182,71 @@ export function RichText({
   ariaDescribedBy,
   className,
   variant = 'default',
+  pasteSmart,
 }: RichTextProps): ReactNode {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const labelId = useId();
   const editorId = `${labelId}-editor`;
+
+  // Capture the latest pasteSmart options in a ref so the paste handler
+  // identity stays stable across renders even when callers pass a fresh
+  // `onUnfurl` each time.
+  const pasteSmartRef = useRef<RichTextSmartPaste | undefined>(pasteSmart);
+  pasteSmartRef.current = pasteSmart;
+
+  const onPaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>): void => {
+    const opts = pasteSmartRef.current;
+    if (opts === undefined) return;
+    const data = e.clipboardData;
+    if (data === null || data === undefined) return;
+    let text: string;
+    try {
+      text = data.getData('text/plain') ?? '';
+    } catch {
+      return;
+    }
+    if (text.length === 0) return;
+    const url = detectFirstUrlForPaste(text);
+    if (url === null) return;
+    const timeoutMs = opts.unfurlTimeoutMs ?? SMART_PASTE_DEFAULT_TIMEOUT_MS;
+    if (timeoutMs <= 0) return;
+    // We deliberately do NOT preventDefault — the editor still inserts
+    // the raw text. The unfurl callback runs alongside so the host can
+    // compose its own UI on top (insert embed card below, render a
+    // side panel, etc.).
+    let settled = false;
+    const finish = (resolved: { provider: string; display: EmbedDisplay } | null): void => {
+      if (settled) return;
+      settled = true;
+      if (resolved === null) return;
+      try {
+        opts.onUnfurl({ url, display: resolved.display });
+      } catch {
+        /* host handler errors must not tear down the editor on paste */
+      }
+    };
+    const timer =
+      typeof window !== 'undefined' && typeof window.setTimeout === 'function'
+        ? window.setTimeout(() => finish(null), timeoutMs)
+        : setTimeout(() => finish(null), timeoutMs);
+    const clear = (): void => {
+      if (typeof window !== 'undefined' && typeof window.clearTimeout === 'function') {
+        window.clearTimeout(timer as number);
+      } else {
+        clearTimeout(timer as ReturnType<typeof setTimeout>);
+      }
+    };
+    void opts.embedRegistry.resolve(url).then(
+      (resolved) => {
+        clear();
+        finish(resolved);
+      },
+      () => {
+        clear();
+        finish(null);
+      },
+    );
+  }, []);
 
   // Seed the editor on first mount.
   useEffect(() => {
@@ -232,6 +356,7 @@ export function RichText({
         onInput={(e) => {
           onChange(sanitizeRichTextHtml(e.currentTarget.innerHTML));
         }}
+        onPaste={onPaste}
       />
     </div>
   );

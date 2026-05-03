@@ -2,7 +2,14 @@
 import './setup.js';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { RichText, RichTextBinding, sanitizeRichTextHtml } from '../src/components/RichText.js';
+import {
+  RichText,
+  RichTextBinding,
+  detectFirstUrlForPaste,
+  sanitizeRichTextHtml,
+} from '../src/components/RichText.js';
+import type { EmbedDisplay } from '../src/embeds/resolver.js';
+import type { EmbedRegistry } from '../src/embeds/registry.js';
 
 describe('RichText', () => {
   it('seeds the editor with the initial value', () => {
@@ -116,6 +123,200 @@ describe('RichText', () => {
     );
     const root = container.querySelector('[data-cir-component="RichText"]');
     expect(root?.className).toContain('border-b');
+  });
+});
+
+// -- Wave 11 / Int-15 — smart paste integration -------------------------------
+
+interface FakeRegistryScript {
+  display?: EmbedDisplay;
+  unresolved?: boolean;
+  reject?: boolean;
+  delayMs?: number;
+}
+
+function makeRegistry(script: FakeRegistryScript): EmbedRegistry & { calls: string[] } {
+  const calls: string[] = [];
+  return {
+    add(): void {
+      /* unused */
+    },
+    calls,
+    resolve(url: string) {
+      calls.push(url);
+      const make = (): Promise<{ provider: string; display: EmbedDisplay } | null> => {
+        if (script.reject === true) return Promise.reject(new Error('boom'));
+        if (script.unresolved === true) return Promise.resolve(null);
+        if (script.display !== undefined) {
+          return Promise.resolve({ provider: 'fake', display: script.display });
+        }
+        return Promise.resolve(null);
+      };
+      if (script.delayMs === undefined || script.delayMs <= 0) return make();
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          make().then(resolve, reject);
+        }, script.delayMs);
+      });
+    },
+  };
+}
+
+describe('RichText pasteSmart integration', () => {
+  it('fires onUnfurl when a pasted URL resolves through the registry', async () => {
+    const display: EmbedDisplay = { kind: 'video', iframeSrc: 'https://x/embed' };
+    const registry = makeRegistry({ display });
+    const onUnfurl = vi.fn();
+    render(
+      <RichText
+        value=""
+        onChange={() => undefined}
+        label="Body"
+        pasteSmart={{ embedRegistry: registry, onUnfurl }}
+      />,
+    );
+    const editor = document.querySelector('[data-cir-part="richtext-editor"]')!;
+    fireEvent.paste(editor, {
+      clipboardData: {
+        getData: (type: string) => (type === 'text/plain' ? 'see https://example.com' : ''),
+      },
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(registry.calls).toEqual(['https://example.com']);
+    expect(onUnfurl).toHaveBeenCalledOnce();
+    expect(onUnfurl.mock.calls[0]?.[0]).toEqual({
+      url: 'https://example.com',
+      display,
+    });
+  });
+
+  it('does NOT fire onUnfurl when no URL is in the clipboard', () => {
+    const registry = makeRegistry({ display: { kind: 'card', title: 'never' } });
+    const onUnfurl = vi.fn();
+    render(
+      <RichText
+        value=""
+        onChange={() => undefined}
+        label="Body"
+        pasteSmart={{ embedRegistry: registry, onUnfurl }}
+      />,
+    );
+    const editor = document.querySelector('[data-cir-part="richtext-editor"]')!;
+    fireEvent.paste(editor, {
+      clipboardData: { getData: () => 'plain text without urls' },
+    });
+    expect(registry.calls).toEqual([]);
+    expect(onUnfurl).not.toHaveBeenCalled();
+  });
+
+  it('does NOT fire onUnfurl when registry returns null', async () => {
+    const registry = makeRegistry({ unresolved: true });
+    const onUnfurl = vi.fn();
+    render(
+      <RichText
+        value=""
+        onChange={() => undefined}
+        label="Body"
+        pasteSmart={{ embedRegistry: registry, onUnfurl }}
+      />,
+    );
+    const editor = document.querySelector('[data-cir-part="richtext-editor"]')!;
+    fireEvent.paste(editor, {
+      clipboardData: { getData: () => 'https://nope.example.com' },
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(registry.calls).toEqual(['https://nope.example.com']);
+    expect(onUnfurl).not.toHaveBeenCalled();
+  });
+
+  it('does NOT fire onUnfurl when registry rejects', async () => {
+    const registry = makeRegistry({ reject: true });
+    const onUnfurl = vi.fn();
+    render(
+      <RichText
+        value=""
+        onChange={() => undefined}
+        label="Body"
+        pasteSmart={{ embedRegistry: registry, onUnfurl }}
+      />,
+    );
+    const editor = document.querySelector('[data-cir-part="richtext-editor"]')!;
+    fireEvent.paste(editor, {
+      clipboardData: { getData: () => 'https://boom.example.com' },
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(onUnfurl).not.toHaveBeenCalled();
+  });
+
+  it('skips unfurl when pasteSmart prop is omitted', () => {
+    const registry = makeRegistry({ display: { kind: 'card', title: 'x' } });
+    const onUnfurl = vi.fn();
+    render(<RichText value="" onChange={() => undefined} label="Body" />);
+    const editor = document.querySelector('[data-cir-part="richtext-editor"]')!;
+    fireEvent.paste(editor, {
+      clipboardData: { getData: () => 'https://example.com' },
+    });
+    expect(registry.calls).toEqual([]);
+    expect(onUnfurl).not.toHaveBeenCalled();
+  });
+
+  it('skips unfurl when unfurlTimeoutMs is 0', () => {
+    const registry = makeRegistry({ display: { kind: 'card', title: 'x' } });
+    const onUnfurl = vi.fn();
+    render(
+      <RichText
+        value=""
+        onChange={() => undefined}
+        label="Body"
+        pasteSmart={{ embedRegistry: registry, onUnfurl, unfurlTimeoutMs: 0 }}
+      />,
+    );
+    const editor = document.querySelector('[data-cir-part="richtext-editor"]')!;
+    fireEvent.paste(editor, {
+      clipboardData: { getData: () => 'https://example.com' },
+    });
+    expect(registry.calls).toEqual([]);
+    expect(onUnfurl).not.toHaveBeenCalled();
+  });
+
+  it('swallows host onUnfurl errors so the editor stays alive', async () => {
+    const display: EmbedDisplay = { kind: 'card', title: 'ok' };
+    const registry = makeRegistry({ display });
+    const onUnfurl = vi.fn(() => {
+      throw new Error('host boom');
+    });
+    render(
+      <RichText
+        value=""
+        onChange={() => undefined}
+        label="Body"
+        pasteSmart={{ embedRegistry: registry, onUnfurl }}
+      />,
+    );
+    const editor = document.querySelector('[data-cir-part="richtext-editor"]')!;
+    expect(() => {
+      fireEvent.paste(editor, {
+        clipboardData: { getData: () => 'https://example.com' },
+      });
+    }).not.toThrow();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(onUnfurl).toHaveBeenCalledOnce();
+  });
+});
+
+describe('detectFirstUrlForPaste', () => {
+  it('extracts the first URL from prose', () => {
+    expect(detectFirstUrlForPaste('see https://x.io and y')).toBe('https://x.io');
+  });
+  it('returns null when no URL is present', () => {
+    expect(detectFirstUrlForPaste('hello')).toBeNull();
+  });
+  it('strips trailing punctuation', () => {
+    expect(detectFirstUrlForPaste('https://x.io.')).toBe('https://x.io');
   });
 });
 

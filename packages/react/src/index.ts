@@ -101,6 +101,23 @@ export {
   type PersistedVaultClient,
 } from './hooks/use-persisted-state.js';
 
+// Wave 11 / Int-15 — smart paste with link unfurl. `useSmartPaste({ embedRegistry,
+// onPaste, unfurlTimeoutMs? })` scans pasted text for the first URL, hands
+// it to the host's Cnt-4 `EmbedRegistry`, and surfaces the resolved display
+// payload (or falls back to raw text on miss / timeout). Pairs with
+// `<RichText pasteSmart={{ embedRegistry }}>` from `@atelier/components`.
+// `EmbedRegistry` / `EmbedDisplay` types are structurally mirrored here so
+// the React adapter stays free of a runtime dep on `@atelier/components`.
+export {
+  useSmartPaste,
+  detectFirstUrl,
+  type SmartPasteOptions,
+  type UseSmartPasteResult,
+  type PasteEvent,
+  type EmbedDisplay as SmartPasteEmbedDisplay,
+  type EmbedRegistry as SmartPasteEmbedRegistry,
+} from './hooks/use-smart-paste.js';
+
 // Wave 11 / Int-11 — preserved scroll + view state across nav. Per-route
 // `useViewState` (selection / filter / sort) + `useScrollRestore`
 // (scrollTop on the scroll container). Both compose on top of Nav-2's

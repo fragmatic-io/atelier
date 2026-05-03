@@ -213,8 +213,17 @@ export type { SliderProps } from './components/Slider.js';
 export { FileUpload, FileUploadBinding } from './components/FileUpload.js';
 export type { FileUploadProps } from './components/FileUpload.js';
 
-export { RichText, RichTextBinding, sanitizeRichTextHtml } from './components/RichText.js';
-export type { RichTextProps, RichTextToolbarItem } from './components/RichText.js';
+export {
+  RichText,
+  RichTextBinding,
+  detectFirstUrlForPaste,
+  sanitizeRichTextHtml,
+} from './components/RichText.js';
+export type {
+  RichTextProps,
+  RichTextSmartPaste,
+  RichTextToolbarItem,
+} from './components/RichText.js';
 
 export { CodeEditor, CodeEditorBinding } from './components/CodeEditor.js';
 export type { CodeEditorProps } from './components/CodeEditor.js';
