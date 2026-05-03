@@ -284,6 +284,34 @@ export { parseMentions } from './mentions/parser.js';
 export { combineMentionResolvers } from './mentions/resolver.js';
 export type { MentionDisplay, MentionMatch, MentionResolver } from './mentions/resolver.js';
 
+// Wave 11 / Cnt-4 — Embed system. Pluggable per-provider URL resolver
+// protocol (`EmbedResolver`), an ordered registry surface (`EmbedRegistry`
+// / `InMemoryEmbedRegistry`), built-in resolvers for YouTube / Loom /
+// Figma + a generic oEmbed fallback (`oembedResolver` accepts a
+// host-supplied fetch — no hard dep on `globalThis.fetch`), and the
+// `<Embed>` rendering primitive that owns the async resolution + falls
+// back to a plain link on failure. Embed is NOT a manifest-bound
+// component (host-level composition); Cnt-5 (markdown) and Int-15 (smart
+// paste) consume it directly.
+export { Embed } from './components/Embed.js';
+export type { EmbedProps } from './components/Embed.js';
+
+export { InMemoryEmbedRegistry } from './embeds/registry.js';
+export type { EmbedRegistry } from './embeds/registry.js';
+export type { EmbedDisplay, EmbedMatch, EmbedResolver } from './embeds/resolver.js';
+
+export {
+  extractFigmaKey,
+  extractLoomId,
+  extractYouTubeId,
+  figmaResolver,
+  loomResolver,
+  mapOEmbedToDisplay,
+  oembedResolver,
+  youtubeResolver,
+} from './embeds/builtin.js';
+export type { OEmbedFetch, OEmbedResolverOptions, OEmbedResponse } from './embeds/builtin.js';
+
 export { Progress, ProgressBinding } from './components/Progress.js';
 export type { ProgressProps } from './components/Progress.js';
 
