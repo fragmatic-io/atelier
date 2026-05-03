@@ -43,7 +43,15 @@ export {
   type KeyboardRegistryListener,
 } from './registry.js';
 
+export {
+  InMemoryQuickSwitchIndex,
+  type QuickSwitchIndex,
+  type QuickSwitchIndexListener,
+  type QuickSwitchItem,
+} from './quickswitch.js';
+
 import type { KeyboardRegistry } from './registry.js';
+import type { QuickSwitchIndex } from './quickswitch.js';
 import type { ActionRecencyTracker } from './recency.js';
 
 /**
@@ -54,4 +62,10 @@ export interface KeyboardServices {
   registry: KeyboardRegistry;
   /** Optional persistence — per-user action recency for fuzzy weighting. */
   recency?: ActionRecencyTracker;
+  /**
+   * Optional quick-switch index — the resource counterpart to `registry`.
+   * Powers `<QuickSwitcher>` (Cmd+P, Int-6). When absent, the switcher
+   * falls through to its `items` prop (or renders empty).
+   */
+  quickswitch?: QuickSwitchIndex;
 }

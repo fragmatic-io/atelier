@@ -393,6 +393,20 @@ export const commandPaletteVariantClass: Readonly<Record<CommandPaletteVariant, 
   });
 
 // -----------------------------------------------------------------------------
+// QuickSwitcher — Wave 11 / Int-6. Same visual surface as CommandPalette
+// (a dialog-backed list with a search input) but indexed against resources
+// instead of actions. We share the variant classes deliberately so hosts
+// that style one get the other for free.
+// -----------------------------------------------------------------------------
+export type QuickSwitcherVariant = 'default' | 'compact';
+
+export const quickSwitcherVariantClass: Readonly<Record<QuickSwitcherVariant, string>> =
+  Object.freeze({
+    default: 'bg-white text-gray-900 rounded-lg shadow-xl ring-1 ring-gray-200 p-3 w-[480px]',
+    compact: 'bg-white text-gray-900 rounded-md shadow-md ring-1 ring-gray-200 p-2 w-[320px]',
+  });
+
+// -----------------------------------------------------------------------------
 // Stepper — layout / display style. `horizontal` is the default flex-row,
 // `vertical` stacks for sidebars, `numbered` strips the connector and leans on
 // the index numerals.
