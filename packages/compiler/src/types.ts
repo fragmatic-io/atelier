@@ -15,6 +15,7 @@
  */
 
 import type {
+  AppOutline,
   Capability,
   ComponentDefinition,
   IntentProfile,
@@ -107,6 +108,14 @@ export interface CompileInput {
    * fields are always set together by `ValidationFeedbackCompiler`.
    */
   violations?: readonly string[] | undefined;
+  /**
+   * Wave C / Phase C-4 — app-wide outline produced by the once-per-app
+   * pre-pass. When set, the inner compiler may render only the route's
+   * content area (chrome / nav / common policies / skill stack are
+   * supplied here). Threaded by `MultiRouteCompiler`; compilers that
+   * don't read it degrade to standalone behaviour with no change.
+   */
+  outline?: AppOutline | undefined;
 }
 
 export interface CompileResult {

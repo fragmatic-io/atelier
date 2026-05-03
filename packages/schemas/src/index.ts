@@ -195,6 +195,11 @@ export {
 export { PolicySchema, type Policy } from './policy.js';
 
 // -----------------------------------------------------------------------------
+// App outline — Wave C / Phase C-4 once-per-app pre-pass
+// -----------------------------------------------------------------------------
+export { AppOutlineSchema, NavEntrySchema, type AppOutline, type NavEntry } from './app-outline.js';
+
+// -----------------------------------------------------------------------------
 // Brand kit (design system)
 // -----------------------------------------------------------------------------
 export {

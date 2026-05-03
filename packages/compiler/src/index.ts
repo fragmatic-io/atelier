@@ -198,6 +198,20 @@ export {
   type TokenBudgetCounter,
 } from './server-resolver.js';
 
+// Outline compiler + multi-route fan-out (Wave C / Phase C-4)
+export {
+  DeterministicOutlineCompiler,
+  type CompileOutlineInput,
+  type OutlineCompiler,
+  type OutlineRouteInput,
+} from './outline-compiler.js';
+export {
+  MultiRouteCompiler,
+  type MultiRouteCompileResult,
+  type MultiRouteCompilerOptions,
+  type MultiRouteEntry,
+} from './multi-route-compiler.js';
+
 // Prompts (exported for tests / custom compilers / observability)
 export { COMPILER_SYSTEM_PROMPT, COMPILER_SYSTEM_PROMPT_VERSION } from './prompts/system.js';
 export { buildPromptContext, type BuiltPromptContext } from './prompts/builder.js';
