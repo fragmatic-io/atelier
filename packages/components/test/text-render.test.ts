@@ -57,6 +57,7 @@ describe('TEXT_RENDERERS', () => {
       DateInput: { label: 'Date' },
       DetailView: { fields: [{ label: 'Name', value: 'Ada' }] },
       Drawer: { open: true, side: 'right', title: 'Filters', onClose: () => undefined },
+      DropZone: { host: false },
       EmptyState: { title: 'Nothing here', description: 'try again' },
       FileUpload: { label: 'Upload', onFiles: () => undefined },
       FilterBar: {

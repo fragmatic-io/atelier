@@ -87,6 +87,27 @@ export type { SplitProps } from './components/Split.js';
 export { MultiPane, MultiPaneBinding, multiPaneTextRender } from './components/MultiPane.js';
 export type { MultiPaneProps, MultiPaneDirection, PaneSpec } from './components/MultiPane.js';
 
+// Wave 11 / Int-10 — `<DropZone>` baseline drag-and-drop file upload
+// primitive. Wraps a region (or, with `host=true`, the entire viewport
+// via `document.body`) and dispatches a configured capability (default
+// `'file.upload'`) with `{ files: accepted }` params on drop. The
+// host-supplied `dispatcher` is typically `useDispatcher()` from
+// `@atelier/react`. Validates files by MIME / extension / `maxSize`;
+// rejected files come back with a `reason` string.
+export {
+  DropZone,
+  DropZoneBinding,
+  dropZoneTextRender,
+  validateDroppedFiles,
+  DROPZONE_DEFAULT_OVERLAY_LABEL,
+  DROPZONE_DEFAULT_CAPABILITY,
+} from './components/DropZone.js';
+export type {
+  DropZoneProps,
+  DropZoneDispatcher,
+  DropZoneRejection,
+} from './components/DropZone.js';
+
 // -----------------------------------------------------------------------------
 // Display
 // -----------------------------------------------------------------------------

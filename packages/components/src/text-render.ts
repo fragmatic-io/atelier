@@ -37,6 +37,7 @@ import { dateInputTextRender } from './components/DateInput.js';
 import { detailViewTextRender } from './components/DetailView.js';
 import { diffViewTextRender } from './components/DiffView.js';
 import { drawerTextRender } from './components/Drawer.js';
+import { dropZoneTextRender } from './components/DropZone.js';
 import { emptyStateTextRender } from './components/EmptyState.js';
 import { fileUploadTextRender } from './components/FileUpload.js';
 import { filterBarTextRender } from './components/FilterBar.js';
@@ -115,6 +116,8 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   DetailView: detailViewTextRender as TextRenderer,
   DiffView: diffViewTextRender as TextRenderer,
   Drawer: drawerTextRender as TextRenderer,
+  // Wave 11 / Int-10 — drag-and-drop file upload primitive.
+  DropZone: dropZoneTextRender as TextRenderer,
   EmptyState: emptyStateTextRender as TextRenderer,
   FileUpload: fileUploadTextRender as TextRenderer,
   FilterBar: filterBarTextRender as TextRenderer,

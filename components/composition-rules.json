@@ -74,6 +74,10 @@
     "can_contain": "*",
     "min_children": 1
   },
+  "DropZone": {
+    "can_contain": "*",
+    "min_children": 1
+  },
   "EmptyState": {
     "can_contain": "leaf"
   },

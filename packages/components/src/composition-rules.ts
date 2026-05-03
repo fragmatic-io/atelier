@@ -39,6 +39,12 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Accordion: { can_contain: '*', min_children: 1 },
   Modal: { can_contain: '*', min_children: 1 },
   Drawer: { can_contain: '*', min_children: 1 },
+  // Wave 11 / Int-10 — `<DropZone>` wraps an arbitrary region (the same
+  // shape as `<Container>` / `<Stack>`); `host=true` widens the listener
+  // target to `document.body` while still rendering the children
+  // normally. `min_children: 1` so a wireframe-shaped manifest can't
+  // produce an empty zone with no content to drop on.
+  DropZone: { can_contain: '*', min_children: 1 },
   // Data-bound containers — Grid and List render from a `data` binding via
   // a default or supplied renderItem. They're "empty" by construction at
   // manifest-author time; the runtime fills rows. NO min_children here, or

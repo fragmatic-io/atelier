@@ -34,6 +34,7 @@ const EXPECTED = [
   'DetailView',
   'DiffView',
   'Drawer',
+  'DropZone',
   'EmptyState',
   'FileUpload',
   'FilterBar',
@@ -86,7 +87,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 73 baseline components', () => {
+  it('contains exactly the 74 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -105,7 +106,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 73 ids', () => {
+  it('list() reports all 74 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 

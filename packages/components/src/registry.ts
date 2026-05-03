@@ -42,6 +42,7 @@ import { DateInputBinding } from './components/DateInput.js';
 import { DetailViewBinding } from './components/DetailView.js';
 import { DiffViewBinding } from './components/DiffView.js';
 import { DrawerBinding } from './components/Drawer.js';
+import { DropZoneBinding } from './components/DropZone.js';
 import { EmptyStateBinding } from './components/EmptyState.js';
 import { FileUploadBinding } from './components/FileUpload.js';
 import { FilterBarBinding } from './components/FilterBar.js';
@@ -118,6 +119,10 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   DetailView: DetailViewBinding,
   DiffView: DiffViewBinding,
   Drawer: DrawerBinding,
+  // Wave 11 / Int-10 — drag-and-drop file upload everywhere. Wraps a
+  // region (or, with `host=true`, the whole document body) and dispatches
+  // the configured capability with `{ files }` params on drop.
+  DropZone: DropZoneBinding,
   EmptyState: EmptyStateBinding,
   FileUpload: FileUploadBinding,
   FilterBar: FilterBarBinding,
