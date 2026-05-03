@@ -258,6 +258,22 @@ export {
 } from './components/HoverCard.js';
 export type { HoverCardProps, HoverCardSide } from './components/HoverCard.js';
 
+// Wave 11 / Cnt-3 — Mention / @user / #issue / autolink resolution. Pluggable
+// per-prefix resolver protocol + inline rendering primitive `<Mention>` and
+// the convenience host-level wrapper `<MentionAware>` that scans raw text and
+// renders each match wrapped (when the resolver supplies a preview) in a
+// `<HoverCard>`. Cnt-5 (markdown at Linear quality) composes this from the
+// markdown renderer side.
+export { Mention, MentionBinding } from './components/Mention.js';
+export type { MentionProps } from './components/Mention.js';
+
+export { MentionAware } from './components/MentionAware.js';
+export type { MentionAwareProps } from './components/MentionAware.js';
+
+export { parseMentions } from './mentions/parser.js';
+export { combineMentionResolvers } from './mentions/resolver.js';
+export type { MentionDisplay, MentionMatch, MentionResolver } from './mentions/resolver.js';
+
 export { Progress, ProgressBinding } from './components/Progress.js';
 export type { ProgressProps } from './components/Progress.js';
 
