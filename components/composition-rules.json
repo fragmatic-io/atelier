@@ -143,6 +143,9 @@
   "Select": {
     "can_contain": "leaf"
   },
+  "SettingsSearch": {
+    "can_contain": "leaf"
+  },
   "Sidebar": {
     "can_contain": "leaf"
   },

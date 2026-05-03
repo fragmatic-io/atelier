@@ -56,6 +56,7 @@ const EXPECTED = [
   'RichText',
   'Search',
   'Select',
+  'SettingsSearch',
   'Sidebar',
   'Skeleton',
   'Slider',
@@ -80,7 +81,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 67 baseline components', () => {
+  it('contains exactly the 68 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -99,7 +100,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 61 ids', () => {
+  it('list() reports all 68 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -174,6 +175,7 @@ describe('COMPOSITION_RULES', () => {
       'Skeleton',
       'ActionMenu',
       'Search',
+      'SettingsSearch',
       'Wizard',
       'FilterBar',
       'KPIRow',

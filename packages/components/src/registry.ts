@@ -64,6 +64,7 @@ import { QueueBinding } from './components/Queue.js';
 import { RichTextBinding } from './components/RichText.js';
 import { SearchBinding } from './components/Search.js';
 import { SelectBinding } from './components/Select.js';
+import { SettingsSearchBinding } from './components/SettingsSearch.js';
 import { SidebarBinding } from './components/Sidebar.js';
 import { SkeletonBinding } from './components/Skeleton.js';
 import { SliderBinding } from './components/Slider.js';
@@ -134,6 +135,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   RichText: RichTextBinding,
   Search: SearchBinding,
   Select: SelectBinding,
+  SettingsSearch: SettingsSearchBinding,
   Sidebar: SidebarBinding,
   Skeleton: SkeletonBinding,
   Slider: SliderBinding,
@@ -361,6 +363,8 @@ export const _LEGACY_COMPOSITION_RULES_BODY: Readonly<
   ActionMenu: { can_contain: 'leaf' },
   // Search renders its own input + clear button internally.
   Search: { can_contain: 'leaf' },
+  // Wave 11 / Int-12 — SettingsSearch renders inline; items come from props.
+  SettingsSearch: { can_contain: 'leaf' },
   // Specialized (batch 3).
   // Form hosts arbitrary input children; the auto-injected submit/cancel
   // buttons are appended internally.

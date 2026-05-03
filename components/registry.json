@@ -417,6 +417,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "SettingsSearch": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "SettingsSearchProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "Sidebar": {
     "actions_supported": [],
     "data_sources": [],

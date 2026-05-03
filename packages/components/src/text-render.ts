@@ -59,6 +59,7 @@ import { queueTextRender } from './components/Queue.js';
 import { richTextTextRender } from './components/RichText.js';
 import { searchTextRender } from './components/Search.js';
 import { selectTextRender } from './components/Select.js';
+import { settingsSearchTextRender } from './components/SettingsSearch.js';
 import { sidebarTextRender } from './components/Sidebar.js';
 import { skeletonTextRender } from './components/Skeleton.js';
 import { sliderTextRender } from './components/Slider.js';
@@ -131,6 +132,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   RichText: richTextTextRender as TextRenderer,
   Search: searchTextRender as TextRenderer,
   Select: selectTextRender as TextRenderer,
+  SettingsSearch: settingsSearchTextRender as TextRenderer,
   Sidebar: sidebarTextRender as TextRenderer,
   Skeleton: skeletonTextRender as TextRenderer,
   Slider: sliderTextRender as TextRenderer,

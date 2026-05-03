@@ -329,6 +329,17 @@ export type { GalleryProps, GalleryItem } from './components/Gallery.js';
 export { CommandPalette, CommandPaletteBinding } from './components/CommandPalette.js';
 export type { CommandPaletteProps, CommandPaletteCommand } from './components/CommandPalette.js';
 
+// Wave 11 / Int-12 — settings-scoped fuzzy search panel (Stripe / Slack /
+// Notion ship one at the top of `/settings`). Self-registers a
+// `settings.search` action with the `<KeyboardProvider>` registry when one
+// is in scope so a `'/'` hotkey focuses the input.
+export {
+  SettingsSearch,
+  SettingsSearchBinding,
+  settingsSearchTextRender,
+} from './components/SettingsSearch.js';
+export type { SettingsSearchProps, SettingsItem } from './components/SettingsSearch.js';
+
 // Wave 11 / Int-3 — keyboard registry adapter. `KeyboardContext`,
 // `<KeyboardProvider>`, and the `useKeyboard*` hooks live here (alongside
 // `<CommandPalette>` and the `IconResolver` adapter) so the baseline

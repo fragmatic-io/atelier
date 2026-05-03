@@ -85,6 +85,9 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   ActionMenu: { can_contain: 'leaf' },
   // Search renders its own input + clear button internally.
   Search: { can_contain: 'leaf' },
+  // Wave 11 / Int-12 — SettingsSearch renders its input + grouped result
+  // list from the `items` prop; manifest authors do not embed children.
+  SettingsSearch: { can_contain: 'leaf' },
   // Specialized (batch 3).
   // Form hosts arbitrary input children; the auto-injected submit/cancel
   // buttons are appended internally.

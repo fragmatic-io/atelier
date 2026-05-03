@@ -81,6 +81,10 @@ describe('TEXT_RENDERERS', () => {
       Progress: { value: 42 },
       Queue: { items: [{ id: 'a', title: 'Renew domain' }], title: 'Decisions' },
       Search: { value: 'tea', onChange: () => undefined },
+      SettingsSearch: {
+        items: [{ id: 'billing', label: 'Billing', href: '/settings/billing' }],
+        onSelect: () => undefined,
+      },
       Select: {
         label: 'Fruit',
         options: [

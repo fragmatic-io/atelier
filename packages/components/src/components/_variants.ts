@@ -407,6 +407,23 @@ export const quickSwitcherVariantClass: Readonly<Record<QuickSwitcherVariant, st
   });
 
 // -----------------------------------------------------------------------------
+// SettingsSearch — Wave 11 / Int-12. Inline search box rendered at the top of
+// a settings surface (Stripe / Slack / Notion all ship one). `default` is the
+// full-width inline panel that grows with the container; `compact` trims the
+// padding for narrower side-rails. Visually distinct from CommandPalette
+// because it isn't a dialog — it sits in the page flow.
+// -----------------------------------------------------------------------------
+export type SettingsSearchVariant = 'default' | 'compact';
+
+export const settingsSearchVariantClass: Readonly<Record<SettingsSearchVariant, string>> =
+  Object.freeze({
+    default:
+      'bg-white text-gray-900 rounded-md ring-1 ring-gray-200 p-3 w-full dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700',
+    compact:
+      'bg-white text-gray-900 rounded-md ring-1 ring-gray-200 p-2 w-full text-sm dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700',
+  });
+
+// -----------------------------------------------------------------------------
 // Stepper — layout / display style. `horizontal` is the default flex-row,
 // `vertical` stacks for sidebars, `numbered` strips the connector and leans on
 // the index numerals.
