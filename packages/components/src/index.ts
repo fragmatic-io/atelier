@@ -77,6 +77,24 @@ export type { DrawerProps, DrawerSide } from './components/Drawer.js';
 export { Split, SplitBinding } from './components/Split.js';
 export type { SplitProps } from './components/Split.js';
 
+// Wave 11 / Nav-1 — `<MultiPane>` is the 3+-pane generalisation of `<Split>`.
+// Reference workflows: Slack (sidebar / main / thread), Discord (servers /
+// channels / main / members), Linear (filters / list / detail). Sizes +
+// collapse state persist via the same `localStorage`-backed JSON shape
+// `<Sidebar>` (Nav-2) uses; the host-facing `usePersistedState` hook in
+// `@atelier/react` is the richer (session/local/vault) surface for the
+// same concern.
+export {
+  MultiPane,
+  MultiPaneBinding,
+  multiPaneTextRender,
+} from './components/MultiPane.js';
+export type {
+  MultiPaneProps,
+  MultiPaneDirection,
+  PaneSpec,
+} from './components/MultiPane.js';
+
 // -----------------------------------------------------------------------------
 // Display
 // -----------------------------------------------------------------------------

@@ -49,6 +49,7 @@ const EXPECTED = [
   'Markdown',
   'MetaBadge',
   'Modal',
+  'MultiPane',
   'MultiSelect',
   'NavBar',
   'NumberInput',
@@ -84,7 +85,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 71 baseline components', () => {
+  it('contains exactly the 72 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -103,7 +104,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 71 ids', () => {
+  it('list() reports all 72 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -229,6 +230,13 @@ describe('COMPOSITION_RULES', () => {
     expect(r.can_contain).toBe('*');
     expect(r.min_children).toBe(2);
     expect(r.max_children).toBe(2);
+  });
+
+  it('MultiPane is an N+-pane layout container with min_children=2 and no upper bound', () => {
+    const r = COMPOSITION_RULES['MultiPane']!;
+    expect(r.can_contain).toBe('*');
+    expect(r.min_children).toBe(2);
+    expect(r.max_children).toBeUndefined();
   });
 
   it('round-trips through @atelier/schemas CompositionRulesSchema', () => {

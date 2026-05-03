@@ -57,6 +57,7 @@ import { MapBinding } from './components/Map.js';
 import { MarkdownBinding } from './components/Markdown.js';
 import { MetaBadgeBinding } from './components/MetaBadge.js';
 import { ModalBinding } from './components/Modal.js';
+import { MultiPaneBinding } from './components/MultiPane.js';
 import { MultiSelectBinding } from './components/MultiSelect.js';
 import { NavBarBinding } from './components/NavBar.js';
 import { NumberInputBinding } from './components/NumberInput.js';
@@ -131,6 +132,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Markdown: MarkdownBinding,
   MetaBadge: MetaBadgeBinding,
   Modal: ModalBinding,
+  MultiPane: MultiPaneBinding,
   MultiSelect: MultiSelectBinding,
   NavBar: NavBarBinding,
   NumberInput: NumberInputBinding,

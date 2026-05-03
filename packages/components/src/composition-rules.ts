@@ -129,6 +129,11 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Breadcrumb: { can_contain: 'leaf' },
   Pagination: { can_contain: 'leaf' },
   Split: { can_contain: '*', min_children: 2, max_children: 2 },
+  // Wave 11 / Nav-1 — `<MultiPane>` is the 3+-pane generalisation of
+  // `<Split>` (Slack sidebar+main+thread, Discord servers+channels+main+
+  // members, Linear filters+list+detail). `min_children: 2` is the
+  // practical floor (a single pane would degenerate); upper bound is open.
+  MultiPane: { can_contain: '*', min_children: 2 },
   Chart: { can_contain: 'leaf' },
   Timeline: { can_contain: 'leaf' },
   Tree: { can_contain: 'leaf' },

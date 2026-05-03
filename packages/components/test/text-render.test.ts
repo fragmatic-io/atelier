@@ -67,6 +67,13 @@ describe('TEXT_RENDERERS', () => {
       Markdown: { content: '# hello' },
       MetaBadge: { count: 5, label: 'unread' },
       Modal: { open: true, title: 'Edit', onClose: () => undefined },
+      MultiPane: {
+        panes: [
+          { id: 'sidebar', label: 'Sidebar', pane: 's' },
+          { id: 'main', label: 'Main', pane: 'm' },
+          { id: 'thread', label: 'Thread', collapsible: true, pane: 't' },
+        ],
+      },
       MultiSelect: {
         label: 'Tags',
         options: [

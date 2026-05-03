@@ -122,6 +122,10 @@
     "can_contain": "*",
     "min_children": 1
   },
+  "MultiPane": {
+    "can_contain": "*",
+    "min_children": 2
+  },
   "MultiSelect": {
     "can_contain": "leaf"
   },
