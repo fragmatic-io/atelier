@@ -110,6 +110,10 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   // `BlockKindRegistry` (filtered by `surface`); manifest authors do not
   // embed children.
   BlockMenu: { can_contain: 'leaf' },
+  // Wave 11 / Cnt-7 — BlockEditor renders typed blocks from the host-supplied
+  // `blocks` prop (each block is a leaf rendered through a per-type
+  // primitive); manifest authors do not embed manifest-level children inside it.
+  BlockEditor: { can_contain: 'leaf' },
   // Stepper renders steps from the `steps` prop.
   Stepper: { can_contain: 'leaf' },
   NumberInput: { can_contain: 'leaf' },

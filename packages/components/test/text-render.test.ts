@@ -136,6 +136,13 @@ describe('TEXT_RENDERERS', () => {
         onInsert: () => undefined,
         onClose: () => undefined,
       },
+      BlockEditor: {
+        blocks: [
+          { id: 'b1', type: 'paragraph', content: 'Hello' },
+          { id: 'b2', type: 'heading', content: 'Title', meta: { level: 1 } },
+        ],
+        onChange: () => undefined,
+      },
       Wizard: {
         steps: [
           { id: 'a', title: 'A', content: 'a' },

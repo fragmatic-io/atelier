@@ -9,6 +9,9 @@
   "Alert": {
     "can_contain": "leaf"
   },
+  "BlockEditor": {
+    "can_contain": "leaf"
+  },
   "BlockMenu": {
     "can_contain": "leaf"
   },

@@ -382,6 +382,23 @@ export type {
   BlockKindRegistryListener,
 } from './blocks/registry.js';
 
+// Wave 11 / Cnt-7 — block-based document editing. `<BlockEditor>` composes
+// the 8 baseline block types (paragraph / heading / callout / toggle / code
+// / embed / quote / divider) and weaves slash-menu insertion (Cnt-6) +
+// keyboard navigation + HTML5 drag-reorder. Unblocks AI-1 ("Ask AI" on
+// selection) which depends on a structured editor surface.
+export {
+  BlockEditor,
+  BlockEditorBinding,
+  blockEditorTextRender,
+} from './components/BlockEditor.js';
+export type {
+  BlockEditorProps,
+  BlockEditorVariant,
+  Block,
+  BlockType,
+} from './components/BlockEditor.js';
+
 // Wave 11 / Int-12 — settings-scoped fuzzy search panel (Stripe / Slack /
 // Notion ship one at the top of `/settings`). Self-registers a
 // `settings.search` action with the `<KeyboardProvider>` registry when one
