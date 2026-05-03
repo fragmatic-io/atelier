@@ -466,6 +466,28 @@ export type {
   SelectionActionDispatcher,
 } from './components/SelectionActionBar.js';
 
+// Wave 11 / AI-3 — Tome / Gamma / Notion-AI-style generative layout.
+// `<GenerativeLayout>` takes a host-supplied async `generate(req)` and
+// renders the resulting `GenerativeBlock[]` (paragraph / heading /
+// callout / code / quote / divider) inline. End-user-visible affordances:
+// Regenerate / Restyle / Expand on the document; Regenerate-this-block +
+// Delete on each block. The `generativeBlocksToBlockEditor` adapter
+// bridges the result into `<BlockEditor>`'s `Block[]` shape so the host
+// can drop the generated layout straight into a live editor.
+export {
+  GenerativeLayout,
+  GenerativeLayoutBinding,
+  generativeLayoutTextRender,
+  generativeBlocksToBlockEditor,
+} from './components/GenerativeLayout.js';
+export type {
+  GenerativeLayoutProps,
+  GenerativeBlock,
+  GenerationRequest,
+  GenerationResult,
+  GenerativeFn,
+} from './components/GenerativeLayout.js';
+
 export { KPIRow, KPIRowBinding } from './components/KPIRow.js';
 export type { KPIRowProps, KPIStat } from './components/KPIRow.js';
 

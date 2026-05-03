@@ -42,6 +42,7 @@ const EXPECTED = [
   'FilterQueryBar',
   'Form',
   'Gallery',
+  'GenerativeLayout',
   'Grid',
   'HoverCard',
   'Icon',
@@ -96,7 +97,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 81 baseline components', () => {
+  it('contains exactly the 82 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -115,7 +116,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 81 ids', () => {
+  it('list() reports all 82 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -197,6 +198,9 @@ describe('COMPOSITION_RULES', () => {
       'FilterBar',
       'KPIRow',
       'Gallery',
+      // Wave 11 / AI-3 — generative layout panel; content driven by
+      // host-supplied `generate(req)` + props (no manifest children).
+      'GenerativeLayout',
       'CommandPalette',
       'BlockMenu',
       'BlockEditor',

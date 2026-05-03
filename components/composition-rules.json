@@ -99,6 +99,9 @@
   "Gallery": {
     "can_contain": "leaf"
   },
+  "GenerativeLayout": {
+    "can_contain": "leaf"
+  },
   "Grid": {
     "can_contain": "*"
   },

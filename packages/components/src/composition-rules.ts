@@ -117,6 +117,10 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   KPIRow: { can_contain: 'leaf' },
   // Gallery renders its figures from the `items` prop.
   Gallery: { can_contain: 'leaf' },
+  // Wave 11 / AI-3 — `<GenerativeLayout>` renders blocks emitted by a
+  // host-supplied `generate(req)` function; manifest authors do not
+  // embed children (content is driven by `generate` + props).
+  GenerativeLayout: { can_contain: 'leaf' },
   // Wave 11 / Int-14 — single-image leaf primitive. Renders a `<figure>`
   // with an `<img>` and an optional caption; manifest authors do not embed
   // children. When `lightbox` is true, clicking the image opens a single-

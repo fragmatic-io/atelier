@@ -71,6 +71,11 @@ describe('TEXT_RENDERERS', () => {
       Gallery: {
         items: [{ id: '1', src: 'a.png', alt: 'A' }],
       },
+      // Wave 11 / AI-3 — generative layout panel.
+      GenerativeLayout: {
+        initialPrompt: 'Pitch deck for a vegan kombucha startup',
+        initialBlocks: [{ id: 'b1', kind: 'paragraph', content: 'Hi' }],
+      },
       Grid: { columns: 3 },
       Icon: { set: 'lucide', name: 'archive' },
       KPIRow: {

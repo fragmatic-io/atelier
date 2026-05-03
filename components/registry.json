@@ -287,6 +287,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "GenerativeLayout": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "GenerativeLayoutProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "Grid": {
     "actions_supported": [],
     "data_sources": ["dummyjson.product.list"],

@@ -45,6 +45,7 @@ import { filterBarTextRender } from './components/FilterBar.js';
 import { filterQueryBarTextRender } from './components/FilterQueryBar.js';
 import { formTextRender } from './components/Form.js';
 import { galleryTextRender } from './components/Gallery.js';
+import { generativeLayoutTextRender } from './components/GenerativeLayout.js';
 import { gridTextRender } from './components/Grid.js';
 import { hoverCardTextRender } from './components/HoverCard.js';
 import { iconTextRender } from './components/Icon.js';
@@ -132,6 +133,8 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   FilterQueryBar: filterQueryBarTextRender as TextRenderer,
   Form: formTextRender as TextRenderer,
   Gallery: galleryTextRender as TextRenderer,
+  // Wave 11 / AI-3 — generative layout panel.
+  GenerativeLayout: generativeLayoutTextRender as TextRenderer,
   Grid: gridTextRender as TextRenderer,
   HoverCard: hoverCardTextRender as TextRenderer,
   Icon: iconTextRender as TextRenderer,

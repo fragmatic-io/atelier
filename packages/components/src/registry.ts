@@ -50,6 +50,7 @@ import { FilterBarBinding } from './components/FilterBar.js';
 import { FilterQueryBarBinding } from './components/FilterQueryBar.js';
 import { FormBinding } from './components/Form.js';
 import { GalleryBinding } from './components/Gallery.js';
+import { GenerativeLayoutBinding } from './components/GenerativeLayout.js';
 import { GridBinding } from './components/Grid.js';
 import { HoverCardBinding } from './components/HoverCard.js';
 import { IconBinding } from './components/Icon.js';
@@ -140,6 +141,10 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   FilterQueryBar: FilterQueryBarBinding,
   Form: FormBinding,
   Gallery: GalleryBinding,
+  // Wave 11 / AI-3 — Tome / Gamma / Notion-AI-style generative layout.
+  // Host-supplied `generate(req)` produces a `GenerativeBlock[]`; the
+  // panel renders + exposes Regenerate / Restyle / Expand affordances.
+  GenerativeLayout: GenerativeLayoutBinding,
   Grid: GridBinding,
   HoverCard: HoverCardBinding,
   Icon: IconBinding,
