@@ -80,8 +80,12 @@ export type { SplitProps } from './components/Split.js';
 // -----------------------------------------------------------------------------
 // Display
 // -----------------------------------------------------------------------------
-export { Markdown, MarkdownBinding } from './components/Markdown.js';
-export type { MarkdownProps } from './components/Markdown.js';
+// Wave 11 / Cnt-5 — Linear-quality Markdown. `markdownVariantClass` is the
+// spacing-axis class table (`'default' | 'tight' | 'loose'`); `MarkdownRenderers`
+// re-exports react-markdown's `Components` map shape so hosts can type their
+// per-element renderer overrides.
+export { Markdown, MarkdownBinding, markdownVariantClass } from './components/Markdown.js';
+export type { MarkdownProps, MarkdownRenderers, MarkdownVariant } from './components/Markdown.js';
 
 export { Table, TableBinding } from './components/Table.js';
 export type { TableProps, TableColumn, TableRowSpec } from './components/Table.js';

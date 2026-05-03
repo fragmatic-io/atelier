@@ -218,9 +218,7 @@ describe('DiffView — Cnt-2 split mode', () => {
       ],
     };
     const { container } = render(<DiffView hunks={[skewed]} variant="split" />);
-    const empties = container.querySelectorAll(
-      '[data-cir-part="diff-row"][data-kind="empty"]',
-    );
+    const empties = container.querySelectorAll('[data-cir-part="diff-row"][data-kind="empty"]');
     // The second deletion has no add to pair with → 1 empty cell on the right.
     expect(empties.length).toBe(1);
   });
@@ -244,7 +242,9 @@ describe('DiffView — per-hunk Shiki highlight', () => {
     const { container } = render(<DiffView hunks={[HUNK]} />);
     expect(container.querySelector('[data-cir-part="diff-line"][data-theme]')).toBeNull();
     expect(
-      container.querySelector('[data-cir-component="DiffView"]')?.getAttribute('data-highlight-state'),
+      container
+        .querySelector('[data-cir-component="DiffView"]')
+        ?.getAttribute('data-highlight-state'),
     ).toBe('idle');
   });
 
@@ -258,9 +258,7 @@ describe('DiffView — per-hunk Shiki highlight', () => {
           ?.getAttribute('data-highlight-state'),
       ).toBe('ready');
     });
-    const lights = container.querySelectorAll(
-      '[data-cir-part="diff-line"][data-theme="light"]',
-    );
+    const lights = container.querySelectorAll('[data-cir-part="diff-line"][data-theme="light"]');
     expect(lights.length).toBe(4);
     // The mock embeds the theme id — verify it threaded through.
     expect(lights[0]?.innerHTML).toContain('data-mock-theme="github-light"');

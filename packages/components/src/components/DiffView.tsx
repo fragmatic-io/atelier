@@ -125,7 +125,7 @@ export interface LegacyDiffRow {
 
 /** Discriminator: is this a hunk (new shape) or a flat row (legacy)? */
 function isHunk(value: DiffHunk | LegacyDiffRow): value is DiffHunk {
-  return 'lines' in value && Array.isArray((value as DiffHunk).lines);
+  return 'lines' in value && Array.isArray(value.lines);
 }
 
 // ---------------------------------------------------------------------------
@@ -266,9 +266,8 @@ function useHunkHighlights(
     return (): void => {
       ac.abort();
     };
-    // `key` captures every meaningful change; ESLint exhaustive-deps would
-    // ask for `hunks` / `theme` — but those are already folded into `key`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // `key` captures every meaningful change; hunks / theme are folded
+    // into `key` so referencing them as deps would over-fire the effect.
   }, [key]);
 
   return results;
@@ -520,10 +519,7 @@ export function DiffView(props: DiffViewProps): ReactNode {
   // behaviour), `unified` for new-shape callers.
   const variant: DiffViewVariant = variantProp ?? (isLegacy ? 'minimal' : 'unified');
 
-  const highlightSet = useMemo(
-    () => new Set<number>(highlightLines ?? []),
-    [highlightLines],
-  );
+  const highlightSet = useMemo(() => new Set<number>(highlightLines ?? []), [highlightLines]);
 
   // Normalise to new-shape hunks for the unified / split renderers. Legacy
   // rows collapse into a single synthetic hunk so we can share machinery.
@@ -589,12 +585,7 @@ export function DiffView(props: DiffViewProps): ReactNode {
                 </div>
               ) : null}
               {variant === 'split' ? (
-                <SplitHunk
-                  hunk={hunk}
-                  hh={hh}
-                  linkLines={linkLines}
-                  highlightSet={highlightSet}
-                />
+                <SplitHunk hunk={hunk} hh={hh} linkLines={linkLines} highlightSet={highlightSet} />
               ) : (
                 <UnifiedHunk
                   hunk={hunk}
