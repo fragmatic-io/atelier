@@ -69,3 +69,23 @@ export {
   type PaginationMode,
   type PaginateOptions,
 } from './cursor.js';
+// Wave 10 / S-3 — streaming subscriptions on `DataResolver`. Gates
+// Coll-1..5 (multiplayer presence / cursors / comments). Two transports
+// ship: SSE (HTTP one-way streams) and InMemory (testing / fixtures).
+// Hosts that don't subscribe simply leave `resolver.subscribe`
+// undefined.
+export {
+  createSseSubscriptionResolver,
+  SseSubscriptionResolver,
+  consumeSubscription,
+  type SseSubscriptionResolverOptions,
+  type EventSourceLike as SseEventSourceLike,
+  type EventSourceCtor as SseEventSourceCtor,
+  type ConsumeSubscriptionOptions,
+  type CleanupFn,
+} from './subscriptions/sse.js';
+export {
+  createInMemorySubscriptionResolver,
+  InMemorySubscriptionResolver,
+  type InMemorySubscriptionResolverOptions,
+} from './subscriptions/in-memory.js';

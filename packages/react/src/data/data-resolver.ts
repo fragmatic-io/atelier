@@ -37,8 +37,17 @@ export interface DataBinding {
  * receives `data: undefined` and is expected to render an empty state.
  * Throwing or returning a rejected promise surfaces as `error` on the
  * component's props.
+ *
+ * Wave 10 / S-3 — resolvers MAY also expose an optional `subscribe(binding)`
+ * method on the function itself for live streaming. Mirrored from
+ * `@atelier/data-resolvers` so the React render walker and the new
+ * `useSubscription` hook can call it without taking a hard dependency on
+ * the resolver implementation package. Hosts that don't implement
+ * subscriptions return `undefined` (or simply don't define the method).
  */
-export type DataResolver = (binding: DataBinding) => unknown;
+export type DataResolver = ((binding: DataBinding) => unknown) & {
+  subscribe?: (binding: DataBinding) => AsyncIterable<unknown> | undefined;
+};
 
 /** Default resolver: returns `undefined` for every binding. */
 export const EmptyDataResolver: DataResolver = () => undefined;

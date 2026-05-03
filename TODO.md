@@ -16,7 +16,7 @@
 | **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                          | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
 | **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture; **C-1 ✅ shipped**) | 🟡 partial     | HIGH                | 3 wk left  | M              |
 | **7**   | Personalisation — P-3, P-4, P-7 (P-1 / P-8 / P-9 / DD shipped)                                                                                                 | 🟡 in flight   | mixed               | 3 wk       | C-Phase-1      |
-| **10**  | Scale tracks — S-1, S-4 (HIGH); S-7 (MEDIUM); S-2 + S-3 + S-5 + S-6 ✅ shipped                                                                                 | 🟡 partial     | mixed               | 4 wk       | C-Phase-2      |
+| **10**  | Scale tracks — S-1, S-4 (HIGH); S-2 + S-3 + S-5 + S-6 + S-7 ✅ shipped                                                                                         | 🟡 partial     | mixed               | 3 wk       | C-Phase-2      |
 | **8**   | Vault marketplace — V-6 (V-1, V-3 ✅ shipped)                                                                                                                  | 📅 planned     | MEDIUM              | 4-6 wk     | C, 7           |
 | **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items; Vis-2, Int-2, Int-3, Int-4, Int-11, Int-13, Cnt-1, Cnt-3, Cnt-8, Nav-4 ✅ shipped)                | 📅 partial     | varies              | 6-10 mo    | C, P-7, S-3    |
 | **12+** | Multi-platform + marketing — N-1..N-5 (**N-4 ✅ shipped**)                                                                                                     | 🟡 partial     | LOWER               | 12-16 wk   | M (now proven) |
@@ -162,7 +162,7 @@ The framework today handles single-app, ≤200-capability registries with low-ca
 - [x] **S-6 — Compile cost budget enforcement.** `BudgetMeteredCompiler`, `BudgetCounter`, `mergeCompileBudgets`, `BudgetExceededError.code`. `bc92956`. Demo wiring env-gated.
 - [x] **S-7 — Capability vector embeddings (RAG variant of S-1).** Higher-quality scoping when registries grow past ~1000 capabilities. Shipped as `EmbeddingCapabilityResolver` + `InMemoryEmbeddingIndex` in `@atelier/capability-resolver` — same `CapabilityResolver` seam as S-1, swap in without touching `ToolUsingCompiler` / `semanticSearchFromResolver`. Pluggable `EmbeddingClient` (no hard dep on a specific embedding provider — hosts plug in OpenAI / Cohere / Gemini / local sentence transformers); brute-force cosine search adequate to ~10k vectors with `Float32Array` math; `serialize` / `load` round-trip so boot doesn't re-embed. Cascades to the substring fallback on cold-start, client error, or all-stale hits — same idiom as S-1's `TwoStageCapabilityResolver`. 41 new tests (28 index + 13 resolver).
 
-**Recommended order for "real-app scale":** S-1 → S-4 → S-7. (S-2 + S-3 + S-5 + S-6 already done.)
+**Recommended order for "real-app scale":** S-1 → S-4. (S-2 + S-3 + S-5 + S-6 + S-7 already done.)
 
 ---
 

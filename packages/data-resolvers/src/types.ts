@@ -57,8 +57,25 @@ export interface DataBinding {
  * A resolver returns a value (or a promise) describing the bound data.
  * Returning `undefined` means "no data for this binding" — components should
  * render their empty state. Throwing or rejecting is surfaced as `error`.
+ *
+ * Wave 10 / S-3 — resolvers MAY also expose an optional `subscribe(binding)`
+ * method on the function itself for live streaming. Hosts that don't
+ * implement subscriptions return `undefined` from `subscribe` (or simply
+ * don't define the method). The shape is a property on the resolver
+ * function — same pattern `withCache(...)` uses for `.size()` /
+ * `.evict()`. This stays back-compat: every existing resolver still
+ * satisfies the protocol because `subscribe` is optional.
+ *
+ * The async-iterable contract:
+ *   - Each `next()` yields one event payload (already parsed/decoded).
+ *   - Iterator completion (return `{ done: true }`) signals end-of-stream.
+ *   - Iterator throws to surface a transport error to the consumer.
+ *   - Consumers MUST call `return()` to clean up (the React hook does
+ *     this on unmount; `consumeSubscription()` wraps the same pattern).
  */
-export type DataResolver = (binding: DataBinding) => unknown;
+export type DataResolver = ((binding: DataBinding) => unknown) & {
+  subscribe?: (binding: DataBinding) => AsyncIterable<unknown> | undefined;
+};
 
 /**
  * A `Capability` registry the resolvers can look up by capability id. Both

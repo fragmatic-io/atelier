@@ -124,6 +124,18 @@ export {
   type DataResolver,
 } from './data/data-resolver.js';
 
+// Wave 10 / S-3 — streaming subscriptions on `DataResolver`. The hook
+// owns the iterator's lifecycle (open on mount, `return()` on unmount /
+// binding change) and surfaces `data` / `loading` / `error` /
+// `reconnect()`. Pair with `SseSubscriptionResolver` /
+// `InMemorySubscriptionResolver` from `@atelier/data-resolvers`. Gates
+// Coll-1..5 (multiplayer presence / cursors / comments).
+export {
+  useSubscription,
+  type UseSubscriptionResult,
+  type UseSubscriptionOptions,
+} from './hooks/use-subscription.js';
+
 // -----------------------------------------------------------------------------
 // Debug UI (for dev observability)
 // -----------------------------------------------------------------------------
