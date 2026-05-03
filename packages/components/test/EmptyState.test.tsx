@@ -3,6 +3,8 @@ import './setup.js';
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { EmptyState, EmptyStateBinding } from '../src/components/EmptyState.js';
+import { IllustrationResolverProvider } from '../src/illustrations/context.js';
+import { MapIllustrationResolver } from '../src/illustrations/resolver.js';
 
 describe('EmptyState', () => {
   it('renders title and (optional) description', () => {
@@ -36,5 +38,34 @@ describe('EmptyState', () => {
   it('applies the bordered variant class', () => {
     render(<EmptyState title="t" variant="bordered" />);
     expect(screen.getByRole('status').className).toContain('border');
+  });
+  // -- Wave 11 / Vis-5 illustration integration --
+  it('renders inline SVG when illustration resolves', () => {
+    const resolver = new MapIllustrationResolver({
+      mascot: { svg: '<svg data-test="m"/>', label: 'Mascot' },
+    });
+    const { container } = render(
+      <IllustrationResolverProvider resolver={resolver}>
+        <EmptyState title="t" illustration="mascot" />
+      </IllustrationResolverProvider>,
+    );
+    const slot = container.querySelector('[data-cir-part="empty-illustration"]');
+    expect(slot).toBeTruthy();
+    expect(slot?.querySelector('svg')).toBeTruthy();
+    expect(slot?.getAttribute('aria-label')).toBe('Mascot');
+  });
+  it('skips the illustration slot when the resolver returns null', () => {
+    const resolver = new MapIllustrationResolver({});
+    const { container } = render(
+      <IllustrationResolverProvider resolver={resolver}>
+        <EmptyState title="t" illustration="missing" />
+      </IllustrationResolverProvider>,
+    );
+    expect(container.querySelector('[data-cir-part="empty-illustration"]')).toBeNull();
+    expect(container.querySelector('[data-cir-part="empty-title"]')?.textContent).toBe('t');
+  });
+  it('skips the illustration slot when no resolver provider is in scope', () => {
+    const { container } = render(<EmptyState title="t" illustration="inbox-zero" />);
+    expect(container.querySelector('[data-cir-part="empty-illustration"]')).toBeNull();
   });
 });

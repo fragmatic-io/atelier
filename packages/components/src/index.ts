@@ -100,7 +100,11 @@ export type { MarkdownProps, MarkdownRenderers, MarkdownVariant } from './compon
 export { Table, TableBinding } from './components/Table.js';
 export type { TableProps, TableColumn, TableRowSpec } from './components/Table.js';
 
-export { EmptyState, EmptyStateBinding } from './components/EmptyState.js';
+export {
+  EmptyState,
+  EmptyStateBinding,
+  EMPTY_STATE_ILLUSTRATION_SIZE,
+} from './components/EmptyState.js';
 export type { EmptyStateProps } from './components/EmptyState.js';
 
 export { List, ListBinding } from './components/List.js';
@@ -528,6 +532,27 @@ export type { IconBrandConfig, IconBrandProviderProps } from './icons/brand-cont
 
 export { LiteralIconResolver, MapIconResolver, NoopIconResolver } from './icons/resolver.js';
 export type { IconResolver } from './icons/resolver.js';
+
+// -----------------------------------------------------------------------------
+// Illustrations (Wave 11 / Vis-5) — `<EmptyState illustration="…">` plus the
+// host-pluggable resolver protocol. Mirrors the Vis-3 icon resolver pattern;
+// `@atelier/components` ships a small bundled default pack so the out-of-
+// the-box experience is coherent without extra wiring.
+// -----------------------------------------------------------------------------
+export {
+  IllustrationResolverContext,
+  IllustrationResolverProvider,
+  useIllustrationResolver,
+} from './illustrations/context.js';
+export type { IllustrationResolverProviderProps } from './illustrations/context.js';
+
+export { MapIllustrationResolver, NoopIllustrationResolver } from './illustrations/resolver.js';
+export type { IllustrationEntry, IllustrationResolver } from './illustrations/resolver.js';
+
+export {
+  DEFAULT_ILLUSTRATIONS,
+  createDefaultIllustrationResolver,
+} from './illustrations/builtins.js';
 
 // Wave 11 / Vis-3: concrete `LucideIconResolver` adapter. Hosts that ship
 // the lucide pack import this directly; other packs implement
