@@ -131,6 +131,13 @@ export {
 } from './hooks/use-view-state.js';
 export { useScrollRestore, type UseScrollRestoreOptions } from './hooks/use-scroll-restore.js';
 
+// Wave 11 / Cnt-10 — saved views
+export { useSavedView } from './hooks/use-saved-view.js';
+export type {
+  UseSavedViewOptions,
+  ViewDefinition as SavedViewDefinition,
+} from './hooks/use-saved-view.js';
+
 // -----------------------------------------------------------------------------
 // Data resolver protocol
 // -----------------------------------------------------------------------------

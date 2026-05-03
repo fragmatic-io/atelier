@@ -263,3 +263,17 @@ export {
   type MarketplaceAddress,
   type SignedBundle,
 } from './marketplace.js';
+
+// View definitions — Wave 11 / Cnt-10
+export {
+  ViewDefinitionSchema,
+  ViewDisplaySchema,
+  ViewFilterOpSchema,
+  ViewFilterSchema,
+  ViewSortSchema,
+  type ViewDefinition,
+  type ViewDisplay,
+  type ViewFilter,
+  type ViewFilterOp,
+  type ViewSort,
+} from './view-definition.js';
