@@ -138,6 +138,29 @@ export type {
   ViewDefinition as SavedViewDefinition,
 } from './hooks/use-saved-view.js';
 
+// Wave 11 / Cnt-11 — form auto-save (Notion / Coda style). Debounces
+// `save()` calls, exposes a status state machine + lastSavedAt, and
+// surfaces a `flush()` escape hatch for beforeunload / route-change
+// boundaries. Pairs with `useVersionHistory` — call `commit()` from
+// `onSaved` to keep history aligned with persisted snapshots.
+export {
+  useAutosave,
+  type AutosaveStatus,
+  type UseAutosaveOptions,
+  type UseAutosaveResult,
+} from './hooks/use-autosave.js';
+
+// Wave 11 / Cnt-11 — per-doc version history. Snapshots on `commit()`,
+// persists via Nav-2's `usePersistedState`, FIFO-evicts past
+// `maxVersions`. Restoration is host-driven — `restore(id)` returns the
+// snapshotted value and the host wires it back into its source-of-truth.
+export {
+  useVersionHistory,
+  type VersionEntry,
+  type UseVersionHistoryOptions,
+  type UseVersionHistoryResult,
+} from './hooks/use-version-history.js';
+
 // -----------------------------------------------------------------------------
 // Data resolver protocol
 // -----------------------------------------------------------------------------
