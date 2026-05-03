@@ -107,6 +107,25 @@ export {
   type EventSourceLike,
   type EventSourceCtor,
 } from './triggers/sse-transport.js';
+export {
+  DEFAULT_REDIS_CHANNEL_PREFIX,
+  REDIS_TRIGGER_ENVELOPE_VERSION,
+  RedisTriggerBus,
+  type RedisLikePublisher,
+  type RedisLikeSubscriber,
+  type RedisTriggerBusOptions,
+  type RedisTriggerEnvelope,
+} from './triggers/redis-bus.js';
+export {
+  DEFAULT_NATS_SUBJECT_PREFIX,
+  NATS_TRIGGER_ENVELOPE_VERSION,
+  NATSTriggerBus,
+  type NATSLikeConnection,
+  type NATSLikeMessage,
+  type NATSLikeSubscription,
+  type NATSTriggerBusOptions,
+  type NATSTriggerEnvelope,
+} from './triggers/nats-bus.js';
 
 // -----------------------------------------------------------------------------
 // Registries
