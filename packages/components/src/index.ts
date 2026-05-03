@@ -235,6 +235,16 @@ export type {
   SidebarSide,
 } from './components/Sidebar.js';
 
+// Wave 11 / Vis-10 — notification badge data model. Drives grouped
+// per-domain unread badges via `<Sidebar aggregator={…}>` + per-item
+// `badgeScope`. Brand kits opt into the matching token group via
+// `BrandTokensSchema.notification`.
+export { NotificationAggregator } from './notification/aggregator.js';
+export type {
+  NotificationCount,
+  NotificationAggregatorListener,
+} from './notification/aggregator.js';
+
 // -----------------------------------------------------------------------------
 // Feedback
 // -----------------------------------------------------------------------------

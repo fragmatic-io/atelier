@@ -167,3 +167,54 @@ describe('BrandKitSchema — round-trip', () => {
     expect(parsed.voice.surfaces?.['button']?.tone).toBe('imperative');
   });
 });
+
+// -----------------------------------------------------------------------------
+// Wave 11 / Vis-10 — notification token group
+// -----------------------------------------------------------------------------
+
+describe('BrandKitSchema — tokens.notification (Vis-10)', () => {
+  it('baseline kit (no notification group) still validates', () => {
+    expect(BrandKitSchema.safeParse(baseKit()).success).toBe(true);
+  });
+
+  it('accepts a kit with the full notification token group', () => {
+    const kit = baseKit();
+    kit.tokens.notification = {
+      counter_bg: '#374151',
+      counter_fg: '#f3f4f6',
+      mention_bg: '#ef4444',
+      mention_fg: '#ffffff',
+      pulse_ms: 1200,
+    };
+    const parsed = BrandKitSchema.safeParse(kit);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.tokens.notification?.counter_bg).toBe('#374151');
+      expect(parsed.data.tokens.notification?.pulse_ms).toBe(1200);
+    }
+  });
+
+  it('accepts a partial notification token group', () => {
+    const kit = baseKit();
+    kit.tokens.notification = { counter_bg: '#374151' };
+    expect(BrandKitSchema.safeParse(kit).success).toBe(true);
+  });
+
+  it('rejects a non-integer pulse_ms', () => {
+    const kit = baseKit();
+    kit.tokens.notification = { pulse_ms: 1.5 };
+    expect(BrandKitSchema.safeParse(kit).success).toBe(false);
+  });
+
+  it('rejects a negative pulse_ms', () => {
+    const kit = baseKit();
+    kit.tokens.notification = { pulse_ms: -10 };
+    expect(BrandKitSchema.safeParse(kit).success).toBe(false);
+  });
+
+  it('accepts pulse_ms=0 (disabled)', () => {
+    const kit = baseKit();
+    kit.tokens.notification = { pulse_ms: 0 };
+    expect(BrandKitSchema.safeParse(kit).success).toBe(true);
+  });
+});

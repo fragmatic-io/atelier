@@ -39,7 +39,14 @@
  * width (~48px collapsed / ~240px expanded) is set inline so consumers
  * without a stylesheet still see the right shape.
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { useKeyboardAction } from '../keyboard/hooks.js';
 import {
@@ -48,7 +55,9 @@ import {
   writePersistedBool,
   writePersistedJson,
 } from '../lib/persisted-state.js';
+import type { NotificationAggregator } from '../notification/aggregator.js';
 import { cn, navigationVariantClass, type NavigationVariant } from './_variants.js';
+import { MetaBadge } from './MetaBadge.js';
 
 export type SidebarSide = 'left' | 'right';
 export type SidebarVariant = NavigationVariant;
@@ -67,6 +76,19 @@ export interface SidebarItem {
   /** When true, the item gets `aria-current="page"`. */
   activeId?: boolean;
   children?: readonly SidebarChildItem[];
+  /**
+   * Wave 11 / Vis-10 — when wired together with a `NotificationAggregator`
+   * via the sidebar-level `aggregator` prop, this string is treated as a
+   * rollup PREFIX (everything in the aggregator whose scope starts with
+   * `badgeScope` rolls up). The aggregator's `rollup(badgeScope)` total
+   * paints a `<MetaBadge>` next to the item's label; presence of any
+   * mentions flips the badge to the `live` variant so the call-out reads
+   * differently from a quiet unread bubble (Slack/Discord pattern).
+   *
+   * Hidden when the sidebar is collapsed to its mini-rail (no room for
+   * the chip — the dot indicator is left as a follow-up).
+   */
+  badgeScope?: string;
 }
 
 export interface SidebarProps {
@@ -140,6 +162,16 @@ export interface SidebarProps {
   className?: string;
   'aria-label'?: string;
   variant?: SidebarVariant;
+  /**
+   * Wave 11 / Vis-10 — optional `NotificationAggregator` used to drive
+   * grouped per-item unread badges. When provided, every item carrying
+   * `badgeScope` shows a `<MetaBadge>` rendered from the aggregator's
+   * `rollup(badgeScope)`. The sidebar `useSyncExternalStore`-subscribes
+   * to the aggregator so wire updates re-render in place. Omit the prop
+   * to opt out; per-item `badgeScope` without the aggregator is silently
+   * ignored.
+   */
+  aggregator?: NotificationAggregator;
 }
 
 /** Width (in pixels) of the icon-only collapsed column. */
@@ -237,6 +269,7 @@ export function Sidebar({
   className,
   'aria-label': ariaLabelOverride,
   variant = 'default',
+  aggregator,
 }: SidebarProps): ReactNode {
   const isControlled = controlledCollapsed !== undefined;
   const isExpandedControlled = controlledExpanded !== undefined;
@@ -393,6 +426,22 @@ export function Sidebar({
   const reducedMotion = usePrefersReducedMotion();
   const ariaLabel = ariaLabelOverride ?? (collapsible ? 'Sidebar (collapsible)' : 'Sidebar');
 
+  // Wave 11 / Vis-10 — subscribe to the notification aggregator so wire
+  // updates (websocket / push event / poll tick) flush a re-render. The
+  // snapshot is the aggregator's monotonic `version()` counter — stable
+  // between writes so `useSyncExternalStore`'s referential-equality check
+  // does not trip the "snapshot result must be cached" loop. We re-read
+  // each item's rollup below; the version number is purely the change
+  // signal. When no aggregator is wired the hook short-circuits via the
+  // no-op subscriber + constant snapshot.
+  useSyncExternalStore(
+    aggregator !== undefined
+      ? (cb): (() => void) => aggregator.subscribe(cb)
+      : (): (() => void) => (): void => {},
+    () => (aggregator !== undefined ? aggregator.version() : 0),
+    () => 0,
+  );
+
   const widthPx = collapsible
     ? effectiveCollapsed
       ? SIDEBAR_COLLAPSED_WIDTH_PX
@@ -443,12 +492,37 @@ export function Sidebar({
           // survives the collapsed state, so re-expanding the rail
           // restores the user's previous shape.
           const showChildren = hasChildren && isOpen && !(collapsible && effectiveCollapsed);
+
+          // Wave 11 / Vis-10 — per-item rolled-up notification badge.
+          // We compute the rollup synchronously (the aggregator is a
+          // plain in-memory store, so no async hop). When `total` is
+          // zero the badge is suppressed entirely so the rail doesn't
+          // carry empty pills next to every item. Mention-bearing
+          // rollups flip to the `live` variant — Slack/Discord paint
+          // mentions in red and unread-only in a quieter tone; we
+          // express that distinction through the existing MetaBadge
+          // variant table rather than introducing a new colour token.
+          const badgeRollup =
+            aggregator !== undefined && it.badgeScope !== undefined
+              ? aggregator.rollup(it.badgeScope)
+              : undefined;
+          const showBadge =
+            badgeRollup !== undefined &&
+            badgeRollup.total > 0 &&
+            !(collapsible && effectiveCollapsed);
+          const badgeVariant =
+            badgeRollup !== undefined && (badgeRollup.mentions ?? 0) > 0 ? 'live' : 'default';
+
           return (
             <li
               key={it.id}
               data-cir-part="sidebar-item"
               data-active={it.activeId === true ? 'true' : 'false'}
               data-expanded={hasChildren ? (isOpen ? 'true' : 'false') : undefined}
+              data-cir-badge-scope={it.badgeScope ?? undefined}
+              data-cir-badge-mentions={
+                badgeRollup !== undefined && (badgeRollup.mentions ?? 0) > 0 ? 'true' : undefined
+              }
             >
               {it.href !== undefined ? (
                 <a
@@ -464,9 +538,21 @@ export function Sidebar({
                   {collapsible && effectiveCollapsed ? null : (
                     <span data-cir-part="sidebar-label">{it.label}</span>
                   )}
+                  {showBadge && badgeRollup !== undefined ? (
+                    <span data-cir-part="sidebar-badge">
+                      <MetaBadge count={badgeRollup.total} variant={badgeVariant} />
+                    </span>
+                  ) : null}
                 </a>
               ) : collapsible && effectiveCollapsed ? null : (
-                <span data-cir-part="sidebar-label-static">{it.label}</span>
+                <>
+                  <span data-cir-part="sidebar-label-static">{it.label}</span>
+                  {showBadge && badgeRollup !== undefined ? (
+                    <span data-cir-part="sidebar-badge">
+                      <MetaBadge count={badgeRollup.total} variant={badgeVariant} />
+                    </span>
+                  ) : null}
+                </>
               )}
               {hasChildren && !(collapsible && effectiveCollapsed) ? (
                 <button

@@ -86,6 +86,33 @@ export const BrandOpenTypeSchema = z.object({
 });
 export type BrandOpenType = z.infer<typeof BrandOpenTypeSchema>;
 
+/**
+ * Wave 11 / Vis-10 — notification token group. Drives the per-domain
+ * grouped-badge primitive (`<NotificationAggregator>` + `<Sidebar>`
+ * integration). All fields are OPTIONAL so pre-existing kits stay valid.
+ *
+ *   - `counter_bg` / `counter_fg`     — neutral unread bubble palette
+ *     (e.g. Slack's grey-on-grey channel chip).
+ *   - `mention_bg` / `mention_fg`     — mention / @-tagged palette
+ *     (Slack's red bubble — visually distinct from the quiet unread).
+ *   - `pulse_ms`                      — interval (ms) for the unread
+ *     indicator's pulse animation. The renderer projects this to a
+ *     CSS variable so a brand kit can dial the cadence; `0` disables.
+ */
+export const NotificationTokensSchema = z.object({
+  /** Counter background colour. */
+  counter_bg: z.string().optional(),
+  /** Counter foreground (text) colour. */
+  counter_fg: z.string().optional(),
+  /** Mention bubble background — visually distinct from `counter_bg`. */
+  mention_bg: z.string().optional(),
+  /** Mention bubble foreground (text) colour. */
+  mention_fg: z.string().optional(),
+  /** Pulse interval (ms) for the unread indicator. `0` disables. */
+  pulse_ms: z.number().int().nonnegative().optional(),
+});
+export type NotificationTokens = z.infer<typeof NotificationTokensSchema>;
+
 export const BrandTokensSchema = z.object({
   colors: TokenScale,
   spacing: TokenScale,
@@ -123,6 +150,12 @@ export const BrandTokensSchema = z.object({
     .optional(),
   radius: TokenScale.optional(),
   shadow: TokenScale.optional(),
+  /**
+   * Wave 11 / Vis-10 — optional notification token group. Drives the
+   * grouped per-domain badge surface (Slack/Discord/Linear pattern).
+   * Pre-existing kits without this field stay valid.
+   */
+  notification: NotificationTokensSchema.optional(),
 });
 export type BrandTokens = z.infer<typeof BrandTokensSchema>;
 

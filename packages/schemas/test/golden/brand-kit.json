@@ -98,6 +98,28 @@
         },
         "shadow": {
           "$ref": "#/properties/tokens/properties/colors"
+        },
+        "notification": {
+          "type": "object",
+          "properties": {
+            "counter_bg": {
+              "type": "string"
+            },
+            "counter_fg": {
+              "type": "string"
+            },
+            "mention_bg": {
+              "type": "string"
+            },
+            "mention_fg": {
+              "type": "string"
+            },
+            "pulse_ms": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
         }
       },
       "required": [

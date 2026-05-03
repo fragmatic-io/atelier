@@ -7,6 +7,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { InMemoryKeyboardRegistry, type KeyboardServices } from '@atelier/keyboard';
 import { KeyboardProvider } from '../src/keyboard/index.js';
 import { Sidebar, SidebarBinding } from '../src/components/Sidebar.js';
+import { NotificationAggregator } from '../src/notification/aggregator.js';
 
 const ITEMS = [
   { id: 'home', label: 'Home', href: '/', activeId: true },
@@ -530,5 +531,122 @@ describe('Sidebar — Wave 11 / Nav-2 keyboard registry integration', () => {
     expect(() => {
       render(<Sidebar items={TREE_ITEMS} collapsible />);
     }).not.toThrow();
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Wave 11 / Vis-10 — notification aggregator integration
+// -----------------------------------------------------------------------------
+
+const BADGE_ITEMS = [
+  { id: 'inbox', label: 'Inbox', href: '/inbox', badgeScope: 'inbox' },
+  {
+    id: 'workspace',
+    label: 'Workspace',
+    href: '/workspace',
+    badgeScope: 'workspace-acme',
+  },
+  { id: 'quiet', label: 'Quiet', href: '/quiet', badgeScope: 'no-such-scope' },
+  { id: 'no-binding', label: 'About', href: '/about' },
+];
+
+describe('Sidebar — Wave 11 / Vis-10 notification badges', () => {
+  it('renders nothing badge-shaped when no aggregator is wired', () => {
+    const { container } = render(<Sidebar items={BADGE_ITEMS} />);
+    expect(container.querySelectorAll('[data-cir-part="sidebar-badge"]').length).toBe(0);
+  });
+
+  it('renders a MetaBadge for items whose badgeScope matches the aggregator', () => {
+    const aggregator = new NotificationAggregator();
+    aggregator.set('inbox', { scope: 'inbox', total: 3 });
+    const { container } = render(<Sidebar items={BADGE_ITEMS} aggregator={aggregator} />);
+    const badges = container.querySelectorAll('[data-cir-part="sidebar-badge"]');
+    expect(badges.length).toBe(1);
+    const inboxItem = container.querySelector(
+      '[data-cir-part="sidebar-item"][data-cir-badge-scope="inbox"]',
+    );
+    expect(inboxItem?.querySelector('[data-cir-component="MetaBadge"]')).toBeTruthy();
+    expect(inboxItem?.querySelector('[data-cir-part="metabadge-content"]')?.textContent).toBe('3');
+  });
+
+  it('rolls up child scopes via badgeScope prefix', () => {
+    const aggregator = new NotificationAggregator();
+    aggregator.set('workspace-acme.channel-eng', {
+      scope: 'workspace-acme.channel-eng',
+      total: 4,
+    });
+    aggregator.set('workspace-acme.channel-design', {
+      scope: 'workspace-acme.channel-design',
+      total: 2,
+    });
+    aggregator.set('workspace-other', { scope: 'workspace-other', total: 99 });
+    const { container } = render(<Sidebar items={BADGE_ITEMS} aggregator={aggregator} />);
+    const item = container.querySelector(
+      '[data-cir-part="sidebar-item"][data-cir-badge-scope="workspace-acme"]',
+    );
+    expect(item?.querySelector('[data-cir-part="metabadge-content"]')?.textContent).toBe('6');
+  });
+
+  it('paints the live variant when any rolled-up entry has mentions', () => {
+    const aggregator = new NotificationAggregator();
+    aggregator.set('inbox', { scope: 'inbox', total: 5, mentions: 2 });
+    const { container } = render(<Sidebar items={BADGE_ITEMS} aggregator={aggregator} />);
+    const item = container.querySelector(
+      '[data-cir-part="sidebar-item"][data-cir-badge-scope="inbox"]',
+    );
+    expect(item?.getAttribute('data-cir-badge-mentions')).toBe('true');
+    expect(
+      item?.querySelector('[data-cir-component="MetaBadge"]')?.getAttribute('data-variant'),
+    ).toBe('live');
+  });
+
+  it('paints the default variant when there are unread but no mentions', () => {
+    const aggregator = new NotificationAggregator();
+    aggregator.set('inbox', { scope: 'inbox', total: 4 });
+    const { container } = render(<Sidebar items={BADGE_ITEMS} aggregator={aggregator} />);
+    const item = container.querySelector(
+      '[data-cir-part="sidebar-item"][data-cir-badge-scope="inbox"]',
+    );
+    expect(item?.getAttribute('data-cir-badge-mentions')).toBeNull();
+    expect(
+      item?.querySelector('[data-cir-component="MetaBadge"]')?.getAttribute('data-variant'),
+    ).toBe('default');
+  });
+
+  it('omits the badge when total is zero', () => {
+    const aggregator = new NotificationAggregator();
+    aggregator.set('inbox', { scope: 'inbox', total: 0 });
+    const { container } = render(<Sidebar items={BADGE_ITEMS} aggregator={aggregator} />);
+    expect(container.querySelectorAll('[data-cir-part="sidebar-badge"]').length).toBe(0);
+  });
+
+  it('hides the badge when the rail is collapsed to mini-rail', () => {
+    const aggregator = new NotificationAggregator();
+    aggregator.set('inbox', { scope: 'inbox', total: 9 });
+    const { container } = render(
+      <Sidebar items={BADGE_ITEMS} aggregator={aggregator} collapsible defaultCollapsed />,
+    );
+    expect(container.querySelectorAll('[data-cir-part="sidebar-badge"]').length).toBe(0);
+  });
+
+  it('re-renders when the aggregator emits after a wire update', () => {
+    const aggregator = new NotificationAggregator();
+    const { container } = render(<Sidebar items={BADGE_ITEMS} aggregator={aggregator} />);
+    expect(container.querySelectorAll('[data-cir-part="sidebar-badge"]').length).toBe(0);
+    act(() => {
+      aggregator.set('inbox', { scope: 'inbox', total: 7 });
+    });
+    expect(container.querySelectorAll('[data-cir-part="sidebar-badge"]').length).toBe(1);
+    expect(container.querySelector('[data-cir-part="metabadge-content"]')?.textContent).toBe('7');
+    act(() => {
+      aggregator.set('inbox', { scope: 'inbox', total: 12, mentions: 3 });
+    });
+    expect(
+      container
+        .querySelector(
+          '[data-cir-part="sidebar-item"][data-cir-badge-scope="inbox"] [data-cir-component="MetaBadge"]',
+        )
+        ?.getAttribute('data-variant'),
+    ).toBe('live');
   });
 });
