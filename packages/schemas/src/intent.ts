@@ -259,6 +259,28 @@ export const IntentProfileSchema = z.object({
    * the framework default `'comfortable'`).
    */
   density_overrides: z.array(DensityOverrideSchema).optional(),
+  /**
+   * Wave 11 / Nav-5 — active scope id when the user has switched contexts
+   * via the chrome `<ScopeSwitcher>` (Vercel / Supabase / Linear ship a
+   * top-left workspace / team / project switcher; this is the persisted
+   * "which scope am I in?" signal).
+   *
+   * The `<RenderNode>` walker reads this and threads it as a default for
+   * any component that accepts a `value` (or equivalent) and is bound to
+   * a scope-shaped capability — components opt in by declaring
+   * `scope_active` in their manifest contract. When the user has not made
+   * an active selection (cold-start or after the host clears it) the
+   * field is omitted; consumers fall back to whatever default the
+   * surrounding manifest declares.
+   *
+   * The shape is intentionally a single string — apps that need richer
+   * "scope" data (slug + tenant + role …) keep that mapping host-side and
+   * round-trip the id through this field. Keeps the wire format stable
+   * across apps that render a workspace switcher AND a project switcher
+   * in the same chrome (each carries its own `<ScopeSwitcher>` and the
+   * runtime threads the matching active id).
+   */
+  scope_active: z.string().min(1).optional(),
 });
 export type IntentProfile = z.infer<typeof IntentProfileSchema>;
 

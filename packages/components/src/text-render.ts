@@ -58,6 +58,7 @@ import { paginationTextRender } from './components/Pagination.js';
 import { progressTextRender } from './components/Progress.js';
 import { queueTextRender } from './components/Queue.js';
 import { richTextTextRender } from './components/RichText.js';
+import { scopeSwitcherTextRender } from './components/ScopeSwitcher.js';
 import { searchTextRender } from './components/Search.js';
 import { selectTextRender } from './components/Select.js';
 import { settingsSearchTextRender } from './components/SettingsSearch.js';
@@ -132,6 +133,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Progress: progressTextRender as TextRenderer,
   Queue: queueTextRender as TextRenderer,
   RichText: richTextTextRender as TextRenderer,
+  ScopeSwitcher: scopeSwitcherTextRender as TextRenderer,
   Search: searchTextRender as TextRenderer,
   Select: selectTextRender as TextRenderer,
   SettingsSearch: settingsSearchTextRender as TextRenderer,

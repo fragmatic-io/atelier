@@ -393,6 +393,24 @@ export {
 } from './components/SettingsSearch.js';
 export type { SettingsSearchProps, SettingsItem } from './components/SettingsSearch.js';
 
+// Wave 11 / Nav-5 — chrome scope switcher (Vercel / Supabase / Linear ship
+// a top-left workspace / team / project switcher). The persisted "active
+// scope" id rides on `IntentProfile.scope_active`; the runtime threads it
+// back as a default for any component that opts in via its manifest
+// contract. Self-registers a `scope.switcher` action with the
+// `<KeyboardProvider>` registry when one is in scope so a `'cmd+shift+o'`
+// hotkey opens the popover from anywhere.
+export {
+  ScopeSwitcher,
+  ScopeSwitcherBinding,
+  scopeSwitcherTextRender,
+} from './components/ScopeSwitcher.js';
+export type {
+  ScopeSwitcherProps,
+  ScopeSwitcherVariant,
+  ScopeOption,
+} from './components/ScopeSwitcher.js';
+
 // Wave 11 / Int-3 — keyboard registry adapter. `KeyboardContext`,
 // `<KeyboardProvider>`, and the `useKeyboard*` hooks live here (alongside
 // `<CommandPalette>` and the `IconResolver` adapter) so the baseline

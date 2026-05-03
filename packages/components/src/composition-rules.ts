@@ -88,6 +88,9 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   // Wave 11 / Int-12 — SettingsSearch renders its input + grouped result
   // list from the `items` prop; manifest authors do not embed children.
   SettingsSearch: { can_contain: 'leaf' },
+  // Wave 11 / Nav-5 — ScopeSwitcher renders its trigger + popover from the
+  // `options` prop; manifest authors do not embed children.
+  ScopeSwitcher: { can_contain: 'leaf' },
   // Specialized (batch 3).
   // Form hosts arbitrary input children; the auto-injected submit/cancel
   // buttons are appended internally.

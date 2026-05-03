@@ -55,6 +55,7 @@ const EXPECTED = [
   'Progress',
   'Queue',
   'RichText',
+  'ScopeSwitcher',
   'Search',
   'Select',
   'SettingsSearch',
@@ -177,6 +178,8 @@ describe('COMPOSITION_RULES', () => {
       'ActionMenu',
       'Search',
       'SettingsSearch',
+      // Wave 11 / Nav-5 — chrome scope switcher (workspace / team / project).
+      'ScopeSwitcher',
       'Wizard',
       'FilterBar',
       'KPIRow',

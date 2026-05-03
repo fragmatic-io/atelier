@@ -210,6 +210,54 @@ describe('IntentProfileSchema', () => {
     const result = IntentProfileSchema.safeParse(profile);
     expect(result.success).toBe(false);
   });
+
+  // ---------------------------------------------------------------------------
+  // Wave 11 / Nav-5 — scope_active (chrome scope switcher)
+  // ---------------------------------------------------------------------------
+
+  it('accepts a profile with scope_active set to a non-empty string', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-05-02T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      scope_active: 'workspace-acme',
+    };
+    const parsed = IntentProfileSchema.parse(profile);
+    expect(parsed.scope_active).toBe('workspace-acme');
+  });
+
+  it('treats scope_active as optional (existing profiles still validate)', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-05-02T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+    };
+    const parsed = IntentProfileSchema.parse(profile);
+    expect(parsed.scope_active).toBeUndefined();
+  });
+
+  it('rejects an empty scope_active', () => {
+    const profile = {
+      user_id: 'vid',
+      profile_version: 1,
+      updated_at: '2026-05-02T12:00:00Z',
+      global_preferences: {},
+      lenses: {},
+      rules: [],
+      vocabulary: {},
+      scope_active: '',
+    };
+    const result = IntentProfileSchema.safeParse(profile);
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('GlobalPreferencesSchema', () => {

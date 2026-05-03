@@ -81,6 +81,14 @@ describe('TEXT_RENDERERS', () => {
       Pagination: { currentPage: 1, totalPages: 5, onPageChange: () => undefined },
       Progress: { value: 42 },
       Queue: { items: [{ id: 'a', title: 'Renew domain' }], title: 'Decisions' },
+      ScopeSwitcher: {
+        options: [
+          { id: 'workspace-acme', label: 'Acme', group: 'Workspaces' },
+          { id: 'team-platform', label: 'Platform', group: 'Teams' },
+        ],
+        value: 'workspace-acme',
+        onChange: () => undefined,
+      },
       Search: { value: 'tea', onChange: () => undefined },
       SettingsSearch: {
         items: [{ id: 'billing', label: 'Billing', href: '/settings/billing' }],

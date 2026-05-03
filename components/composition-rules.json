@@ -140,6 +140,9 @@
   "RichText": {
     "can_contain": "leaf"
   },
+  "ScopeSwitcher": {
+    "can_contain": "leaf"
+  },
   "Search": {
     "can_contain": "leaf"
   },

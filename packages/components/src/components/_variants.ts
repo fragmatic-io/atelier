@@ -439,6 +439,31 @@ export const settingsSearchVariantClass: Readonly<Record<SettingsSearchVariant, 
   });
 
 // -----------------------------------------------------------------------------
+// ScopeSwitcher — Wave 11 / Nav-5. Top-left chrome scope switcher (Vercel /
+// Supabase / Linear ship one). `default` is the standard popover anchored
+// under the trigger button; `compact` trims the trigger padding for tighter
+// chrome. Visually distinct from CommandPalette — this is a popover, not a
+// dialog, and lives inline in the chrome.
+// -----------------------------------------------------------------------------
+export type ScopeSwitcherVariant = 'default' | 'compact';
+
+export const scopeSwitcherTriggerVariantClass: Readonly<Record<ScopeSwitcherVariant, string>> =
+  Object.freeze({
+    default:
+      'inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium bg-white text-gray-900 ring-1 ring-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700 dark:hover:bg-gray-800',
+    compact:
+      'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium bg-white text-gray-900 ring-1 ring-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700 dark:hover:bg-gray-800',
+  });
+
+export const scopeSwitcherPopoverVariantClass: Readonly<Record<ScopeSwitcherVariant, string>> =
+  Object.freeze({
+    default:
+      'bg-white text-gray-900 rounded-md ring-1 ring-gray-200 p-2 w-[320px] dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700',
+    compact:
+      'bg-white text-gray-900 rounded-md ring-1 ring-gray-200 p-1 w-[240px] text-xs dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700',
+  });
+
+// -----------------------------------------------------------------------------
 // Stepper — layout / display style. `horizontal` is the default flex-row,
 // `vertical` stacks for sidebars, `numbered` strips the connector and leans on
 // the index numerals.

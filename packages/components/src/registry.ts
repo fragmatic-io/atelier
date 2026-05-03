@@ -63,6 +63,7 @@ import { PaginationBinding } from './components/Pagination.js';
 import { ProgressBinding } from './components/Progress.js';
 import { QueueBinding } from './components/Queue.js';
 import { RichTextBinding } from './components/RichText.js';
+import { ScopeSwitcherBinding } from './components/ScopeSwitcher.js';
 import { SearchBinding } from './components/Search.js';
 import { SelectBinding } from './components/Select.js';
 import { SettingsSearchBinding } from './components/SettingsSearch.js';
@@ -135,6 +136,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Progress: ProgressBinding,
   Queue: QueueBinding,
   RichText: RichTextBinding,
+  ScopeSwitcher: ScopeSwitcherBinding,
   Search: SearchBinding,
   Select: SelectBinding,
   SettingsSearch: SettingsSearchBinding,
