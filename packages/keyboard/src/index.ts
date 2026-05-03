@@ -22,6 +22,10 @@ export {
   NoopRecencyTracker,
 } from './recency.js';
 
+export { type AliasOverlay, effectiveHotkey, InMemoryAliasOverlay } from './aliases.js';
+
+export { ChordStateMachine, type ChordIntent, type ChordStateMachineOptions } from './chord.js';
+
 export {
   canonicalEventKey,
   detectPlatform,
@@ -53,6 +57,7 @@ export {
 import type { KeyboardRegistry } from './registry.js';
 import type { QuickSwitchIndex } from './quickswitch.js';
 import type { ActionRecencyTracker } from './recency.js';
+import type { AliasOverlay } from './aliases.js';
 
 /**
  * Aggregate services bag for the React adapter (and other adapters). Hosts
@@ -68,4 +73,12 @@ export interface KeyboardServices {
    * falls through to its `items` prop (or renders empty).
    */
   quickswitch?: QuickSwitchIndex;
+  /**
+   * Optional per-user alias overlay (Wave 11 / Int-7). When provided, the
+   * resolver consults the overlay before each action's declared hotkey, so
+   * a user-set rebinding wins. Hosts that persist aliases (vault scope,
+   * localStorage) wrap an `InMemoryAliasOverlay` with their writer; the
+   * `<KeyboardProvider>` is neutral on the storage strategy.
+   */
+  aliases?: AliasOverlay;
 }

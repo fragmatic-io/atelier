@@ -30,6 +30,7 @@
  *    down `route`-scoped actions when the consuming hook unmounts.
  */
 
+import { type AliasOverlay } from './aliases.js';
 import {
   matchHotkey,
   parseHotkey,
@@ -125,8 +126,17 @@ export interface KeyboardRegistry {
    * Resolve the given hotkey-shaped event to the most-recently-registered
    * action that matches. Returns `null` when nothing matches (the React
    * provider treats this as "let the event continue").
+   *
+   * When `aliases` is provided (Wave 11 / Int-7), the resolver consults
+   * the alias overlay first: if the user has rebound an action's hotkey,
+   * the alias wins over the action's declared `hotkey`. Actions with NO
+   * alias and NO declared hotkey continue to be skipped.
    */
-  resolve(event: HotkeyEventLike, platform?: Platform): KeyboardAction | null;
+  resolve(
+    event: HotkeyEventLike,
+    platform?: Platform,
+    aliases?: AliasOverlay,
+  ): KeyboardAction | null;
   /**
    * Subscribe to mutation events. Returns an unsubscribe thunk. Used by the
    * React provider's `useSyncExternalStore` integration.
@@ -192,7 +202,11 @@ export class InMemoryKeyboardRegistry implements KeyboardRegistry {
     return frozen;
   }
 
-  resolve(event: HotkeyEventLike, platform?: Platform): KeyboardAction | null {
+  resolve(
+    event: HotkeyEventLike,
+    platform?: Platform,
+    aliases?: AliasOverlay,
+  ): KeyboardAction | null {
     // Iterate in REVERSE insertion order so the most-recently-registered
     // action wins on collisions (e.g. a route-scoped binding overlaying a
     // global default). Map iterators don't reverse natively; pull entries
@@ -200,8 +214,14 @@ export class InMemoryKeyboardRegistry implements KeyboardRegistry {
     const all = Array.from(this.#entries.values());
     for (let i = all.length - 1; i >= 0; i--) {
       const entry = all[i] as RegisteredAction;
-      if (entry.hotkey === null) continue;
-      if (matchHotkey(entry.hotkey, event, platform)) {
+      // Consult the alias overlay first when present; the user's preference
+      // wins over the action's declared hotkey. Falling back to the cached
+      // parse keeps the hot path allocation-free for unaliased actions.
+      const aliasHotkey = aliases?.get(entry.action.id);
+      const parsed: ParsedHotkey | null =
+        aliasHotkey !== undefined ? safeParse(aliasHotkey) : entry.hotkey;
+      if (parsed === null) continue;
+      if (matchHotkey(parsed, event, platform)) {
         return entry.action;
       }
     }
@@ -222,5 +242,20 @@ export class InMemoryKeyboardRegistry implements KeyboardRegistry {
     for (const fn of listeners) {
       fn();
     }
+  }
+}
+
+/**
+ * Forgiving wrapper around `parseHotkey` for runtime alias lookups. The
+ * `AliasOverlay.set()` path validates eagerly, so a malformed alias should
+ * be impossible — but a corrupt persisted entry could slip through. Treat
+ * a parse failure as "no alias" so the user falls back to the declared
+ * binding rather than crashing the keydown handler.
+ */
+function safeParse(input: string): ParsedHotkey | null {
+  try {
+    return parseHotkey(input);
+  } catch {
+    return null;
   }
 }

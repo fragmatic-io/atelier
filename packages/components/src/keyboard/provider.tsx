@@ -34,11 +34,14 @@
  */
 import { useEffect, useMemo, type ReactNode } from 'react';
 import {
+  canonicalEventKey,
+  ChordStateMachine,
   detectPlatform,
   InMemoryKeyboardRegistry,
   InMemoryRecencyTracker,
   NoopRecencyTracker,
   type HotkeyEventLike,
+  type KeyboardAction,
   type KeyboardServices,
   type Platform,
 } from '@atelier/keyboard';
@@ -86,6 +89,28 @@ function hasModifier(event: HotkeyEventLike): boolean {
   return event.ctrlKey || event.metaKey || event.altKey;
 }
 
+/**
+ * Bump recency, invoke the action, and route any rejection / throw through
+ * a console warning. Extracted so the chord-fire and single-step-fire paths
+ * share the same lifecycle (recency-before-invoke, errors-don't-bubble).
+ */
+function fireAction(action: KeyboardAction, services: KeyboardServices): void {
+  // Bump recency BEFORE invoking so async invokes don't lose the bump
+  // if their promise rejects.
+  const recency = services.recency ?? NoopRecencyTracker;
+  recency.bump(action.id);
+  try {
+    const result = action.invoke();
+    if (result instanceof Promise) {
+      result.catch((err: unknown) => {
+        console.warn(`[cir] keyboard action "${action.id}" rejected`, err);
+      });
+    }
+  } catch (err) {
+    console.warn(`[cir] keyboard action "${action.id}" threw`, err);
+  }
+}
+
 export function KeyboardProvider({
   services,
   platform,
@@ -103,6 +128,11 @@ export function KeyboardProvider({
     };
   }, [services]);
 
+  // Chord state machine — Wave 11 / Int-7. Built once per services bag so
+  // pending state survives across keydown ticks. Hosts that swap services
+  // mid-tree get a fresh chord machine (correct: aliases / registry change).
+  const chord = useMemo(() => new ChordStateMachine(value.registry), [value]);
+
   useEffect(() => {
     if (disableEventListener) return;
     if (typeof document === 'undefined') return;
@@ -117,31 +147,49 @@ export function KeyboardProvider({
       };
       // Bare-key hotkeys never fire from inside text-input surfaces.
       // Modified hotkeys (Cmd+K, Ctrl+Shift+P) DO fire — those are
-      // command-bar conventions every web app honours.
+      // command-bar conventions every web app honours. A chord that's
+      // mid-flight is also cancelled so the user typing into a search box
+      // doesn't accidentally fire `g i`.
       if (!hasModifier(eventLike) && isTextInputTarget(event.target)) {
+        chord.cancel();
         return;
       }
-      const action = value.registry.resolve(eventLike, platform ?? detectPlatform());
+      // Escape cancels a pending chord without firing — even when no
+      // single-step `Escape` action is registered. Mirrors Linear / Vim.
+      if (chord.isPending && canonicalEventKey(event.key) === 'escape') {
+        chord.cancel();
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      const resolvedPlatform = platform ?? detectPlatform();
+      // Modifier-bearing keystrokes never participate in chord matching —
+      // chords are bare-key sequences (`g i`). Skip the chord layer entirely
+      // so `Cmd+G` doesn't get swallowed mid-chord.
+      if (!hasModifier(eventLike)) {
+        const intent = chord.feed(eventLike, resolvedPlatform);
+        if (intent.kind === 'pending') {
+          // Captured the first key of a chord — suppress defaults so the
+          // bare `g` doesn't reach a focused search box, then wait.
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        if (intent.kind === 'fire') {
+          event.preventDefault();
+          event.stopPropagation();
+          fireAction(intent.action, value);
+          return;
+        }
+        // 'passthrough' — fall through to the single-step resolver below.
+      }
+      const action = value.registry.resolve(eventLike, resolvedPlatform, value.aliases);
       if (!action) return;
       // Suppress the browser default before invoking — prevents the action
       // from racing browser-level Cmd+K behaviour (Firefox: search bar focus).
       event.preventDefault();
       event.stopPropagation();
-      // Bump recency BEFORE invoking so async invokes don't lose the bump
-      // if their promise rejects.
-      const recency = value.recency ?? NoopRecencyTracker;
-      recency.bump(action.id);
-      // Fire-and-forget; the dispatcher / audit pipeline handles errors.
-      try {
-        const result = action.invoke();
-        if (result instanceof Promise) {
-          result.catch((err: unknown) => {
-            console.warn(`[cir] keyboard action "${action.id}" rejected`, err);
-          });
-        }
-      } catch (err) {
-        console.warn(`[cir] keyboard action "${action.id}" threw`, err);
-      }
+      fireAction(action, value);
     };
 
     // `capture: true` so the listener wins over deeper handlers that might
@@ -151,7 +199,7 @@ export function KeyboardProvider({
     return () => {
       document.removeEventListener('keydown', onKeyDown, { capture: true });
     };
-  }, [value, platform, disableEventListener]);
+  }, [value, platform, disableEventListener, chord]);
 
   return <KeyboardContext.Provider value={value}>{children}</KeyboardContext.Provider>;
 }
