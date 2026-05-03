@@ -1,0 +1,52 @@
+{
+  "capabilities": [
+    {
+      "id": "dummyjson.cart.add",
+      "path": "dummyjson/cart.add.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "dummyjson.cart.list",
+      "path": "dummyjson/cart.list.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "dummyjson.cart.remove",
+      "path": "dummyjson/cart.remove.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "dummyjson.product.list",
+      "path": "dummyjson/product.list.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "dummyjson.product.recommendations",
+      "path": "dummyjson/product.recommendations.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "dummyjson.product.search",
+      "path": "dummyjson/product.search.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "github.issue.close",
+      "path": "github/issue.close.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "github.issue.create",
+      "path": "github/issue.create.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "github.repo.list",
+      "path": "github/repo.list.json",
+      "version": "0.1.0"
+    }
+  ],
+  "generated_at": "2026-05-03T06:56:57.811Z",
+  "subdirectories": ["dummyjson", "github"],
+  "version": "0.2.0"
+}

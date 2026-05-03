@@ -49,6 +49,9 @@
     "fix:license-headers": "tsx scripts/check-license-headers.ts --fix",
     "components:sync": "tsx --tsconfig packages/components/tsconfig.json scripts/sync-component-registry.ts",
     "components:check": "tsx --tsconfig packages/components/tsconfig.json scripts/sync-component-registry.ts --check",
+    "capabilities:index": "tsx --tsconfig packages/schemas/tsconfig.json scripts/generate-capability-index.ts",
+    "capabilities:index:check": "tsx --tsconfig packages/schemas/tsconfig.json scripts/generate-capability-index.ts --check",
+    "capabilities:validate-changed": "tsx --tsconfig packages/schemas/tsconfig.json scripts/validate-capabilities-incremental.ts",
     "atelier": "tsx packages/cli/src/index.ts",
     "demo": "tsx scripts/dev-demo.ts",
     "marketing:dev": "pnpm --filter @atelier/marketing dev",
@@ -58,8 +61,8 @@
     "schemas:dump": "atelier-schemas dump --out .well-known/schemas",
     "validate:data": "atelier-schemas validate-data",
     "evals": "atelier-evals run",
-    "validate:fast": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm validate:data",
-    "validate": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm validate:data && pnpm test",
+    "validate:fast": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm capabilities:index:check && pnpm validate:data",
+    "validate": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm capabilities:index:check && pnpm validate:data && pnpm test",
     "prepare": "husky"
   },
   "devDependencies": {

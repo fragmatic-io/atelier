@@ -46,6 +46,17 @@ export {
 } from './capability.js';
 
 // -----------------------------------------------------------------------------
+// Capability index — Wave 10 / S-5 generated `_index.json` summary.
+// -----------------------------------------------------------------------------
+export {
+  CAPABILITY_INDEX_GENERATED_AT_SENTINEL,
+  CapabilityIndexEntrySchema,
+  CapabilityIndexSchema,
+  type CapabilityIndex,
+  type CapabilityIndexEntry,
+} from './capability-index.js';
+
+// -----------------------------------------------------------------------------
 // Skill
 // -----------------------------------------------------------------------------
 export { SkillSchema, type Skill } from './skill.js';

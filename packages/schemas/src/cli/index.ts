@@ -107,7 +107,7 @@ async function validateData(rootDir: string, strict: boolean): Promise<number> {
 
   let failures = 0;
   let total = 0;
-  for (const { dir, schemaName, fileOverrides } of PATH_DISPATCH) {
+  for (const { dir, schemaName, fileOverrides, basenameOverrides } of PATH_DISPATCH) {
     const abs = resolve(rootDir, dir);
     if (!existsSync(abs)) {
       continue;
@@ -121,14 +121,16 @@ async function validateData(rootDir: string, strict: boolean): Promise<number> {
     const files = await fg('**/*.json', { cwd: abs, absolute: true });
     for (const file of files) {
       total++;
-      // Pick schema by per-file override (keyed on basename relative to
-      // `dir`) before falling through to the directory's default schema.
-      // The strict review-envelope gate keys on the EFFECTIVE schema name
-      // — only `capability` carries a `_review` envelope today, so other
-      // overridden files (e.g. `composition-rules`) are silently skipped
+      // Pick schema by per-file override (full path relative to `dir`),
+      // then by per-basename override (any-depth match), then fall through
+      // to the directory's default schema. The strict review-envelope gate
+      // keys on the EFFECTIVE schema name — only `capability` carries a
+      // `_review` envelope today, so other overridden files (e.g.
+      // `composition-rules`, `capability-index`) are silently skipped
       // by the strict check.
       const rel = relative(abs, file);
-      const overrideName = fileOverrides?.[rel];
+      const base = rel.includes('/') ? rel.slice(rel.lastIndexOf('/') + 1) : rel;
+      const overrideName = fileOverrides?.[rel] ?? basenameOverrides?.[base];
       const effectiveSchemaName = overrideName ?? schemaName;
       const validator = overrideName ? validators.get(overrideName) : defaultValidator;
       if (!validator) {

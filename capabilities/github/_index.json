@@ -1,0 +1,22 @@
+{
+  "capabilities": [
+    {
+      "id": "github.issue.close",
+      "path": "issue.close.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "github.issue.create",
+      "path": "issue.create.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "github.repo.list",
+      "path": "repo.list.json",
+      "version": "0.1.0"
+    }
+  ],
+  "generated_at": "2026-05-03T06:56:57.811Z",
+  "subdirectories": [],
+  "version": "0.2.0"
+}

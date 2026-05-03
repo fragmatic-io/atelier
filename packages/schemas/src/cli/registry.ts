@@ -12,6 +12,7 @@
 import type { ZodSchema } from 'zod';
 import { BrandKitSchema } from '../brand-kit.js';
 import { CapabilitySchema } from '../capability.js';
+import { CapabilityIndexSchema } from '../capability-index.js';
 import {
   ComponentDefinitionSchema,
   ComponentRegistrySchema,
@@ -39,6 +40,7 @@ export const SCHEMA_REGISTRY: readonly RegistryEntry[] = [
   { name: 'audit-event', schema: AuditEventSchema },
   { name: 'brand-kit', schema: BrandKitSchema },
   { name: 'capability', schema: CapabilitySchema },
+  { name: 'capability-index', schema: CapabilityIndexSchema },
   { name: 'component-definition', schema: ComponentDefinitionSchema },
   { name: 'component-registry', schema: ComponentRegistrySchema },
   { name: 'composition-rules', schema: CompositionRulesSchema },
@@ -77,15 +79,33 @@ export interface PathDispatchEntry {
   /** Registry entry name applied to every JSON file in `dir` by default. */
   schemaName: string;
   /**
-   * Per-file overrides keyed by basename relative to `dir` (e.g.
+   * Per-file overrides keyed by path relative to `dir` (e.g.
    * `'composition-rules.json'`). Files in this map are validated against
    * the named schema instead of `schemaName`.
    */
   fileOverrides?: Readonly<Record<string, string>>;
+  /**
+   * Per-basename overrides — apply to ANY file with the given basename
+   * regardless of nesting depth. Wave 10 / S-5 introduced
+   * `_index.json` summaries that can live at arbitrary depth under
+   * `capabilities/`; this mechanism dispatches each one to the
+   * `capability-index` schema without forcing the dispatch table to
+   * enumerate every nested path.
+   */
+  basenameOverrides?: Readonly<Record<string, string>>;
 }
 
 export const PATH_DISPATCH: ReadonlyArray<PathDispatchEntry> = [
-  { dir: 'capabilities', schemaName: 'capability' },
+  {
+    dir: 'capabilities',
+    schemaName: 'capability',
+    basenameOverrides: {
+      // Wave 10 / S-5: generated per-directory + root capability index
+      // summaries. They can live at any depth and validate against
+      // `CapabilityIndexSchema`.
+      '_index.json': 'capability-index',
+    },
+  },
   { dir: 'recipes', schemaName: 'manifest' },
   {
     dir: 'components',
