@@ -91,7 +91,7 @@ export {
 
 // Wave 11 / Nav-2 — generic persisted-state hook (session / local / vault).
 // Powers `<Sidebar storageKey="…">` collapse + tree memory and is the
-// reusable primitive for Int-11's view-state middleware when that lands.
+// reusable primitive Int-11's view-state middleware composes on top of.
 export {
   usePersistedState,
   PersistedVaultContext,
@@ -100,6 +100,19 @@ export {
   type PersistedStateOptions,
   type PersistedVaultClient,
 } from './hooks/use-persisted-state.js';
+
+// Wave 11 / Int-11 — preserved scroll + view state across nav. Per-route
+// `useViewState` (selection / filter / sort) + `useScrollRestore`
+// (scrollTop on the scroll container). Both compose on top of Nav-2's
+// `usePersistedState` and target `${routeKey}.view` / `${routeKey}.scroll`
+// so a single `routeKey` covers both shapes without collision.
+export {
+  useViewState,
+  type UseViewStateOptions,
+  type ViewStateScope,
+  type ViewStateSetter,
+} from './hooks/use-view-state.js';
+export { useScrollRestore, type UseScrollRestoreOptions } from './hooks/use-scroll-restore.js';
 
 // -----------------------------------------------------------------------------
 // Data resolver protocol
