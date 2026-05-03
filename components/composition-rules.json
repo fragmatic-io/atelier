@@ -107,10 +107,16 @@
   "Icon": {
     "can_contain": "leaf"
   },
+  "Image": {
+    "can_contain": "leaf"
+  },
   "KPIRow": {
     "can_contain": "leaf"
   },
   "Kanban": {
+    "can_contain": "leaf"
+  },
+  "Lightbox": {
     "can_contain": "leaf"
   },
   "List": {

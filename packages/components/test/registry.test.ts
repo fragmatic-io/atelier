@@ -44,8 +44,10 @@ const EXPECTED = [
   'Grid',
   'HoverCard',
   'Icon',
+  'Image',
   'KPIRow',
   'Kanban',
+  'Lightbox',
   'List',
   'Logo',
   'Map',
@@ -92,7 +94,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 77 baseline components', () => {
+  it('contains exactly the 79 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -111,7 +113,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 77 ids', () => {
+  it('list() reports all 79 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 

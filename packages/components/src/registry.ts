@@ -52,8 +52,10 @@ import { GalleryBinding } from './components/Gallery.js';
 import { GridBinding } from './components/Grid.js';
 import { HoverCardBinding } from './components/HoverCard.js';
 import { IconBinding } from './components/Icon.js';
+import { ImageBinding } from './components/Image.js';
 import { KPIRowBinding } from './components/KPIRow.js';
 import { KanbanBinding } from './components/Kanban.js';
+import { LightboxBinding } from './components/Lightbox.js';
 import { ListBinding } from './components/List.js';
 import { LogoBinding } from './components/Logo.js';
 import { MapBinding } from './components/Map.js';
@@ -135,8 +137,10 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Grid: GridBinding,
   HoverCard: HoverCardBinding,
   Icon: IconBinding,
+  Image: ImageBinding,
   KPIRow: KPIRowBinding,
   Kanban: KanbanBinding,
+  Lightbox: LightboxBinding,
   List: ListBinding,
   Logo: LogoBinding,
   Map: MapBinding,

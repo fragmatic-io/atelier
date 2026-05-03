@@ -438,6 +438,16 @@ export type { KPIRowProps, KPIStat } from './components/KPIRow.js';
 export { Gallery, GalleryBinding } from './components/Gallery.js';
 export type { GalleryProps, GalleryItem } from './components/Gallery.js';
 
+// Wave 11 / Int-14 — single-image leaf + fullscreen lightbox primitive.
+// `<Image lightbox>` is the per-image opt-in for the "click to zoom"
+// reflex; hosts that need richer multi-image carousels build directly on
+// `<Lightbox>` with their own `items[]`.
+export { Image, ImageBinding, imageTextRender } from './components/Image.js';
+export type { ImageProps } from './components/Image.js';
+
+export { Lightbox, LightboxBinding, lightboxTextRender } from './components/Lightbox.js';
+export type { LightboxProps, LightboxItem } from './components/Lightbox.js';
+
 export { CommandPalette, CommandPaletteBinding } from './components/CommandPalette.js';
 export type { CommandPaletteProps, CommandPaletteCommand } from './components/CommandPalette.js';
 

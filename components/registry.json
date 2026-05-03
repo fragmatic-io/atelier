@@ -305,6 +305,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "Image": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "ImageProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "KPIRow": {
     "actions_supported": [],
     "data_sources": ["dummyjson.product.list"],
@@ -320,6 +329,15 @@
     "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "KanbanProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "Lightbox": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "LightboxProps",
     "responsive_targets": ["web"],
     "text_render": true
   },

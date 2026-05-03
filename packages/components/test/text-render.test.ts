@@ -181,6 +181,13 @@ describe('TEXT_RENDERERS', () => {
       TourStep: { target: '#x', title: 'Welcome', step: 1, totalSteps: 3 },
       TourProgress: { current: 2, total: 5 },
       Confetti: { active: true },
+      // Wave 11 / Int-14 — single-image leaf + fullscreen lightbox.
+      Image: { src: '/a.jpg', alt: 'A photo' },
+      Lightbox: {
+        items: [{ src: '/a.jpg', alt: 'A' }],
+        open: false,
+        onClose: () => undefined,
+      },
     };
 
     for (const [id, renderer] of Object.entries(TEXT_RENDERERS)) {

@@ -47,8 +47,10 @@ import { galleryTextRender } from './components/Gallery.js';
 import { gridTextRender } from './components/Grid.js';
 import { hoverCardTextRender } from './components/HoverCard.js';
 import { iconTextRender } from './components/Icon.js';
+import { imageTextRender } from './components/Image.js';
 import { kpiRowTextRender } from './components/KPIRow.js';
 import { kanbanTextRender } from './components/Kanban.js';
+import { lightboxTextRender } from './components/Lightbox.js';
 import { listTextRender } from './components/List.js';
 import { logoTextRender } from './components/Logo.js';
 import { mapTextRender } from './components/Map.js';
@@ -130,8 +132,10 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Grid: gridTextRender as TextRenderer,
   HoverCard: hoverCardTextRender as TextRenderer,
   Icon: iconTextRender as TextRenderer,
+  Image: imageTextRender as TextRenderer,
   KPIRow: kpiRowTextRender as TextRenderer,
   Kanban: kanbanTextRender as TextRenderer,
+  Lightbox: lightboxTextRender as TextRenderer,
   List: listTextRender as TextRenderer,
   Logo: logoTextRender as TextRenderer,
   Map: mapTextRender as TextRenderer,

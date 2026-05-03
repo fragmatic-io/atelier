@@ -110,6 +110,14 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   KPIRow: { can_contain: 'leaf' },
   // Gallery renders its figures from the `items` prop.
   Gallery: { can_contain: 'leaf' },
+  // Wave 11 / Int-14 — single-image leaf primitive. Renders a `<figure>`
+  // with an `<img>` and an optional caption; manifest authors do not embed
+  // children. When `lightbox` is true, clicking the image opens a single-
+  // item `<Lightbox>`.
+  Image: { can_contain: 'leaf' },
+  // Wave 11 / Int-14 — fullscreen lightbox. Items come from the `items`
+  // prop; manifest authors do not embed manifest-level children inside it.
+  Lightbox: { can_contain: 'leaf' },
   // CommandPalette consumes commands via the `commands` prop.
   CommandPalette: { can_contain: 'leaf' },
   // Wave 11 / Cnt-6 — BlockMenu consumes block kinds via a
