@@ -3,32 +3,67 @@
 
 'use client';
 /**
- * Skeleton — decorative loading placeholder. Variants (Wave 6 / P-10):
- * bordered, elevated, ghost, tinted (default).
+ * Skeleton — decorative loading placeholder.
  *
- * Wave 7b / Vis-8 adds a `shape` prop so authors can match the placeholder
- * to the layout of the real content (avatar + 2 lines, table-row, kpi-tile,
- * etc.). All shapes share a single shimmer (`animate-pulse`, a Tailwind
- * utility); the shimmer is suppressed under `prefers-reduced-motion: reduce`.
+ * Wave 11 / Vis-8 — skeleton-as-shape, not as block. Best-in-class apps
+ * (Linear, Stripe, Vercel) ship per-component skeleton shapes that mirror
+ * the layout of the real content rather than rendering a single grey
+ * rectangle. The `shape` prop drives a small catalog of layout-faithful
+ * compositions:
+ *
+ *   - `rectangle`   — single block (the original / legacy default).
+ *   - `circle`      — avatar / chip placeholder.
+ *   - `line`        — single text line at a jittered 60–95 % width.
+ *   - `stack`       — avatar + 2 text lines (chat message / list-row preview).
+ *   - `card`        — header + media + 2 text lines.
+ *   - `table-row`   — N column blocks; `count` tiles the row.
+ *   - `kpi`         — label + value (KPI tile).
+ *   - `list-row`    — checkbox square + text line (list / multi-select rows).
+ *   - `detail-block`— hero + 3 stat blocks + 3 text lines (detail view).
+ *
+ * Legacy shape names from Wave 7b — `rect`, `text-line`,
+ * `avatar-with-2-lines`, `kpi-tile`, `detail-view`, `gallery-tile`,
+ * `timeline-event`, `text-paragraph` — remain accepted for back-compat and
+ * are normalised to the canonical Wave 11 catalog at render time.
+ *
+ * Density-aware: row vertical padding for `table-row` and `list-row`
+ * pulls from `DENSITY_ROW_PADDING_PX` so loading-state rows match the
+ * populated state's row height (no jarring re-flow when data lands).
+ *
+ * ARIA (Wave 11): the wrapper carries `role="status"`, `aria-busy="true"`,
+ * and `aria-label="Loading"` so assistive tech announces the placeholder
+ * as a live region. Shimmer is suppressed under
+ * `prefers-reduced-motion: reduce`.
  *
  * Composition rule: `Skeleton: { can_contain: 'leaf' }` — every shape is
  * layout-only (no slot for children).
  */
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
-import { cn, feedbackVariantClass, type FeedbackVariant } from './_variants.js';
+import {
+  cn,
+  feedbackVariantClass,
+  skeletonShapeClass,
+  type FeedbackVariant,
+  type SkeletonShape as CanonicalSkeletonShape,
+} from './_variants.js';
 import { DEFAULT_DENSITY, DENSITY_ROW_PADDING_PX, type Density } from './density.js';
 
 export type SkeletonRadius = 'sm' | 'md' | 'full';
 export type SkeletonVariant = FeedbackVariant;
 
+/**
+ * Canonical Wave 11 / Vis-8 shape catalog plus legacy Wave 7b aliases. The
+ * legacy names normalise via `normaliseShape()` to one of the canonical
+ * shapes — authors writing fresh code should reach for the Wave 11 names.
+ */
 export type SkeletonShape =
+  | CanonicalSkeletonShape
+  // Legacy Wave 7b aliases — preserved for back-compat. These map onto the
+  // canonical catalog at render time; no behavioural difference.
   | 'rect'
-  | 'circle'
   | 'text-line'
   | 'avatar-with-2-lines'
-  | 'card'
-  | 'table-row'
   | 'kpi-tile'
   | 'detail-view'
   | 'gallery-tile'
@@ -41,18 +76,24 @@ export interface SkeletonProps {
   radius?: SkeletonRadius;
   variant?: SkeletonVariant;
   shape?: SkeletonShape;
-  /** Repeat count for shapes that tile (table-row, text-paragraph). Default 1. */
+  /** Repeat count for shapes that tile (table-row, list-row, line). Default 1. */
   count?: number;
   /** Column count for shape="table-row". Default 4. */
   columns?: number;
   /**
-   * Wave 11 / Vis-6 — personalisation density. Threaded by the renderer
-   * so loading-state rows match the populated state's row height. Skeleton
-   * uses the value to scale `table-row` vertical padding; `rect` and other
-   * shapes continue to honour explicit `width` / `height` props.
+   * Wave 11 / Vis-6 — personalisation density. Threaded by the renderer so
+   * loading-state rows match the populated state's row height. Skeleton
+   * uses the value to scale `table-row` and `list-row` vertical padding;
+   * `rectangle` and other shapes continue to honour explicit `width` /
+   * `height` props.
    */
   density?: Density;
   className?: string;
+  /**
+   * Optional override for the announced label. Defaults to `"Loading"` so
+   * screen readers consistently announce loading state across surfaces.
+   */
+  ariaLabel?: string;
 }
 
 const RADIUS_PX: Readonly<Record<SkeletonRadius, string>> = Object.freeze({
@@ -62,6 +103,38 @@ const RADIUS_PX: Readonly<Record<SkeletonRadius, string>> = Object.freeze({
 });
 
 const BLOCK_BG = 'rgba(0,0,0,0.08)';
+
+/**
+ * Map every accepted shape value (canonical + legacy alias) to its canonical
+ * Wave 11 catalog entry. Returning the canonical key keeps the rest of the
+ * renderer + `data-shape` attribute consistent regardless of which alias the
+ * caller supplied.
+ */
+function normaliseShape(shape: SkeletonShape): CanonicalSkeletonShape {
+  switch (shape) {
+    case 'rect':
+      return 'rectangle';
+    case 'text-line':
+      return 'line';
+    case 'avatar-with-2-lines':
+      return 'stack';
+    case 'kpi-tile':
+      return 'kpi';
+    case 'detail-view':
+      return 'detail-block';
+    // Legacy shapes that don't have a 1:1 Wave 11 equivalent — pick the
+    // closest canonical fit so the placeholder still renders something
+    // sensible, while authors migrate to the canonical names.
+    case 'gallery-tile':
+      return 'card';
+    case 'timeline-event':
+      return 'stack';
+    case 'text-paragraph':
+      return 'line';
+    default:
+      return shape;
+  }
+}
 
 function toLen(v: string | number): string {
   return typeof v === 'number' ? `${String(v)}px` : v;
@@ -109,14 +182,6 @@ function stableRand(seed: number): number {
 function textLineWidth(seed: number): string {
   const pct = 60 + Math.floor(stableRand(seed) * 36); // 60..95
   return `${String(pct)}%`;
-}
-
-function blockStyle(extra: CSSProperties = {}): CSSProperties {
-  return {
-    backgroundColor: BLOCK_BG,
-    borderRadius: RADIUS_PX.sm,
-    ...extra,
-  };
 }
 
 /** A single rect block — internal building piece for composite shapes. */
@@ -171,13 +236,13 @@ function renderCircle(props: SkeletonProps): ReactNode {
   );
 }
 
-function renderTextLine(seed = 0): ReactNode {
+function renderLine(seed = 0): ReactNode {
   return <Block width={textLineWidth(seed)} height="0.85em" />;
 }
 
-function renderAvatarWith2Lines(): ReactNode {
+function renderStack(): ReactNode {
   return (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+    <>
       <span
         data-cir-skeleton-block=""
         style={{
@@ -192,26 +257,18 @@ function renderAvatarWith2Lines(): ReactNode {
         <Block width={textLineWidth(1)} height="0.9em" />
         <Block width={textLineWidth(2)} height="0.7em" style={{ opacity: 0.7 }} />
       </div>
-    </div>
+    </>
   );
 }
 
 function renderCard(): ReactNode {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        padding: 12,
-        ...blockStyle({ backgroundColor: 'transparent', borderRadius: RADIUS_PX.md }),
-      }}
-    >
+    <>
       <Block width="40%" height="1em" />
       <Block width="100%" height="80px" radius="md" />
       <Block width={textLineWidth(3)} height="0.75em" />
       <Block width={textLineWidth(4)} height="0.75em" />
-    </div>
+    </>
   );
 }
 
@@ -245,25 +302,46 @@ function renderTableRow(columns: number, rowSeed: number, density: Density): Rea
   );
 }
 
-function renderKpiTile(): ReactNode {
+function renderKpi(): ReactNode {
+  return (
+    <>
+      <Block width="40%" height="0.7em" style={{ opacity: 0.7 }} />
+      <Block width="60%" height="1.5em" />
+    </>
+  );
+}
+
+function renderListRow(rowSeed: number, density: Density): ReactNode {
+  // Checkbox square — fixed 16x16 sm-radius block to match the populated
+  // `<List>` row's selection indicator.
+  const rowPad = DENSITY_ROW_PADDING_PX[density];
   return (
     <div
       style={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-        padding: 12,
+        alignItems: 'center',
+        gap: 12,
+        padding: `${String(rowPad)}px 0`,
       }}
     >
-      <Block width="40%" height="0.7em" style={{ opacity: 0.7 }} />
-      <Block width="60%" height="1.5em" />
+      <span
+        data-cir-skeleton-block=""
+        style={{
+          flex: '0 0 auto',
+          width: 16,
+          height: 16,
+          borderRadius: RADIUS_PX.sm,
+          backgroundColor: BLOCK_BG,
+        }}
+      />
+      <Block width={textLineWidth(rowSeed * 11 + 3)} height="0.85em" style={{ flex: '1 1 auto' }} />
     </div>
   );
 }
 
-function renderDetailView(): ReactNode {
+function renderDetailBlock(): ReactNode {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 12 }}>
+    <>
       <Block width="100%" height="120px" radius="md" />
       <div style={{ display: 'flex', gap: 12 }}>
         <Block width="33%" height="2em" />
@@ -275,43 +353,8 @@ function renderDetailView(): ReactNode {
         <Block width={textLineWidth(6)} height="0.75em" />
         <Block width={textLineWidth(7)} height="0.75em" />
       </div>
-    </div>
+    </>
   );
-}
-
-function renderGalleryTile(): ReactNode {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <Block width="100%" height="120px" radius="md" />
-      <Block width={textLineWidth(8)} height="0.75em" />
-    </div>
-  );
-}
-
-function renderTimelineEvent(): ReactNode {
-  return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-      <span
-        data-cir-skeleton-block=""
-        style={{
-          flex: '0 0 auto',
-          width: 12,
-          height: 12,
-          borderRadius: '9999px',
-          backgroundColor: BLOCK_BG,
-          marginTop: 4,
-        }}
-      />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 auto' }}>
-        <Block width="30%" height="0.7em" style={{ opacity: 0.7 }} />
-        <Block width={textLineWidth(9)} height="0.85em" />
-      </div>
-    </div>
-  );
-}
-
-function renderTextParagraphLine(idx: number): ReactNode {
-  return <Block width={textLineWidth(idx + 11)} height="0.75em" />;
 }
 
 // -----------------------------------------------------------------------------
@@ -321,21 +364,28 @@ export function Skeleton({
   height = '1em',
   radius = 'sm',
   variant = 'tinted',
-  shape = 'rect',
+  shape = 'rectangle',
   count = 1,
   columns = 4,
   density = DEFAULT_DENSITY,
   className,
+  ariaLabel = 'Loading',
 }: SkeletonProps): ReactNode {
   const reducedMotion = usePrefersReducedMotion();
   const animateClass = reducedMotion ? undefined : 'animate-pulse';
+  const canonical = normaliseShape(shape);
+
+  const safeCount = Math.max(1, Math.floor(count));
+  const safeCols = Math.max(1, Math.floor(columns));
 
   // ---------------------------------------------------------------------------
-  // Backwards compat: the default `rect` shape preserves the original
-  // <span> element, inline-block layout, and surface attributes. Only the
-  // animate-pulse class is a net-new addition.
+  // Backwards compat: the default `rectangle` shape preserves the original
+  // <span> element (inline-block) so existing usage that styles
+  // `Skeleton` as an inline placeholder keeps working. ARIA upgrades to
+  // role="status" + aria-busy="true" + aria-label so screen readers
+  // announce the placeholder as a live region.
   // ---------------------------------------------------------------------------
-  if (shape === 'rect') {
+  if (canonical === 'rectangle') {
     const style: CSSProperties = {
       display: 'inline-block',
       width: toLen(width),
@@ -345,14 +395,21 @@ export function Skeleton({
     };
     return (
       <span
-        aria-hidden="true"
+        role="status"
+        aria-busy="true"
+        aria-label={ariaLabel}
         data-cir-component="Skeleton"
-        data-shape="rect"
+        data-shape="rectangle"
         data-radius={radius}
         data-variant={variant}
         data-density={density}
         data-cir-density={density}
-        className={cn(feedbackVariantClass[variant], animateClass, className)}
+        className={cn(
+          feedbackVariantClass[variant],
+          skeletonShapeClass.rectangle,
+          animateClass,
+          className,
+        )}
         style={style}
       />
     );
@@ -365,19 +422,27 @@ export function Skeleton({
     width: toLen(width),
   };
 
-  const safeCount = Math.max(1, Math.floor(count));
-  const safeCols = Math.max(1, Math.floor(columns));
-
   let body: ReactNode;
-  switch (shape) {
+  switch (canonical) {
     case 'circle':
       body = renderCircle({ width, height });
       break;
-    case 'text-line':
-      body = renderTextLine(0);
+    case 'line': {
+      // For paragraph-like rendering, callers pass count > 1 and we tile
+      // the line shape, jittering the seed so adjacent lines differ.
+      if (safeCount > 1) {
+        const lines = [];
+        for (let i = 0; i < safeCount; i += 1) {
+          lines.push(<div key={i}>{renderLine(i + 11)}</div>);
+        }
+        body = <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{lines}</div>;
+      } else {
+        body = renderLine(0);
+      }
       break;
-    case 'avatar-with-2-lines':
-      body = renderAvatarWith2Lines();
+    }
+    case 'stack':
+      body = renderStack();
       break;
     case 'card':
       body = renderCard();
@@ -387,49 +452,50 @@ export function Skeleton({
       for (let i = 0; i < safeCount; i += 1) {
         rows.push(<div key={i}>{renderTableRow(safeCols, i, density)}</div>);
       }
-      body = <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{rows}</div>;
+      body = rows;
       break;
     }
-    case 'kpi-tile':
-      body = renderKpiTile();
+    case 'kpi':
+      body = renderKpi();
       break;
-    case 'detail-view':
-      body = renderDetailView();
-      break;
-    case 'gallery-tile':
-      body = renderGalleryTile();
-      break;
-    case 'timeline-event':
-      body = renderTimelineEvent();
-      break;
-    case 'text-paragraph': {
-      const lines = [];
-      const n = Math.max(1, Math.floor(count));
-      for (let i = 0; i < n; i += 1) {
-        lines.push(<div key={i}>{renderTextParagraphLine(i)}</div>);
+    case 'list-row': {
+      const rows = [];
+      for (let i = 0; i < safeCount; i += 1) {
+        rows.push(<div key={i}>{renderListRow(i, density)}</div>);
       }
-      body = <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{lines}</div>;
+      body = rows;
       break;
     }
+    case 'detail-block':
+      body = renderDetailBlock();
+      break;
     default: {
-      // Exhaustive guard: TS will fire if a new shape is added without a case.
-      const _never: never = shape;
+      // Exhaustive guard: TS will fire if a new canonical shape is added
+      // without a case here.
+      const _never: never = canonical;
       body = _never;
     }
   }
 
+  // For composite shapes we lean on the shape-class wrapper for layout
+  // (Tailwind hosts pick it up; non-Tailwind hosts fall back to the inline
+  // styles emitted by each per-shape renderer).
+  const wrapperLayoutClass = skeletonShapeClass[canonical];
+
   return (
     <div
-      aria-hidden="true"
+      role="status"
+      aria-busy="true"
+      aria-label={ariaLabel}
       data-cir-component="Skeleton"
-      data-shape={shape}
+      data-shape={canonical}
       data-radius={radius}
       data-variant={variant}
       data-density={density}
       data-cir-density={density}
       data-count={String(safeCount)}
-      data-columns={shape === 'table-row' ? String(safeCols) : undefined}
-      className={cn(feedbackVariantClass[variant], animateClass, className)}
+      data-columns={canonical === 'table-row' ? String(safeCols) : undefined}
+      className={cn(feedbackVariantClass[variant], wrapperLayoutClass, animateClass, className)}
       style={wrapperStyle}
     >
       {body}

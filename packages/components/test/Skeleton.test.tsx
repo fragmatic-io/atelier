@@ -34,11 +34,25 @@ function mockReducedMotion(matches: boolean): () => void {
 }
 
 describe('Skeleton', () => {
-  it('renders an aria-hidden span', () => {
+  // -- Wave 11 / Vis-8 ARIA upgrade --
+  it('exposes role="status" + aria-busy="true" + aria-label="Loading"', () => {
     const { container } = render(<Skeleton />);
-    const el = container.querySelector('span');
-    expect(el?.getAttribute('aria-hidden')).toBe('true');
-    expect(el?.getAttribute('data-cir-component')).toBe('Skeleton');
+    const el = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(el.getAttribute('role')).toBe('status');
+    expect(el.getAttribute('aria-busy')).toBe('true');
+    expect(el.getAttribute('aria-label')).toBe('Loading');
+  });
+  it('honours custom ariaLabel override', () => {
+    const { container } = render(<Skeleton ariaLabel="Loading audit events" />);
+    const el = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(el.getAttribute('aria-label')).toBe('Loading audit events');
+  });
+  it('renders the default span (regression: rectangle preserves inline-block element)', () => {
+    const { container } = render(<Skeleton />);
+    const el = container.querySelector('span') as HTMLElement;
+    expect(el.getAttribute('data-cir-component')).toBe('Skeleton');
+    expect(el.getAttribute('data-shape')).toBe('rectangle');
+    expect(el.style.display).toBe('inline-block');
   });
   it('honours width / height props', () => {
     const { container } = render(<Skeleton width={120} height="2em" />);
@@ -82,15 +96,16 @@ describe('Skeleton', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Wave 7b / Vis-8 — shape catalog
+  // Wave 11 / Vis-8 — canonical shape catalog
+  //
+  // Each shape renders a distinct DOM tree; the data-shape attribute always
+  // reports the CANONICAL name (legacy aliases normalise on the way in).
   // ---------------------------------------------------------------------------
 
-  it('default shape is rect — preserves the legacy span element (regression)', () => {
+  it('default shape is rectangle', () => {
     const { container } = render(<Skeleton />);
     const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.tagName).toBe('SPAN');
-    expect(root.getAttribute('data-shape')).toBe('rect');
-    expect(root.style.display).toBe('inline-block');
+    expect(root.getAttribute('data-shape')).toBe('rectangle');
   });
 
   it('shape="circle" renders a circular block', () => {
@@ -103,10 +118,10 @@ describe('Skeleton', () => {
     expect(inner.style.height).toBe('48px');
   });
 
-  it('shape="text-line" renders a single rect with width in the 60-95% band', () => {
-    const { container } = render(<Skeleton shape="text-line" />);
+  it('shape="line" renders a single rect with width in the 60-95% band', () => {
+    const { container } = render(<Skeleton shape="line" />);
     const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-shape')).toBe('text-line');
+    expect(root.getAttribute('data-shape')).toBe('line');
     const blocks = root.querySelectorAll('[data-cir-skeleton-block]');
     expect(blocks).toHaveLength(1);
     const w = (blocks[0] as HTMLElement).style.width;
@@ -117,21 +132,28 @@ describe('Skeleton', () => {
     expect(pct).toBeLessThanOrEqual(95);
   });
 
-  it('shape="text-line" width is stable across re-renders', () => {
-    const { container: a } = render(<Skeleton shape="text-line" />);
-    const { container: b } = render(<Skeleton shape="text-line" />);
+  it('shape="line" width is stable across re-renders', () => {
+    const { container: a } = render(<Skeleton shape="line" />);
+    const { container: b } = render(<Skeleton shape="line" />);
     const wa = (a.querySelector('[data-cir-skeleton-block]') as HTMLElement).style.width;
     const wb = (b.querySelector('[data-cir-skeleton-block]') as HTMLElement).style.width;
     expect(wa).toBe(wb);
   });
 
-  it('shape="avatar-with-2-lines" renders 1 circle + 2 text rects', () => {
-    const { container } = render(<Skeleton shape="avatar-with-2-lines" />);
+  it('shape="line" with count=4 tiles 4 lines', () => {
+    const { container } = render(<Skeleton shape="line" count={4} />);
     const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-shape')).toBe('avatar-with-2-lines');
+    expect(root.getAttribute('data-count')).toBe('4');
+    const lines = root.querySelectorAll('[data-cir-skeleton-block]');
+    expect(lines).toHaveLength(4);
+  });
+
+  it('shape="stack" renders 1 circle + 2 text rects (avatar + 2 lines)', () => {
+    const { container } = render(<Skeleton shape="stack" />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('stack');
     const blocks = Array.from(root.querySelectorAll<HTMLElement>('[data-cir-skeleton-block]'));
     expect(blocks).toHaveLength(3);
-    // The circle is the only one with the pill border-radius.
     const circleBlocks = blocks.filter((el) => el.style.borderRadius === '9999px');
     expect(circleBlocks).toHaveLength(1);
   });
@@ -169,54 +191,123 @@ describe('Skeleton', () => {
     expect(cells).toHaveLength(15);
   });
 
-  it('shape="kpi-tile" renders label + number rect', () => {
-    const { container } = render(<Skeleton shape="kpi-tile" />);
+  it('shape="kpi" renders label + value (2 blocks)', () => {
+    const { container } = render(<Skeleton shape="kpi" />);
     const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-shape')).toBe('kpi-tile');
+    expect(root.getAttribute('data-shape')).toBe('kpi');
     const blocks = root.querySelectorAll('[data-cir-skeleton-block]');
     expect(blocks).toHaveLength(2);
   });
 
-  it('shape="detail-view" renders hero + 3 stat blocks + 3 text lines', () => {
-    const { container } = render(<Skeleton shape="detail-view" />);
+  it('shape="list-row" renders checkbox + line', () => {
+    const { container } = render(<Skeleton shape="list-row" />);
     const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-shape')).toBe('detail-view');
+    expect(root.getAttribute('data-shape')).toBe('list-row');
+    const blocks = Array.from(root.querySelectorAll<HTMLElement>('[data-cir-skeleton-block]'));
+    expect(blocks).toHaveLength(2);
+    // First block is the 16x16 checkbox square (sm radius); second is the line.
+    const checkbox = blocks[0];
+    expect(checkbox.style.width).toBe('16px');
+    expect(checkbox.style.height).toBe('16px');
+  });
+
+  it('shape="list-row" with count=4 emits 8 blocks (4 rows × [checkbox + line])', () => {
+    const { container } = render(<Skeleton shape="list-row" count={4} />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-count')).toBe('4');
+    const blocks = root.querySelectorAll('[data-cir-skeleton-block]');
+    expect(blocks).toHaveLength(8);
+  });
+
+  it('shape="detail-block" renders hero + 3 stat blocks + 3 text lines', () => {
+    const { container } = render(<Skeleton shape="detail-block" />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('detail-block');
     const blocks = root.querySelectorAll('[data-cir-skeleton-block]');
     expect(blocks.length).toBeGreaterThanOrEqual(7);
   });
 
-  it('shape="gallery-tile" renders image + caption', () => {
-    const { container } = render(<Skeleton shape="gallery-tile" />);
-    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-shape')).toBe('gallery-tile');
-    const blocks = root.querySelectorAll('[data-cir-skeleton-block]');
-    expect(blocks).toHaveLength(2);
+  // ---------------------------------------------------------------------------
+  // Distinct DOM per shape — sanity check that no two canonical shapes
+  // produce the same block count + arrangement (cheap fingerprint).
+  // ---------------------------------------------------------------------------
+
+  it('every canonical shape produces distinct DOM', () => {
+    const shapes = [
+      'rectangle',
+      'circle',
+      'line',
+      'stack',
+      'card',
+      'table-row',
+      'kpi',
+      'list-row',
+      'detail-block',
+    ] as const;
+    const fingerprints = new Set<string>();
+    for (const s of shapes) {
+      const { container, unmount } = render(<Skeleton shape={s} />);
+      const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+      const blockCount = root.querySelectorAll('[data-cir-skeleton-block]').length;
+      const fp = `${s}:${String(blockCount)}:${root.tagName}`;
+      fingerprints.add(fp);
+      unmount();
+    }
+    expect(fingerprints.size).toBe(shapes.length);
   });
 
-  it('shape="timeline-event" renders dot + date + description', () => {
-    const { container } = render(<Skeleton shape="timeline-event" />);
-    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-shape')).toBe('timeline-event');
-    const blocks = Array.from(root.querySelectorAll<HTMLElement>('[data-cir-skeleton-block]'));
-    expect(blocks).toHaveLength(3);
-    const dot = blocks.find((el) => el.style.borderRadius === '9999px');
-    expect(dot).toBeDefined();
+  // ---------------------------------------------------------------------------
+  // Density — table-row + list-row pull row padding from
+  // `DENSITY_ROW_PADDING_PX`. Verify the data-density attribute lands and the
+  // inline padding matches each tier.
+  // ---------------------------------------------------------------------------
+
+  it('threads density onto data-cir-density', () => {
+    for (const d of ['compact', 'comfortable', 'spacious'] as const) {
+      const { container, unmount } = render(<Skeleton shape="table-row" density={d} />);
+      const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+      expect(root.getAttribute('data-cir-density')).toBe(d);
+      unmount();
+    }
   });
 
-  it('shape="text-paragraph" with count=4 renders 4 lines', () => {
-    const { container } = render(<Skeleton shape="text-paragraph" count={4} />);
-    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-shape')).toBe('text-paragraph');
-    expect(root.getAttribute('data-count')).toBe('4');
-    const lines = root.querySelectorAll('[data-cir-skeleton-block]');
-    expect(lines).toHaveLength(4);
+  it('table-row vertical padding tracks density', () => {
+    const expected: Record<'compact' | 'comfortable' | 'spacious', string> = {
+      compact: '2px 0px',
+      comfortable: '8px 0px',
+      spacious: '14px 0px',
+    };
+    for (const d of ['compact', 'comfortable', 'spacious'] as const) {
+      const { container, unmount } = render(<Skeleton shape="table-row" density={d} />);
+      const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+      // The padded row is the inner div whose first child is a skeleton block
+      // (the cells). Walk to find the parent of any block that has flex layout.
+      const row = root.querySelector<HTMLElement>('div div[style*="padding"]');
+      expect(row).not.toBeNull();
+      expect(row && row.style.padding).toBe(expected[d]);
+      unmount();
+    }
   });
 
-  it('text-paragraph defaults count to 1', () => {
-    const { container } = render(<Skeleton shape="text-paragraph" />);
-    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
-    expect(root.getAttribute('data-count')).toBe('1');
+  it('list-row vertical padding tracks density', () => {
+    const expected: Record<'compact' | 'comfortable' | 'spacious', string> = {
+      compact: '2px 0px',
+      comfortable: '8px 0px',
+      spacious: '14px 0px',
+    };
+    for (const d of ['compact', 'comfortable', 'spacious'] as const) {
+      const { container, unmount } = render(<Skeleton shape="list-row" density={d} />);
+      const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+      const row = root.querySelector<HTMLElement>('div div[style*="padding"]');
+      expect(row).not.toBeNull();
+      expect(row && row.style.padding).toBe(expected[d]);
+      unmount();
+    }
   });
+
+  // ---------------------------------------------------------------------------
+  // Animation
+  // ---------------------------------------------------------------------------
 
   it('applies animate-pulse by default', () => {
     const { container } = render(<Skeleton />);
@@ -241,5 +332,48 @@ describe('Skeleton', () => {
     expect(root.getAttribute('data-count')).toBe('1');
     const cells = root.querySelectorAll('[data-cir-skeleton-block]');
     expect(cells).toHaveLength(3);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Legacy aliases — Wave 7b shape names normalise to canonical Wave 11
+  // catalog entries so existing demos / hosts keep working.
+  // ---------------------------------------------------------------------------
+
+  it('legacy shape="rect" normalises to rectangle', () => {
+    const { container } = render(<Skeleton shape="rect" />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('rectangle');
+  });
+
+  it('legacy shape="text-line" normalises to line', () => {
+    const { container } = render(<Skeleton shape="text-line" />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('line');
+  });
+
+  it('legacy shape="avatar-with-2-lines" normalises to stack', () => {
+    const { container } = render(<Skeleton shape="avatar-with-2-lines" />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('stack');
+  });
+
+  it('legacy shape="kpi-tile" normalises to kpi', () => {
+    const { container } = render(<Skeleton shape="kpi-tile" />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('kpi');
+  });
+
+  it('legacy shape="detail-view" normalises to detail-block', () => {
+    const { container } = render(<Skeleton shape="detail-view" />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('detail-block');
+  });
+
+  it('legacy shape="text-paragraph" normalises to line + count', () => {
+    const { container } = render(<Skeleton shape="text-paragraph" count={3} />);
+    const root = container.querySelector('[data-cir-component="Skeleton"]') as HTMLElement;
+    expect(root.getAttribute('data-shape')).toBe('line');
+    const lines = root.querySelectorAll('[data-cir-skeleton-block]');
+    expect(lines).toHaveLength(3);
   });
 });

@@ -584,6 +584,47 @@ export const codeViewVariantClass: Readonly<Record<CodeViewVariant, string>> = O
 });
 
 // -----------------------------------------------------------------------------
+// Skeleton shape — Wave 11 / Vis-8. Per-component skeleton shapes that match
+// the layout of the real content (Linear / Stripe pattern: skeleton-as-shape,
+// not a single grey block). Each entry is the OUTER wrapper class for the
+// shape; the inner blocks paint via inline styles so non-Tailwind hosts still
+// get the layout. Tailwind hosts pick up the wrapper utility for free.
+//
+// Canonical shape names (Wave 11 spec):
+//   - `rectangle`   — single block (legacy default; alias of the previous `rect`).
+//   - `circle`      — avatar-shaped block.
+//   - `line`        — single text line at jittered width.
+//   - `stack`       — avatar + 2 text lines (chat / list-row preview).
+//   - `card`        — header + media + 2 text lines.
+//   - `table-row`   — N column blocks; tiles with `count`.
+//   - `kpi`         — small label + large value.
+//   - `list-row`    — checkbox square + text line.
+//   - `detail-block`— hero + 3 stat cells + 3 text lines.
+// -----------------------------------------------------------------------------
+export type SkeletonShape =
+  | 'rectangle'
+  | 'circle'
+  | 'line'
+  | 'stack'
+  | 'card'
+  | 'table-row'
+  | 'kpi'
+  | 'list-row'
+  | 'detail-block';
+
+export const skeletonShapeClass: Readonly<Record<SkeletonShape, string>> = Object.freeze({
+  rectangle: '',
+  circle: '',
+  line: 'block w-full',
+  stack: 'flex items-center gap-3',
+  card: 'flex flex-col gap-2 p-3',
+  'table-row': 'flex flex-col gap-1',
+  kpi: 'flex flex-col gap-2 p-3',
+  'list-row': 'flex items-center gap-3',
+  'detail-block': 'flex flex-col gap-3 p-3',
+});
+
+// -----------------------------------------------------------------------------
 // Elevation scale — Wave 11 / Vis-7. Five canonical levels mirror
 // `BrandKit.elevation_scale` (`resting` / `hover` / `popover` / `modal` /
 // `commandbar`). Components consume this map via `cn(..., elevationClass[level])`
