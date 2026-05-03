@@ -339,6 +339,21 @@ export type { GalleryProps, GalleryItem } from './components/Gallery.js';
 export { CommandPalette, CommandPaletteBinding } from './components/CommandPalette.js';
 export type { CommandPaletteProps, CommandPaletteCommand } from './components/CommandPalette.js';
 
+// Wave 11 / Cnt-6 — slash-command menu for block creation. Notion's `/`
+// menu — an inline command palette scoped to "what kind of block do I want
+// here". Pairs with the per-surface `BlockKindRegistry` so a doc surface and
+// a chat surface get different menus. Gates Cnt-7 (block editor) + AI-2
+// (slash-AI shortcuts).
+export { BlockMenu, BlockMenuBinding, blockMenuTextRender } from './components/BlockMenu.js';
+export type { BlockMenuProps, BlockMenuTrigger } from './components/BlockMenu.js';
+export { ALL_SURFACES, InMemoryBlockKindRegistry } from './blocks/registry.js';
+export type {
+  BlockInsertContext,
+  BlockKind,
+  BlockKindRegistry,
+  BlockKindRegistryListener,
+} from './blocks/registry.js';
+
 // Wave 11 / Int-12 — settings-scoped fuzzy search panel (Stripe / Slack /
 // Notion ship one at the top of `/settings`). Self-registers a
 // `settings.search` action with the `<KeyboardProvider>` registry when one

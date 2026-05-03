@@ -22,6 +22,7 @@ import { MapComponentRegistry, type ComponentBinding } from '@atelier/runtime';
 import { AccordionBinding } from './components/Accordion.js';
 import { ActionMenuBinding } from './components/ActionMenu.js';
 import { AlertBinding } from './components/Alert.js';
+import { BlockMenuBinding } from './components/BlockMenu.js';
 import { BreadcrumbBinding } from './components/Breadcrumb.js';
 import { BulkActionBarBinding } from './components/BulkActionBar.js';
 import { ButtonBinding } from './components/Button.js';
@@ -92,6 +93,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Accordion: AccordionBinding,
   ActionMenu: ActionMenuBinding,
   Alert: AlertBinding,
+  BlockMenu: BlockMenuBinding,
   Breadcrumb: BreadcrumbBinding,
   BulkActionBar: BulkActionBarBinding,
   Button: ButtonBinding,
@@ -380,6 +382,8 @@ export const _LEGACY_COMPOSITION_RULES_BODY: Readonly<
   Gallery: { can_contain: 'leaf' },
   // CommandPalette consumes commands via the `commands` prop.
   CommandPalette: { can_contain: 'leaf' },
+  // Wave 11 / Cnt-6 — BlockMenu consumes kinds via a BlockKindRegistry.
+  BlockMenu: { can_contain: 'leaf' },
   // Stepper renders steps from the `steps` prop.
   Stepper: { can_contain: 'leaf' },
   // Phase 5c batch 2 — Input + Navigation primitives. Every input is a leaf

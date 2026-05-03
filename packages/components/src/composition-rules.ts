@@ -103,6 +103,10 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Gallery: { can_contain: 'leaf' },
   // CommandPalette consumes commands via the `commands` prop.
   CommandPalette: { can_contain: 'leaf' },
+  // Wave 11 / Cnt-6 — BlockMenu consumes block kinds via a
+  // `BlockKindRegistry` (filtered by `surface`); manifest authors do not
+  // embed children.
+  BlockMenu: { can_contain: 'leaf' },
   // Stepper renders steps from the `steps` prop.
   Stepper: { can_contain: 'leaf' },
   NumberInput: { can_contain: 'leaf' },

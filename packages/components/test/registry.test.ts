@@ -13,6 +13,7 @@ const EXPECTED = [
   'Accordion',
   'ActionMenu',
   'Alert',
+  'BlockMenu',
   'Breadcrumb',
   'BulkActionBar',
   'Button',
@@ -81,7 +82,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 68 baseline components', () => {
+  it('contains exactly the 69 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -100,7 +101,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 68 ids', () => {
+  it('list() reports all 69 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -181,6 +182,7 @@ describe('COMPOSITION_RULES', () => {
       'KPIRow',
       'Gallery',
       'CommandPalette',
+      'BlockMenu',
       'Stepper',
       'NumberInput',
       'DateInput',

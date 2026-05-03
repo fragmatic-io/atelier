@@ -16,6 +16,7 @@
 import { accordionTextRender } from './components/Accordion.js';
 import { actionMenuTextRender } from './components/ActionMenu.js';
 import { alertTextRender } from './components/Alert.js';
+import { blockMenuTextRender } from './components/BlockMenu.js';
 import { breadcrumbTextRender } from './components/Breadcrumb.js';
 import { bulkActionBarTextRender } from './components/BulkActionBar.js';
 import { buttonTextRender } from './components/Button.js';
@@ -89,6 +90,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Accordion: accordionTextRender as TextRenderer,
   ActionMenu: actionMenuTextRender as TextRenderer,
   Alert: alertTextRender as TextRenderer,
+  BlockMenu: blockMenuTextRender as TextRenderer,
   Breadcrumb: breadcrumbTextRender as TextRenderer,
   BulkActionBar: bulkActionBarTextRender as TextRenderer,
   Button: buttonTextRender as TextRenderer,

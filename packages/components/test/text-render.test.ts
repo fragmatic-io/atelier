@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COMPONENT_BINDINGS } from '../src/registry.js';
 import { TEXT_RENDERERS } from '../src/text-render.js';
+import { InMemoryBlockKindRegistry } from '../src/blocks/registry.js';
 
 describe('TEXT_RENDERERS', () => {
   it('covers every component in the registry', () => {
@@ -119,6 +120,13 @@ describe('TEXT_RENDERERS', () => {
         actions: [{ id: 'github.issue.bulk_archive', label: 'Archive' }],
         onAction: () => undefined,
         onClear: () => undefined,
+      },
+      BlockMenu: {
+        registry: new InMemoryBlockKindRegistry(),
+        surface: 'doc',
+        open: true,
+        onInsert: () => undefined,
+        onClose: () => undefined,
       },
       Wizard: {
         steps: [

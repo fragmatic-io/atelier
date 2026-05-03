@@ -407,6 +407,21 @@ export const quickSwitcherVariantClass: Readonly<Record<QuickSwitcherVariant, st
   });
 
 // -----------------------------------------------------------------------------
+// BlockMenu — Wave 11 / Cnt-6. Inline slash-command menu anchored next to the
+// editor caret (Notion / Linear / Coda pattern). `default` is the floating
+// popover surface; `compact` trims the padding for chat / comment surfaces
+// where vertical space is tight.
+// -----------------------------------------------------------------------------
+export type BlockMenuVariant = 'default' | 'compact';
+
+export const blockMenuVariantClass: Readonly<Record<BlockMenuVariant, string>> = Object.freeze({
+  default:
+    'bg-white text-gray-900 rounded-md ring-1 ring-gray-200 p-2 w-[320px] dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700',
+  compact:
+    'bg-white text-gray-900 rounded-md ring-1 ring-gray-200 p-1 w-[260px] text-sm dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-700',
+});
+
+// -----------------------------------------------------------------------------
 // SettingsSearch — Wave 11 / Int-12. Inline search box rendered at the top of
 // a settings surface (Stripe / Slack / Notion all ship one). `default` is the
 // full-width inline panel that grows with the container; `compact` trims the
