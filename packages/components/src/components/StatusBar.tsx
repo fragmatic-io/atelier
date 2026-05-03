@@ -19,10 +19,42 @@
  *     CSS pulse animation (suppressed under `prefers-reduced-motion: reduce`).
  *   - compact — a dot + message; no detail, no pulse.
  *
- * Wiring example for a host:
+ * Wave 11 / Vis-9 — capability binding + click-through + severity icons:
+ *
+ *  - **Capability binding.** When the manifest declares
+ *    `data: { source: 'system.status' }`, the runtime threads the resolved
+ *    payload through `props.data`. The component reads `status` / `message`
+ *    / `detail` from that payload, falling back to the explicit props when
+ *    the binding has not yet hydrated. Accepted shape:
+ *      `{ status: 'operational' | 'degraded' | 'incident' | 'maintenance',
+ *         message: string,
+ *         detail?: string }`.
+ *    Malformed payloads fall through to the explicit-prop path so the bar
+ *    never renders blank.
+ *
+ *  - **Click-through.** `href` (existing) wraps the bar in a same-origin
+ *    `<a>`. `onClick` (new) is the alternative for client-side routers
+ *    (Next.js / TanStack / React Router) that prefer to intercept rather
+ *    than ship to a real URL. Both can coexist — `onClick` runs first; the
+ *    handler can `event.preventDefault()` to suppress browser navigation.
+ *
+ *  - **Severity icon slot.** When an `IconResolver` is in scope, the
+ *    leading glyph is rendered as a lucide icon picked per status
+ *    (`circle-check` for operational, `alert-triangle` for degraded /
+ *    incident, `wrench` for maintenance). Hosts that haven't wired a
+ *    resolver still get the Unicode-glyph fallback path — the component
+ *    never hard-depends on an icon pack.
+ *
+ * Wiring example:
  *
  * ```tsx
- * // In a layout / chrome component:
+ * // Manifest-driven (preferred): runtime resolves system.status and
+ * // threads it as props.data — no host plumbing.
+ * { component: 'StatusBar',
+ *   data: { source: 'system.status' },
+ *   props: { href: '/status' } }
+ *
+ * // Imperative (legacy):
  * function Chrome() {
  *   const status = useCapability('system.status');
  *   if (!status) return null;
@@ -38,17 +70,42 @@
  * }
  * ```
  */
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import {
   cn,
+  iconSizePx,
   statusBarColorClass,
   statusBarVariantClass,
   type StatusBarStatus,
   type StatusBarVariant,
 } from './_variants.js';
+import { Icon } from './Icon.js';
+import { useIconResolver } from '../icons/context.js';
 
 export type { StatusBarStatus, StatusBarVariant } from './_variants.js';
+
+/**
+ * Resolved shape carried on `props.data` when the manifest declares
+ * `data: { source: 'system.status' }`. Field names mirror the manifest
+ * capability registry — `status` is the level token; `message` is the
+ * one-line summary; `detail` is the optional second line.
+ *
+ * The component is liberal in what it accepts: a malformed payload falls
+ * through to the explicit-prop path, so a not-yet-hydrated binding never
+ * renders a blank pill.
+ */
+export interface SystemStatusValue {
+  status: StatusBarStatus;
+  message: string;
+  detail?: string;
+}
 
 export interface StatusBarProps {
   /** Current system status. */
@@ -59,17 +116,35 @@ export interface StatusBarProps {
   detail?: string;
   /** Optional click-through to a dedicated status page. */
   href?: string;
+  /**
+   * Optional click handler — alternative to `href` for client-side routers
+   * (Next.js / TanStack / React Router) that intercept the click and call
+   * `router.push(...)` rather than ship to a real URL. When both `href` and
+   * `onClick` are set, `onClick` fires first; callers can
+   * `event.preventDefault()` to suppress the browser's default navigation.
+   */
+  onClick?: (event: ReactMouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
   /** Allow the user to dismiss the bar. State persists in `sessionStorage`. */
   dismissible?: boolean;
   /** Layout variant. `default` is the full pill; `compact` is a dot + message. */
   variant?: StatusBarVariant;
   /** Extra class names appended to the variant utility class string. */
   className?: string;
+  /**
+   * Capability-bound payload. Set automatically by the runtime when the
+   * manifest declares `data: { source: 'system.status' }`. When the payload
+   * carries valid `status` / `message` fields, those win over the explicit
+   * props; malformed payloads fall through so the bar never blanks. See
+   * `SystemStatusValue` for the accepted shape.
+   */
+  data?: unknown;
 }
 
 /**
- * Per-status icon. Plain Unicode so the package does not pull in an icon set;
- * hosts can re-skin via `[data-cir-component="StatusBar"] [data-cir-part="icon"]`.
+ * Per-status Unicode glyph. Plain text so the package does not pull in an
+ * icon set; hosts can re-skin via
+ * `[data-cir-component="StatusBar"] [data-cir-part="icon"]`. Used as the
+ * fallback when no `IconResolver` is wired.
  */
 const STATUS_ICON: Readonly<Record<StatusBarStatus, string>> = Object.freeze({
   operational: '✓', //   check mark
@@ -78,12 +153,51 @@ const STATUS_ICON: Readonly<Record<StatusBarStatus, string>> = Object.freeze({
   maintenance: '🛠', // hammer + wrench (U+1F6E0)
 });
 
+/**
+ * Per-status default lucide icon name. Lined up with names the
+ * `LucideIconResolver` default roster recognises out of the box. Hosts that
+ * wire a different resolver can re-skin via that contract — the component
+ * still falls back to the Unicode glyph above if the resolver returns null.
+ */
+const STATUS_DEFAULT_ICON_NAME: Readonly<Record<StatusBarStatus, string>> = Object.freeze({
+  operational: 'circle-check',
+  degraded: 'alert-triangle',
+  incident: 'alert-triangle',
+  maintenance: 'wrench',
+});
+
 const STATUS_LABEL: Readonly<Record<StatusBarStatus, string>> = Object.freeze({
   operational: 'Operational',
   degraded: 'Degraded',
   incident: 'Incident',
   maintenance: 'Maintenance',
 });
+
+/** Allowed status tokens used by the capability-binding parser. */
+const STATUS_TOKENS: ReadonlySet<string> = new Set<StatusBarStatus>([
+  'operational',
+  'degraded',
+  'incident',
+  'maintenance',
+]);
+
+/**
+ * Best-effort parser for the `system.status` capability payload. Returns
+ * `undefined` for any non-conforming shape so the caller falls through to
+ * the explicit-prop path. Tolerant of `level` as an alias for `status`
+ * (mirrors the JSDoc-pinned imperative-wiring example).
+ */
+function parseSystemStatus(value: unknown): SystemStatusValue | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const bag = value as Record<string, unknown>;
+  const rawStatus = bag['status'] ?? bag['level'];
+  const rawMessage = bag['message'];
+  if (typeof rawStatus !== 'string' || typeof rawMessage !== 'string') return undefined;
+  if (!STATUS_TOKENS.has(rawStatus)) return undefined;
+  const out: SystemStatusValue = { status: rawStatus as StatusBarStatus, message: rawMessage };
+  if (typeof bag['detail'] === 'string') out.detail = bag['detail'];
+  return out;
+}
 
 /** sessionStorage key for the dismiss flag. */
 function dismissKey(href: string | undefined, message: string): string {
@@ -131,16 +245,27 @@ const PULSE_ANIMATION: CSSProperties = {
 };
 
 export function StatusBar({
-  status,
-  message,
-  detail,
+  status: statusProp,
+  message: messageProp,
+  detail: detailProp,
   href,
+  onClick,
   dismissible = false,
   variant = 'default',
   className,
+  data,
 }: StatusBarProps): ReactNode {
   const reducedMotion = usePrefersReducedMotion();
+  const resolver = useIconResolver();
   const [dismissed, setDismissed] = useState(false);
+
+  // Capability-binding payload wins when valid. Malformed payloads fall
+  // through to the explicit-prop path so the bar never renders blank.
+  const bound = parseSystemStatus(data);
+  const status: StatusBarStatus = bound?.status ?? statusProp;
+  const message: string = bound?.message ?? messageProp;
+  const detail: string | undefined = bound?.detail ?? detailProp;
+  const boundFromCapability = bound !== undefined;
 
   // Re-hydrate the dismissed flag from sessionStorage on mount and whenever
   // the dismiss key changes (e.g. the host swaps href / message).
@@ -190,9 +315,32 @@ export function StatusBar({
   const layoutClass = statusBarVariantClass[variant];
   const isCompact = variant === 'compact';
 
+  // Severity-icon slot. Resolver returning a real SVG renders an `<Icon>`;
+  // otherwise we fall back to the Unicode glyph so the package keeps its
+  // zero-icon-pack-default posture.
+  const iconName = STATUS_DEFAULT_ICON_NAME[status];
+  const hasResolvedIcon = resolver.resolve('lucide', iconName) !== null;
+  const iconSize = isCompact ? iconSizePx.sm : iconSizePx.md;
+  const iconStyle: CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    ...(showPulse ? PULSE_ANIMATION : {}),
+  };
+
   const icon = (
-    <span data-cir-part="icon" aria-hidden="true" style={showPulse ? PULSE_ANIMATION : undefined}>
-      {isCompact ? '●' /* solid dot for compact */ : STATUS_ICON[status]}
+    <span
+      data-cir-part="icon"
+      data-cir-icon-source={hasResolvedIcon ? 'resolver' : 'unicode'}
+      aria-hidden="true"
+      style={iconStyle}
+    >
+      {hasResolvedIcon ? (
+        <Icon set="lucide" name={iconName} size={iconSize} />
+      ) : isCompact ? (
+        '●' /* solid dot for compact */
+      ) : (
+        STATUS_ICON[status]
+      )}
     </span>
   );
 
@@ -218,28 +366,60 @@ export function StatusBar({
     'data-status': status,
     'data-variant': variant,
     'data-pulse': showPulse ? 'true' : undefined,
+    'data-cir-bound': boundFromCapability ? 'system.status' : undefined,
     className: cn(colorClass, layoutClass, className),
   };
+
+  // Click-through wraps the body in either an `<a>` (when `href` is set —
+  // including the `onClick`-without-href + `<a role="button">` combo so
+  // hosts can keep a focusable, keyboard-activatable link without a real
+  // URL) or a `<button>` (when only `onClick` is set; matches expected
+  // tab order + Enter/Space activation for non-link clickables).
+  const linkBaseStyle: CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    color: 'inherit',
+    textDecoration: 'inherit',
+  };
+
+  let linkEl: ReactNode;
+  if (href !== undefined) {
+    linkEl = (
+      <a href={href} data-cir-part="link" onClick={onClick} style={linkBaseStyle}>
+        {body}
+      </a>
+    );
+  } else if (onClick !== undefined) {
+    linkEl = (
+      <button
+        type="button"
+        data-cir-part="link"
+        onClick={onClick}
+        style={{
+          ...linkBaseStyle,
+          background: 'transparent',
+          border: 0,
+          padding: 0,
+          font: 'inherit',
+          cursor: 'pointer',
+        }}
+      >
+        {body}
+      </button>
+    );
+  } else {
+    linkEl = (
+      <span data-cir-part="link" style={linkBaseStyle}>
+        {body}
+      </span>
+    );
+  }
 
   const inner = (
     <>
       {showPulse ? <style data-cir-part="keyframes">{PULSE_STYLE}</style> : null}
-      {href !== undefined ? (
-        <a
-          href={href}
-          data-cir-part="link"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          {body}
-        </a>
-      ) : (
-        <span
-          data-cir-part="link"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          {body}
-        </span>
-      )}
+      {linkEl}
       {dismissible ? (
         <button
           type="button"
@@ -272,8 +452,12 @@ function capitalize(s: string): string {
 }
 
 export function statusBarTextRender(props: Partial<StatusBarProps>): string {
-  const status = props?.status ?? 'operational';
-  const message = props?.message ?? '';
+  // Honour the capability binding in the text adapter too, so audit /
+  // accessibility / non-DOM consumers see the same final string the visual
+  // renderer would.
+  const bound = parseSystemStatus(props?.data);
+  const status = bound?.status ?? props?.status ?? 'operational';
+  const message = bound?.message ?? props?.message ?? '';
   return message.length > 0 ? `${capitalize(status)}: ${message}` : capitalize(status);
 }
 
