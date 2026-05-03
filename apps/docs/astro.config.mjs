@@ -3,6 +3,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import rehypeMermaid from 'rehype-mermaid';
+import { visit } from 'unist-util-visit';
 
 // GitHub Pages serves project sites from `<user>.github.io/<repo>/` unless a
 // custom domain is bound. Marketing lives at `/atelier/` and the docs site
@@ -10,6 +11,34 @@ import rehypeMermaid from 'rehype-mermaid';
 // into one Pages artifact; the docs site's `base` is the docs subpath.
 const base = process.env.DOCS_BASE ?? '/atelier/docs';
 const site = process.env.DOCS_SITE ?? 'https://fragmatic-io.github.io';
+
+/**
+ * rehype plugin: rewrite root-relative `<a href="/foo">` to be base-prefixed
+ * (`<a href="/atelier/docs/foo">`). Astro/Starlight's sidebar config gets
+ * the base prefix automatically, but raw `href` attributes inside MDX —
+ * markdown links `[text](/foo)` and JSX `<LinkCard href="/foo">` — do
+ * not. Without this rewrite, every internal docs link 404s on Pages
+ * because it lands at `<user>.github.io/foo` instead of
+ * `<user>.github.io/atelier/docs/foo`.
+ *
+ * Skips: external URLs, anchor-only links, and links that already start
+ * with the base path.
+ */
+function rehypePrefixInternalLinks(basePath) {
+  const trimmed = basePath.replace(/\/+$/, ''); // strip trailing slash
+  return () => (tree) => {
+    visit(tree, 'element', (node) => {
+      if (node.tagName !== 'a') return;
+      const href = node.properties?.href;
+      if (typeof href !== 'string') return;
+      // Skip non-internal / already-prefixed / anchor-only.
+      if (!href.startsWith('/')) return;
+      if (href.startsWith('//')) return; // protocol-relative
+      if (href.startsWith(trimmed + '/') || href === trimmed) return;
+      node.properties.href = trimmed + href;
+    });
+  };
+}
 
 export default defineConfig({
   site,
@@ -24,6 +53,7 @@ export default defineConfig({
   markdown: {
     rehypePlugins: [
       [rehypeMermaid, { strategy: 'inline-svg', mermaidConfig: { theme: 'default' } }],
+      rehypePrefixInternalLinks(base),
     ],
     syntaxHighlight: 'shiki',
     shikiConfig: {
