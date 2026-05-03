@@ -38,8 +38,8 @@ function makePanes(): PaneSpec[] {
 }
 
 function stubPointerCapture(el: HTMLElement): void {
-  (el as HTMLElement & { setPointerCapture?: (id: number) => void }).setPointerCapture =
-    (): void => undefined;
+  (el as HTMLElement & { setPointerCapture?: (id: number) => void }).setPointerCapture = (): void =>
+    undefined;
   (el as HTMLElement & { releasePointerCapture?: (id: number) => void }).releasePointerCapture =
     (): void => undefined;
   (el as HTMLElement & { hasPointerCapture?: (id: number) => boolean }).hasPointerCapture =
@@ -79,9 +79,9 @@ describe('MultiPane', () => {
 
   it('defaults direction to horizontal with vertical separators', () => {
     const { container } = render(<MultiPane panes={makePanes()} />);
-    expect(container.querySelector('[data-cir-component="MultiPane"]')?.getAttribute('data-direction')).toBe(
-      'horizontal',
-    );
+    expect(
+      container.querySelector('[data-cir-component="MultiPane"]')?.getAttribute('data-direction'),
+    ).toBe('horizontal');
     const handle = container.querySelector('[data-cir-part="multipane-handle"]');
     expect(handle?.getAttribute('aria-orientation')).toBe('vertical');
   });
@@ -95,7 +95,9 @@ describe('MultiPane', () => {
   it('drag updates pane sizes (left grows, right shrinks)', () => {
     const onResize = vi.fn();
     const { container } = render(<MultiPane panes={makePanes()} onResize={onResize} />);
-    const handle = container.querySelectorAll('[data-cir-part="multipane-handle"]')[0] as HTMLDivElement;
+    const handle = container.querySelectorAll(
+      '[data-cir-part="multipane-handle"]',
+    )[0] as HTMLDivElement;
     stubPointerCapture(handle);
     fireEvent.pointerDown(handle, { pointerId: 1, clientX: 200, clientY: 50 });
     fireEvent.pointerMove(handle, { pointerId: 1, clientX: 250, clientY: 50 });
@@ -109,7 +111,9 @@ describe('MultiPane', () => {
   it('clamps drag to the left pane minSize', () => {
     const onResize = vi.fn();
     const { container } = render(<MultiPane panes={makePanes()} onResize={onResize} />);
-    const handle = container.querySelectorAll('[data-cir-part="multipane-handle"]')[0] as HTMLDivElement;
+    const handle = container.querySelectorAll(
+      '[data-cir-part="multipane-handle"]',
+    )[0] as HTMLDivElement;
     stubPointerCapture(handle);
     fireEvent.pointerDown(handle, { pointerId: 1, clientX: 200, clientY: 50 });
     // Drag 1000 px to the left — sidebar should clamp at minSize=100.
@@ -122,7 +126,9 @@ describe('MultiPane', () => {
   it('clamps drag to the left pane maxSize', () => {
     const onResize = vi.fn();
     const { container } = render(<MultiPane panes={makePanes()} onResize={onResize} />);
-    const handle = container.querySelectorAll('[data-cir-part="multipane-handle"]')[0] as HTMLDivElement;
+    const handle = container.querySelectorAll(
+      '[data-cir-part="multipane-handle"]',
+    )[0] as HTMLDivElement;
     stubPointerCapture(handle);
     fireEvent.pointerDown(handle, { pointerId: 1, clientX: 200, clientY: 50 });
     // Drag 1000 px to the right — sidebar should clamp at maxSize=400.
@@ -143,7 +149,9 @@ describe('MultiPane', () => {
       { id: 'thread', label: 'Thread', defaultSize: 300, minSize: 200, pane: <div>t</div> },
     ];
     const { container } = render(<MultiPane panes={panes} onResize={onResize} />);
-    const handle = container.querySelectorAll('[data-cir-part="multipane-handle"]')[0] as HTMLDivElement;
+    const handle = container.querySelectorAll(
+      '[data-cir-part="multipane-handle"]',
+    )[0] as HTMLDivElement;
     stubPointerCapture(handle);
     // sidebar=200, main=600. main.minSize=200. Dragging the handle right by
     // 500px would shrink main to 100 — should clamp so main stays at 200.
@@ -165,10 +173,10 @@ describe('MultiPane', () => {
     ) as HTMLButtonElement;
     expect(collapseBtn).toBeTruthy();
     fireEvent.click(collapseBtn);
-    expect(onCollapseChange).toHaveBeenCalledWith(
-      expect.objectContaining({ thread: true }),
-    );
-    expect(container.querySelector('[data-cir-part="multipane-rail"][data-pane="thread"]')).toBeTruthy();
+    expect(onCollapseChange).toHaveBeenCalledWith(expect.objectContaining({ thread: true }));
+    expect(
+      container.querySelector('[data-cir-part="multipane-rail"][data-pane="thread"]'),
+    ).toBeTruthy();
     // The pane content node should no longer be in the tree (rail replaced it).
     expect(
       container.querySelector('[data-cir-part="multipane-pane"][data-pane="thread"]'),
@@ -197,7 +205,9 @@ describe('MultiPane', () => {
 
   it('persists sizes to localStorage when storageKey is set', () => {
     const { container } = render(<MultiPane panes={makePanes()} storageKey="ws.layout" />);
-    const handle = container.querySelectorAll('[data-cir-part="multipane-handle"]')[0] as HTMLDivElement;
+    const handle = container.querySelectorAll(
+      '[data-cir-part="multipane-handle"]',
+    )[0] as HTMLDivElement;
     stubPointerCapture(handle);
     fireEvent.pointerDown(handle, { pointerId: 1, clientX: 200, clientY: 50 });
     fireEvent.pointerMove(handle, { pointerId: 1, clientX: 280, clientY: 50 });
@@ -239,10 +249,7 @@ describe('MultiPane', () => {
   });
 
   it('reads persisted collapsed state on mount', () => {
-    window.localStorage.setItem(
-      'ws.layout.collapsed',
-      JSON.stringify({ thread: true }),
-    );
+    window.localStorage.setItem('ws.layout.collapsed', JSON.stringify({ thread: true }));
     const { container } = render(<MultiPane panes={makePanes()} storageKey="ws.layout" />);
     expect(
       container.querySelector('[data-cir-part="multipane-rail"][data-pane="thread"]'),
@@ -299,7 +306,9 @@ describe('MultiPane', () => {
   it('pointer move without prior pointer down does nothing', () => {
     const onResize = vi.fn();
     const { container } = render(<MultiPane panes={makePanes()} onResize={onResize} />);
-    const handle = container.querySelectorAll('[data-cir-part="multipane-handle"]')[0] as HTMLDivElement;
+    const handle = container.querySelectorAll(
+      '[data-cir-part="multipane-handle"]',
+    )[0] as HTMLDivElement;
     fireEvent.pointerMove(handle, { pointerId: 1, clientX: 700, clientY: 50 });
     expect(onResize).not.toHaveBeenCalled();
   });

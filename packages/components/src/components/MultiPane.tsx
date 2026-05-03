@@ -84,14 +84,7 @@
  * Two children is the practical floor (one would degenerate to a single
  * pane); the upper bound is open. Manifest authors typically wire 3 or 4.
  */
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { readPersistedJson, writePersistedJson } from '../lib/persisted-state.js';
 
@@ -178,7 +171,8 @@ function mergeSizes(
   const out: Record<string, number> = {};
   for (const p of panes) {
     const stored = persisted[p.id];
-    out[p.id] = typeof stored === 'number' && stored > 0 ? stored : (p.defaultSize ?? DEFAULT_PANE_SIZE);
+    out[p.id] =
+      typeof stored === 'number' && stored > 0 ? stored : (p.defaultSize ?? DEFAULT_PANE_SIZE);
   }
   return out;
 }
@@ -239,16 +233,13 @@ export function MultiPane({
   // offset and the snapshot of the two affected pane sizes. Refs (not
   // useState) so a pointermove fires immediately without a re-render in
   // between to install the new value.
-  const dragRef = useRef<
-    | {
-        leftId: string;
-        rightId: string;
-        startCoord: number;
-        startLeft: number;
-        startRight: number;
-      }
-    | null
-  >(null);
+  const dragRef = useRef<{
+    leftId: string;
+    rightId: string;
+    startCoord: number;
+    startLeft: number;
+    startRight: number;
+  } | null>(null);
 
   const onResizeRef = useRef(onResize);
   onResizeRef.current = onResize;
@@ -452,30 +443,31 @@ export function MultiPane({
       {slots.map((slot, idx) => {
         if (slot.kind === 'pane') {
           const p = slot.pane;
-          const collapseControl = p.collapsible === true ? (
-            <button
-              type="button"
-              data-cir-part="multipane-collapse"
-              data-pane={p.id}
-              aria-label={`Collapse ${p.label ?? p.id}`}
-              onClick={() => {
-                toggleCollapsed(p.id);
-              }}
-              style={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                background: 'transparent',
-                border: 0,
-                cursor: 'pointer',
-                fontSize: 12,
-                lineHeight: 1,
-                padding: 2,
-              }}
-            >
-              {direction === 'horizontal' ? '◀' : '▲'}
-            </button>
-          ) : null;
+          const collapseControl =
+            p.collapsible === true ? (
+              <button
+                type="button"
+                data-cir-part="multipane-collapse"
+                data-pane={p.id}
+                aria-label={`Collapse ${p.label ?? p.id}`}
+                onClick={() => {
+                  toggleCollapsed(p.id);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  right: 4,
+                  background: 'transparent',
+                  border: 0,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  lineHeight: 1,
+                  padding: 2,
+                }}
+              >
+                {direction === 'horizontal' ? '◀' : '▲'}
+              </button>
+            ) : null;
           return (
             <div
               key={`pane-${p.id}`}

@@ -84,16 +84,8 @@ export type { SplitProps } from './components/Split.js';
 // `<Sidebar>` (Nav-2) uses; the host-facing `usePersistedState` hook in
 // `@atelier/react` is the richer (session/local/vault) surface for the
 // same concern.
-export {
-  MultiPane,
-  MultiPaneBinding,
-  multiPaneTextRender,
-} from './components/MultiPane.js';
-export type {
-  MultiPaneProps,
-  MultiPaneDirection,
-  PaneSpec,
-} from './components/MultiPane.js';
+export { MultiPane, MultiPaneBinding, multiPaneTextRender } from './components/MultiPane.js';
+export type { MultiPaneProps, MultiPaneDirection, PaneSpec } from './components/MultiPane.js';
 
 // -----------------------------------------------------------------------------
 // Display
