@@ -36,6 +36,7 @@ import { ChatThreadBinding } from './components/ChatThread.js';
 import { CodeEditorBinding } from './components/CodeEditor.js';
 import { CodeViewBinding } from './components/CodeView.js';
 import { CommandPaletteBinding } from './components/CommandPalette.js';
+import { ConfettiBinding } from './components/Confetti.js';
 import { ConfirmDialogBinding } from './components/ConfirmDialog.js';
 import { ContainerBinding } from './components/Container.js';
 import { DateInputBinding } from './components/DateInput.js';
@@ -91,6 +92,8 @@ import { TimelineBinding } from './components/Timeline.js';
 import { ToastBinding } from './components/Toast.js';
 import { ToggleBinding } from './components/Toggle.js';
 import { TooltipBinding } from './components/Tooltip.js';
+import { TourProgressBinding } from './components/TourProgress.js';
+import { TourStepBinding } from './components/TourStep.js';
 import { TreeBinding } from './components/Tree.js';
 import { WizardBinding } from './components/Wizard.js';
 
@@ -113,6 +116,7 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   CodeEditor: CodeEditorBinding,
   CodeView: CodeViewBinding,
   CommandPalette: CommandPaletteBinding,
+  Confetti: ConfettiBinding,
   ConfirmDialog: ConfirmDialogBinding,
   Container: ContainerBinding,
   DateInput: DateInputBinding,
@@ -168,6 +172,12 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Toast: ToastBinding,
   Toggle: ToggleBinding,
   Tooltip: TooltipBinding,
+  // Wave 11 / Int-5 — onboarding microinteractions. `<TourStep>` overlays a
+  // highlight ring + tooltip card around a target element; `<TourProgress>`
+  // shows step N of M as dots / bar / fraction. Pair them with `<Confetti>`
+  // (above) for the celebratory micro-moment on tour completion.
+  TourProgress: TourProgressBinding,
+  TourStep: TourStepBinding,
   Tree: TreeBinding,
   // Wave 10 / S-2 — virtualized variants of List + Table for high-cardinality
   // data. Forced by `composes_hierarchy_for_long_lists` when the bound

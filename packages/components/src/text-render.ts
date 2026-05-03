@@ -31,6 +31,7 @@ import { codeBlockTextRender } from './components/CodeBlock.js';
 import { codeEditorTextRender } from './components/CodeEditor.js';
 import { codeViewTextRender } from './components/CodeView.js';
 import { commandPaletteTextRender } from './components/CommandPalette.js';
+import { confettiTextRender } from './components/Confetti.js';
 import { confirmDialogTextRender } from './components/ConfirmDialog.js';
 import { containerTextRender } from './components/Container.js';
 import { dateInputTextRender } from './components/DateInput.js';
@@ -83,6 +84,8 @@ import { timelineTextRender } from './components/Timeline.js';
 import { toastTextRender } from './components/Toast.js';
 import { toggleTextRender } from './components/Toggle.js';
 import { tooltipTextRender } from './components/Tooltip.js';
+import { tourProgressTextRender } from './components/TourProgress.js';
+import { tourStepTextRender } from './components/TourStep.js';
 import { treeTextRender } from './components/Tree.js';
 import { virtualListTextRender } from './components/VirtualList.js';
 import { virtualTableTextRender } from './components/VirtualTable.js';
@@ -110,6 +113,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   CodeEditor: codeEditorTextRender as TextRenderer,
   CodeView: codeViewTextRender as TextRenderer,
   CommandPalette: commandPaletteTextRender as TextRenderer,
+  Confetti: confettiTextRender as TextRenderer,
   ConfirmDialog: confirmDialogTextRender as TextRenderer,
   Container: containerTextRender as TextRenderer,
   DateInput: dateInputTextRender as TextRenderer,
@@ -163,6 +167,9 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Toast: toastTextRender as TextRenderer,
   Toggle: toggleTextRender as TextRenderer,
   Tooltip: tooltipTextRender as TextRenderer,
+  // Wave 11 / Int-5 — onboarding microinteractions.
+  TourProgress: tourProgressTextRender as TextRenderer,
+  TourStep: tourStepTextRender as TextRenderer,
   Tree: treeTextRender as TextRenderer,
   // Wave 10 / S-2 — virtualized list + table primitives.
   VirtualList: virtualListTextRender as TextRenderer,

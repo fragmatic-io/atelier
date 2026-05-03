@@ -28,6 +28,7 @@ const EXPECTED = [
   'CodeEditor',
   'CodeView',
   'CommandPalette',
+  'Confetti',
   'ConfirmDialog',
   'Container',
   'DateInput',
@@ -80,6 +81,10 @@ const EXPECTED = [
   'Toast',
   'Toggle',
   'Tooltip',
+  // Wave 11 / Int-5 — `<TourProgress>` / `<TourStep>` ship alongside
+  // `<Confetti>` (sorted in above between `CommandPalette` + `ConfirmDialog`).
+  'TourProgress',
+  'TourStep',
   'Tree',
   'VirtualList',
   'VirtualTable',
@@ -87,7 +92,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 74 baseline components', () => {
+  it('contains exactly the 77 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -106,7 +111,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 74 ids', () => {
+  it('list() reports all 77 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -224,6 +229,10 @@ describe('COMPOSITION_RULES', () => {
       'VirtualTable',
       // Wave 11 / Cnt-9 — ActivityFeed renders typed events from props.
       'ActivityFeed',
+      // Wave 11 / Int-5 — onboarding microinteractions. All three are leaves.
+      'TourStep',
+      'TourProgress',
+      'Confetti',
     ] as const) {
       expect(COMPOSITION_RULES[leaf]?.can_contain).toBe('leaf');
     }

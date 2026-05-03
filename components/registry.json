@@ -161,6 +161,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "Confetti": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "ConfettiProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "ConfirmDialog": {
     "actions_supported": [],
     "data_sources": [],
@@ -630,6 +639,24 @@
     "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "TooltipProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "TourProgress": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "TourProgressProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "TourStep": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "TourStepProps",
     "responsive_targets": ["web"],
     "text_render": true
   },

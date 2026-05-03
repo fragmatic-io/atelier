@@ -54,6 +54,9 @@
   "CommandPalette": {
     "can_contain": "leaf"
   },
+  "Confetti": {
+    "can_contain": "leaf"
+  },
   "ConfirmDialog": {
     "can_contain": "leaf"
   },
@@ -223,6 +226,12 @@
     "can_contain": "*",
     "max_children": 1,
     "min_children": 1
+  },
+  "TourProgress": {
+    "can_contain": "leaf"
+  },
+  "TourStep": {
+    "can_contain": "leaf"
   },
   "Tree": {
     "can_contain": "leaf"

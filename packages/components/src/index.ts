@@ -531,6 +531,36 @@ export type { KanbanProps, KanbanColumn, KanbanCard } from './components/Kanban.
 export { ChatThread, ChatThreadBinding } from './components/ChatThread.js';
 export type { ChatThreadProps, ChatMessage, ChatRole } from './components/ChatThread.js';
 
+// Wave 11 / Int-5 — onboarding microinteractions. `<TourStep>` is the
+// contextual highlight + tooltip card; `<TourProgress>` is the dots / bar /
+// fraction "step N of M" strip; `<Confetti>` is the CSS-only celebration
+// burst (reduced-motion collapses to onDone-only). All three are leaves —
+// the host orchestrates which step shows / when to celebrate.
+export {
+  TourStep,
+  TourStepBinding,
+  tourStepTextRender,
+  computeCardPosition as computeTourCardPosition,
+  pickAutoPlacement as pickTourAutoPlacement,
+  resolveTargetRect as resolveTourTargetRect,
+} from './components/TourStep.js';
+export type { TourStepProps, TourStepPlacement } from './components/TourStep.js';
+
+export {
+  TourProgress,
+  TourProgressBinding,
+  tourProgressTextRender,
+} from './components/TourProgress.js';
+export type { TourProgressProps, TourProgressVariant } from './components/TourProgress.js';
+
+export {
+  Confetti,
+  ConfettiBinding,
+  confettiTextRender,
+  buildParticles as buildConfettiParticles,
+} from './components/Confetti.js';
+export type { ConfettiProps } from './components/Confetti.js';
+
 // -----------------------------------------------------------------------------
 // Icons (Wave 7b / Vis-3) — `<Icon>` plus the host-pluggable resolver
 // protocol. Atelier ships zero icon packs; hosts implement `IconResolver` and

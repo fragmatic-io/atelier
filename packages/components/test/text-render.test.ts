@@ -177,6 +177,10 @@ describe('TEXT_RENDERERS', () => {
         rows: [{ k: 'v' }, { k: 'w' }],
         total: 1000,
       },
+      // Wave 11 / Int-5 — onboarding microinteractions.
+      TourStep: { target: '#x', title: 'Welcome', step: 1, totalSteps: 3 },
+      TourProgress: { current: 2, total: 5 },
+      Confetti: { active: true },
     };
 
     for (const [id, renderer] of Object.entries(TEXT_RENDERERS)) {

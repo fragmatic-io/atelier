@@ -169,4 +169,12 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   // payload toggles render `<DiffView>` and a JSON `<pre>` inline; manifest
   // authors do not embed manifest-level children.
   ActivityFeed: { can_contain: 'leaf' },
+  // Wave 11 / Int-5 — onboarding microinteractions. All three are leaves:
+  // TourStep renders its title / description / footer from props; TourProgress
+  // renders dots / bar / fraction from current + total; Confetti owns its
+  // particle DOM internally. Manifest authors do not embed children inside
+  // any of them.
+  TourStep: { can_contain: 'leaf' },
+  TourProgress: { can_contain: 'leaf' },
+  Confetti: { can_contain: 'leaf' },
 });
