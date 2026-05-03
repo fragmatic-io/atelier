@@ -161,7 +161,14 @@ export { useHighlightedCode } from './code/use-highlighted.js';
 export type { HighlightedCodeState } from './code/use-highlighted.js';
 
 export { DiffView, DiffViewBinding } from './components/DiffView.js';
-export type { DiffViewProps, DiffHunk, DiffKind } from './components/DiffView.js';
+export type {
+  DiffViewProps,
+  DiffHunk,
+  DiffKind,
+  DiffKindInput,
+  DiffLine,
+  LegacyDiffRow,
+} from './components/DiffView.js';
 
 export { Map, MapBinding } from './components/Map.js';
 export type { MapProps, MapMarker } from './components/Map.js';
