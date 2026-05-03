@@ -55,6 +55,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright chromium (for rehype-mermaid SVG render)
+        # rehype-mermaid's `inline-svg` strategy renders mermaid → SVG via a
+        # headless chromium at build time. Without this step the docs build
+        # fails with "Executable doesn't exist at .../chrome-headless-shell".
+        run: pnpm --filter @atelier/docs exec playwright install --with-deps chromium
+
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
