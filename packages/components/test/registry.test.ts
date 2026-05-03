@@ -39,6 +39,7 @@ const EXPECTED = [
   'EmptyState',
   'FileUpload',
   'FilterBar',
+  'FilterQueryBar',
   'Form',
   'Gallery',
   'Grid',
@@ -65,6 +66,7 @@ const EXPECTED = [
   'ScopeSwitcher',
   'Search',
   'Select',
+  'SelectionActionBar',
   'SettingsSearch',
   'Sidebar',
   'Skeleton',
@@ -94,7 +96,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 79 baseline components', () => {
+  it('contains exactly the 81 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -113,7 +115,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 79 ids', () => {
+  it('list() reports all 81 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 

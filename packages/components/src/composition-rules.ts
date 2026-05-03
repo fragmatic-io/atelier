@@ -106,6 +106,13 @@ export const COMPOSITION_RULES: Readonly<Record<string, CompositionRule>> = Obje
   Wizard: { can_contain: 'leaf' },
   // FilterBar renders its controls from the `filters` prop.
   FilterBar: { can_contain: 'leaf' },
+  // Wave 11 / Nav-6 — `<FilterQueryBar>` renders chips + an input from
+  // its `value`/`defaultValue` + `fields` props. No manifest-level children.
+  FilterQueryBar: { can_contain: 'leaf' },
+  // Wave 11 / AI-1 — `<SelectionActionBar>` mounts a floating toolbar above
+  // the active selection. Action labels + capabilities come from the
+  // `actions` prop; manifest authors do not embed children.
+  SelectionActionBar: { can_contain: 'leaf' },
   // KPIRow renders its tiles from the `stats` prop (StatCard reuse).
   KPIRow: { can_contain: 'leaf' },
   // Gallery renders its figures from the `items` prop.

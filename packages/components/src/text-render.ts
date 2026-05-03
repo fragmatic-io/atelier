@@ -42,6 +42,7 @@ import { dropZoneTextRender } from './components/DropZone.js';
 import { emptyStateTextRender } from './components/EmptyState.js';
 import { fileUploadTextRender } from './components/FileUpload.js';
 import { filterBarTextRender } from './components/FilterBar.js';
+import { filterQueryBarTextRender } from './components/FilterQueryBar.js';
 import { formTextRender } from './components/Form.js';
 import { galleryTextRender } from './components/Gallery.js';
 import { gridTextRender } from './components/Grid.js';
@@ -68,6 +69,7 @@ import { richTextTextRender } from './components/RichText.js';
 import { scopeSwitcherTextRender } from './components/ScopeSwitcher.js';
 import { searchTextRender } from './components/Search.js';
 import { selectTextRender } from './components/Select.js';
+import { selectionActionBarTextRender } from './components/SelectionActionBar.js';
 import { settingsSearchTextRender } from './components/SettingsSearch.js';
 import { sidebarTextRender } from './components/Sidebar.js';
 import { skeletonTextRender } from './components/Skeleton.js';
@@ -127,6 +129,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   EmptyState: emptyStateTextRender as TextRenderer,
   FileUpload: fileUploadTextRender as TextRenderer,
   FilterBar: filterBarTextRender as TextRenderer,
+  FilterQueryBar: filterQueryBarTextRender as TextRenderer,
   Form: formTextRender as TextRenderer,
   Gallery: galleryTextRender as TextRenderer,
   Grid: gridTextRender as TextRenderer,
@@ -153,6 +156,7 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   ScopeSwitcher: scopeSwitcherTextRender as TextRenderer,
   Search: searchTextRender as TextRenderer,
   Select: selectTextRender as TextRenderer,
+  SelectionActionBar: selectionActionBarTextRender as TextRenderer,
   SettingsSearch: settingsSearchTextRender as TextRenderer,
   Sidebar: sidebarTextRender as TextRenderer,
   Skeleton: skeletonTextRender as TextRenderer,

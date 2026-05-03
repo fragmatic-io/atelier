@@ -90,6 +90,9 @@
   "FilterBar": {
     "can_contain": "leaf"
   },
+  "FilterQueryBar": {
+    "can_contain": "leaf"
+  },
   "Form": {
     "can_contain": "*"
   },
@@ -170,6 +173,9 @@
     "can_contain": "leaf"
   },
   "Select": {
+    "can_contain": "leaf"
+  },
+  "SelectionActionBar": {
     "can_contain": "leaf"
   },
   "SettingsSearch": {

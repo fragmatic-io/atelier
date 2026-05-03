@@ -64,6 +64,9 @@ describe('TEXT_RENDERERS', () => {
         filters: [{ id: 'q', label: 'Query', type: 'search' }],
         onChange: () => undefined,
       },
+      FilterQueryBar: {
+        fields: [{ key: 'assignee' }],
+      },
       Form: { onSubmit: () => undefined },
       Gallery: {
         items: [{ id: '1', src: 'a.png', alt: 'A' }],
@@ -108,6 +111,7 @@ describe('TEXT_RENDERERS', () => {
         onChange: () => undefined,
       },
       Search: { value: 'tea', onChange: () => undefined },
+      SelectionActionBar: {},
       SettingsSearch: {
         items: [{ id: 'billing', label: 'Billing', href: '/settings/billing' }],
         onSelect: () => undefined,

@@ -432,6 +432,40 @@ export type {
   FilterType,
 } from './components/FilterBar.js';
 
+// Wave 11 / Nav-6 — Linear-style filter syntax bar. Renders `field:value`
+// tokens as inline chips as the user types; pure parser exposed as
+// `parseFilterQuery(query, fields)` for headless / server-side use.
+export {
+  FilterQueryBar,
+  FilterQueryBarBinding,
+  filterQueryBarTextRender,
+  parseFilterQuery,
+  formatFilterChip,
+} from './components/FilterQueryBar.js';
+export type {
+  FilterQueryBarProps,
+  FilterField,
+  ParsedFilter,
+  ParsedFilterOp,
+  ParseFilterQueryResult,
+} from './components/FilterQueryBar.js';
+
+// Wave 11 / AI-1 — "Ask AI" floating selection toolbar. Mounts above the
+// active selection inside a `data-cir-ai-selectable="true"` subtree (or
+// the supplied `container`) and dispatches `ai.<id>` capabilities with
+// the selected text + surface id.
+export {
+  SelectionActionBar,
+  SelectionActionBarBinding,
+  selectionActionBarTextRender,
+  DEFAULT_AI_SELECTION_ACTIONS,
+} from './components/SelectionActionBar.js';
+export type {
+  SelectionActionBarProps,
+  SelectionAction,
+  SelectionActionDispatcher,
+} from './components/SelectionActionBar.js';
+
 export { KPIRow, KPIRowBinding } from './components/KPIRow.js';
 export type { KPIRowProps, KPIStat } from './components/KPIRow.js';
 

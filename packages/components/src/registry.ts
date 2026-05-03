@@ -47,6 +47,7 @@ import { DropZoneBinding } from './components/DropZone.js';
 import { EmptyStateBinding } from './components/EmptyState.js';
 import { FileUploadBinding } from './components/FileUpload.js';
 import { FilterBarBinding } from './components/FilterBar.js';
+import { FilterQueryBarBinding } from './components/FilterQueryBar.js';
 import { FormBinding } from './components/Form.js';
 import { GalleryBinding } from './components/Gallery.js';
 import { GridBinding } from './components/Grid.js';
@@ -73,6 +74,7 @@ import { RichTextBinding } from './components/RichText.js';
 import { ScopeSwitcherBinding } from './components/ScopeSwitcher.js';
 import { SearchBinding } from './components/Search.js';
 import { SelectBinding } from './components/Select.js';
+import { SelectionActionBarBinding } from './components/SelectionActionBar.js';
 import { SettingsSearchBinding } from './components/SettingsSearch.js';
 import { SidebarBinding } from './components/Sidebar.js';
 import { SkeletonBinding } from './components/Skeleton.js';
@@ -132,6 +134,10 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   EmptyState: EmptyStateBinding,
   FileUpload: FileUploadBinding,
   FilterBar: FilterBarBinding,
+  // Wave 11 / Nav-6 — Linear-style filter syntax bar (`assignee:me priority:high`).
+  // The user types `field:value` tokens and each completed token becomes
+  // an inline chip; free text after the last token flows to `onTextChange`.
+  FilterQueryBar: FilterQueryBarBinding,
   Form: FormBinding,
   Gallery: GalleryBinding,
   Grid: GridBinding,
@@ -158,6 +164,10 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   ScopeSwitcher: ScopeSwitcherBinding,
   Search: SearchBinding,
   Select: SelectBinding,
+  // Wave 11 / AI-1 — "Ask AI" floating toolbar above the active text
+  // selection. Default actions (Summarize / Improve / Translate / Ask AI)
+  // dispatch `ai.<id>` capabilities with the selected text + surface id.
+  SelectionActionBar: SelectionActionBarBinding,
   SettingsSearch: SettingsSearchBinding,
   Sidebar: SidebarBinding,
   Skeleton: SkeletonBinding,

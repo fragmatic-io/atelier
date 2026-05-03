@@ -260,6 +260,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "FilterQueryBar": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "FilterQueryBarProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "Form": {
     "actions_supported": [],
     "data_sources": [],
@@ -495,6 +504,15 @@
     "design_tokens": "@atelier/components/baseline@0.1.0",
     "examples": [],
     "props_schema": "SelectProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
+  "SelectionActionBar": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "SelectionActionBarProps",
     "responsive_targets": ["web"],
     "text_render": true
   },
