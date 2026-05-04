@@ -167,6 +167,7 @@ describe('ToolUsingCompiler', () => {
       'validateDraft',
       'inspectExistingManifest',
       'listSiblingRoutes',
+      'findRecipe',
     ]);
   });
 

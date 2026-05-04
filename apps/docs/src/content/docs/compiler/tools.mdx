@@ -18,11 +18,11 @@ The tool-using compiler exposes nine tools to the LLM agent. The agent calls the
 | `validateDraft`           | Run the draft manifest through the policy engine; return ok or violations. | C-2   |
 | `inspectExistingManifest` | Read a prior manifest for the same user/route (cross-route coherence).     | C-2   |
 | `listSiblingRoutes`       | List the other routes in the recipe (so chrome / nav stay consistent).     | C-2   |
+| `findRecipe`              | Retrieve persona/recipe scaffolds via `@atelier/recipe-resolver`.          | C-5   |
 
-Two more are deferred:
+One more is deferred:
 
 - `explainViolation` — rolled into the violation strings the validator already returns.
-- `findRecipe` — gated on V-6 / C-5 (marketplace retrieval).
 
 ## The `ToolEnvironment` interface
 

@@ -20,6 +20,7 @@
     "@atelier/keyboard": "workspace:*",
     "@atelier/policies": "workspace:*",
     "@atelier/react": "workspace:*",
+    "@atelier/recipe-resolver": "workspace:*",
     "@atelier/runtime": "workspace:*",
     "@atelier/schemas": "workspace:*",
     "@atelier/vault-client": "workspace:*",

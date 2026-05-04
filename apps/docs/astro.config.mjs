@@ -142,6 +142,7 @@ export default defineConfig({
             { label: 'Tools', link: '/compiler/tools' },
             { label: 'Validation feedback', link: '/compiler/validation-feedback' },
             { label: 'Capability scoping', link: '/compiler/capability-scoping' },
+            { label: 'Recipe RAG', link: '/compiler/recipe-rag' },
             { label: 'Budget enforcement', link: '/compiler/budget' },
           ],
         },

@@ -44,6 +44,7 @@ export default {
         'react',
         'data-resolvers',
         'capability-resolver',
+        'recipe-resolver',
         'vault-server',
         'vault-client',
         'marketing',

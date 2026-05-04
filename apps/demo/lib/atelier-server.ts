@@ -26,8 +26,11 @@ import {
   type CompileCapabilityResolver,
   type CompilerService,
   type ManifestStore,
+  type RecipeResolverLike,
 } from '@atelier/compiler';
 import { SubstringCapabilityResolver } from '@atelier/capability-resolver';
+import { LocalRecipeStore, SubstringRecipeResolver } from '@atelier/recipe-resolver';
+import { join } from 'node:path';
 import type { CompileBudget } from '@atelier/schemas';
 import { SequenceDetector } from '@atelier/policies';
 import { BehavioralTap, StreamingAuditSink } from '@atelier/runtime';
@@ -194,6 +197,33 @@ function buildServer(): CirServer {
   // today's `GeminiCompiler` is. We keep the budget wrap on for parity.
   const useTools = process.env['CIR_COMPILER_TOOLS_ENABLED'] === '1';
 
+  // Wave C / Phase C-5 — opt-in recipe RAG. When the env flag is set,
+  // we wire a `SubstringRecipeResolver` over the in-tree `recipes/`
+  // directory and seed it from `LocalRecipeStore.list()`. The agent's
+  // `findRecipe` tool then routes through this resolver. The substring
+  // baseline is enough for the demo corpus (~2 recipes); production
+  // hosts swap in `EmbeddingRecipeResolver` over a real embedding
+  // client. Default boot is unchanged — the tool returns
+  // `{ recipes: [] }` when no resolver is wired.
+  const useRecipeRag = process.env['CIR_RECIPE_RAG_ENABLED'] === '1';
+  let recipeResolver: RecipeResolverLike | undefined;
+  if (useRecipeRag) {
+    const recipesDir = join(process.cwd(), 'recipes');
+    const store = new LocalRecipeStore({ directory: recipesDir });
+    const resolver = new SubstringRecipeResolver();
+    // Fire-and-forget seed — the agent's first `findRecipe` call may
+    // race the seed; the substring resolver simply returns `[]` until
+    // the index is populated (acceptable for a dev/demo wiring).
+    void store
+      .list()
+      .then((recipes) => resolver.index(recipes))
+      .catch((err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.warn('[cir] recipe-rag: failed to seed LocalRecipeStore', err);
+      });
+    recipeResolver = resolver;
+  }
+
   const compilers: CompilerService[] = [];
   if (geminiAvailable) {
     const llmCompiler: CompilerService = useTools
@@ -210,6 +240,7 @@ function buildServer(): CirServer {
           env: {
             capabilities: CAPABILITIES,
             components,
+            ...(recipeResolver !== undefined ? { recipeResolver } : {}),
           },
           onToolCall: (call) => {
             // eslint-disable-next-line no-console

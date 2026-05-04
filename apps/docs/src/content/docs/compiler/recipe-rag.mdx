@@ -1,0 +1,140 @@
+---
+title: Recipe RAG (C-5)
+description: Retrieve persona-tuned manifest scaffolds via @atelier/recipe-resolver and the findRecipe tool.
+---
+
+C-2 shipped the tool-using compiler with one seam reserved for marketplace retrieval: `findRecipe`. C-5 fills that seam — recipes are vector-indexed by description / domain / brand fit, and the compiler agent calls `findRecipe(query, topN)` to ground composition on a known persona scaffold before drafting the manifest.
+
+The package solves the same problem as `@atelier/capability-resolver` (S-1 / S-7) on a different corpus. The two stories rhyme deliberately — a host that wires one wires the other almost the same way.
+
+## The package
+
+`@atelier/recipe-resolver` ships:
+
+- `RecipeResolver` — abstract retrieval contract.
+- `SubstringRecipeResolver` — fast, free, no LLM. Exact id / prefix / substring / domain / brand-id match. Baseline + fallback.
+- `EmbeddingRecipeResolver` — embeddings over the recipe's description + domain + intent surface texts; brand-fit acts as a re-ranking signal. Substring fallback on embedding failure.
+- `LocalRecipeStore` — file-system-backed `RecipeStore` for the in-tree `recipes/` directory. V-6's marketplace store will swap in when it ships.
+
+```ts
+export interface RecipeResolver {
+  readonly id: string;
+  resolve(query: RecipeQuery): Promise<RecipeResolverResult>;
+  index(recipes: readonly Recipe[]): Promise<void>;
+}
+
+export interface RecipeQuery {
+  routeId?: string;
+  intent?: IntentProfile;
+  brandKitId?: string;
+  domain?: string;
+  text?: string;
+  topN?: number; // default 5
+}
+
+export interface RecipeResolverResult {
+  recipes: Recipe[];
+  scores?: number[];
+}
+```
+
+## The recipe store seam
+
+Recipes are loaded via a host-supplied `RecipeStore` so the resolver doesn't bake in a filesystem / HTTP loader.
+
+```ts
+export interface RecipeStore {
+  list(): Promise<readonly Recipe[]>;
+  get(id: string): Promise<Recipe | null>;
+}
+```
+
+Two recipe shapes are accepted by `LocalRecipeStore`:
+
+1. **Wrapped** — `{ id, description, domain, brand_kit_id, intent_surfaces, manifest }`. Used by hosts that want full control over the recipe metadata.
+2. **Manifest with sidecar** — a flat `Manifest`-shaped JSON, alongside an optional `<id>.meta.json` that supplies the description / domain / brand / surfaces. The manifest body is preserved as the recipe's `manifest` field.
+
+V-6's marketplace store swaps `LocalRecipeStore` for an HTTP-backed implementation; the resolver and the compiler tool don't notice.
+
+## Wiring the compiler
+
+`ToolEnvironment.recipeResolver` is the seam the compiler routes `findRecipe` through. Pass a built resolver:
+
+```ts
+import { EmbeddingRecipeResolver, LocalRecipeStore } from '@atelier/recipe-resolver';
+
+const store = new LocalRecipeStore({ directory: '/abs/path/to/recipes' });
+const resolver = new EmbeddingRecipeResolver({ client: yourEmbeddingClient });
+await resolver.index(await store.list());
+
+const compiler = new ToolUsingCompiler({
+  inner: geminiAgentClient,
+  env: {
+    capabilities,
+    components,
+    recipeResolver: resolver,
+  },
+});
+```
+
+When no `recipeResolver` is supplied, the `findRecipe` tool returns `{ recipes: [] }` — the compiler degrades gracefully (mirrors `inspectExistingManifest` / `listSiblingRoutes`).
+
+## The `findRecipe` tool
+
+The compiler agent sees a single new tool:
+
+| Tool         | Purpose                                                                                     | Phase |
+| ------------ | ------------------------------------------------------------------------------------------- | ----- |
+| `findRecipe` | Retrieve persona/recipe scaffolds matching the query (route + intent + domain + brand fit). | C-5   |
+
+The tool returns a **slim projection** — `{ id, description, brand_kit_id, intent_surfaces, domain }` — _not_ the full recipe. The full `manifest` body stays on the host; the compiler passes only the metadata the agent needs to pick a scaffold. This keeps the agent's context budget under control even for large recipes.
+
+```ts
+findRecipe: {
+  description: 'Retrieve top-N recipes matching the query (route + intent + domain).',
+  params: { query, topN },
+  call: async (input, ctx) => {
+    if (!ctx.recipeResolver) return { recipes: [] };
+    const r = await ctx.recipeResolver.resolve({ ...input.query, topN: input.topN ?? 5 });
+    return { recipes: r.recipes.map(slim), scores: r.scores };
+  },
+};
+```
+
+## Cascade story
+
+`EmbeddingRecipeResolver` cascades to the substring fallback when:
+
+- The embedding client throws (rate limit, transient transport, abort).
+- The index is empty (cold start before the first `index(...)` call).
+- The topK results reference no recipe in the indexed set (stale index).
+
+Hosts observe failures via the optional `onError` hook (audit / alerting); the cascade itself is automatic.
+
+The `findRecipe` tool layers one more guard: if the resolver throws _despite_ its own fallback, the tool returns `{ recipes: [] }` rather than poisoning the compile.
+
+## When to enable
+
+The `EmbeddingRecipeResolver` requires an embedding pipeline. Hosts that don't have one wire `SubstringRecipeResolver` directly — it scales fine to ~1k recipes, and the compiler agent's slim-projection contract means the substring baseline is rarely the actual bottleneck on accuracy.
+
+The trigger to upgrade to embeddings: **the recipe corpus grows past ~100 entries AND the agent's recipe picks start drifting** (an eval signal — `findRecipe` returning the wrong scaffold for queries the substring resolver should have caught with a richer model).
+
+## V-6 dependency
+
+C-5's TODO note says it depends on V-6 (publish/consume) — the reasoning was "V-6 ships the corpus to index". For this commit, `LocalRecipeStore` is enough: the resolver protocol, the embedding pipeline, and the compiler tool all land. V-6 swaps the `RecipeStore` impl when it ships.
+
+## Demo wiring
+
+Optional, gated behind `CIR_RECIPE_RAG_ENABLED=1`: `apps/demo` instantiates `EmbeddingRecipeResolver` over a `LocalRecipeStore` pointing at the in-tree `recipes/` directory. Default boot is unchanged.
+
+## Testing
+
+- **Substring resolver** — fully deterministic; tests assert top-5 ordering, domain wins, brand-fit re-ranking.
+- **Embedding resolver** — gated behind `CIR_EMBEDDING_TESTS=1` for the real-provider path. Cache + fallback are tested unconditionally with a hand-rolled `EmbeddingClient` stub.
+- **`findRecipe` tool** — drives the full agent loop with a stub `AgentClient` and a structurally-typed `RecipeResolverLike`; asserts the agent receives the slim projection (no `manifest` leak), failures degrade to `{ recipes: [] }`, and the tool reaches the resolver with the right query.
+
+## Next
+
+- [Compiler → Tools](/compiler/tools/) — the existing nine tools the agent calls.
+- [Compiler → Capability scoping](/compiler/capability-scoping/) — the parallel S-1 / S-7 story for capabilities.
+- [Compiler → Validation feedback](/compiler/validation-feedback/) — composes around the tool-using compiler.

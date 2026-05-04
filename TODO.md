@@ -90,7 +90,7 @@ Compile correctness, scope, retrieval. The next architectural moves after C-1 / 
 
 ### P1.2 — Recipe retrieval (RAG)
 
-- [ ] **C-5 — Recipe RAG.** Recipes vector-indexed by description / domain / brand fit. Compiler agent gets a `findRecipe` tool (the seam was reserved during C-2). Same single-agent + tools pattern. **2 wk.** **Depends on V-6 publishing endpoint** (so there's something to index from) — but the plumbing (embedding pipeline, vector store, the tool) can land before V-6 with a local-recipes fixture index.
+- [x] **C-5 — Recipe RAG.** Recipes vector-indexed by description / domain / brand fit. Compiler agent gets a `findRecipe` tool (the seam reserved during C-2). New package `@atelier/recipe-resolver` ships `SubstringRecipeResolver` (baseline + fallback) + `EmbeddingRecipeResolver` (production, with substring fallback on failure) + `LocalRecipeStore` (in-tree fixture loader). V-6 dependency satisfied via `LocalRecipeStore` — V-6's marketplace store swaps in when it ships without changing callers. Demo wiring gated behind `CIR_RECIPE_RAG_ENABLED=1`.
 
 ### P1.3 — Distributed trigger bus
 

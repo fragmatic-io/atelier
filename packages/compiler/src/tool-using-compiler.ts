@@ -67,7 +67,10 @@ import {
 import {
   fallbackFindCapability,
   fallbackFindComponent,
+  slimRecipe,
   type CapabilityRef,
+  type FindRecipeResult,
+  type RecipeQueryLike,
   type RouteOutline,
   type SemanticSearch,
   type ToolEnvironment,
@@ -241,7 +244,7 @@ export class ToolUsingCompiler implements CompilerService {
         // tool against the environment and append the responses.
         contents.push({ role: 'model', toolCalls: turn.toolCalls });
         for (const call of turn.toolCalls) {
-          const result = this.#dispatchTool(call, input, scopedRequest);
+          const result = await this.#dispatchTool(call, input, scopedRequest);
           this.#fireOnToolCall(call, result);
           contents.push({ role: 'tool', name: call.name, response: result });
         }
@@ -271,11 +274,11 @@ export class ToolUsingCompiler implements CompilerService {
   // ---------------------------------------------------------------------------
   // Tool dispatch — each tool is a thin wrapper around `ToolEnvironment`.
 
-  #dispatchTool(
+  async #dispatchTool(
     call: AgentToolCall,
     input: CompileInput,
     scopedRequest?: { capabilities: Readonly<Record<string, Capability>> },
-  ): unknown {
+  ): Promise<unknown> {
     const args = call.args ?? {};
     switch (call.name) {
       case 'lookupCapability':
@@ -312,8 +315,35 @@ export class ToolUsingCompiler implements CompilerService {
         return this.#inspectExistingManifest(asString(args['route']) || input.route);
       case 'listSiblingRoutes':
         return this.#listSiblingRoutes();
+      case 'findRecipe':
+        return this.#findRecipe(args['query'], args['topN']);
       default:
         return { error: `unknown tool: ${call.name}` };
+    }
+  }
+
+  /**
+   * `findRecipe` — the C-5 retrieval tool. Routes through the host's
+   * `recipeResolver`; returns a slim projection (id + description +
+   * brand_kit_id + intent_surfaces + domain) so the agent's context
+   * budget stays small. When no resolver is wired, returns an empty
+   * result so the tool degrades gracefully (parallel to
+   * `inspectExistingManifest` / `listSiblingRoutes`).
+   */
+  async #findRecipe(rawQuery: unknown, rawTopN: unknown): Promise<FindRecipeResult> {
+    if (!this.#env.recipeResolver) return { recipes: [] };
+    const query = (rawQuery && typeof rawQuery === 'object' ? rawQuery : {}) as RecipeQueryLike;
+    const topN = asInt(rawTopN, 5);
+    const merged: RecipeQueryLike = { ...query, topN };
+    try {
+      const result = await this.#env.recipeResolver.resolve(merged);
+      const recipes = result.recipes.map((r) => slimRecipe(r));
+      return result.scores ? { recipes, scores: result.scores } : { recipes };
+    } catch {
+      // Resolver failure must not poison the compile path. Surface a
+      // benign empty result; the host's resolver-side observers handle
+      // the failure (audit / alerting).
+      return { recipes: [] };
     }
   }
 
@@ -547,6 +577,33 @@ const TOOL_DECLARATIONS: readonly AgentToolDeclaration[] = [
       'List sibling routes in this app (path + optional title/summary). Use to keep chrome and brand consistent across routes without compiling each one.',
     parameters: { type: 'object', properties: {} },
   },
+  {
+    name: 'findRecipe',
+    description:
+      'Retrieve top-N recipes matching the query (route + intent + domain + brand fit). Returns a slim projection (id, description, brand_kit_id, intent_surfaces, domain) — call this to ground composition on a known persona scaffold before drafting the manifest. Returns `{ recipes: [] }` when no recipe resolver is wired.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'object',
+          description: 'Recipe query. All fields optional.',
+          properties: {
+            text: { type: 'string', description: 'Free-form description.' },
+            domain: { type: 'string', description: 'Optional domain hint, e.g. "commerce".' },
+            brandKitId: { type: 'string', description: 'Brand-fit signal.' },
+            routeId: { type: 'string', description: 'Route being compiled.' },
+          },
+          additionalProperties: true,
+        },
+        topN: {
+          type: 'integer',
+          description: 'Max results. Default 5, max 20.',
+          minimum: 1,
+          maximum: 20,
+        },
+      },
+    },
+  },
 ];
 
 // -----------------------------------------------------------------------------
@@ -567,6 +624,7 @@ You have access to tools to discover what is available:
 - validateDraft(draft) — submit your manifest for policy validation
 - inspectExistingManifest(route) — see what's currently rendered for a route
 - listSiblingRoutes() — see other routes in this app for cross-route consistency
+- findRecipe(query, topN?) — retrieve persona/recipe scaffolds matching query (route + intent + domain + brand)
 
 Workflow:
 1. Read the route + intent + brand kit from the user message.

@@ -152,6 +152,9 @@ importers:
       '@atelier/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@atelier/recipe-resolver':
+        specifier: workspace:*
+        version: link:../../packages/recipe-resolver
       '@atelier/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
@@ -562,6 +565,19 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@24.12.2)(happy-dom@15.11.7)(lightningcss@1.32.0)
+
+  packages/recipe-resolver:
+    dependencies:
+      '@atelier/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

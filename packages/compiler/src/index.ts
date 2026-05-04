@@ -157,9 +157,16 @@ export {
 export {
   fallbackFindCapability,
   fallbackFindComponent,
+  slimRecipe,
   type CapabilityRef,
+  type FindRecipeResult,
+  type RecipeLike,
+  type RecipeQueryLike,
+  type RecipeResolverLike,
+  type RecipeResolverResultLike,
   type RouteOutline,
   type SemanticSearch,
+  type SlimRecipe,
   type ToolEnvironment,
   type ToolValidationResult,
 } from './tool-environment.js';

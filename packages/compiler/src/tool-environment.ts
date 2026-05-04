@@ -42,7 +42,7 @@
  * `search.capabilities(query, k)`; the implementation evolves underneath.
  */
 
-import type { Capability, ComponentDefinition, Manifest } from '@atelier/schemas';
+import type { Capability, ComponentDefinition, IntentProfile, Manifest } from '@atelier/schemas';
 
 /**
  * Result shape for `validateDraft`. Same `{ ok, reasons }` shape used by
@@ -102,6 +102,98 @@ export interface ToolEnvironment {
    * consistent across routes without compiling every sibling itself.
    */
   listSiblingRoutes?: () => readonly RouteOutline[];
+  /**
+   * Optional recipe resolver — the C-5 RAG seam. When supplied, the
+   * agent's `findRecipe` tool routes through this resolver; otherwise
+   * the tool returns `{ recipes: [] }`. The structural shape mirrors
+   * `@atelier/recipe-resolver`'s `RecipeResolver` so hosts can pass
+   * either implementation directly without an adapter (the compiler
+   * package does not take a hard dep on `@atelier/recipe-resolver`).
+   */
+  recipeResolver?: RecipeResolverLike;
+}
+
+/**
+ * Structural recipe — what the compiler needs from a recipe to project
+ * the slim view to the agent. Hosts pass instances of
+ * `@atelier/recipe-resolver`'s `Recipe` (or any equivalent shape).
+ */
+export interface RecipeLike {
+  readonly id: string;
+  readonly description: string;
+  readonly domain?: string;
+  readonly brand_kit_id?: string;
+  readonly intent_surfaces?: readonly string[];
+  readonly manifest?: unknown;
+}
+
+/**
+ * Structural query — the seam the compiler tool builds from the agent's
+ * `findRecipe(query, topN)` call. Mirrors `@atelier/recipe-resolver`'s
+ * `RecipeQuery` shape.
+ */
+export interface RecipeQueryLike {
+  routeId?: string;
+  intent?: IntentProfile;
+  brandKitId?: string;
+  domain?: string;
+  text?: string;
+  topN?: number;
+}
+
+export interface RecipeResolverResultLike {
+  recipes: readonly RecipeLike[];
+  scores?: readonly number[];
+}
+
+/**
+ * Structural resolver. The compiler tool only needs `resolve(...)`;
+ * `index(...)` is a host-side concern and not surfaced through the
+ * agent. Implementations that ship `index` (the standard ones) satisfy
+ * this type by structural subtyping.
+ */
+export interface RecipeResolverLike {
+  resolve(query: RecipeQueryLike): Promise<RecipeResolverResultLike>;
+}
+
+/**
+ * Slim projection returned by the `findRecipe` tool — id + description +
+ * brand_kit_id + intent_surfaces. Deliberately drops the (potentially
+ * large) `manifest` field so the agent's context budget stays small.
+ * Hosts that want the full recipe call `RecipeStore.get(id)` server-side
+ * after the agent picks a candidate.
+ */
+export interface SlimRecipe {
+  id: string;
+  description: string;
+  brand_kit_id?: string;
+  intent_surfaces?: readonly string[];
+  domain?: string;
+}
+
+/**
+ * Result the `findRecipe` tool returns to the agent. Same shape as
+ * `RecipeResolverResultLike` but with `recipes` projected to
+ * `SlimRecipe`.
+ */
+export interface FindRecipeResult {
+  recipes: SlimRecipe[];
+  scores?: readonly number[];
+}
+
+/**
+ * Pure-function projection. Public for tests + custom tool surfaces;
+ * the wrapper uses it internally. Drops `manifest` outright; everything
+ * else passes through unchanged.
+ */
+export function slimRecipe(recipe: RecipeLike): SlimRecipe {
+  return {
+    id: recipe.id,
+    description: recipe.description,
+    ...(recipe.domain !== undefined ? { domain: recipe.domain } : {}),
+    ...(recipe.brand_kit_id !== undefined ? { brand_kit_id: recipe.brand_kit_id } : {}),
+    ...(recipe.intent_surfaces !== undefined ? { intent_surfaces: recipe.intent_surfaces } : {}),
+  };
 }
 
 /**
