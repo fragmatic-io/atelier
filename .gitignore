@@ -65,6 +65,9 @@ apps/*/.astro/
 apps/*/test-results/
 apps/*/playwright-report/
 apps/*/playwright/.cache/
+packages/*/storybook-static/
+packages/*/test-results/
+packages/*/playwright-report/
 
 # Misc
 .cache/

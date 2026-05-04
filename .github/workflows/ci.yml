@@ -158,3 +158,43 @@ jobs:
 
       - name: Run demo E2E
         run: pnpm --filter @atelier/demo e2e
+
+  component-workbench:
+    name: Component Storybook Visual Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/components exec playwright install --with-deps chromium
+
+      - name: Build package artifacts
+        run: pnpm build
+
+      - name: Build component Storybook
+        run: pnpm components:storybook:build
+
+      - name: Run component visual smoke
+        run: pnpm components:storybook:visual
+
+      - name: Upload Storybook artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-storybook
+          path: packages/components/storybook-static/
+          retention-days: 7
+          if-no-files-found: ignore
