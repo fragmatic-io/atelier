@@ -54,8 +54,6 @@
     "capabilities:validate-changed": "tsx --tsconfig packages/schemas/tsconfig.json scripts/validate-capabilities-incremental.ts",
     "atelier": "tsx packages/cli/src/index.ts",
     "demo": "tsx scripts/dev-demo.ts",
-    "marketing:dev": "pnpm --filter @atelier/marketing dev",
-    "marketing:build": "pnpm --filter @atelier/marketing build",
     "docs:dev": "pnpm --filter @atelier/docs dev",
     "docs:build": "pnpm --filter @atelier/docs build",
     "schemas:dump": "atelier-schemas dump --out .well-known/schemas",

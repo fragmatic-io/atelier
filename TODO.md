@@ -1,208 +1,301 @@
 # TODO
 
-> Single source of truth for what's planned vs what's shipped. Updated 2026-05-04 (P0 + P1 + P2 + P3 closeout; resuming tomorrow on P4 / P5 / P6 + ops follow-ups).
+> Single source of truth. Updated 2026-05-04 (production-readiness reprioritisation following external review).
 >
-> Historical record of phases that landed: [`docs/build-plan.md`](docs/build-plan.md) and the `## What's shipped` section of the root [`README.md`](README.md).
+> **Top priority: production readiness, not feature expansion.** A green `pnpm test` does not offset a broken `pnpm validate` gate. Every advertised command, env-gated path, and package export must work for an external consumer.
+>
+> Historical record: [`docs/build-plan.md`](docs/build-plan.md) and the `What's shipped` section at the bottom of this file.
+
+---
+
+## The thesis
+
+A 2026-05-04 external review summarised the project as:
+
+> "Closer to an early platform kernel than a toy. Strong as research / product prototype. Internal dogfood possible after fixing validation and demo boot paths. **External production framework: not yet.** Production app today: only if narrow, heavily controlled, and the compiler is treated as advisory with deterministic fallback."
+
+Bands below sequence what it would take to flip "external production framework" from **not yet** to **yes**.
 
 ---
 
 ## Reading guide
 
-**Priority is stability over expansion.** The order below is what to ship next, not what's most exciting. Within a band, items are in execution order (top first).
+Bands ordered top→bottom by what closes the gap fastest. Within a band, items are in execution order.
 
-| Band   | Bucket                                                          | What it's for                                          | Time-box       |
-| ------ | --------------------------------------------------------------- | ------------------------------------------------------ | -------------- |
-| **P0** | [Stability & op-debt](#p0--stability--op-debt)                  | Velocity-killers — fix before adding more surface      | ~½ d remaining |
-| **P1** | [Compile quality](#p1--compile-quality)                         | Compile correctness, scope, retrieval, distributed bus | ~3 d remaining |
-| **P2** | [Marketplace completion (V-6)](#p2--marketplace-completion-v-6) | Vault-marketplace distribution channel                 | ✅ shipped     |
-| **P3** | [Site consolidation](#p3--site-consolidation--branding)         | Single docs site at `/atelier/`                        | ✅ shipped     |
-| **P4** | [Wave 11 polish remaining](#p4--wave-11-polish-remaining)       | Vis / Int / Cnt / Nav / Coll / AI long tail            | 4-6 mo         |
-| **P5** | [Personalisation continuity](#p5--personalisation-continuity)   | P-3 / P-4 / P-7 finishing                              | 3 wk           |
-| **P6** | [Multi-platform & long tail](#p6--multi-platform--long-tail)    | iOS / Android / RN / cross-platform variants / open Qs | 12-16 wk       |
+| Band    | Bucket                                                                                     | What it closes                                               | Time-box |
+| ------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | -------- |
+| **P0**  | [Validation gate integrity](#p0--validation-gate-integrity)                                | Every advertised command works on a fresh clone              | <1 wk    |
+| **P1**  | [Productionise env-gated paths](#p1--productionise-env-gated-paths)                        | 6 `CIR_*_ENABLED` flags become defaults or get deleted       | 1-2 wk   |
+| **P2**  | [Consumer DX](#p2--consumer-dx)                                                            | Packages publishable + installable outside the monorepo      | 2-3 wk   |
+| **P3**  | [Real-LLM evidence](#p3--real-llm-evidence)                                                | Eval suite proves the LLM compile actually produces good UIs | 2-3 wk   |
+| **P4**  | [Visual regression matrix](#p4--visual-regression-matrix)                                  | 83-component catalog gets a visual gallery + diff CI         | 1-2 wk   |
+| **P5**  | [Demo boot paths](#p5--demo-boot-paths)                                                    | Demos exercise real LLM compiles by default, not fallback    | 1 wk     |
+| **P6**  | [SemVer + public API contracts](#p6--semver--public-api-contracts)                         | Each `@atelier/*` package has a frozen public surface        | 1-2 wk   |
+| **P7**  | [Stability + op-debt cleanups (carry-overs)](#p7--stability--op-debt-cleanups-carry-overs) | Branch protection, gray-matter cache bug, etc.               | <1 wk    |
+| **P8**  | [Compile-quality follow-ups](#p8--compile-quality-follow-ups)                              | P1.4 plumbing items, cross-app workflow                      | 1-2 wk   |
+| **P9**  | [Wave 11 polish remaining](#p9--wave-11-polish-remaining)                                  | Vis / Int / Cnt / Nav / Coll / AI long tail                  | 4-6 mo   |
+| **P10** | [Personalisation continuity](#p10--personalisation-continuity)                             | P-3 / P-4 / P-7                                              | 3 wk     |
+| **P11** | [Multi-platform & long tail](#p11--multi-platform--long-tail)                              | iOS / Android / RN / cross-platform variants                 | 12-16 wk |
 
-> **Naming note (marketplace).** Two distinct things in this codebase share the word "marketplace":
+> **Naming note (marketplace).** Two distinct things share the word "marketplace":
 >
-> - **The catalog** — the set of baseline primitives `@atelier/components` ships, plus the recipes / brand kits / skills built on top. This is the _product_. The Wave M architectural pivot was about the catalog. Codified as ETHOS principle #11 ("baseline-first").
-> - **The vault marketplace** — the distribution channel (`atelier://author/persona@version`, ed25519 signing, TOFU). The technical infrastructure that lets the catalog reach hosts. This is **V-6** in Wave 8.
+> - **The catalog** — baseline primitives + recipes + brand kits + skills. The product. Wave M / ETHOS principle #11 ("baseline-first") was about this.
+> - **The vault marketplace** — distribution channel (`atelier://author/persona@version`, ed25519, TOFU). V-6 in Wave 8.
 >
-> When we say "marketplace" alone we mean the distribution channel.
+> Unqualified "marketplace" means the distribution channel.
 
 ---
 
-## At a glance
+## P0 — Validation gate integrity
 
-| Wave    | Scope                                                                                 | Status                                    |
-| ------- | ------------------------------------------------------------------------------------- | ----------------------------------------- |
-| **M**   | Baseline-first pivot — catalog 62 → 83; 3 demos at zero customs; ETHOS #11; eval gate | ✅ shipped                                |
-| **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                 | 🟡 partial — branch protection still TODO |
-| **C**   | Compiler evolution — C-1 / C-2 / C-3 / C-4 / C-5 ✅                                   | ✅ shipped (all 5 phases)                 |
-| **7**   | Personalisation — P-1 / P-8 / P-9 / DD ✅; P-3 / P-4 / P-7 remain                     | 🟡 in flight                              |
-| **10**  | Scale — S-1 / S-2 / S-3 / S-4 / S-5 / S-6 / S-7 ✅                                    | ✅ shipped (all 7 phases)                 |
-| **8**   | Vault marketplace — V-1 / V-3 / V-6.a / V-6.b / V-6.c / V-6.d / V-6.e / V-6.f ✅      | ✅ shipped (full V-6)                     |
-| **11**  | Visual depth — 18 items shipped this session (catalog 65 → 83); long tail remains     | 🟡 partial                                |
-| **12+** | Multi-platform — N-4 ✅; N-1 / N-2 / N-3 / N-5 remain                                 | 🟡 partial                                |
-| **Op**  | Operational + hardening debt                                                          | 📅 see P0                                 |
+**The advertised CI gate must pass on a fresh clone, every time.** A broken `pnpm validate` is a credibility bug; everything else can wait.
 
-**This session's scoreboard** — Wave 8 / 10 / C all closed. Site merged + deployed at `/atelier/`. Baseline-first nomenclature codified. Lint-staged worktree-stash leak fixed. AJV strict gate in CI. Runtime Zod hardening. Skill YAML strictness with `atelier lint skill`. Catalog 65 → 83. Test count ~3400 → 3606.
+### P0.1 — `pnpm validate` survives a fresh clone (CONFIRMED FAILING earlier today)
 
-**Recent commits** (most recent first):
+The review's headline issue: `scripts/marketplace-eval.ts` line 40 imports `@atelier/eval-marketplace`, but the workspace symlink wasn't populated until `pnpm install` ran. Reproduced + fixed locally; need a permanent guardrail.
 
-`71e97fa` V-6.e nightly eval gate · `dfcb944` V-6.d review/curation flow · `1880415` S-4 distributed TriggerBus · `544bd67` V-6.a/b/f publish + consume + sign · `b6aa5b8` C-5 recipe RAG · `3f51e3c` dependabot policy tightening · `d73c5c8` C-3/S-1 capability scoping · `61834f1` V-6.c MarketplaceBrowser · `07cf04d` test-fixture compliance · `6d1bbad` 4 pre-existing failures fixed · `6829018` skill YAML + lint CLI · `3b87f4d` site consistency sweep · `f749361` MDX format · `a82ce2c` AJV strict gate · `240cede` runtime Zod hardening · `dc70a44` site merge · `9a9e02e` marketplace nomenclature + replan.
+- [x] **Stale `marketing:dev` / `marketing:build` script refs removed** from root `package.json` (point at deleted `@atelier/marketing` package). _This commit._
+- [ ] **CI job that runs `pnpm install --frozen-lockfile && pnpm validate` from a clean checkout.** If this passes, every advertised command works for any developer or agent. **<1 d.**
+- [ ] **`pnpm install` runs as part of the husky `prepare` step OR the pre-push hook detects a stale `node_modules/@atelier/*` symlink set and fails fast.** Stops "validate fails because workspace symlinks are stale" recurring on agents. **<1 d.**
+- [ ] **Audit every script in root `package.json`** — does each advertised command produce the documented behaviour? Document or delete the ones that don't. **<1 d.**
 
----
+### P0.2 — Hooks that don't surprise
 
-## P0 — Stability & op-debt
+- [x] **lint-staged worktree-stash leak** — `--no-stash` mode. `dc70a44`.
+- [ ] **`pre-push` runs full-monorepo `validate:fast` (~60 s)** — move to per-package gate or staged-only so push isn't a barrier. **<1 d.**
+- [ ] **Per-script README** — `package.json` script names are pithy; add a comment block at the top of `package.json` (or a `docs/scripts.md`) documenting what each script does. Stops developers from running blindly. **<1 d.**
 
-**Mostly done.** Two manual repo-owner items remain.
+### P0.3 — Schema + dispatcher hardening (already shipped — keep validated)
 
-### P0 closeout (this session)
+- [x] **AJV strict-mode CI gate.** `a82ce2c`.
+- [x] **Runtime Zod hardening** (manifest fetch + IDB + dispatcher input). `240cede`.
+- [x] **Skill YAML strictness + `atelier lint skill <path>`.** `6829018`.
+- [x] **4 pre-existing test failures + use-optimistic-action TS errors.** `6d1bbad` + `07cf04d`.
 
-- [x] **P0.1** — quarantine 4 pre-existing test failures + fix `use-optimistic-action.test.tsx` TS errors. `6d1bbad` + `07cf04d`.
-- [x] **P0.2 (lint-staged half)** — `lint-staged --no-stash` in `.husky/pre-commit`. Sibling-worktree stash leaks resolved. `dc70a44`.
-- [ ] **P0.2 (pre-push half)** — `pre-push` runs full-monorepo `validate:fast` (~60 s × N agents). Move to a per-package gate or staged-only. **<1 d.** _Open._
-- [x] **P0.4** — marketplace nomenclature disambiguated; ETHOS #11 retitled "Baseline-first: the catalog is the product"; glossary box added. `9a9e02e`.
-- [x] **P0.5a** — runtime Zod-validates manifest fetch + IDB cache reads + dispatcher input. `240cede`.
-- [x] **P0.5b** — AJV strict-mode CI gate + format-strip in JSON-Schema codegen. `a82ce2c`.
-- [x] **P0.5c** — better YAML errors in `parseSkillMarkdown` + `atelier lint skill <path>` CLI. `6829018`.
-- [x] **P0.6** — dependabot policy: dropped `commit-message.include: scope` (commitlint compatibility) + ignored major bumps on github-actions. 4 stale PRs closed. `3f51e3c`.
+### P0.4 — Repo-owner manual items
 
-### P0 still open
-
-- [ ] **Branch protection on `main`** — require CI green, require PR review (1 reviewer), no force-push. _Repo-owner action via `gh repo edit` or Settings UI._
-- [ ] **Project board / discussions / wiki** — enable once team grows beyond one. _Repo-owner action._
-
-### P0 follow-ups discovered
-
-- [ ] **`gray-matter@4.0.3` cache bug.** `matter()` populates the cache _before_ invoking the YAML engine, so a thrown YAMLException leaves an empty `{ data: {} }` entry that masks the error on subsequent calls. Worked around in P0.5c with `{ }` options bag. Worth either upstreaming a fix or migrating off gray-matter to a maintained alternative. **<1 d.**
+- [ ] **Branch protection on `main`** — require CI green, require PR review (1 reviewer), no force-push. _Repo-owner action._
+- [ ] **Project board / discussions / wiki** — enable once team grows. _Repo-owner action._
 
 ---
 
-## P1 — Compile quality
+## P1 — Productionise env-gated paths
 
-**Mostly done.** One small follow-up bucket remains.
+**13 `CIR_*` env vars** in the codebase today. The review's main critique: experimental paths live behind flags nobody runs by default, which means they bitrot, double the test surface, and let docs lie about what's "shipped". Each gate gets a binary decision.
 
-### P1 closeout (this session)
+### Inventory (every gate today)
 
-- [x] **P1.1 / C-3 / S-1** — two-stage compile via capability scoping. New `@atelier/capability-resolver` package; `CompileInput.capabilityResolver` + `topN` (default 30); `findCapability` routes through resolver while `lookupCapability` / `listCapabilities` keep broaden-by-id escape hatch. `d73c5c8`.
-- [x] **P1.2 / C-5** — recipe RAG. New `@atelier/recipe-resolver` package; substring + embedding resolvers; compiler `findRecipe` tool with `slimRecipe` projection. `b6aa5b8`.
-- [x] **P1.3 / S-4** — distributed `TriggerBus` via pluggable `TriggerTransport`. `InMemoryTriggerTransport` + `SseTriggerTransport` reference impls + Node HTTP coordinator; loop prevention via `originNodeId`. `1880415`.
+| Env var                                                                       | Gates                                 | Decision                                                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------- |
+| `CIR_COMPILER_TOOLS_ENABLED`                                                  | C-2 tool-using compiler in apps/demo  | **Flip to default** — C-2 has 21 + 10 tests, used in production-shaped tests.       |
+| `CIR_CAPABILITY_RESOLVER_ENABLED`                                             | P1.1 capability-resolver in apps/demo | **Flip to default** with `SubstringCapabilityResolver` baseline.                    |
+| `CIR_CAPABILITY_SCOPING_ENABLED`                                              | Two-stage compile pipeline            | Same — fold into the above.                                                         |
+| `CIR_RECIPE_RAG_ENABLED`                                                      | C-5 recipe RAG in apps/demo           | **Flip to default** with `LocalRecipeStore`.                                        |
+| `CIR_MARKETPLACE_ENABLED`                                                     | V-6 endpoints in vault-server         | **Flip to default** — published, signed, reviewed, eval-gated.                      |
+| `CIR_COMPILE_BUDGET_ENABLED`                                                  | S-6 compile-budget enforcement        | **Flip to default** — production hosts always need this.                            |
+| `CIR_COMPILE_BUDGET_*` (CALLS_PER_HOUR / TOKENS / TOKENS_PER_DAY / WINDOW_MS) | Budget thresholds                     | **Keep as config** (legitimate tuning knob).                                        |
+| `CIR_SCOPING_MODEL`                                                           | Stage-1 model name                    | **Keep as config** (legitimate).                                                    |
+| `CIR_DIFF_BASE`                                                               | Eval diff base                        | **Keep as config**.                                                                 |
+| `CIR_EMBEDDING_TESTS`                                                         | Heavy embedding tests                 | **Rename to `ATELIER_EMBEDDING_TESTS`** (we left `CIR_` for renamed work; cleanup). |
 
-### P1.4 — plumbing follow-ups (open)
+### P1.1 — Default-on the `_ENABLED` group, delete the gates
 
-- [ ] **`BehaviorPatternDetectedTrigger` schema variant.** V-4 emits `behavior.workaround_detected`; we also want a non-workaround `behavior.pattern_detected` so promote-to-recipe doesn't fire on pure-workaround sequences. **<1 d.**
+For each of the six `_ENABLED` flags:
+
+- [ ] **`CIR_COMPILER_TOOLS_ENABLED` → default-on.** Delete the gate; ToolUsingCompiler is the production compiler. Keep an opt-OUT (`ATELIER_COMPILER_TOOLS=off`) for the deterministic-only case. **2-3 d.**
+- [ ] **`CIR_CAPABILITY_RESOLVER_ENABLED` + `CIR_CAPABILITY_SCOPING_ENABLED` → merge + default-on.** Substring resolver is the baseline; embedding resolver opts in via env. **2 d.**
+- [ ] **`CIR_RECIPE_RAG_ENABLED` → default-on** with `LocalRecipeStore`. **1 d.**
+- [ ] **`CIR_MARKETPLACE_ENABLED` → default-on** in vault-server. **1 d.**
+- [ ] **`CIR_COMPILE_BUDGET_ENABLED` → default-on** in apps/demo. **1 d.**
+
+### P1.2 — Rename surface
+
+- [ ] **All `CIR_*` env vars renamed to `ATELIER_*`** (consistent with the package rename). Old names accepted with a one-release-cycle deprecation warning. **<1 d.**
+
+### P1.3 — Document the surface
+
+- [ ] **`apps/docs/src/content/docs/operations/env-vars.mdx`** — every supported env var, default, valid range, what it gates. **<1 d.**
+
+---
+
+## P2 — Consumer DX
+
+**All 15 packages currently export `./src/index.ts` directly.** This works in-monorepo because pnpm + tsx + vitest read TS directly. It does NOT work for an external consumer who installs `@atelier/runtime` from npm — they get raw TypeScript that their build pipeline must compile, which is often a non-starter for downstream apps.
+
+### P2.1 — Build artifacts on every package
+
+- [ ] **Each `packages/*/package.json`** gets:
+  - `"main": "./dist/index.js"`
+  - `"types": "./dist/index.d.ts"`
+  - `"exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }, "./testing": { ... } }`
+  - `"files": ["dist", "src"]` (ship src for sourcemaps + readability)
+- [ ] **Build pipeline per package**: `tsc -b` produces `dist/`. CI runs `pnpm build` before `pnpm test` so consumers and tests both consume the built artifact.
+- [ ] **Workspace symlinks now resolve through `dist/`** when consumed cross-package; in-repo dev keeps using TS via path mappings under a separate `tsconfig.dev.json`.
+- [ ] **Eval gate**: an "external consumer smoke test" — `pnpm pack` each package, install into a scratch directory, import the public surface, confirm no `tsx` / `ts-node` is needed.
+
+### P2.2 — `atelier init` actually works outside the monorepo
+
+- [ ] **Standalone-publish hardening.** `atelier init` today assumes the monorepo layout. Rework so it scaffolds a fresh Next.js (or Vite) app with `@atelier/runtime` + `@atelier/react` + `@atelier/components` from npm, no monorepo dependency. **1 wk.**
+- [ ] **Vite support.** Currently hardcoded to Next.js 15. **3 d.**
+
+### P2.3 — `atelier validate` does real work
+
+Today: it shells out to `pnpm validate` blindly, which only works if the consumer happens to have the same monorepo layout.
+
+- [ ] **Reimplement as a real validator** that runs typecheck + eslint + vitest in the consumer's project (regardless of monorepo). **3-5 d.**
+
+### P2.4 — Catalog publishability
+
+- [ ] **`pnpm publish:dry-run`** verifies all 15 packages can be packed without errors. CI step. **<1 d.**
+- [ ] **README per package** — short package-scoped READMEs explaining the export surface (today they live in src code comments). **2-3 d.**
+
+---
+
+## P3 — Real-LLM evidence
+
+**The review's pointed critique**: "not enough evidence that real LLM compiles produce consistently good UIs outside fixtures." Today V-6.e nightly eval uses a deterministic compile (no LLM dep) and frozen reference fixtures. Necessary, not sufficient.
+
+### P3.1 — Real-LLM eval suite
+
+- [ ] **`@atelier/eval-llm`** new package (or extend `@atelier/eval-marketplace`):
+  - Runs the top-10 marketplace personas through `GeminiCompiler` (or whichever real LLM is configured) against the frozen capability + component fixture set.
+  - Validates the output manifests against `ManifestSchema` + baseline policies (existing logic).
+  - **Plus** — diffs the rendered manifest tree shape against a snapshot. Major shape changes flag a regression.
+  - **Plus** — measures actual cost (`token_cost`) per persona-route pair and tracks against a budget. Cost regression = failure.
+  - **Plus** — captures the LLM's reasoning trace alongside the manifest; `cir-evals` can rank reasoning quality (loosely; bounded heuristic).
+- [ ] **Nightly job** runs this in addition to V-6.e (which becomes the deterministic-compile sanity check). **3 d.**
+- [ ] **Cost dashboard** — daily report of per-persona compile cost across the eval set. **2 d.**
+
+### P3.2 — End-user perceived-quality eval
+
+The hard problem the review is pointing at: even when manifests validate, do they LOOK good? Bridges the gap between "schema-passes" and "user-quality".
+
+- [ ] **Rendered-output snapshot diffs** — for each top-10 persona, render the route's manifest with `@atelier/components` to a static HTML + screenshot. Visual diff against baseline (Playwright + a screenshot library). Flag visual regressions, not just schema regressions. **1 wk.**
+- [ ] **Recipe-quality scorecards** — `cir-evals` produces a per-recipe scorecard (compile-passed Y/N, schema-passed Y/N, policies-passed Y/N, snapshot-stable Y/N, cost-budget-respected Y/N). Surface in the marketplace browse UI. **3 d.**
+
+---
+
+## P4 — Visual regression matrix
+
+**The catalog has 83 baseline primitives. There is no visual gallery and no visual-diff CI.** Every prior catalog promotion was tested for behaviour but not for pixel-level rendering.
+
+- [ ] **`apps/components-gallery`** — a Storybook-style or custom MDX gallery enumerating every component × every variant × every state (default / hover / focus / disabled / empty / loading / error). Static-rendered to `dist/`. **3-5 d.**
+- [ ] **Playwright visual-diff CI** — screenshots each gallery cell, diffs against baseline; PR fails on regression beyond a threshold. **2 d on top.**
+- [ ] **Catalog page on docs site** — embed live previews from the gallery so newcomers see what's available. Link from `/atelier/components/catalog`. **2 d.**
+
+---
+
+## P5 — Demo boot paths
+
+**The review's other pointed critique**: "demos still leaning on fake/generic fallback surfaces". Aurora / Octant / Marigold all fall back to `FallbackCompiler` when no Gemini key is set, which means the default boot doesn't exercise the LLM compile path it advertises.
+
+- [ ] **CI runs each demo with a real Gemini key** (Actions secret) — at least one route per demo, asserts the manifest is a non-fallback compile. **2 d.**
+- [ ] **`pnpm demo --real-llm` flag** — opt-in for local; refuses to boot without a key, no silent fallback. **<1 d.**
+- [ ] **Demo boot README** — clear signposting that "demo runs" without a key but only the LLM compile path is the real demonstration. **<1 d.**
+
+---
+
+## P6 — SemVer + public API contracts
+
+Today every `@atelier/*` package is on `0.x.x` and APIs move freely. External adoption needs a frozen public surface and a documented breaking-change policy.
+
+- [ ] **Per-package `API.md`** documenting the exported surface (what's public, what's internal, what's deprecated). Generated from `src/index.ts` exports + curated descriptions. **3 d.**
+- [ ] **`@atelier/api-extractor` step in CI** — diffs the public surface across PRs; major changes auto-flag a breaking-change label. **2 d.**
+- [ ] **Promote one package to `1.0.0`** as the proof point. `@atelier/schemas` is the natural first candidate (it's the most stable). **2 d to write the migration / breaking-change doc.**
+
+---
+
+## P7 — Stability + op-debt cleanups (carry-overs)
+
+Items that aren't blocking production but should land before the next sprint.
+
+- [ ] **`gray-matter@4.0.3` cache bug.** Worked around in P0.5c with `{ }` options bag. Either upstream a fix or migrate off gray-matter. **<1 d.**
+- [ ] **`@atelier/react/debug` host-side smoke test.** Subpath export wired; not smoke-tested outside the monorepo. **<1 d** (folds into P2.1).
+- [ ] **IndexedDB LRU eviction is O(n) per write.** Fine at default cap of 200; revisit with byte-accounting. **2-3 d.**
+
+---
+
+## P8 — Compile-quality follow-ups
+
+The plumbing items that didn't fit in C-1..C-5.
+
+- [ ] **`BehaviorPatternDetectedTrigger` schema variant.** V-4 emits `behavior.workaround_detected`; we want a non-workaround `behavior.pattern_detected` so promote-to-recipe doesn't fire on workaround sequences only. **<1 d.**
 - [ ] **Behavioral pattern detector implementations.** `BehavioralPatternDetector` interface + `NoopBehavioralDetector` ship; no real heuristics. **2-3 d.**
-- [ ] **Cross-app workflow compilation.** Single-app compile is shipped; "Gmail + Calendar + Linear in one lens" needs a neutral compiler host. See [`docs/open-questions.md`](docs/open-questions.md) §1. **1-2 wk.**
+- [ ] **Cross-app workflow compilation.** Single-app compile shipped; "Gmail + Calendar + Linear in one lens" needs a neutral compiler host. See [`docs/open-questions.md`](docs/open-questions.md) §1. **1-2 wk.**
 
 ---
 
-## P2 — Marketplace completion (V-6)
+## P9 — Wave 11 polish remaining
 
-**Wave 8 vault marketplace 100% shipped.** End-to-end pipeline: author signs → publishes → maintainer reviews → consumer browses → compiler retrieves via RAG → nightly eval gate proves the top-N still compile.
+The long tail of UI primitives. **Deprioritised** under the new ordering — adding more catalog while the existing 83 primitives lack visual regression coverage is the kind of expansion the review is warning against. Resume after P0–P6 close.
 
-- [x] **V-1** — `MarketplaceAddress` + `SignedBundle` schemas + ed25519 signing. (Pre-session.)
-- [x] **V-3** — TOFU verification. (Pre-session.)
-- [x] **V-6.a** — `POST /marketplace/persona` (publish). `544bd67`.
-- [x] **V-6.b** — `GET /marketplace/persona/<a>/<p>@<v>` + `/latest` (consume). `544bd67`.
-- [x] **V-6.c** — `<MarketplaceBrowser>` baseline component. `61834f1`.
-- [x] **V-6.d** — review / curation flow. `dfcb944`.
-- [x] **V-6.e** — nightly eval gate via `@atelier/eval-marketplace` + GitHub Actions cron. `71e97fa`.
-- [x] **V-6.f** — sign-at-publish via `publishPersona` + `atelier marketplace publish` CLI. `544bd67`.
+### Vis (visual depth)
 
-### Marketplace follow-ups (optional, low priority)
+- ✅ Vis-2, Vis-3, Vis-5, Vis-8.
+- [ ] Vis-4 (variant pass for remaining 32 components — folds into P4 visual gallery; ~1.5 wk).
+- [ ] Vis-7 (5-step elevation system; 3 d).
+- [ ] Vis-9 / Vis-10 (open visual debt items).
 
-- [ ] **Live marketplace browse on the docs site.** Once the public vault is hosted (or a static JSON snapshot is exported), embed `<MarketplaceBrowser>` on a new `/atelier/marketplace/browse/` page so visitors can see real personas without running their own host. **~1 d** plus hosting decision.
-- [ ] **Telemetry-based ranking for V-6.e.** Default rank is currently alphabetical-on-canonical-address; flip to download-count once V-6.d telemetry accrues. **<1 d.**
+### Int (interaction)
 
----
+- ✅ Int-2, Int-3, Int-4, Int-5, Int-10, Int-11, Int-13, Int-14.
+- [ ] Int-1 (motion layer extension; 2 wk on top of P-7).
+- [ ] Int-6 (Quick-switcher Cmd+P; 1 wk).
+- [ ] Int-7 (chord shortcuts + per-user aliases; 1 wk).
+- [ ] Int-15 (smart paste link unfurl; 1.5 wk).
 
-## P3 — Site consolidation & branding
+### Cnt (content)
 
-**Done.** Marketing folded into `apps/docs` as Starlight splash pages. Single Pages domain at `https://fragmatic-io.github.io/atelier/`.
+- ✅ Cnt-1..5, Cnt-7..11.
+- [ ] Cnt-6 audit + close (<1 d).
 
-- [x] **P3.1 — Marketing → Starlight splash pages.** `dc70a44`. `apps/marketing/` retired. URL flipped from `/atelier/docs/` to `/atelier/`. Rehype plugin auto-prefixes root-relative MDX links via `DOCS_BASE`. Four hardcoded JSX `LinkCard href` + hero `actions[].link` in the homepage updated by hand.
-- [x] **P3 consistency sweep** — `/start/`, `/architecture/`, `/demos/` demoted from `template: splash` to default docs layout (only `/index.mdx` is splash); stale `/atelier/docs/` URL refs scrubbed; `seti:` file-icons swapped for line-style; sidebar catalog count delocalised. `3b87f4d` + `f749361`.
+### Nav (navigation)
 
-### P3 follow-ups
+- ✅ Nav-4, Nav-5, Nav-6.
+- [ ] Nav-1 (left rail; 1 wk).
 
-- [ ] **Custom domain.** Once we own `atelier.dev` (or similar), drop the `/atelier/` path-prefix entirely — the `DOCS_BASE` env var handles that. Hardcoded `/atelier/...` in 4 JSX/YAML hrefs in `index.mdx` would need to revert to `/...`. **<1 d** + DNS work.
+### Coll (collaboration; S-3 + S-4 ✅ unblocked)
 
----
+- [ ] Coll-1 (presence; 1.5 wk).
+- [ ] Coll-2 (live cursors; 2 wk; depends on Coll-1).
+- [ ] Coll-3 (threaded comments; 2.5 wk; depends on Cnt-3).
+- [ ] Coll-4 (follow-mode; 2 wk; depends on Coll-1).
+- [ ] Coll-5 (selection halos; 1 wk; depends on Coll-1).
 
-## P4 — Wave 11 polish remaining
+### AI (inline AI surfaces)
 
-The long tail of visual / interaction / content / nav / collaboration / AI primitives. Sequence within each sub-bucket is execution order; sub-buckets are independent.
-
-### P4.1 — Vis (visual depth)
-
-- [x] Vis-2, Vis-3, Vis-5, Vis-8 shipped (this + prior sessions).
-- [ ] **Vis-4** — Variant pass for the remaining 32 components (after Wave 6 P-10 covered 24/56). **~1.5 wk.**
-- [ ] **Vis-7** — Elevation / surface system (5-step elevation token scale resting / hover / popover / modal / commandbar with paired light/dark shadow recipes). **3 d on top of Vis-2.**
-- [ ] **Vis-9, Vis-10** — Open visual-debt items (consult original list).
-
-### P4.2 — Int (interaction)
-
-- [x] Int-2, Int-3, Int-4, Int-5, Int-10, Int-11, Int-13, Int-14 shipped.
-- [ ] **Int-1** — Motion layer extension beyond P-7 (per-component entry/exit, data-update animations). **2 wk on top of P-7.**
-- [ ] **Int-6** — Quick-switcher (`Cmd+P`) distinct from command palette; capability-typed `quickswitch_index` per app. Depends on Int-3. **1 wk.**
-- [ ] **Int-7** — Chord shortcuts + per-user aliases (`g i`, `g a`); chord state machine + per-user alias overlay in the intent vault. Depends on Int-3. **1 wk.**
-- [ ] **Int-15** — Smart paste with link unfurl. Cnt-4 ✅ unblocked. **1.5 wk.**
-
-### P4.3 — Cnt (content)
-
-- [x] Cnt-1..5, Cnt-7..11 shipped.
-- [ ] **Cnt-6** — Audit + close (BlockKindRegistry shipped via Cnt-7; check whether anything remains). **<1 d audit.**
-
-### P4.4 — Nav (navigation)
-
-- [x] Nav-4, Nav-5, Nav-6 shipped.
-- [ ] **Nav-1** — Navigation rail / app shell upgrade (left rail with collapsible sections, persistence already shipped via Nav-2). **1 wk.**
-
-### P4.5 — Coll (collaboration; S-3 + S-4 ✅ unblocked the whole bucket)
-
-- [ ] **Coll-1** — Multiplayer presence indicators. `<Presence>` primitive backed by a `presence.subscribe` capability. **1.5 wk.**
-- [ ] **Coll-2** — Live cursors on canvas / list / doc surfaces. Depends on Coll-1. **2 wk.**
-- [ ] **Coll-3** — Threaded comments anchored to content. `comment_anchor` schema + `<CommentThread>`. Depends on Cnt-3. **2.5 wk.**
-- [ ] **Coll-4** — Real-time follow-mode / observe-mode. Depends on Coll-1. **2 wk.**
-- [ ] **Coll-5** — Selection halos for collaborative selection. Depends on Coll-1. **1 wk.**
-
-### P4.6 — AI (inline AI surfaces)
-
-- [x] AI-1, AI-3 shipped.
-- [ ] **AI-2** — Slash-command AI shortcuts in editors. `/summarize` / `/translate` / `/brainstorm` inside the slash menu (Cnt-6). Depends on AI-1. **1 wk.**
-- [ ] **AI-4** — Inline AI chat docked to surface. Raycast-style chat with read-context of the current capability bindings. **2 wk.**
+- ✅ AI-1, AI-3.
+- [ ] AI-2 (slash-command AI in editors; 1 wk; depends on AI-1).
+- [ ] AI-4 (inline AI chat docked to surface; 2 wk).
 
 ---
 
-## P5 — Personalisation continuity
+## P10 — Personalisation continuity
 
-P-1 / P-8 / P-9 / DD shipped; the remainder.
+P-1 / P-8 / P-9 / DD ✅; the remainder.
 
-- [ ] **P-3** — Refinement loop (right-click any component → describe tweak → diff-compile → manifest update + new scoped intent rule). Depends on P-1 (✅). **1.5 wk.**
-- [ ] **P-4** — Engagement signals back into the compiler (component.viewed / dismissed / bounced + per-user aggregator). **1 wk.**
+- [ ] **P-3** — Refinement loop. Depends on P-1 (✅). **1.5 wk.**
+- [ ] **P-4** — Engagement signals back into the compiler. **1 wk.**
 - [ ] **P-7** — Motion / view-transitions / animation layer (foundation for Int-1). **1.5 wk.**
 
 ---
 
-## P6 — Multi-platform & long tail
+## P11 — Multi-platform & long tail
 
-Last band — only after P0–P5 settle.
+Last band. After P0–P10 settle.
 
-### P6.1 — Native renderers
+### Native renderers
 
-- [ ] **N-1** — iOS SwiftUI native renderer. **4-6 wk.**
-- [ ] **N-2** — Android Jetpack Compose native renderer. **4-6 wk.**
-- [ ] **N-3** — React Native bindings (cheaper bridge — share more with `@atelier/react`). **2-3 wk.**
-- [ ] **N-5** — Cross-platform component variant authoring (one source → web + native). **2 wk.**
+- [ ] N-1 iOS SwiftUI (4-6 wk).
+- [ ] N-2 Android Jetpack Compose (4-6 wk).
+- [ ] N-3 React Native (2-3 wk).
+- [ ] N-5 Cross-platform component variant authoring (2 wk).
 
-### P6.2 — Tooling polish
+### Tooling polish (folded into P2 where appropriate)
 
-- [ ] **`atelier init` standalone-publish hardening.** Today assumes the Atelier monorepo layout. npm-installable templates and host-project pre-flight are roadmap.
-- [ ] **Vite support in `atelier init`.** Hardcoded to Next.js 15 today.
-- [ ] **`atelier validate` host pre-flight.** Today shells out to `pnpm validate` blindly.
-- [ ] **Eval harness wired into `pnpm validate`.** Will flip on once enough scenarios are load-bearing.
-- [ ] **`@atelier/react/debug` host-side smoke test.** Subpath export wired; end-to-end developer experience hasn't been smoke-tested outside the monorepo.
-- [ ] **Component-variants demo / Storybook.** A dedicated visual gallery (Storybook or a custom MDX route) is roadmap — should compose with future custom-domain work if it lands.
-- [ ] **IndexedDB LRU eviction is O(n) per write.** Fine at the default cap of 200; revisit with byte-accounting work.
+- [ ] `atelier validate` host pre-flight — see P2.3.
+- [ ] Eval harness wired into `pnpm validate` — P3.1 covers.
+- [ ] Component-variants demo / Storybook — see P4.
 
 ---
 
@@ -210,53 +303,53 @@ Last band — only after P0–P5 settle.
 
 For full prose-form context on every landed item see commit messages and `docs/build-plan.md`.
 
-### Wave M — Baseline-first pivot (closed, 2026-05-02 session)
+### This session (2026-05-04, recent commits first)
 
-12 commits. ETHOS principle #11 codified ("Baseline-first: the catalog is the product"). Three demos ship zero custom bindings. Catalog promotions: `<Queue>` + `<Logo>` + `<MetaBadge>` + data-aware `<Grid>` + tile-shaped `<Card>` + data-aware `<Gallery>` + per-item `emphasis` flag. Adjacent tracks: P-8 + S-6.
+`1b0e50d` TODO EOD revision · `71e97fa` V-6.e nightly eval gate · `dfcb944` V-6.d review/curation flow · `1880415` S-4 distributed TriggerBus · `544bd67` V-6.a/b/f publish + consume + sign · `b6aa5b8` C-5 recipe RAG · `3f51e3c` dependabot policy · `d73c5c8` C-3/S-1 capability scoping · `61834f1` V-6.c MarketplaceBrowser · `07cf04d` test-fixture compliance · `6d1bbad` 4 pre-existing failures fixed · `6829018` skill YAML + lint CLI · `3b87f4d` site consistency sweep · `f749361` MDX format · `a82ce2c` AJV strict gate · `240cede` runtime Zod hardening · `dc70a44` site merge · `9a9e02e` marketplace nomenclature + replan.
+
+### Wave M — Baseline-first pivot (closed, 2026-05-02)
+
+12 commits. ETHOS principle #11 codified. Three demos ship zero custom bindings. Catalog promotions: `<Queue>` + `<Logo>` + `<MetaBadge>` + data-aware `<Grid>` + tile-shaped `<Card>` + `<Gallery>` + per-item `emphasis`. Adjacent: P-8 + S-6.
 
 ### Wave 11 — shipped this session (catalog 65 → 83, +18)
 
-Vis-5 (illustrations) `d9789cc` · Vis-8 (skeleton-as-shape) `0bf58fa` · Cnt-10 (saved views) `f410775` · Cnt-11 (autosave + version history) `6443904` · Int-10 (DropZone) `448b170` · Int-5 (TourStep + TourProgress + Confetti) `fc5aa32` · Int-14 (Lightbox + Image) `23d90f3` · Nav-6 (FilterQueryBar) + AI-1 (SelectionActionBar) `0504090` · AI-3 (GenerativeLayout) `4f02ea6` · V-6.c (MarketplaceBrowser) `61834f1`.
-
-Plus prior session: Vis-2, Int-2, Int-3, Int-4, Int-11, Int-13, Cnt-1, Cnt-2, Cnt-3, Cnt-4, Cnt-5, Cnt-8, Cnt-9, Nav-4, Nav-5.
+Vis-5 · Vis-8 · Cnt-10 · Cnt-11 · Int-10 · Int-5 · Int-14 · Nav-6 · AI-1 · AI-3 · V-6.c. Plus prior session: Vis-2, Int-2, Int-3, Int-4, Int-11, Int-13, Cnt-1..5 + 8..9, Nav-4, Nav-5.
 
 ### Compiler — Wave C (closed, all 5 phases shipped)
 
-- ✅ **C-1** — Validation feedback loop (`497e99d`). `ValidationFeedbackCompiler`.
-- ✅ **C-2** — Tool-using compiler. 9 tools.
-- ✅ **C-3** — Capability scoping via `@atelier/capability-resolver`. Two-stage compile. `d73c5c8`.
-- ✅ **C-4** — Outline + multi-route fan-out (`ea98644`).
-- ✅ **C-5** — Recipe RAG via `@atelier/recipe-resolver` + `findRecipe` tool. `b6aa5b8`.
+C-1 ✅ C-2 ✅ C-3 ✅ C-4 ✅ C-5 ✅.
 
 ### Wave 10 — Scale (closed, all 7 phases shipped)
 
-S-1 ✅ (= C-3) · S-2 ✅ · S-3 ✅ · S-4 ✅ (`1880415` distributed TriggerBus) · S-5 ✅ · S-6 ✅ · S-7 ✅.
+S-1 (= C-3) · S-2 · S-3 · S-4 (`1880415` distributed TriggerBus) · S-5 · S-6 · S-7.
 
 ### Wave 8 — Vault marketplace (closed, all sub-tracks shipped)
 
-V-1 ✅ · V-3 ✅ · V-6.a ✅ · V-6.b ✅ · V-6.c ✅ · V-6.d ✅ · V-6.e ✅ · V-6.f ✅. End-to-end publish → review → consume → browse → RAG → nightly eval pipeline.
+V-1 · V-3 · V-6.a · V-6.b · V-6.c · V-6.d · V-6.e · V-6.f. End-to-end publish → review → consume → browse → RAG → nightly eval pipeline.
 
 ### What we explicitly do NOT do (compiler track)
 
-- ❌ Flat Plan→Compose→Validate→Refine multi-agent pipeline as the default. High latency (60-90s vs today's 22s), high cost, marginal accuracy gain over C-1.
-- ❌ Per-component specialist agents ("a `<Queue>` agent, a `<Card>` agent"). Component selection is a single decision; splitting into N agents is overengineering.
+- ❌ Flat Plan→Compose→Validate→Refine multi-agent pipeline as the default.
+- ❌ Per-component specialist agents.
 
 ---
 
 ## Tomorrow's first move (suggested)
 
-Lowest-friction wins to pick up tomorrow, ranked:
+Lowest-friction wins:
 
-1. **P0 leftovers (manual)** — flip branch protection in repo settings; enable project board / discussions if you want them. **5 min.**
-2. **P1.4 schema variant** — `BehaviorPatternDetectedTrigger`. Self-contained, <1 d. Closes the Wave-10 plumbing follow-ups.
-3. **Marketplace browse on docs site** — one-day visible win. Embed `<MarketplaceBrowser>` against a static JSON snapshot exported on each deploy. Demonstrates the framework's promise to anyone who reads `/atelier/`.
-4. **P3 follow-up** — wire up custom domain if `atelier.dev` (or similar) is in hand; otherwise leave for later.
-5. **P4 — pick a sub-bucket** — Coll-1 (presence) is gated on a real backend wire-up; Vis-4 (variant pass) is mechanical and parallelisable; AI-2 / AI-4 round out the inline-AI surface. Coll-1 is the highest-impact next move once a host-supplied transport is identified (S-4 ✅ unblocks the wire).
+1. **P0.1 fresh-clone CI job** — adds the guardrail that the recurring symlink stale issue can't reach main again. **<1 d.**
+2. **P1.1 first env-gate flip** — pick `CIR_COMPILER_TOOLS_ENABLED` (most production-shaped) and default-on, delete the gate. Validates the productionisation pattern that the rest will follow. **2-3 d.**
+3. **P0.4 manual** — branch protection on main (5 min repo-owner action).
+4. **P2.1 build pipeline pilot** — pick one package (`@atelier/schemas` is most stable) and ship the build-artifact path as a proof. The other 14 packages get the same treatment in a follow-up batch. **2-3 d.**
+5. **P3.1 real-LLM eval seed** — extend `@atelier/eval-marketplace` to optionally use `GeminiCompiler` against the top-3 personas. Captures cost + manifest-shape. The rest of P3 builds on this seam. **2 d.**
+
+After that pattern proves out, P1 / P2 / P3 / P4 can fan out as parallel agents.
 
 ---
 
 ## Maintenance
 
-- This file is the **planning surface**. Per-commit prose-form descriptions of shipped items live in commit messages and `docs/build-plan.md`.
-- When a P0 item lands, mark it `[x]` and add the commit hash. When a higher-band item lands, do the same and consider whether it should be promoted out of the planning surface (i.e. inlined into the `What's shipped` section) on the next quarterly cleanup.
-- The marketplace nomenclature note at the top of this file should NOT be removed without consensus — it's preventing real confusion in PR review.
+- This file is the **planning surface**. Per-commit prose lives in commit messages and `docs/build-plan.md`.
+- The marketplace nomenclature note above should NOT be removed without consensus.
+- Production-readiness ordering above should NOT be reshuffled to "easier wins first" — the review's point is that the dependency order matters: validation gate → env-gate cleanup → consumer DX → real-LLM evidence. Skipping ahead to feature work undermines the credibility of everything below it.
