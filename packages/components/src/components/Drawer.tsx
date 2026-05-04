@@ -12,7 +12,12 @@
  * inverse plays out under `easing.in`. Defaults to off for back-compat.
  * Honours `prefers-reduced-motion`. Backdrop fades to/from `rgba(0,0,0,0.4)`
  * over the same duration so the two halves of the drawer move together.
+ *
+ * Radix pilot: keep Atelier's manifest-facing props and data attributes,
+ * while delegating dialog semantics, focus management, and outside
+ * interactions to `@radix-ui/react-dialog`.
  */
+import * as Dialog from '@radix-ui/react-dialog';
 import { useEffect, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { cn, elevationClass, layoutVariantClass, type LayoutVariant } from './_variants.js';
@@ -55,6 +60,27 @@ function offstageTransform(side: DrawerSide): string {
   return 'translateY(100%)';
 }
 
+function panelPlacementStyle(side: DrawerSide): CSSProperties {
+  const common: CSSProperties = {
+    position: 'fixed',
+    zIndex: 21,
+    background: 'var(--atelier-bg-surface, white)',
+    color: 'var(--atelier-fg-primary, #111827)',
+    boxShadow: 'var(--atelier-shadow-lg, 0 24px 48px rgb(15 23 42 / 18%))',
+  };
+
+  if (side === 'left') {
+    return { ...common, insetBlock: 0, left: 0, width: 'min(420px, calc(100vw - 32px))' };
+  }
+  if (side === 'right') {
+    return { ...common, insetBlock: 0, right: 0, width: 'min(420px, calc(100vw - 32px))' };
+  }
+  if (side === 'top') {
+    return { ...common, insetInline: 0, top: 0, maxHeight: 'min(70vh, 520px)' };
+  }
+  return { ...common, insetInline: 0, bottom: 0, maxHeight: 'min(70vh, 520px)' };
+}
+
 export function Drawer({
   open,
   onClose,
@@ -92,6 +118,7 @@ export function Drawer({
       window.removeEventListener('keydown', onKey);
     };
   }, [open, onClose]);
+
   if (!visible) return null;
   // Per-component motion grammar — the panel slides in from the chosen
   // edge. Reduced-motion gates the transform off so the panel just
@@ -125,32 +152,63 @@ export function Drawer({
       {...(animated ? { 'data-transition-phase': phase, 'data-animated': 'true' } : {})}
       className={cn(layoutVariantClass[variant], elevationClass.modal, className)}
     >
-      <div
-        data-cir-part="drawer-backdrop"
-        aria-hidden="true"
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: `rgba(0,0,0,${String(0.4 * backdropOpacity)})`,
-          ...backdropTransition,
+      <Dialog.Root
+        open={visible}
+        onOpenChange={(nextOpen): void => {
+          if (!nextOpen) onClose();
         }}
-      />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        data-cir-part="drawer-panel"
-        data-cir-side={side}
-        style={{ ...motionStyle, ...panelTransform, ...panelTransition }}
       >
-        {title !== undefined ? (
-          <header data-cir-part="drawer-header">
-            <h2 data-cir-part="drawer-title">{title}</h2>
-          </header>
-        ) : null}
-        <div data-cir-part="drawer-body">{children}</div>
-      </aside>
+        <Dialog.Overlay asChild>
+          <div
+            data-cir-part="drawer-backdrop"
+            aria-hidden="true"
+            onClick={onClose}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: `rgba(0,0,0,${String(0.4 * backdropOpacity)})`,
+              ...backdropTransition,
+            }}
+          />
+        </Dialog.Overlay>
+        <Dialog.Content asChild aria-label={title ?? 'Drawer'} aria-describedby={undefined}>
+          <aside
+            data-cir-part="drawer-panel"
+            data-cir-side={side}
+            style={{
+              ...panelPlacementStyle(side),
+              ...motionStyle,
+              ...panelTransform,
+              ...panelTransition,
+            }}
+          >
+            {title !== undefined ? (
+              <header
+                data-cir-part="drawer-header"
+                style={{
+                  borderBottom: '1px solid var(--atelier-border-subtle, #e5e7eb)',
+                  padding: '16px 18px',
+                }}
+              >
+                <Dialog.Title asChild>
+                  <h2 data-cir-part="drawer-title" style={{ margin: 0, fontSize: '18px' }}>
+                    {title}
+                  </h2>
+                </Dialog.Title>
+              </header>
+            ) : (
+              <Dialog.Title asChild>
+                <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>
+                  Drawer
+                </span>
+              </Dialog.Title>
+            )}
+            <div data-cir-part="drawer-body" style={{ padding: '18px' }}>
+              {children}
+            </div>
+          </aside>
+        </Dialog.Content>
+      </Dialog.Root>
     </div>
   );
 }

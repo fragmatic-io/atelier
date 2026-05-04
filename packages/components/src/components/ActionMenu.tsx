@@ -5,8 +5,13 @@
 /**
  * ActionMenu — kebab/overflow controlled menu. Variants (Wave 6 / P-10):
  * primary, secondary (default), ghost, outline, destructive. Sizes: sm, md, lg.
+ *
+ * Radix pilot: keep Atelier's manifest-facing props and data attributes,
+ * while delegating menu roles, roving focus, typeahead, Escape, and
+ * outside-interaction handling to `@radix-ui/react-dropdown-menu`.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useState, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { actionVariantClass, cn, type ActionVariant, type Size } from './_variants.js';
 
@@ -42,95 +47,79 @@ export function ActionMenu({
   'aria-label': ariaLabel = 'Actions',
 }: ActionMenuProps): ReactNode {
   const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const menuRef = useRef<HTMLUListElement | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent): void => {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (triggerRef.current?.contains(target)) return;
-      if (menuRef.current?.contains(target)) return;
-      setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return (): void => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
   return (
-    <div
-      data-cir-component="ActionMenu"
-      data-placement={placement}
-      data-open={open ? 'true' : 'false'}
-      data-variant={variant}
-      data-size={size}
-      className={cn(actionVariantClass[variant], className)}
-      style={{ position: 'relative', display: 'inline-block' }}
-    >
-      <button
-        ref={triggerRef}
-        type="button"
-        data-cir-part="action-menu-trigger"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => {
-          setOpen((v) => !v);
-        }}
+    <DropdownMenu.Root open={open} onOpenChange={setOpen}>
+      <div
+        data-cir-component="ActionMenu"
+        data-placement={placement}
+        data-open={open ? 'true' : 'false'}
+        data-variant={variant}
+        data-size={size}
+        className={cn(actionVariantClass[variant], className)}
+        style={{ position: 'relative', display: 'inline-block' }}
       >
-        {trigger}
-      </button>
-      {open ? (
-        <ul
-          ref={menuRef}
-          role="menu"
+        <DropdownMenu.Trigger asChild>
+          <button
+            type="button"
+            data-cir-part="action-menu-trigger"
+            aria-label={typeof trigger === 'string' ? undefined : ariaLabel}
+          >
+            {trigger}
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content
+          align={placement === 'bottom-start' ? 'start' : 'end'}
+          side="bottom"
           aria-label={ariaLabel}
           data-cir-part="action-menu-list"
           style={{
             position: 'absolute',
-            top: '100%',
-            left: placement === 'bottom-start' ? 0 : 'auto',
-            right: placement === 'bottom-end' ? 0 : 'auto',
             margin: 0,
-            padding: 0,
+            padding: '4px',
             listStyle: 'none',
             minWidth: '160px',
-            background: 'white',
-            border: '1px solid #ddd',
+            background: 'var(--atelier-bg-surface, white)',
+            color: 'var(--atelier-fg-primary, #111827)',
+            border: '1px solid var(--atelier-border-default, #d1d5db)',
+            borderRadius: 'var(--atelier-radius-md, 6px)',
+            boxShadow: 'var(--atelier-shadow-md, 0 12px 28px rgb(15 23 42 / 14%))',
+            zIndex: 20,
           }}
         >
           {items.map((item) => (
-            <li key={item.id} role="none">
+            <DropdownMenu.Item
+              key={item.id}
+              asChild
+              {...(item.disabled !== undefined ? { disabled: item.disabled } : {})}
+            >
               <button
                 type="button"
-                role="menuitem"
                 data-cir-part="action-menu-item"
                 data-destructive={item.destructive ? 'true' : 'false'}
                 disabled={item.disabled}
                 onClick={() => {
-                  if (item.disabled) return;
                   item.onSelect();
-                  setOpen(false);
-                  triggerRef.current?.focus();
                 }}
-                style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  border: 0,
+                  borderRadius: 'var(--atelier-radius-sm, 4px)',
+                  background: 'transparent',
+                  color: item.destructive
+                    ? 'var(--atelier-fg-danger, #b91c1c)'
+                    : 'var(--atelier-fg-primary, #111827)',
+                  padding: '6px 8px',
+                  textAlign: 'left',
+                }}
               >
                 {item.label}
               </button>
-            </li>
+            </DropdownMenu.Item>
           ))}
-        </ul>
-      ) : null}
-    </div>
+        </DropdownMenu.Content>
+      </div>
+    </DropdownMenu.Root>
   );
 }
 ActionMenu.displayName = 'ActionMenu';
