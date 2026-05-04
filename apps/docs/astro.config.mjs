@@ -16,12 +16,12 @@ const site = process.env.DOCS_SITE ?? 'https://fragmatic-io.github.io';
 
 /**
  * rehype plugin: rewrite root-relative `<a href="/foo">` to be base-prefixed
- * (`<a href="/atelier/docs/foo">`). Astro/Starlight's sidebar config gets
+ * (`<a href="/atelier/foo">`). Astro/Starlight's sidebar config gets
  * the base prefix automatically, but raw `href` attributes inside MDX —
  * markdown links `[text](/foo)` and JSX `<LinkCard href="/foo">` — do
  * not. Without this rewrite, every internal docs link 404s on Pages
  * because it lands at `<user>.github.io/foo` instead of
- * `<user>.github.io/atelier/docs/foo`.
+ * `<user>.github.io/atelier/foo`.
  *
  * Skips: external URLs, anchor-only links, and links that already start
  * with the base path.
@@ -149,7 +149,7 @@ export default defineConfig({
           label: 'Components',
           collapsed: true,
           items: [
-            { label: 'Catalog (67 baseline)', link: '/components/catalog' },
+            { label: 'Catalog', link: '/components/catalog' },
             { label: 'Baseline vs custom', link: '/components/baseline-vs-custom' },
             { label: 'Composition rules', link: '/components/composition-rules' },
             { label: 'Variants', link: '/components/variants' },

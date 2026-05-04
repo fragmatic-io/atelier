@@ -130,9 +130,9 @@ See [Compiler → Budget](/compiler/budget/) and [Operations → Cost control](/
 
 ## Deploying the docs site itself
 
-This very site lives in `apps/docs/`. It's a Starlight app that builds to a static `dist/`. The repo's `.github/workflows/docs-deploy.yml` builds on push to `main`, uploads the artifact, and `actions/deploy-pages@v4` publishes it under `/atelier/docs/` on `fragmatic-io.github.io`.
+This very site lives in `apps/docs/`. It's a Starlight app that builds to a static `dist/`. The repo's `.github/workflows/site-deploy.yml` builds on push to `main`, uploads the artifact, and `actions/deploy-pages@v4` publishes it under `/atelier/` on `fragmatic-io.github.io`.
 
-The marketing site at `/atelier/` is a separate Astro app at `apps/marketing/`. Both deploy to the same GitHub Pages site at different subpaths.
+After the P3 site merge (2026-05-04), the marketing surface (homepage + `/start/` + `/architecture/` + `/demos/`) lives in this same Starlight site as splash / docs pages — there is no longer a separate `apps/marketing` package.
 
 <Aside type="caution">
   GitHub Pages allows one source per repository. If you deploy multiple Astro apps to one Pages

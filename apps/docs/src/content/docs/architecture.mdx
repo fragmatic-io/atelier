@@ -1,14 +1,6 @@
 ---
 title: Architecture
 description: Recipe → compiler → manifest → renderer. Five public artifacts, one private artifact, ephemeral output.
-template: splash
-hero:
-  tagline: Five public artifacts at the top. One private artifact below them belongs to the user. The compiler is the only LLM-touching component.
-  actions:
-    - text: Full architecture chapter
-      link: /atelier/concepts/capability/
-      icon: right-arrow
-      variant: primary
 ---
 
 Five public artifacts at the top, signed and versioned by the app. One private artifact below them belongs to the user. The compiler is the only LLM-touching component. Every manifest passes the policy engine before serving. **Once cached, nothing in the hot path is non-deterministic.**
