@@ -98,8 +98,7 @@
           "minLength": 1
         },
         "imported_at": {
-          "type": "string",
-          "format": "date-time"
+          "type": "string"
         },
         "importer_version": {
           "type": "string",

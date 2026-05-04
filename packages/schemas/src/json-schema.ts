@@ -35,6 +35,31 @@ export interface ToJsonSchemaOptions {
 
 const DEFAULT_ID_BASE = 'https://cir.dev/schemas';
 
+/**
+ * Recursively strip `format` keywords from a JSON Schema-shaped value.
+ *
+ * `zod-to-json-schema` emits formats like `"date-time"` for `z.string().datetime()`,
+ * `"email"` for `.email()`, etc. AJV strict mode rejects any unknown format,
+ * which forces every downstream consumer to ship `ajv-formats` just to compile
+ * our schemas — not a contract we want to impose. The Zod schemas remain the
+ * source of truth for runtime validation; the generated JSON Schemas are for
+ * structural / shape checks only, so dropping `format` is safe.
+ */
+function stripFormats(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(stripFormats);
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (k === 'format') continue;
+      out[k] = stripFormats(v);
+    }
+    return out;
+  }
+  return value;
+}
+
 /** Convert a Zod schema into a JSON Schema document with a stable `$id`. */
 export function toJsonSchema(
   schema: ZodSchema,
@@ -52,6 +77,9 @@ export function toJsonSchema(
   // ours so the field order stays predictable in serialized output.
   const { $schema: _existingSchema, ...rest } = raw;
 
+  // Drop `format` everywhere — see `stripFormats` for why.
+  const cleaned = stripFormats(rest) as Record<string, unknown>;
+
   const $schema =
     target === 'jsonSchema2019-09'
       ? 'https://json-schema.org/draft/2019-09/schema'
@@ -60,6 +88,6 @@ export function toJsonSchema(
   return {
     $schema,
     $id: `${idBase}/${opts.name}.json`,
-    ...rest,
+    ...cleaned,
   };
 }

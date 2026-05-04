@@ -75,7 +75,7 @@ Cheap to fix, expensive to ignore. **Do these next.**
 - [ ] **`ManifestFetcher` Zod-validation on response body.** `ManifestResolver.validate` is the only client-side defense today. Add structural parse on response. **<1 d.**
 - [ ] **`IndexedDBManifestCache` runtime sanity check on read.** Casts stored values without parse. Add defensive parse on `get`. **<1 d.**
 - [ ] **`ActionDispatcher` Zod-validate input against `capability.input`.** Host is on the hook today. **<1 d.**
-- [ ] **JSON-Schema export AJV-strict CI step.** `pnpm schemas:dump` regenerates `.well-known/schemas/*.json`; default output sometimes uses formats AJV strict mode rejects. Add a CI gate that loads each through AJV strict and fails on rejection. **<1 d.**
+- [x] **JSON-Schema export AJV-strict CI step.** `scripts/check-schemas-ajv.ts` loads every dumped schema through `new Ajv({ strict: true })`; wired into `validate:fast` and the CI workflow. `toJsonSchema` now strips `format` keywords from generated output so downstream consumers don't need `ajv-formats` just to compile our schemas.
 - [ ] **Skill-markdown YAML strictness.** `parseSkillMarkdown` could surface a clearer error message; an `atelier lint skill <path>` would front-run validation. **<1 d.**
 
 ---

@@ -16,8 +16,7 @@
       "minimum": 0
     },
     "updated_at": {
-      "type": "string",
-      "format": "date-time"
+      "type": "string"
     },
     "global_preferences": {
       "type": "object",
