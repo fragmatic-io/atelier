@@ -14,7 +14,7 @@
 /* eslint-disable no-console */
 
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 
@@ -26,16 +26,26 @@ import { ADD_USAGE } from '../usage.js';
  * Uses `createRequire` so the CLI works under both `node --import=tsx/esm`
  * (production invocation) and Vitest's SSR worker (which does not implement
  * `import.meta.resolve`). The `@atelier/components/registry` subpath export is
- * defined in that package's `exports` map, so the resolution is stable.
+ * defined in that package's `exports` map; under built package exports it
+ * resolves to dist/registry.js, so we step back to the package source tree for
+ * the files this command copies.
  *
  * Exported for tests.
  */
 export function resolveComponentsSourceDir(): string {
   const req = createRequire(import.meta.url);
-  // package.json -> "exports": { "./registry": "./src/registry.ts" }.
-  // The components live in ./src/components/ alongside the registry.
+  // Older source-only package exports resolve beside ./src/components/.
+  // Built package exports resolve to ./dist/registry.js, with source retained
+  // at ./src/components/ for the copy command.
   const registryPath = req.resolve('@atelier/components/registry');
-  return resolve(dirname(registryPath), 'components');
+  const sourceExportDir = resolve(dirname(registryPath), 'components');
+  if (hasComponentSources(sourceExportDir)) return sourceExportDir;
+  return resolve(dirname(registryPath), '..', 'src', 'components');
+}
+
+function hasComponentSources(dir: string): boolean {
+  if (!existsSync(dir)) return false;
+  return readdirSync(dir).some((entry) => entry.endsWith('.tsx'));
 }
 
 /**

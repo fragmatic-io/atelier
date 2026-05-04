@@ -70,6 +70,7 @@
   "devDependencies": {
     "@atelier/cli": "workspace:*",
     "@atelier/docs": "workspace:*",
+    "@atelier/capability-resolver": "workspace:*",
     "@atelier/compiler": "workspace:*",
     "@atelier/components": "workspace:*",
     "@atelier/data-resolvers": "workspace:*",
@@ -79,8 +80,10 @@
     "@atelier/evals": "workspace:*",
     "@atelier/policies": "workspace:*",
     "@atelier/react": "workspace:*",
+    "@atelier/recipe-resolver": "workspace:*",
     "@atelier/runtime": "workspace:*",
     "@atelier/schemas": "workspace:*",
+    "@atelier/keyboard": "workspace:*",
     "@atelier/vault-client": "workspace:*",
     "@atelier/vault-server": "workspace:*",
     "@commitlint/cli": "^19.6.0",

@@ -5,25 +5,35 @@
   "description": "Atelier eval harness — discovers and runs scenario-based evals against capabilities, skills, components, and manifests",
   "license": "MIT",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "bin": {
-    "atelier-evals": "./src/cli/index.ts"
+    "atelier-evals": "./dist/cli/index.js"
   },
   "scripts": {
+    "build": "tsc -b tsconfig.build.json",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run"
   },
   "dependencies": {
     "@atelier/schemas": "workspace:*",
     "fast-glob": "^3.3.2",
-    "kleur": "^4.1.5"
+    "kleur": "^4.1.5",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
-    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
