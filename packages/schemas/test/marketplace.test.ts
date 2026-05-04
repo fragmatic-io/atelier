@@ -109,6 +109,36 @@ describe('canonicalJsonStringify', () => {
     const b = { y: { a: 1, b: 2 }, x: 1 };
     expect(canonicalJsonStringify(a)).toBe(canonicalJsonStringify(b));
   });
+
+  it('emits null for top-level undefined / function / symbol', () => {
+    expect(canonicalJsonStringify(undefined)).toBe('null');
+    expect(canonicalJsonStringify(() => undefined)).toBe('null');
+    expect(canonicalJsonStringify(Symbol('s'))).toBe('null');
+  });
+
+  it('emits null for arrays containing undefined / function / symbol', () => {
+    const out = canonicalJsonStringify([1, undefined, () => undefined, Symbol('s'), 2]);
+    expect(out).toBe('[1,null,null,null,2]');
+  });
+
+  it('skips undefined / function / symbol object values', () => {
+    const out = canonicalJsonStringify({
+      a: 1,
+      b: undefined,
+      c: () => undefined,
+      d: Symbol('s'),
+      e: 2,
+    });
+    // b/c/d dropped; only a, e remain.
+    expect(out).toBe('{"a":1,"e":2}');
+  });
+
+  it('round-trips strings, booleans, and null', () => {
+    expect(canonicalJsonStringify('hi')).toBe('"hi"');
+    expect(canonicalJsonStringify(true)).toBe('true');
+    expect(canonicalJsonStringify(false)).toBe('false');
+    expect(canonicalJsonStringify(null)).toBe('null');
+  });
 });
 
 describe('signingInputForBundle', () => {
