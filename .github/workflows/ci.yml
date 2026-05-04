@@ -71,8 +71,8 @@ jobs:
       - name: Capabilities index check
         run: pnpm capabilities:index:check
 
-      - name: Test (with coverage)
-        run: pnpm test --coverage
+      - name: Test
+        run: pnpm test
 
       # Pack @atelier/schemas, install into a scratch dir as a downstream npm
       # consumer would, and run workspace dist/bin smokes for the migrated core
