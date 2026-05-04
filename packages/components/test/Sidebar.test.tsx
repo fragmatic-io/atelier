@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { InMemoryKeyboardRegistry, type KeyboardServices } from '@atelier/keyboard';
 import { KeyboardProvider } from '../src/keyboard/index.js';
-import { Sidebar, SidebarBinding } from '../src/components/Sidebar.js';
+import { Sidebar, SidebarBinding, SIDEBAR_ITEM_GAP } from '../src/components/Sidebar.js';
 import { NotificationAggregator } from '../src/notification/aggregator.js';
 
 const ITEMS = [
@@ -43,6 +43,17 @@ describe('Sidebar', () => {
   it('renders nested children when present', () => {
     render(<Sidebar items={ITEMS} />);
     expect(document.querySelectorAll('[data-cir-part="sidebar-child"]').length).toBe(2);
+  });
+
+  it('keeps primary and secondary item spacing matched on design tokens', () => {
+    const { container } = render(<Sidebar items={ITEMS} />);
+    const primary = container.querySelector<HTMLElement>('[data-cir-part="sidebar-items"]');
+    const secondary = container.querySelector<HTMLElement>('[data-cir-part="sidebar-children"]');
+    expect(primary?.style.display).toBe('grid');
+    expect(secondary?.style.display).toBe('grid');
+    expect(primary?.style.gap).toBe(SIDEBAR_ITEM_GAP);
+    expect(secondary?.style.gap).toBe(SIDEBAR_ITEM_GAP);
+    expect(primary?.style.gap).toContain('--atelier-space-xs');
   });
 
   it('starts uncollapsed by default', () => {

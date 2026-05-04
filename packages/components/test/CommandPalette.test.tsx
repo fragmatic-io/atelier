@@ -17,9 +17,9 @@ const COMMANDS = [
 ];
 
 describe('CommandPalette', () => {
-  it('renders nothing visible when closed (dialog has no open attr)', () => {
+  it('renders nothing visible when closed', () => {
     render(<CommandPalette open={false} commands={COMMANDS} onClose={() => undefined} />);
-    expect(document.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+    expect(document.querySelector('[data-cir-component="CommandPalette"]')).toBeNull();
   });
 
   it('shows all commands when open with empty query', () => {
@@ -102,16 +102,15 @@ describe('CommandPalette', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('toggles the dialog open attribute on the open prop', () => {
+  it('toggles the dialog surface on the open prop', () => {
     const { rerender } = render(
       <CommandPalette open={false} commands={COMMANDS} onClose={() => undefined} />,
     );
-    const dlg = document.querySelector('dialog')!;
-    expect(dlg.hasAttribute('open')).toBe(false);
+    expect(document.querySelector('[data-cir-component="CommandPalette"]')).toBeNull();
     rerender(<CommandPalette open commands={COMMANDS} onClose={() => undefined} />);
-    expect(dlg.hasAttribute('open')).toBe(true);
+    expect(document.querySelector('[data-cir-component="CommandPalette"]')).not.toBeNull();
     rerender(<CommandPalette open={false} commands={COMMANDS} onClose={() => undefined} />);
-    expect(dlg.hasAttribute('open')).toBe(false);
+    expect(document.querySelector('[data-cir-component="CommandPalette"]')).toBeNull();
   });
 
   it('binding id matches', () => {

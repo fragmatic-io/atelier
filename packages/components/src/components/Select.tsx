@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 /**
- * Select — controlled native `<select>`. We use the platform widget on
- * purpose: it ships keyboard navigation, screen-reader support, and mobile
- * native pickers for free. A custom listbox can replace this in Phase 4c
- * if richer styling demands it; for the baseline we don't pay the
- * accessibility cost.
+ * Select — controlled Radix select. This keeps the manifest-facing contract
+ * flat while giving hosts a themeable trigger/content surface and Radix's
+ * keyboard/focus behavior.
  */
+import * as RadixSelect from '@radix-ui/react-select';
 import { useId, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 
@@ -37,27 +36,45 @@ export function Select({
   className,
 }: SelectProps): ReactNode {
   const generatedId = useId();
-  const selectId = id ?? `cir-select-${generatedId}`;
+  const labelId = id ?? `cir-select-${generatedId}`;
+  const current = options.find((opt) => opt.value === value);
   return (
     <div data-cir-component="Select" className={className}>
-      <label htmlFor={selectId} data-cir-part="select-label">
+      <span id={labelId} data-cir-part="select-label">
         {label}
-      </label>
-      <select
-        id={selectId}
-        name={name}
+      </span>
+      <RadixSelect.Root
         value={value}
-        disabled={disabled}
-        onChange={(e) => {
-          onChange(e.currentTarget.value);
-        }}
+        onValueChange={onChange}
+        {...(name !== undefined ? { name } : {})}
+        {...(disabled !== undefined ? { disabled } : {})}
       >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+        <RadixSelect.Trigger aria-labelledby={labelId} data-cir-part="select-trigger">
+          <RadixSelect.Value placeholder={current?.label ?? label} />
+          <RadixSelect.Icon data-cir-part="select-icon" aria-hidden>
+            ▾
+          </RadixSelect.Icon>
+        </RadixSelect.Trigger>
+        <RadixSelect.Portal>
+          <RadixSelect.Content
+            data-cir-part="select-content"
+            data-elevation="popover"
+            position="popper"
+            sideOffset={4}
+          >
+            <RadixSelect.Viewport data-cir-part="select-viewport">
+              {options.map((opt) => (
+                <RadixSelect.Item key={opt.value} value={opt.value} data-cir-part="select-option">
+                  <RadixSelect.ItemText>{opt.label}</RadixSelect.ItemText>
+                  <RadixSelect.ItemIndicator data-cir-part="select-option-indicator">
+                    ✓
+                  </RadixSelect.ItemIndicator>
+                </RadixSelect.Item>
+              ))}
+            </RadixSelect.Viewport>
+          </RadixSelect.Content>
+        </RadixSelect.Portal>
+      </RadixSelect.Root>
     </div>
   );
 }

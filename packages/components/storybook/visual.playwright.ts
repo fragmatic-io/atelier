@@ -1,12 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
-import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test, type Page } from '@playwright/test';
 
 const BRAND_EXPECTATIONS = [
   { id: 'neutral', brand: 'atelier.design.neutral', accent: '#2563eb' },
   { id: 'commerce', brand: 'atelier.design.commerce', accent: '#ff5f3a' },
   { id: 'console', brand: 'atelier.design.console', accent: '#38bdf8' },
 ] as const;
+
+async function expectStoryA11yClean(page: Page): Promise<void> {
+  const results = await new AxeBuilder({ page }).include('[data-cir-story-root]').analyze();
+
+  expect(results.violations).toEqual([]);
+}
 
 for (const brand of BRAND_EXPECTATIONS) {
   test(`component catalog renders unobstructed with ${brand.id} design system`, async ({
@@ -66,6 +73,8 @@ test('interaction primitives story exercises Radix-backed surfaces', async ({ pa
     '/iframe.html?id=components-catalog--interaction-primitives&viewMode=story&globals=designSystem:neutral',
   );
 
+  await expectStoryA11yClean(page);
+
   await page.locator('[data-cir-part="action-menu-trigger"]').click();
   await page.locator('[data-cir-part="action-menu-item"]', { hasText: 'Assign' }).click();
   await expect(page.locator('[data-cir-last-action]')).toHaveText('Last action: Assign');
@@ -81,4 +90,56 @@ test('interaction primitives story exercises Radix-backed surfaces', async ({ pa
   await expect(page.getByText('Recent activity')).toBeVisible();
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('dialog', { name: 'Customer context' })).toHaveCount(0);
+});
+
+test('ExceptionReviewWorkbench resolves with confirmation and audit', async ({ page }) => {
+  await page.goto(
+    '/iframe.html?id=components-operational-workflows--exception-review-workbench&viewMode=story&globals=designSystem:neutral',
+  );
+
+  await expect(page.locator('[data-cir-workflow="ExceptionReviewWorkbench"]')).toBeVisible();
+  await expectStoryA11yClean(page);
+  await page.locator('[data-cir-queue-item]', { hasText: 'EX-1038' }).click();
+  await expect(page.locator('[data-cir-record-id]')).toHaveText('EX-1038');
+
+  await page.locator('[data-cir-resolve-exception]').click();
+  await expect(page.getByRole('dialog', { name: 'Confirm exception resolution' })).toBeVisible();
+  await page.locator('[data-cir-confirm-resolution]').click();
+  await expect(page.locator('[data-cir-audit-line]')).toContainText('Resolved EX-1038');
+});
+
+test('CustomerContextPanel switches customer context and opens risk notes', async ({ page }) => {
+  await page.goto(
+    '/iframe.html?id=components-operational-workflows--customer-context-panel&viewMode=story&globals=designSystem:neutral',
+  );
+
+  await expect(page.locator('[data-cir-workflow="CustomerContextPanel"]')).toBeVisible();
+  await expectStoryA11yClean(page);
+  await page.locator('[data-cir-customer-row]', { hasText: 'Arden Health' }).click();
+  await expect(page.locator('[data-cir-workflow-header] h2')).toHaveText('Arden Health');
+
+  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await expect(page.locator('[data-cir-mini-timeline]')).toContainText(
+    'Policy evaluator requested',
+  );
+
+  await page.locator('[data-cir-open-notes]').click();
+  await expect(page.getByRole('dialog', { name: 'Risk notes' })).toBeVisible();
+});
+
+test('ApprovalCommandCenter runs command palette approval flow', async ({ page }) => {
+  await page.goto(
+    '/iframe.html?id=components-operational-workflows--approval-command-center&viewMode=story&globals=designSystem:neutral',
+  );
+
+  await expect(page.locator('[data-cir-workflow="ApprovalCommandCenter"]')).toBeVisible();
+  await expectStoryA11yClean(page);
+  await page.locator('[data-cir-approval-item]', { hasText: 'APR-2197' }).click();
+  await page.locator('[data-cir-open-command-palette]').click();
+
+  await expect(page.getByRole('dialog', { name: 'Command palette' })).toBeVisible();
+  await page.getByRole('button', { name: /Approve APR-2197/i }).click();
+  await expect(page.getByRole('dialog', { name: 'Confirm approval dispatch' })).toBeVisible();
+  await page.locator('[data-cir-confirm-approval]').click();
+  await expect(page.locator('[data-cir-audit-line]')).toContainText('Approved APR-2197');
 });
