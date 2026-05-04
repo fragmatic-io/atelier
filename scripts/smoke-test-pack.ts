@@ -314,12 +314,41 @@ function runWorkspaceArtifactSmoke(): void {
 import { ActionDispatcher, MapActionRegistry } from '@atelier/runtime';
 import { validateManifest } from '@atelier/policies';
 import { MemoryManifestStore, ServerManifestResolver } from '@atelier/compiler';
+import { ALL_COMPONENTS, Button, COMPONENT_BINDINGS, resolveDensity } from '@atelier/components';
+import { ALL_COMPONENTS as REGISTRY_COMPONENTS } from '@atelier/components/registry';
+import { COMPOSITION_RULES } from '@atelier/components/composition-rules';
+import { DENSITY_AWARE_COMPONENTS } from '@atelier/components/_variants';
+import { CirRuntime } from '@atelier/react';
+import { buildTestServices } from '@atelier/react/testing';
+import { CompileBadge } from '@atelier/react/debug';
+import { defineEval } from '@atelier/evals';
+import { InMemoryKeyboardRegistry } from '@atelier/keyboard';
+import { MockDataResolver } from '@atelier/data-resolvers';
+import { SubstringCapabilityResolver } from '@atelier/capability-resolver';
+import { SubstringRecipeResolver } from '@atelier/recipe-resolver';
+import { runMarketplaceEval } from '@atelier/eval-marketplace';
 
 if (typeof ActionDispatcher !== 'function') throw new Error('ActionDispatcher export missing');
 if (typeof MapActionRegistry !== 'function') throw new Error('MapActionRegistry export missing');
 if (typeof validateManifest !== 'function') throw new Error('validateManifest export missing');
 if (typeof MemoryManifestStore !== 'function') throw new Error('MemoryManifestStore export missing');
 if (typeof ServerManifestResolver !== 'function') throw new Error('ServerManifestResolver export missing');
+if (Button === undefined) throw new Error('Button export missing');
+if (typeof ALL_COMPONENTS.get !== 'function') throw new Error('ALL_COMPONENTS export missing');
+if (!COMPONENT_BINDINGS.Button) throw new Error('COMPONENT_BINDINGS export missing');
+if (typeof REGISTRY_COMPONENTS.get !== 'function') throw new Error('registry subpath export missing');
+if (!COMPOSITION_RULES) throw new Error('composition-rules subpath export missing');
+if (!(DENSITY_AWARE_COMPONENTS instanceof Set)) throw new Error('_variants subpath export missing');
+if (typeof resolveDensity !== 'function') throw new Error('density-resolver export missing');
+if (typeof CirRuntime !== 'function') throw new Error('CirRuntime export missing');
+if (typeof buildTestServices !== 'function') throw new Error('react testing export missing');
+if (typeof CompileBadge !== 'function') throw new Error('react debug export missing');
+if (typeof defineEval !== 'function') throw new Error('evals export missing');
+if (typeof InMemoryKeyboardRegistry !== 'function') throw new Error('keyboard export missing');
+if (typeof MockDataResolver !== 'function') throw new Error('data-resolvers export missing');
+if (typeof SubstringCapabilityResolver !== 'function') throw new Error('capability-resolver export missing');
+if (typeof SubstringRecipeResolver !== 'function') throw new Error('recipe-resolver export missing');
+if (typeof runMarketplaceEval !== 'function') throw new Error('eval-marketplace export missing');
 console.log('workspace-runtime ok');
 `,
     ],
@@ -397,6 +426,30 @@ console.log('workspace-runtime ok');
     }
   }
   log('cli-bin', 'CLI subcommand dist entrypoints succeeded under bare Node');
+
+  log('evals-bin', 'node packages/evals/dist/cli/index.js run --pattern __no_evals__/**/*.eval.ts');
+  const evals = spawnSync(
+    'node',
+    [
+      '--import=tsx/esm',
+      join(ROOT, 'packages', 'evals', 'dist', 'cli', 'index.js'),
+      'run',
+      '--pattern',
+      '__no_evals__/**/*.eval.ts',
+    ],
+    {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    },
+  );
+  if (evals.status !== 0) {
+    fail(
+      'evals-bin',
+      `atelier-evals smoke failed (exit ${evals.status})\nstdout:\n${evals.stdout}\nstderr:\n${evals.stderr}`,
+    );
+  }
+  log('evals-bin', 'atelier-evals dist entrypoint succeeded under bare Node + tsx loader');
 }
 
 function main(): void {

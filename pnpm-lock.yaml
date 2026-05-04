@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@atelier/capability-resolver':
+        specifier: workspace:*
+        version: link:packages/capability-resolver
       '@atelier/cli':
         specifier: workspace:*
         version: link:packages/cli
@@ -35,12 +38,18 @@ importers:
       '@atelier/evals':
         specifier: workspace:*
         version: link:packages/evals
+      '@atelier/keyboard':
+        specifier: workspace:*
+        version: link:packages/keyboard
       '@atelier/policies':
         specifier: workspace:*
         version: link:packages/policies
       '@atelier/react':
         specifier: workspace:*
         version: link:packages/react
+      '@atelier/recipe-resolver':
+        specifier: workspace:*
+        version: link:packages/recipe-resolver
       '@atelier/runtime':
         specifier: workspace:*
         version: link:packages/runtime
@@ -521,10 +530,10 @@ importers:
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
-    devDependencies:
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
+    devDependencies:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -562,6 +571,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@atelier/components':
+        specifier: workspace:*
+        version: link:../components
       '@atelier/policies':
         specifier: workspace:*
         version: link:../policies
@@ -572,9 +584,6 @@ importers:
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
-      '@atelier/components':
-        specifier: workspace:*
-        version: link:../components
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)

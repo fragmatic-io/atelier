@@ -5,16 +5,38 @@
   "description": "Atelier baseline React component library — unstyled, semantic primitives that fit ComponentBinding",
   "license": "MIT",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./registry": "./src/registry.ts",
-    "./composition-rules": "./src/composition-rules.ts",
-    "./density-resolver": "./src/density-resolver.ts",
-    "./_variants": "./src/components/_variants.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./registry": {
+      "types": "./dist/registry.d.ts",
+      "default": "./dist/registry.js"
+    },
+    "./composition-rules": {
+      "types": "./dist/composition-rules.d.ts",
+      "default": "./dist/composition-rules.js"
+    },
+    "./density-resolver": {
+      "types": "./dist/density-resolver.d.ts",
+      "default": "./dist/density-resolver.js"
+    },
+    "./_variants": {
+      "types": "./dist/components/_variants.d.ts",
+      "default": "./dist/components/_variants.js"
+    }
   },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
+    "build": "tsc -b tsconfig.build.json",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run"
   },
