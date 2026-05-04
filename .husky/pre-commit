@@ -1,13 +1,16 @@
 # Pre-commit hook.
 #
-# Op-debt note (Wave 11 batch — multi-agent worktree learning): when
-# multiple agents work in linked worktrees that share the same `.git`,
-# `lint-staged`'s `git stash --include-untracked` can sweep in OTHER
-# worktrees' untracked files. The agent then commits a polluted index
-# unless it manually unstages.
+# Op-debt fix (Wave 11 batch — multi-agent worktree): when multiple
+# agents work in linked worktrees that share the same `.git/`,
+# `lint-staged`'s default `git stash --include-untracked --keep-index`
+# sweeps in OTHER worktrees' untracked files. Popping the stash then
+# lands those files in the wrong tree (or loses them).
 #
-# Mitigation today: agents should `git status` before staging and
-# explicitly `git add <paths>` rather than `git add -A`. Long-term fix
-# would be lint-staged supporting per-worktree stash isolation, OR
-# agents using non-linked worktrees (separate `.git`).
-pnpm exec lint-staged
+# Mitigation: run lint-staged with `--no-stash` (lint-staged v15+).
+# Trade-off: lint-staged operates on the working-tree copy of each
+# staged file, so any unstaged edits to a staged file get linted
+# alongside the staged hunks. For `prettier --write` and `eslint --fix`
+# this is benign — both are idempotent and the agent re-stages the
+# touched files. The win is that NO global stash is taken, so sibling
+# worktrees stay untouched.
+pnpm exec lint-staged --no-stash

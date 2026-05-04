@@ -1,27 +1,25 @@
 name: site-deploy
 
-# Builds the @atelier/marketing AND @atelier/docs Astro sites and deploys them
-# to GitHub Pages as ONE merged artifact under a single Pages source.
+# Builds the @atelier/docs Starlight site and deploys it to GitHub Pages.
 #
-# Layout in the deployed artifact:
-#   /                   — apps/marketing/dist/  (the brand-pitch site)
-#   /docs/              — apps/docs/dist/       (this Starlight developer docs site)
-#
-# Why one workflow: GitHub Pages allows one source per repo. Two independent
-# deploy-pages workflows would race; last write wins, the loser's surface
-# disappears. Merging into a single artifact in one workflow avoids that.
+# After the P3 marketing+docs merge (2026-05-04), this is a single-site
+# deploy. The Starlight site at `apps/docs/` serves both the marketing
+# splash pages (`/`, `/start/`, `/architecture/`, `/demos/`) and the
+# developer docs (sidebar-rendered sections under `/introduction/`,
+# `/getting-started/`, `/concepts/`, `/compiler/`, `/components/`,
+# `/marketplace/`, `/runtime/`, `/operations/`, plus `/roadmap/`,
+# `/glossary/`, `/contributing/`).
 #
 # REQUIRES (one-time, repo-owner action):
 #   Settings → Pages → Source: "GitHub Actions"
 # Until that toggle is flipped, the deploy step will fail with a clear
-# message from actions/configure-pages — the build steps still run, so
+# message from actions/configure-pages — the build step still runs, so
 # PRs get build-time validation regardless.
 
 on:
   push:
     branches: [main]
     paths:
-      - 'apps/marketing/**'
       - 'apps/docs/**'
       - '.github/workflows/site-deploy.yml'
   workflow_dispatch:
@@ -37,7 +35,7 @@ permissions:
 
 jobs:
   build:
-    name: Build marketing + docs
+    name: Build docs site
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -65,32 +63,20 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Build marketing site
+      - name: Build docs site
         env:
           # configure-pages sets `base_path` to the Pages base
           # (e.g. /atelier on fragmatic-io.github.io/atelier, or / for a
-          # custom domain). Marketing lands at the root of that base.
-          MARKETING_BASE: ${{ steps.pages.outputs.base_path }}
-          MARKETING_SITE: ${{ steps.pages.outputs.origin }}
-        run: pnpm --filter @atelier/marketing build
-
-      - name: Build docs site
-        env:
-          # Docs lives at /<base>/docs — concatenate.
-          DOCS_BASE: ${{ steps.pages.outputs.base_path }}/docs
+          # custom domain). The docs site now lives at the root of that
+          # base — there is no longer a separate marketing layer above.
+          DOCS_BASE: ${{ steps.pages.outputs.base_path }}
           DOCS_SITE: ${{ steps.pages.outputs.origin }}
         run: pnpm --filter @atelier/docs build
 
-      - name: Merge artifacts
-        # Marketing → /, docs → /docs/. The docs build emits its own subpath
-        # in `base`, so files inside apps/docs/dist already reference
-        # /atelier/docs/* correctly; we just nest the directory under the
-        # marketing artifact.
+      - name: Stage artifact
         run: |
           mkdir -p _site
-          cp -r apps/marketing/dist/. _site/
-          mkdir -p _site/docs
-          cp -r apps/docs/dist/. _site/docs/
+          cp -r apps/docs/dist/. _site/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

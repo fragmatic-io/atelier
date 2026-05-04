@@ -6,10 +6,12 @@ import rehypeMermaid from 'rehype-mermaid';
 import { visit } from 'unist-util-visit';
 
 // GitHub Pages serves project sites from `<user>.github.io/<repo>/` unless a
-// custom domain is bound. Marketing lives at `/atelier/` and the docs site
-// lives at `/atelier/docs/`. The combined deploy workflow stitches both
-// into one Pages artifact; the docs site's `base` is the docs subpath.
-const base = process.env.DOCS_BASE ?? '/atelier/docs';
+// custom domain is bound. After the marketing+docs merge (P3, 2026-05-04),
+// this single Starlight site serves the entire `/atelier/` path — the
+// homepage is the splash page, and the secondary marketing surfaces
+// (`/start/`, `/architecture/`, `/demos/`) are Starlight splash pages
+// alongside the developer docs sections.
+const base = process.env.DOCS_BASE ?? '/atelier';
 const site = process.env.DOCS_SITE ?? 'https://fragmatic-io.github.io';
 
 /**
@@ -78,9 +80,11 @@ export default defineConfig({
       pagination: true,
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
 
-      // The marketing site lives at `/atelier/` and is the brand surface.
-      // Top-bar links cross over to it so a reader can hop between the
-      // pitch site and the docs without thinking about deploy boundaries.
+      // After the P3 marketing+docs merge (2026-05-04), the homepage
+      // (`/index.mdx`) and the four splash pages (`/start/`,
+      // `/architecture/`, `/demos/`) ARE the marketing surface — the
+      // separate `apps/marketing` was retired in favour of Starlight's
+      // `template: splash` for those routes.
       components: {},
       head: [
         {
@@ -90,6 +94,15 @@ export default defineConfig({
       ],
 
       sidebar: [
+        {
+          label: 'Atelier',
+          items: [
+            { label: 'Home', link: '/' },
+            { label: 'Quick start', link: '/start' },
+            { label: 'Architecture', link: '/architecture' },
+            { label: 'Demos', link: '/demos' },
+          ],
+        },
         {
           label: 'Introduction',
           items: [
