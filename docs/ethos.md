@@ -1,6 +1,6 @@
 # Atelier Ethos — what every implementation and demo must honor
 
-> **Atelier's core thesis**: a UI's _layout_ is a runtime artifact. A compiler
+> **Atelier's core thesis**: an operational UI's _layout_ is a runtime artifact. A compiler
 > takes a recipe (declarative app description), the user's intent profile,
 > and the granted capabilities, and produces a manifest tree. The runtime
 > walks the tree against a registered binding catalog. Policies validate
@@ -129,13 +129,14 @@ demo.
 > **the catalog**. When we mean the distribution channel we say
 > "**vault marketplace**" or cite "V-6".
 
-The framework's promise is "give the LLM a rich enough primitive
-catalog and it will compose any domain UI." That promise is only
-real if hosts can ship apps **without** writing per-host React for every
-domain shape. Each per-host `ComponentBinding` registered on top of
-`@atelier/components`'s `COMPONENT_BINDINGS` is a local escape hatch — a
-place where the host has decided the LLM cannot be trusted to compose
-the shape from primitives.
+The framework's promise is "give the compiler mature primitives, strict
+composition rules, brand tokens, and operational composites, and it will
+compose useful policy-safe workbenches." That promise is only real if hosts can
+ship operational apps **without** writing per-host React for every domain shape.
+Each per-host `ComponentBinding` registered on top of `@atelier/components`'s
+`COMPONENT_BINDINGS` is a local escape hatch — a place where the host has
+decided the compiler cannot be trusted to compose the shape from baseline
+vocabulary.
 
 Most "custom bindings" are smell:
 
@@ -168,9 +169,11 @@ known follow-up. Adding a new binding without first attempting (a) a
 baseline promotion or (b) a composition fails the gate. Lowering the
 ceiling by deleting a binding is the only way to grow the marketplace.
 
-A demo's custom-binding count is the single best smell test for whether
-the framework's baseline-first promise is being kept. **Aurora ships
-zero.** Octant and Marigold are on the migration plan to follow.
+A demo's custom-binding count is a useful smell test for whether the
+framework's baseline-first promise is being kept. The stronger test is
+operational: can a generated surface move from context → decision →
+policy-confirmed dispatch → audit without handwritten route UI? **Aurora,
+Octant, and Marigold ship zero custom bindings.**
 
 ---
 

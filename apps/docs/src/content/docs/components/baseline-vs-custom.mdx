@@ -3,9 +3,15 @@ title: Baseline vs custom bindings
 description: The marketplace pivot story. Why custom bindings are a last resort.
 ---
 
-The framework's promise is: **give the LLM a rich enough primitive marketplace and it will compose any domain UI.** That promise is only real if hosts can ship apps **without** writing per-host React for every domain shape.
+The framework's promise is: **give the compiler mature primitives, strict
+composition rules, brand tokens, and operational composites, and it will compose
+useful policy-safe workbenches.** That promise is only real if hosts can ship
+operational apps **without** writing per-host React for every domain shape.
 
-Each per-host `ComponentBinding` registered on top of `@atelier/components`'s `COMPONENT_BINDINGS` is a local escape hatch — a place where the host has decided the LLM cannot be trusted to compose the shape from primitives.
+Each per-host `ComponentBinding` registered on top of `@atelier/components`'s
+`COMPONENT_BINDINGS` is a local escape hatch — a place where the host has
+decided the compiler cannot be trusted to compose the shape from baseline
+vocabulary.
 
 ## The pressure pyramid
 
@@ -84,7 +90,11 @@ test.each(Object.entries(CEILINGS))('%s ships at most %i custom bindings', (path
 
 ## A demo's custom-binding count
 
-…is the single best smell test for whether the framework's marketplace promise is being kept. The three reference demos all ship **zero** as of Wave M (2026-05-02).
+…is a useful smell test for whether the framework's baseline-first promise is
+being kept. It is not the whole product test. The stronger test is whether a
+generated operational workflow can move from context → decision →
+policy-confirmed dispatch → audit without handwritten route UI. The three
+reference demos all ship **zero** as of Wave M (2026-05-02).
 
 | Demo                             | Pre-pivot | Post-pivot |
 | -------------------------------- | --------- | ---------- |

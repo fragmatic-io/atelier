@@ -1,9 +1,9 @@
 ---
 title: Atelier
-description: Capability · Intent · Render. UI as a runtime artifact.
+description: Capability · Intent · Render. Policy-safe adaptive operational UI.
 template: splash
 hero:
-  tagline: UI as a runtime artifact. The compiler builds the manifest. The renderer walks it. The catalog ships the parts.
+  tagline: Operational UI as a runtime artifact. Capabilities define what can happen. Policies define what may happen. Intent shapes what should be shown.
   actions:
     - text: Quick start
       link: /atelier/start/
@@ -24,9 +24,15 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 > **Intent is the private artifact.**
 > **UI is ephemeral output.**
 
-Software ships **capabilities and skills** (typed actions, data, usage knowledge). Users keep **intent** (preferences, lenses, rules). Agents emit **UI as ephemeral output** — a `Manifest` JSON document the runtime renders. Cached. Versioned. Recomputed only on trigger.
+Software ships **capabilities and skills** (typed actions, data, usage knowledge). Users keep **intent** (preferences, lenses, rules). Agents emit **operational UI as ephemeral output** — a `Manifest` JSON document the runtime renders. Cached. Versioned. Recomputed only on trigger.
 
 Atelier is the integration of pieces that already exist — MCP-style capabilities, skills, JSON manifest UI, intent profiles, multi-tier caching, pub-sub triggers — into one principled architecture. **Compile rarely, render constantly.**
+
+The product promise is deliberately bounded: **operational UI generated from
+capabilities, policies, intent, and a strong component/composition system.**
+Atelier is not a prompt-to-any-app generator. It is for support ops,
+sales/revenue ops, marketplace ops, compliance/risk ops, and engineering ops
+teams that need role-specific workbenches over the same systems of record.
 
 ## Three artifacts
 
@@ -42,9 +48,9 @@ Atelier is the integration of pieces that already exist — MCP-style capabiliti
   </Card>
 </CardGrid>
 
-## The baseline-first pivot
+## The operational-ui pivot
 
-**Wave M, 2026-05-02.** The framework's promise is simple: give the LLM a rich-enough primitive **catalog** and it will compose any domain UI. Three reference apps. Different domains. **Zero custom React components.**
+**Wave M, 2026-05-02.** The framework proved the baseline-first direction: three reference apps, different domains, **zero custom React components.** The next promise is stricter: primitives are necessary but not enough. Atelier must pair mature primitives with composition rules and operational composites that make generated workbenches feel useful, auditable, and on-brand.
 
 |          |                       |
 | -------- | --------------------- |
@@ -52,7 +58,7 @@ Atelier is the integration of pieces that already exist — MCP-style capabiliti
 | Octant   | **0** custom bindings |
 | Marigold | **0** custom bindings |
 
-A demo's custom-binding count is the single best smell test for whether the framework's catalog promise is being kept. The [ETHOS principle #11](/atelier/introduction/ethos/) codifies why; the [demos page](/atelier/demos/) shows what shipped.
+A demo's custom-binding count is one smell test for whether the framework's catalog promise is being kept. The stronger test is whether a generated operational workflow can take a real user from context → decision → policy-confirmed action → audit record without handwritten route UI. The [ETHOS principle #11](/atelier/introduction/ethos/) codifies the baseline-first rule; the [product promise](/atelier/introduction/product-promise/) codifies the narrower market promise.
 
 > **Naming note.** Two distinct things in this codebase share the word "marketplace":
 >

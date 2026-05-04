@@ -1,46 +1,59 @@
-# 90% Coverage Strategy
+# Operational UI Coverage Strategy
 
-The ambition is that Atelier covers 90% of web app and website use cases. Here is how that math works.
+Atelier is no longer pursuing "90% of web apps" as the product promise. That
+claim is too broad and invites weak demos. The production target is narrower:
 
----
-
-## The taxonomy
-
-90% of web apps fall into one of these patterns:
-
-| Pattern                | % of apps | Examples                      | Atelier coverage                   |
-| ---------------------- | --------- | ----------------------------- | ---------------------------------- |
-| CRUD over entities     | 25%       | Notion, Airtable, Linear      | Native — Form/Table/DetailView     |
-| Communication          | 15%       | Email, chat, comments         | Native — ChatThread/ThreadView     |
-| Workflow / pipeline    | 12%       | CRM, recruiting, project mgmt | Native — Kanban/Stepper            |
-| Scheduling             | 8%        | Calendar, booking             | Native — Calendar/AvailabilityGrid |
-| Analytics / dashboards | 12%       | Looker, Metabase, KPI tools   | Native — Chart/StatCard/Grid       |
-| Document / media       | 8%        | Docs, drives, galleries       | Native — Markdown/Gallery/CodeView |
-| Search / discovery     | 5%        | Google, internal search       | Native — Search/FilterBar/List     |
-| Commerce               | 5%        | Shopify storefronts (browse)  | Native — Card/Gallery/Form         |
-| Real-time monitoring   | 3%        | Status pages, ops dashboards  | Native — KPIRow/Chart/Alert        |
-| Specialized creative   | 7%        | Figma, video editors, DAWs    | Out of scope (canvas-heavy)        |
-
-Out-of-scope categories — the 10% that doesn't fit — are mostly canvas-heavy or real-time multiplayer creative tools. Those have their own UI primitives and don't benefit from a generic component catalog.
+**Operational UI generated from capabilities, policies, intent, and a strong
+component/composition system.**
 
 ---
 
-## What "coverage" means in practice
+## The target taxonomy
 
-For each in-scope app:
+Atelier should cover most operational workflows that sit on top of real systems
+of record:
 
-- The app exposes its capabilities (typed actions + data schemas)
-- The app catalogs its components (or uses the shared catalog)
-- The app authors skills for common patterns
-- The user has an intent profile
-- The compiler produces manifests
+| Pattern                    | First-market examples                           | Atelier coverage target                                  |
+| -------------------------- | ----------------------------------------------- | -------------------------------------------------------- |
+| Exception review           | Refund exceptions, compliance holds, SLA risk   | `Queue` + `DetailView` + policy gate + audit timeline    |
+| Account/customer context   | Support account view, sales account brief       | `CustomerContextPanel` + `Timeline` + related actions    |
+| Approval workflow          | Refund approval, access request, risk signoff   | `ApprovalCommandCenter` + confirmation policy            |
+| Ops dashboards             | Support load, marketplace health, incident KPIs | `KPIRow` + `Chart` + `Table` + trigger-aware refresh     |
+| Investigation / triage     | Issue inbox, alert triage, fraud review         | `Queue` + `DiffView` + `Evidence` / attachment patterns  |
+| Bulk operational actions   | Reassign, archive, close, refund batches        | Selection + `BulkActionBar` + undo / rollback middleware |
+| Audit / compliance surface | Action history, policy validation, grants       | `PolicyAuditTimeline` + manifest/audit event views       |
 
-If all five are in place, the user can customize. The 90% number means: for 9 out of 10 apps you might use this week, the framework is fundamentally applicable.
+Out-of-scope categories are still valid software, just not the first Atelier
+market: consumer landing pages, games, canvas-heavy editors, creative suites,
+bespoke marketing pages, and highly choreographed brand experiences.
 
 ---
 
-## The "fallback to default" guarantee
+## What "coverage" means now
 
-For any route the compiler cannot generate a valid manifest for (policy failure, capability missing, intent ambiguous), the system serves the default recipe. The user never sees a broken interface. The customize flow surfaces an error: "Couldn't customize this route — here's why."
+For an operational workflow to be "covered," all of this must be true:
 
-This guarantee is what makes Atelier safe to deploy. The worst case is: the user sees the same UI everyone else sees. The best case: their interface is uniquely theirs.
+- The app exposes typed data and action capabilities.
+- Every action declares side effects, permissions, confirmation, and reversibility.
+- Policies can validate the rendered manifest before it is served.
+- The component catalog has enough primitives and composites to express the flow.
+- Brand kit tokens make the generated surface look on-brand without route CSS.
+- The runtime can dispatch actions and write audit events.
+- Storybook or E2E coverage proves the workflow is usable, not merely rendered.
+
+The old question was "can the compiler draw the UI?" The production question is
+"can the operator safely finish the job?"
+
+---
+
+## The fallback guarantee
+
+For any route the compiler cannot generate a valid manifest for — policy
+failure, capability missing, ambiguous intent, component mismatch — the system
+serves the default recipe. The user never sees a broken interface. The
+customize flow surfaces the reason: "Couldn't customize this route — here's
+why."
+
+This guarantee is what makes Atelier safe to deploy. Worst case: the operator
+sees the known-good default workflow. Best case: the interface adapts to their
+role, queue, policy grants, and intent without forking the frontend.

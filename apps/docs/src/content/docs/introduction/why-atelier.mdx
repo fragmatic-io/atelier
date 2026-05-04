@@ -5,9 +5,16 @@ description: Problem space, alternatives, who it's for.
 
 ## The problem
 
-Modern software ships static interfaces. A team of designers and engineers decides what the inbox looks like, what the dashboard shows, what the settings page contains — and that's what every user sees. If the user wants something different, they file a feature request and wait quarters.
+Modern operational software ships static interfaces. A team of designers and
+engineers decides what the queue looks like, what the dashboard shows, what the
+review screen contains — and that's what every operator sees. If support ops,
+sales ops, compliance, or engineering ops needs a different surface over the
+same systems of record, they file a feature request, clone a dashboard, or build
+another internal tool.
 
-This is fundamentally backwards once an LLM can reliably translate user intent into a UI specification. The compiler can do it on demand, per user, per route, recomputed only when something material changes.
+This is fundamentally backwards once an LLM can reliably translate operational
+intent into a policy-validated manifest. The compiler can do it on demand, per
+role, per workflow, recomputed only when something material changes.
 
 ## Why not just hand-write React per user?
 
@@ -38,7 +45,12 @@ the next bottleneck is maintaining many slightly different UIs over the same
 systems. Atelier lets the organisation define capabilities and policies once,
 then compile policy-safe interfaces per role or workflow.
 
-**You ship a SaaS product.** Your customers complain that the UI is too dense / too sparse / too cluttered / too sterile. Different cohorts want different shapes. Customisation toggles plus feature flags become unmaintainable. Atelier's intent profile collapses that into one architecture: the user describes what they want, the compiler emits it.
+**You ship a SaaS product with operational users.** Your customers complain
+that the admin UI is too dense / too sparse / too cluttered / too sterile.
+Different teams want different review flows and action surfaces. Customisation
+toggles plus feature flags become unmaintainable. Atelier's intent profile
+collapses that into one architecture: the user describes how they work, the
+compiler emits a policy-safe surface over capabilities you already own.
 
 **You ship a developer tool.** Your power users build their own Linear / Notion / Raycast workflows. You want them to compose new views without writing React. The marketplace primitive — `atelier://author/persona@version` — turns recipe-publishing into a first-class operation.
 
@@ -55,7 +67,10 @@ then compile policy-safe interfaces per role or workflow.
 | Rete / no-code builders                 | Drag-and-drop                      | The user authors layouts. Doesn't translate intent into structure automatically.                                                                        |
 | MCP                                     | Capability protocol                | Just the capability layer. No render layer, no intent vault, no compile loop. Atelier sits on top of MCP-style capability definitions.                  |
 
-Atelier picks one specific niche: **continuously recompile an existing app's UI per user, on demand, against a known capability surface and a known component vocabulary.** It is not for net-new app generation; it is for personalising what already exists.
+Atelier picks one specific niche: **continuously recompile operational UI per
+role/workflow, on demand, against a known capability surface, policy set, brand
+kit, and component vocabulary.** It is not for net-new app generation; it is for
+adapting what already exists.
 
 ## What you give up
 
@@ -66,10 +81,19 @@ Atelier picks one specific niche: **continuously recompile an existing app's UI 
 
 ## What you get
 
-- **Per-user UI without per-user code.** The compiler emits a manifest the user actually wants, not the one a designer guessed.
+- **Role/workflow-specific UI without role/workflow-specific code.** The compiler emits a manifest that matches the operator's context, not the one a static dashboard guessed.
 - **Cache invalidation as a first-class architecture.** Triggers, not stale-while-revalidate prayers.
 - **Auditable everything.** Every compile, every action, every policy validation fires through a `StreamingAuditSink`.
 - **A marketplace.** Recipes are signed bundles. `atelier://acme/email-triage@1.0.0` is a thing you can publish, consume, and trust.
+
+## What we are not pursuing
+
+- Arbitrary "fully dynamic UI" for every software category.
+- Consumer landing pages, games, canvas editors, or brand-heavy websites.
+- Free-form generated React/HTML as the production path.
+- Replacing design systems; Atelier consumes brand kits and mature primitives.
+- Replacing every Retool-style builder immediately; the wedge is operational
+  workbenches whose maintenance cost grows with roles, queues, and policies.
 
 ## Next
 

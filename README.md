@@ -1,14 +1,21 @@
 # Atelier
 
-**Capability · Intent · Render** — a production architecture for dynamic software interfaces.
+**Capability · Intent · Render** — a production architecture for policy-safe adaptive operational interfaces.
 
 > **Capabilities and skills are the public artifact.**
 > **Intent is the private artifact.**
 > **UI is ephemeral output.**
 
-Software ships **capabilities and skills** (typed actions, data, usage knowledge). Users keep **intent** (preferences, lenses, rules). Agents emit **UI as ephemeral output** — a `Manifest` JSON document that the runtime renders. Cached. Versioned. Recomputed only on trigger.
+Software ships **capabilities and skills** (typed actions, data, usage knowledge). Users keep **intent** (preferences, lenses, rules). Agents emit **operational UI as ephemeral output** — a `Manifest` JSON document that the runtime renders. Cached. Versioned. Recomputed only on trigger.
 
 Atelier is the integration of pieces that already exist — MCP-style capabilities, skills, JSON manifest UI, intent profiles, multi-tier caching, pub-sub triggers — into one principled architecture. Compile rarely, render constantly. **The interface is not the product. The capability is.**
+
+The product promise is intentionally narrow: **operational UI generated from
+capabilities, policies, intent, and a strong component/composition system.**
+Atelier is not trying to generate arbitrary consumer apps, marketing sites, or
+canvas-heavy creative tools. It targets teams drowning in internal operational
+workflows where the same systems of record need many role-specific, auditable
+interfaces.
 
 ## Target audience
 
@@ -25,9 +32,14 @@ the same capability surface.** Retool-style tools prove teams will pay for
 internal apps; Atelier targets the next bottleneck, where the app itself needs
 to adapt per user/workflow without forking the frontend.
 
+The first product-quality proof should look like an ops workbench, not a toy
+component catalog: exception review, customer context, approval commands,
+policy obligations, audit trail, and reversible action dispatch in one coherent
+generated surface.
+
 ---
 
-## Quick start (10 minutes from `git clone` to a personalised UI)
+## Quick start (10 minutes from `git clone` to an adaptive operational UI)
 
 ```bash
 git clone https://github.com/fragmatic-io/atelier.git
@@ -348,6 +360,10 @@ atelier/
 
 ## The bet
 
-The next decade of software is built on **capability surfaces** and **ephemeral interfaces**, with users (or agents acting for them) composing what they actually need from a stable substrate. Get the three artifacts right (capability is contract, intent is private, UI is ephemeral) and 90% of software's flexibility problems collapse into one architecture.
+The next decade of operational software is built on **capability surfaces** and
+**ephemeral interfaces**, with users (or agents acting for them) composing what
+they actually need from a stable substrate. Get the three artifacts right —
+capability is contract, intent is private, UI is ephemeral — and teams can stop
+forking internal dashboards every time a role, queue, or policy changes.
 
 The interface is not the product. The capability is.
