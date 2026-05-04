@@ -164,14 +164,18 @@ function buildServer(): CirServer {
   const apiKey = process.env['GEMINI_API_KEY'];
   const geminiAvailable = !!apiKey && apiKey.length > 10;
 
-  // Wave C / Phase C-2 + Wave 10 / S-1 — the C-2 tool-using compiler is
-  // env-gated via `CIR_COMPILER_TOOLS_ENABLED=1`; capability scoping
-  // (S-1, two-stage compile) layers on top via
-  // `CIR_CAPABILITY_SCOPING_ENABLED=1` and is only meaningful when tools
-  // are enabled. Default boot remains the single-shot `GeminiCompiler`
-  // path for parity with the rest of the demo.
-  const useTools = process.env['CIR_COMPILER_TOOLS_ENABLED'] === '1';
-  const useScoping = process.env['CIR_CAPABILITY_SCOPING_ENABLED'] === '1';
+  // Wave C / Phase C-2 — tool-using compiler is the default production path
+  // (TODO P1.1, 2026-05-04). Opt-out via `ATELIER_COMPILER_TOOLS=off` for
+  // hosts that need the deterministic single-shot path. Legacy
+  // `CIR_COMPILER_TOOLS_ENABLED=0` still understood for one release cycle.
+  // Capability scoping (S-1) layers on top via the same opt-out switch
+  // because it is only meaningful when tools are enabled.
+  const compilerToolsEnv = process.env['ATELIER_COMPILER_TOOLS'];
+  const legacyToolsDisabled = process.env['CIR_COMPILER_TOOLS_ENABLED'] === '0';
+  const useTools = !legacyToolsDisabled && compilerToolsEnv !== 'off';
+  const scopingEnv = process.env['ATELIER_CAPABILITY_SCOPING'];
+  const legacyScopingDisabled = process.env['CIR_CAPABILITY_SCOPING_ENABLED'] === '0';
+  const useScoping = useTools && !legacyScopingDisabled && scopingEnv !== 'off';
 
   // Wave 10 / S-1 — capability scoping resolver. When enabled, this is
   // the production `TwoStageCapabilityResolver`: stage 1 calls

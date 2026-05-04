@@ -195,7 +195,13 @@ function buildServer(): CirServer {
   // The wrapper is composable: this branch can be wrapped further by
   // `ValidationFeedbackCompiler` or `BudgetMeteredCompiler` exactly as
   // today's `GeminiCompiler` is. We keep the budget wrap on for parity.
-  const useTools = process.env['CIR_COMPILER_TOOLS_ENABLED'] === '1';
+  // Wave C / Phase C-2 — tool-using compiler is the default production path
+  // (TODO P1.1, 2026-05-04). Opt-out via `ATELIER_COMPILER_TOOLS=off` for
+  // hosts that need the deterministic single-shot path. Legacy
+  // `CIR_COMPILER_TOOLS_ENABLED=0` still understood for one release cycle.
+  const compilerToolsEnv = process.env['ATELIER_COMPILER_TOOLS'];
+  const legacyDisabled = process.env['CIR_COMPILER_TOOLS_ENABLED'] === '0';
+  const useTools = !legacyDisabled && compilerToolsEnv !== 'off';
 
   // Wave C / Phase C-5 — opt-in recipe RAG. When the env flag is set,
   // we wire a `SubstringRecipeResolver` over the in-tree `recipes/`

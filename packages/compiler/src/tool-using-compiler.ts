@@ -44,7 +44,9 @@
  *     hosts work out-of-the-box with no semantic search wired.
  *   - `GeminiAgentClient` — a function-calling-aware Gemini client that
  *     reuses the same `apiKey`/model contract as `GeminiCompiler`.
- *   - Showcase wiring in `apps/demo` behind `CIR_COMPILER_TOOLS_ENABLED=1`.
+ *   - Default-on production wiring in `apps/demo` + `apps/demo-github`
+ *     (TODO P1.1, 2026-05-04). Opt-out via `ATELIER_COMPILER_TOOLS=off`
+ *     when a host needs the deterministic single-shot path.
  *   - Composability with `ValidationFeedbackCompiler` (which wraps any
  *     `CompilerService` — including this one).
  *

@@ -55,6 +55,12 @@ jobs:
       - name: Schemas — AJV strict-mode gate
         run: pnpm schemas:check-ajv
 
+      - name: Components catalog check
+        run: pnpm components:check
+
+      - name: Capabilities index check
+        run: pnpm capabilities:index:check
+
       - name: Test (with coverage)
         run: pnpm test --coverage
 
@@ -66,3 +72,34 @@ jobs:
           path: coverage/
           retention-days: 7
           if-no-files-found: ignore
+
+  # TODO P0.1 — production-readiness fresh-clone guardrail.
+  # The split-step `validate` job above gives nice per-step CI annotations.
+  # This separate one-shot job runs the *unified* `pnpm validate` script
+  # exactly as a fresh-clone consumer would invoke it. If CI passes the
+  # split steps but fails this job, an advertised command is broken even
+  # though component pieces succeed individually — that's the bug we're
+  # guarding against (per the 2026-05-04 external review).
+  validate-fresh-clone:
+    name: Validate (fresh clone, unified pnpm validate)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run advertised validate command
+        # `pnpm validate` is the script users + agents actually run. A green
+        # CI must mean a green `pnpm validate` on a fresh clone.
+        run: pnpm validate
