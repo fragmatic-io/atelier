@@ -33,7 +33,7 @@
 
 | Wave    | Scope                                                                                          | Status                                    |
 | ------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| **M**   | Baseline-first pivot — catalog 62 → 81 (now 82); 3 demos at zero customs; ETHOS #11; eval gate | ✅ shipped                                |
+| **M**   | Baseline-first pivot — catalog 62 → 81 (now 83); 3 demos at zero customs; ETHOS #11; eval gate | ✅ shipped                                |
 | **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                          | 🟡 partial — branch protection still TODO |
 | **C**   | Compiler evolution — C-1 ✅ C-2 ✅ C-4 ✅; C-3/S-1 + C-5 (RAG) remain                          | 🟡 partial                                |
 | **7**   | Personalisation — P-1 / P-8 / P-9 / DD ✅; P-3 / P-4 / P-7 remain                              | 🟡 in flight                              |
@@ -117,7 +117,7 @@ The distribution channel. **The Wave M architectural prerequisite is shipped —
 
 - [ ] **V-6.a — Publish endpoint.** `POST /atelier/marketplace/persona` accepts a signed bundle, verifies the ed25519 signature, persists to a content-addressed store, indexes by `(author, persona, version)`. **1 wk.**
 - [ ] **V-6.b — Consume endpoint.** `GET /atelier/marketplace/<author>/<persona>@<version>` returns the signed bundle. Browser caches by content hash. **1 wk.**
-- [ ] **V-6.c — Browse / search UI.** A docs-side page (or a primitive in `@atelier/components`) that lists / filters available recipes. **1 wk.**
+- [x] **V-6.c — Browse / search UI.** `<MarketplaceBrowser>` baseline primitive shipped (catalog 82 → 83). Renders a filter panel (author / domain / brand kit / search) + scrollable listings; card click opens a preview drawer with a "Use this recipe" CTA that fires `onSelect` + optionally dispatches a `selectCapability` via the host dispatcher. `MockMarketplaceClient` ships alongside for previews / tests; production hosts wire the `@atelier/vault-client`-backed client.
 - [ ] **V-6.d — Review / curation flow.** Maintainer-side approval for personas surfaced in the default index. Could be skipped for v1 in favour of a flat self-publish space. **1 wk.**
 - [ ] **V-6.e — Eval gate.** "Top 10 personas in the marketplace compile cleanly" smoke job that runs nightly. **3 d.**
 - [ ] **V-6.f — Sign capabilities/skills artifacts at publish time.** Per [`docs/production-concerns.md`](docs/production-concerns.md). Needs a key-management decision (per-author key on first publish, or a maintainer-issued cert?). **1 wk.**
@@ -126,7 +126,7 @@ The distribution channel. **The Wave M architectural prerequisite is shipped —
 
 ### P2.3 — Marketplace-adjacent primitives (separate from V-6)
 
-- [ ] **Marketplace browse-page primitive.** A reusable `<MarketplaceBrowser>` baseline component that consumes the V-6.b endpoint, lets users filter by author / domain / brand-fit, and previews a persona before consuming. Catalog entry. **1 wk after V-6.b.**
+- [x] **Marketplace browse-page primitive** — shipped together with V-6.c above. `<MarketplaceBrowser>` is a baseline catalog entry (catalog 82 → 83); accepts any `MarketplaceClient`, so hosts can wire the V-6.b endpoint via `@atelier/vault-client` once that lands.
 
 ---
 

@@ -202,6 +202,67 @@ pnpm atelier marketplace trust set <author> <key_id>
 pnpm atelier marketplace trust delete <author>
 ```
 
+## Browse UI — `<MarketplaceBrowser>`
+
+For hosts that want a drop-in browse / search / preview surface, `@atelier/components` ships a baseline primitive that consumes any `MarketplaceClient` (the `@atelier/vault-client` is the canonical implementation; tests + docs-site previews can use `MockMarketplaceClient`).
+
+```tsx
+import {
+  MarketplaceBrowser,
+  MockMarketplaceClient,
+  type MarketplaceListing,
+} from '@atelier/components';
+
+const sample: MarketplaceListing[] = [
+  {
+    address: {
+      scheme: 'atelier',
+      author: 'acme',
+      persona: 'founder-inbox',
+      version: '1.0.0',
+      raw: 'atelier://acme/founder-inbox@1.0.0',
+    },
+    description: 'Inbox lens for founders.',
+    domain: 'productivity',
+    brandKitId: 'acme-default',
+    publishedAt: '2026-05-01T12:00:00Z',
+    authorDisplayName: 'Acme',
+  },
+];
+
+export function BrowsePage() {
+  const client = new MockMarketplaceClient(sample);
+  return (
+    <MarketplaceBrowser
+      client={client}
+      selectCapability="marketplace.install"
+      onSelect={(listing) => {
+        console.log('User picked', listing.address.raw);
+      }}
+    />
+  );
+}
+```
+
+The component renders:
+
+- A left **filter panel** (author / domain / brand kit / search). Search is debounced ~200 ms.
+- A right **listings panel** (scrollable). Each card shows persona name + version pill + author + a 2-line description + domain / brand-kit chips.
+- A **preview drawer** that opens on card click. The drawer's "Use this recipe" CTA fires `onSelect(listing)` and (when `selectCapability` is supplied) dispatches the capability with `{ address }` via the host-supplied `dispatcher` — same dispatcher contract as `<DropZone>` / `<SelectionActionBar>`.
+
+Wiring the real vault client is a one-line swap:
+
+```ts
+import { VaultMarketplaceClient } from '@atelier/vault-client';
+
+const client = new VaultMarketplaceClient({
+  vaultUrl: 'https://vault.example',
+  trustedKeys,
+});
+```
+
+Loading + empty states use the existing baseline primitives (`<Skeleton shape="card" count={6}>` while the first list call is in flight, `<EmptyState>` when the client returns zero matches), so the surface inherits the host's variant tokens automatically.
+
 ## What you DON'T do
 
 - **Don't bypass signature verification.** If the signature doesn't verify, the bundle is suspect. Reject.

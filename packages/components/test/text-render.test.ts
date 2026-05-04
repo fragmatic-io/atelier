@@ -84,6 +84,13 @@ describe('TEXT_RENDERERS', () => {
       List: { items: [1, 2, 3], renderItem: (n: number) => String(n) },
       Logo: { wordmark: 'Aurora' },
       Markdown: { content: '# hello' },
+      // Wave 8 / V-6.c — vault-marketplace browse UI.
+      MarketplaceBrowser: {
+        client: {
+          list: () => Promise.resolve([]),
+          get: () => Promise.resolve(null),
+        },
+      },
       MetaBadge: { count: 5, label: 'unread' },
       Modal: { open: true, title: 'Edit', onClose: () => undefined },
       MultiPane: {

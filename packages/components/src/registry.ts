@@ -62,6 +62,7 @@ import { ListBinding } from './components/List.js';
 import { LogoBinding } from './components/Logo.js';
 import { MapBinding } from './components/Map.js';
 import { MarkdownBinding } from './components/Markdown.js';
+import { MarketplaceBrowserBinding } from './components/MarketplaceBrowser.js';
 import { MetaBadgeBinding } from './components/MetaBadge.js';
 import { ModalBinding } from './components/Modal.js';
 import { MultiPaneBinding } from './components/MultiPane.js';
@@ -156,6 +157,10 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   Logo: LogoBinding,
   Map: MapBinding,
   Markdown: MarkdownBinding,
+  // Wave 8 / V-6.c — `<MarketplaceBrowser>` lists / filters / previews
+  // recipes published to the vault marketplace. Host-driven via a
+  // `MarketplaceClient` (typically `@atelier/vault-client`).
+  MarketplaceBrowser: MarketplaceBrowserBinding,
   MetaBadge: MetaBadgeBinding,
   Modal: ModalBinding,
   MultiPane: MultiPaneBinding,

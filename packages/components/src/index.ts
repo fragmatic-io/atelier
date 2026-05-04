@@ -161,6 +161,32 @@ export type { LogoProps, LogoSize } from './components/Logo.js';
 export { MetaBadge, MetaBadgeBinding, metaBadgeTextRender } from './components/MetaBadge.js';
 export type { MetaBadgeProps, MetaBadgeVariant } from './components/MetaBadge.js';
 
+// Wave 8 / V-6.c — `<MarketplaceBrowser>` baseline primitive for the vault
+// marketplace (the V-6 distribution channel — distinct from "the catalog",
+// which is what the Wave M baseline-first pivot is about). Calls
+// `client.list()` against a host-supplied `MarketplaceClient` (typically
+// `@atelier/vault-client`); renders a filter panel + scrollable listings,
+// opens a preview drawer on card click, and dispatches an optional
+// `selectCapability` via the host dispatcher when the user picks a recipe.
+// `MockMarketplaceClient` is exported alongside for docs-site previews +
+// host smoke tests.
+export {
+  MarketplaceBrowser,
+  MarketplaceBrowserBinding,
+  marketplaceBrowserTextRender,
+  MockMarketplaceClient,
+  MARKETPLACE_BROWSER_DEFAULT_DEBOUNCE_MS,
+  MARKETPLACE_BROWSER_REGION_LABEL,
+} from './components/MarketplaceBrowser.js';
+export type {
+  MarketplaceBrowserProps,
+  MarketplaceBrowserDispatcher,
+  MarketplaceClient,
+  MarketplaceListing,
+  MarketplaceListQuery,
+  MarketplaceAddress,
+} from './components/MarketplaceBrowser.js';
+
 export { DetailView, DetailViewBinding } from './components/DetailView.js';
 export type { DetailViewProps, DetailField } from './components/DetailView.js';
 

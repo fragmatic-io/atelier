@@ -395,6 +395,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "MarketplaceBrowser": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.1.0",
+    "examples": [],
+    "props_schema": "MarketplaceBrowserProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "MetaBadge": {
     "actions_supported": [],
     "data_sources": [],

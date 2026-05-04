@@ -137,6 +137,9 @@
   "Markdown": {
     "can_contain": "leaf"
   },
+  "MarketplaceBrowser": {
+    "can_contain": "leaf"
+  },
   "MetaBadge": {
     "can_contain": "leaf"
   },
