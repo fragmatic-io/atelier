@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/docs exec playwright install --with-deps chromium
+
       # Build every workspace package/app that declares a build script. Core
       # package exports now resolve through dist artifacts, so this catches
       # broken package.json export maps and production-only Next.js failures
@@ -112,6 +115,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/docs exec playwright install --with-deps chromium
+
       - name: Run advertised validate command
         # `pnpm validate` is the script users + agents actually run. A green
         # CI must mean a green `pnpm validate` on a fresh clone. Its first
@@ -140,10 +146,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/docs exec playwright install --with-deps chromium
+
       - name: Build package artifacts
         run: pnpm build
 
-      - name: Install Playwright Chromium
+      - name: Verify demo Playwright browser
         run: pnpm --filter @atelier/demo exec playwright install --with-deps chromium
 
       - name: Run demo E2E
