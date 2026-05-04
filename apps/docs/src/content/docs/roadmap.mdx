@@ -7,7 +7,20 @@ import { Aside } from '@astrojs/starlight/components';
 
 The full roadmap lives in [`TODO.md`](https://github.com/fragmatic-io/atelier/blob/main/TODO.md). This page renders the high-level table and the most recent wave details.
 
-<Aside type="note">Last updated: 2026-05-02 (marketplace-pivot consolidation).</Aside>
+<Aside type="note">Last updated: 2026-05-04 (operational-ui promise).</Aside>
+
+## Product direction
+
+The roadmap is now anchored to one promise:
+
+**Operational UI generated from capabilities, policies, intent, and a strong
+component/composition system.**
+
+That means the next milestones should prove useful workbenches for support ops,
+sales/revenue ops, marketplace ops, compliance/risk ops, and engineering ops.
+General "fully dynamic UI" is not the target. Consumer landing pages, games,
+canvas editors, and brand-heavy websites are explicitly out of scope for the
+first production push.
 
 ## At a glance
 
@@ -19,13 +32,16 @@ The full roadmap lives in [`TODO.md`](https://github.com/fragmatic-io/atelier/bl
 | **7**   | Personalisation — P-3, P-4, P-7 (P-1 / P-8 / P-9 / DD shipped)                                                                  | in flight | mixed               | 3 wk          | C-Phase-1      |
 | **10**  | Scale tracks — S-1, S-4 (HIGH); S-3, S-5, S-7 (MEDIUM); S-2 + S-6 shipped                                                       | partial   | mixed               | 6 wk          | C-Phase-2      |
 | **8**   | Vault marketplace — V-6 (V-1, V-3 shipped)                                                                                      | planned   | MEDIUM              | 4-6 wk        | C, 7           |
-| **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items)                                                                    | partial   | varies              | 6-10 mo       | C, P-7, S-3    |
+| **11**  | Visual + interaction depth — mature primitives, brand tokens, Storybook interaction gates                                       | partial   | HIGH                | 6-10 mo       | C, P-7, S-3    |
+| **OUI** | Operational UI proof — exception workbench, context panel, approval center, audit timeline                                      | planned   | HIGH                | 4-6 wk        | 11 primitives  |
 | **12+** | Multi-platform + marketing — N-1..N-5 (**N-4 shipped**)                                                                         | partial   | LOWER               | 12-16 wk      | M (now proven) |
 | **Op**  | Operational + hardening debt — small, bounded items, do anytime                                                                 | open      | LOWER               | &lt;1 wk each | —              |
 
 ## Recommended sequence (next)
 
-**C-Phase-2 (tools, 2 wk)** → S-1 (when first host hits >150 capabilities) → Vis-3 (icon resolver) → 11.x polish picks → V-6 (marketplace) → balance of 11 / 12.
+**11 primitives (Radix-backed Select/Tabs/Tooltip/Popover/CommandPalette)** →
+**OUI golden workflow** → C-Phase-2 (tools, 2 wk) → S-1 (when first host hits
+&gt;150 capabilities) → V-6 (marketplace) → balance of 11 / 12.
 
 _(P-9 shipped.)_
 
@@ -96,6 +112,22 @@ The full track is ~50 items spanning Vis / Int / Cnt / Nav / Coll / AI. Highligh
 - **Cnt-2** — Diff rendering (Linear/GitHub-style). **1.5 wk.**
 - **Cnt-3** — Mention / @user / #issue / link auto-resolution. **2 wk.**
 - **AI-1** — "Ask AI" on selection. **2 wk.**
+
+### Wave OUI — operational UI proof
+
+- **OUI-1** — Mature interaction primitives: `Select`, `Tabs`,
+  `Tooltip`/`Popover`, `CommandPalette`. Keep manifest contracts stable; add
+  Storybook interaction checks. **1-2 wk. HIGH.**
+- **OUI-2** — Add operational composites:
+  `ExceptionReviewWorkbench`, `CustomerContextPanel`,
+  `ApprovalCommandCenter`, `PolicyAuditTimeline`. **2-3 wk. HIGH.**
+- **OUI-3** — Golden workflow:
+  capability → manifest → rendered workbench → policy-confirmed action dispatch
+  → audit event. No custom route UI; no hand-authored manifest as the primary
+  path. **1 wk. HIGH.**
+- **OUI-4** — Pilot docs and sales wedge: "replace stale role-specific
+  operational dashboards with safe, auditable workbenches over one capability
+  surface." **2-3 d. HIGH.**
 
 ### Wave 12+ — multi-platform + marketing
 

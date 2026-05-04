@@ -108,6 +108,7 @@ export default defineConfig({
           items: [
             { label: 'What is Atelier?', link: '/introduction/what-is-atelier' },
             { label: 'Why Atelier?', link: '/introduction/why-atelier' },
+            { label: 'Product promise', link: '/introduction/product-promise' },
             { label: 'Ethos — the eleven principles', link: '/introduction/ethos' },
           ],
         },

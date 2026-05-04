@@ -1,6 +1,6 @@
 ---
 title: What is Atelier?
-description: The CIR pattern, Atelier as a product, and the marketplace promise.
+description: The CIR pattern, Atelier as a product, and the operational UI promise.
 ---
 
 Atelier is a **product brand** built on the **CIR architectural pattern**:
@@ -13,11 +13,11 @@ Both names appear in this documentation. **Atelier** is what you ship; **CIR** i
 
 ## The one-line thesis
 
-Software ships **capabilities and skills**. Users keep **intent**. Agents emit **UI as ephemeral output** — cached, versioned, recomputed only on trigger.
+Software ships **capabilities and skills**. Users keep **intent**. Agents emit **operational UI as ephemeral output** — cached, versioned, recomputed only on trigger.
 
 The first is public, signed by the company, versioned like a database schema. The second is private, durable, owned by the user, portable across apps. The third is disposable — a manifest the runtime renders, never the source of truth. "UI" here means any rendered surface: a web page, a native screen, an inline chat component, a voice prompt, a spatial overlay.
 
-Get this separation right and 90% of software's flexibility problems collapse into one architecture.
+Get this separation right and the flexibility problem for operational software becomes tractable: one capability surface, many policy-safe interfaces, recomputed only when the work context actually changes.
 
 ## Target organisation
 
@@ -31,6 +31,19 @@ and maintaining those screens becomes its own product surface.
 Atelier's wedge is to define the capability surface once, validate every
 manifest against policy, and compile the interface per role/workflow instead of
 forking the frontend.
+
+## Product promise
+
+Atelier's promise is **operational UI generated from capabilities, policies,
+intent, and a strong component/composition system**.
+
+This is narrower than "fully dynamic UI" or "any app from a prompt." The first
+production-grade surfaces should be workbenches for queues, reviews,
+exceptions, approvals, account context, policy obligations, reversible actions,
+and audit trails. If a workflow has real systems of record, role-specific
+screens, and safety requirements, it belongs in Atelier's first market. If it
+is a consumer landing page, a canvas editor, a game, or a bespoke brand
+experience, it does not.
 
 ## The five public artifacts
 
@@ -50,11 +63,19 @@ These are owned by the app. Signed. Versioned. Cacheable at the edge.
 
 - **Manifest** — JSON tree. Compiled once on cold path; cached at three tiers (server `ManifestStore`, browser memory, browser IndexedDB). The runtime walks it. The renderer maps node IDs to registered `ComponentBinding`s. Actions dispatch through the `ActionDispatcher` (modal confirm, optimistic UI, undo).
 
-## The marketplace promise
+## The catalog promise
 
-Atelier's wager: **give the LLM a rich enough primitive marketplace and it will compose any domain UI from baseline components alone.** No per-host React. No bespoke `IssueQueue` / `ProductCard` / `ThreadView` bindings.
+Atelier's catalog wager: **give the compiler mature primitives, strict
+composition rules, brand tokens, and reusable operational composites, and it can
+produce useful domain workbenches without per-host React.** No bespoke
+`IssueQueue` / `ProductCard` / `ThreadView` bindings for every app.
 
-That promise is verifiable. The three reference demos — Aurora (productivity), Octant (GitHub issues), Marigold (e-commerce) — all ship **zero custom bindings** as of the marketplace pivot (Wave M, 2026-05-02). A demo's custom-binding count is the single best smell test for whether the framework's marketplace promise is being kept.
+That promise is verifiable. The three reference demos — Aurora (productivity),
+Octant (GitHub issues), Marigold (e-commerce) — all ship **zero custom
+bindings** as of the marketplace pivot (Wave M, 2026-05-02). Custom-binding
+count remains a useful smell test, but the product test is stronger: can a
+generated surface complete a real operational loop from context → decision →
+policy-confirmed action → audit?
 
 ## Where this docs site fits
 
@@ -71,5 +92,6 @@ This site at [`/atelier/`](https://fragmatic-io.github.io/atelier/) covers the b
 ## Next
 
 - [Why Atelier?](/introduction/why-atelier/) — problem space, alternatives, who it's for.
+- [Product promise](/introduction/product-promise/) — the narrowed market promise and pilot plan.
 - [The eleven principles](/introduction/ethos/) — falsifiable rules every implementation honours.
 - [Installation](/getting-started/installation/) — from `git clone` to a personalised UI in 10 minutes.

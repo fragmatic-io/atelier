@@ -3,7 +3,7 @@ title: Ethos — the eleven principles
 description: The falsifiable rules every Atelier implementation honours.
 ---
 
-> **Atelier's core thesis.** A UI's _layout_ is a runtime artifact. A compiler takes a recipe (declarative app description), the user's intent profile, and the granted capabilities, and produces a manifest tree. The runtime walks the tree against a registered binding catalog. Policies validate the tree before render. **The human authors recipes; the LLM authors manifests.**
+> **Atelier's core thesis.** An operational UI's _layout_ is a runtime artifact. A compiler takes a recipe (declarative app description), the user's intent profile, and the granted capabilities, and produces a manifest tree. The runtime walks the tree against a registered binding catalog. Policies validate the tree before render. **The human authors recipes; the LLM authors manifests.**
 
 Anything that contradicts this thesis — no matter how clean it looks — is drift, and should be flagged in review. The eleven principles below are falsifiable; if a PR violates one and there's a defensible reason, the reason goes in the commit body.
 
@@ -61,7 +61,14 @@ Every demo must demonstrate something **only Atelier can do**: intent-driven rec
 
 ## 11. The marketplace is the product; custom bindings are a last resort
 
-The framework's promise is "give the LLM a rich enough primitive marketplace and it will compose any domain UI." That promise is only real if hosts can ship apps **without** writing per-host React for every domain shape. Each per-host `ComponentBinding` registered on top of `@atelier/components`'s `COMPONENT_BINDINGS` is a local escape hatch — a place where the host has decided the LLM cannot be trusted to compose the shape from primitives.
+The framework's promise is "give the compiler mature primitives, strict
+composition rules, brand tokens, and operational composites, and it will compose
+useful policy-safe workbenches." That promise is only real if hosts can ship
+operational apps **without** writing per-host React for every domain shape. Each
+per-host `ComponentBinding` registered on top of `@atelier/components`'s
+`COMPONENT_BINDINGS` is a local escape hatch — a place where the host has
+decided the compiler cannot be trusted to compose the shape from baseline
+vocabulary.
 
 Most "custom bindings" are smell:
 
@@ -76,7 +83,11 @@ The remaining defensible reasons for a custom binding:
 
 The `tests/marketplace-pressure.test.ts` gate caps each demo's custom binding count and ratchets it down. Lowering the ceiling by deleting a binding is the only way to grow the marketplace.
 
-A demo's custom-binding count is the single best smell test for whether the framework's marketplace promise is being kept. **Aurora ships zero. Octant and Marigold followed during the marketplace pivot.**
+A demo's custom-binding count is a useful smell test for whether the baseline
+promise is being kept. The stronger test is operational: can a generated
+surface move from context → decision → policy-confirmed dispatch → audit
+without handwritten route UI? **Aurora ships zero. Octant and Marigold followed
+during the marketplace pivot.**
 
 ## How to use this document in review
 

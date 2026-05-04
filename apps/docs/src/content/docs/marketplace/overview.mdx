@@ -7,7 +7,12 @@ The marketplace is the user-facing distribution surface for recipes, personas, a
 
 ## Status
 
-> **v0** (Wave 8 / track V-6 MVP). The marketplace pivot (Wave M) was the **architectural prerequisite** — the demos prove that an LLM compiler with a rich primitive marketplace really can compose any domain UI. V-6 is what turns it into a product.
+> **v0** (Wave 8 / track V-6 MVP). The marketplace pivot (Wave M) was the
+> **architectural prerequisite** — the demos prove that an LLM compiler with a
+> rich primitive catalog can compose useful domain surfaces without custom
+> bindings. The narrowed product promise is operational: distribute recipes,
+> skills, and brand kits that produce safe workbenches over typed capabilities.
+> V-6 is what turns that into a product channel.
 
 What ships today: `atelier://author/persona@version` addressing, ed25519-signed bundles, TOFU (trust on first use) trust model on top of the existing vault. Review-flow UI, search/discovery, and compiler integration (C-Phase-5 RAG) are deferred to follow-ups.
 
@@ -105,14 +110,17 @@ When pinned, the TOFU cache is bypassed; the fetch must match the pinned fingerp
 
 ## Why this matters
 
-The marketplace pivot proved you can ship a real domain UI without writing a single custom binding. The marketplace turns that capability into a distributable product:
+The marketplace pivot proved you can ship a domain surface without writing a
+single custom binding. The marketplace turns that capability into a
+distributable operational product:
 
 - A skill author publishes `atelier://taskmaster/founder-inbox@1.0.0`.
 - A founder boots a fresh Atelier app, types `atelier add taskmaster/founder-inbox@1.0.0`.
 - The CLI fetches the bundle, verifies, presents the consent surface (capabilities granted, scopes requested), and installs it.
-- The user gets a personalised UI authored by someone they trust, without that author having to build a separate app.
+- The user gets an adaptive operational UI authored by someone they trust,
+  without that author having to build a separate app.
 
-The framework's marketplace promise becomes a marketplace.
+The framework's operational recipe promise becomes a marketplace.
 
 ## Next
 
