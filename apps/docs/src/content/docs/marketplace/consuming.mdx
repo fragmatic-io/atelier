@@ -55,11 +55,29 @@ A `SignedBundle` from a publisher you may or may not have interacted with before
    ```
 
    The `client.fetch` flow:
-   1. `GET /vault/marketplace/<author>/<persona>@<version>` from the vault.
+   1. `GET /vault/marketplace/<author>/<persona>@<version>` from the vault (legacy route — `MarketplaceClient` continues to use it).
    2. Verify the signature locally.
    3. Check the TOFU cache — record on first contact, throw `MarketplaceTrustError` on mismatch.
    4. (If `?signed_by=` was present) check the pin matches `bundle.key_id`.
    5. Return the payload.
+
+   **V-6.b new endpoints** (used by host-side fetchers / browse UI):
+
+   ```bash
+   # Exact version — content-addressed, immutable, long max-age cache.
+   GET /marketplace/persona/<author>/<persona>@<version>
+   # → 200 SignedBundle (or 404)
+
+   # Latest semver for the (author, persona) pair.
+   GET /marketplace/persona/<author>/<persona>/latest
+   # → 200 { address, bundle }  (or 404 when no versions exist)
+   ```
+
+   The `/latest` response is wrapped in `{ address, bundle }` so the
+   caller can distinguish the resolved version from the bundle bytes
+   (the address is what the consumer pins in their TOFU store).
+   `Cache-Control` on `/latest` is short + must-revalidate; on the
+   exact-version route it's `max-age=31536000, immutable`.
 
 3. **Inspect the recipe.**
 
@@ -186,17 +204,21 @@ Useful when:
 | `MarketplaceTrustError`  | "This author's signing key changed. Inspect both fingerprints out-of-band before accepting." |
 | Network errors           | "Couldn't reach the vault. Try again later."                                                 |
 
-## CLI surface (roadmap)
-
-The CLI surface for this flow is roadmap. Today it's a JS API. Once V-6 polish lands:
+## CLI surface
 
 ```bash
+# Publish (V-6.f — shipped):
+pnpm atelier marketplace publish bundle.json \
+  --author acme \
+  --key ~/.atelier/keys/acme.private.pem
+```
+
+The consume / install / trust subcommands remain roadmap:
+
+```bash
+# Roadmap:
 pnpm atelier marketplace fetch atelier://acme/founder-inbox@1.0.0
-# Inspect what's in the bundle.
-
 pnpm atelier marketplace install atelier://acme/founder-inbox@1.0.0
-# Walks consent + installs.
-
 pnpm atelier marketplace trust list
 pnpm atelier marketplace trust set <author> <key_id>
 pnpm atelier marketplace trust delete <author>

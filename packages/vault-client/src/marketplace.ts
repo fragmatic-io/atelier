@@ -23,7 +23,9 @@
  * verify against this key.
  */
 import { VaultUnreachableError } from './errors.js';
+import type { VaultClient } from './client.js';
 import {
+  MarketplaceAddressSchema,
   SignedBundleSchema,
   formatMarketplaceAddress,
   parseMarketplaceAddress,
@@ -494,4 +496,238 @@ async function readBodyOrText(res: Response): Promise<unknown> {
       return null;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// V-6.f — `publishPersona` sign-at-publish helper.
+//
+// Pairs with `POST /marketplace/persona` on the server (V-6.a). The CLI
+// reaches for this; programmatic publishers can too.
+//
+// The helper:
+//   1. Derives the public key from the supplied 32-byte ed25519 seed (via
+//      Web Crypto's `importKey({ name: 'Ed25519' }, 'pkcs8')` — same path
+//      `MarketplaceClient.publish` uses).
+//   2. Builds canonical signing bytes via `signingInputForBundle`.
+//   3. Signs.
+//   4. POSTs the resulting `SignedBundle` to `/marketplace/persona` on
+//      the same vault the supplied `VaultClient` is configured against.
+//   5. Returns the parsed `MarketplaceAddress` from the server's 201 response.
+//
+// Why a free function vs. another method on `MarketplaceClient`: the
+// `MarketplaceClient.publish` flow is the LEGACY (publish-with-bundle-pubkey)
+// path. The persona endpoints have different semantics (server-known author
+// keys + 401 / 409 surface) so the helper is named distinctly to avoid
+// confusion at call sites.
+// ---------------------------------------------------------------------------
+
+/**
+ * Pre-signing inputs to `publishPersona`. The caller supplies the
+ * address (or a parseable `atelier://` string) + the payload — the
+ * helper produces the timestamp at sign time so each publish is fresh.
+ */
+export interface BundlePayload {
+  /** Parsed `MarketplaceAddress` or its `atelier://...` string form. */
+  address: MarketplaceAddress | string;
+  /** Anything — recipe, persona JSON, capability set. Same shape the server stores. */
+  payload: unknown;
+  /**
+   * Optional explicit timestamp. Default: `new Date().toISOString()`. Tests
+   * pin this; production callers leave it undefined.
+   */
+  timestamp?: string;
+}
+
+/** Author identity + signing key. */
+export interface MarketplaceAuthor {
+  /** Author handle. Must match the `address.author` in the bundle. */
+  id: string;
+  /**
+   * Raw 32-byte ed25519 PRIVATE seed. The matching public key is derived
+   * automatically via Web Crypto. Pass `publicKey` explicitly to skip the
+   * derivation.
+   */
+  privateKey: Uint8Array;
+  /**
+   * Optional pre-derived public key (raw 32-byte ed25519 point). When
+   * omitted, we derive it from `privateKey`. Useful in tests + when the
+   * caller already has both halves on hand.
+   */
+  publicKey?: Uint8Array;
+}
+
+/**
+ * Build the canonical signing bytes for a `BundlePayload`, sign them
+ * with the author's private key, and POST the resulting `SignedBundle`
+ * to `POST /marketplace/persona` on the supplied client's vault.
+ *
+ * Returns the parsed canonical address. Throws `MarketplaceError`
+ * (subclass thereof for the specific surfaces) on any non-2xx response.
+ */
+export async function publishPersona(
+  client: VaultClient,
+  bundle: BundlePayload,
+  author: MarketplaceAuthor,
+): Promise<MarketplaceAddress> {
+  const parsedAddress =
+    typeof bundle.address === 'string' ? parseMarketplaceAddress(bundle.address) : bundle.address;
+  if (parsedAddress === null) {
+    const text =
+      typeof bundle.address === 'string' ? bundle.address : JSON.stringify(bundle.address);
+    throw new MarketplaceError(`malformed address: ${text}`);
+  }
+  // Defence-in-depth: the address.author MUST match `author.id`. The
+  // server enforces this too (the directory key is keyed on
+  // `address.author`), but catching it here gives a faster, clearer
+  // error before any signing work happens.
+  if (parsedAddress.author !== author.id) {
+    throw new MarketplaceError(
+      `author mismatch: bundle.address.author='${parsedAddress.author}' but author.id='${author.id}'`,
+    );
+  }
+
+  const publicKey = author.publicKey ?? (await derivePublicKey(author.privateKey));
+  const timestamp = bundle.timestamp ?? new Date().toISOString();
+  const signingInput = signingInputForBundle({
+    address: parsedAddress,
+    payload: bundle.payload,
+    timestamp,
+  });
+  const sigBytes = await signCanonicalEd25519(author.privateKey, signingInput);
+  const keyId = await computeKeyId(publicKey);
+  const signedBundle: SignedBundle = {
+    address: {
+      scheme: 'atelier',
+      author: parsedAddress.author,
+      persona: parsedAddress.persona,
+      version: parsedAddress.version,
+    },
+    payload: bundle.payload,
+    timestamp,
+    signature: bytesToB64(sigBytes),
+    public_key: bytesToB64(publicKey),
+    key_id: keyId,
+  };
+
+  // Reach into the client for the configured vault URL + fetcher. We
+  // don't expose those publicly because the client owns its transport;
+  // duck-typing through the JS structural shape is the lowest-friction
+  // path that doesn't break encapsulation for normal callers.
+  const fetcher: typeof fetch = (client as unknown as { fetcher?: typeof fetch }).fetcher ?? fetch;
+  const vaultUrl: string = (client as unknown as { vaultUrl?: string }).vaultUrl ?? '';
+  if (vaultUrl === '') {
+    throw new MarketplaceError('VaultClient is missing vaultUrl');
+  }
+
+  let res: Response;
+  try {
+    res = await fetcher(`${vaultUrl}/marketplace/persona`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(signedBundle),
+    });
+  } catch (err) {
+    throw new VaultUnreachableError(err as Error);
+  }
+
+  if (res.status === 401) {
+    throw new MarketplaceError(`publishPersona: 401 unauthorized — ${await readErrorReason(res)}`);
+  }
+  if (res.status === 409) {
+    throw new MarketplaceError(`publishPersona: 409 duplicate — ${await readErrorReason(res)}`);
+  }
+  if (res.status === 400) {
+    throw new MarketplaceError(`publishPersona: 400 bad request — ${await readErrorReason(res)}`);
+  }
+  if (!res.ok) {
+    throw new MarketplaceError(
+      `publishPersona: HTTP ${String(res.status)} — ${await readErrorReason(res)}`,
+    );
+  }
+  const body = (await res.json()) as { address?: string };
+  if (typeof body.address !== 'string') {
+    throw new MarketplaceError('publishPersona: server response missing address');
+  }
+  const parsedOut = parseMarketplaceAddress(body.address);
+  if (parsedOut === null) {
+    // Defensive: the server SHOULD echo the canonical form, but if it
+    // doesn't, fall back to the address we built locally — the publish
+    // succeeded by HTTP status.
+    const validated = MarketplaceAddressSchema.safeParse(signedBundle.address);
+    if (!validated.success) {
+      throw new MarketplaceError(`publishPersona: malformed address from server: ${body.address}`);
+    }
+    return validated.data;
+  }
+  return parsedOut;
+}
+
+/** Read the `error` field of an error response, or fall back to text. */
+async function readErrorReason(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: string; reason?: string };
+    if (body.reason !== undefined) return `${body.error ?? 'error'}: ${body.reason}`;
+    return body.error ?? `HTTP ${String(res.status)}`;
+  } catch {
+    try {
+      return await res.text();
+    } catch {
+      return `HTTP ${String(res.status)}`;
+    }
+  }
+}
+
+/**
+ * Derive the raw 32-byte ed25519 public key from a 32-byte private seed.
+ * Uses Web Crypto's PKCS8 import + JWK export round-trip — works in both
+ * Node 22+ (which exposes `crypto.subtle` as a global) and the browser.
+ */
+async function derivePublicKey(privateKeyRaw: Uint8Array): Promise<Uint8Array> {
+  if (privateKeyRaw.length !== 32) {
+    throw new MarketplaceError(
+      `ed25519 private key must be 32 raw bytes (got ${String(privateKeyRaw.length)})`,
+    );
+  }
+  // Wrap the seed in PKCS8 prefix so Web Crypto accepts it (same prefix
+  // `signCanonicalEd25519` uses). Then export as JWK and pull the `x`
+  // coordinate (the public point in base64url).
+  const pkcs8 = new Uint8Array([
+    0x30,
+    0x2e,
+    0x02,
+    0x01,
+    0x00,
+    0x30,
+    0x05,
+    0x06,
+    0x03,
+    0x2b,
+    0x65,
+    0x70,
+    0x04,
+    0x22,
+    0x04,
+    0x20,
+    ...privateKeyRaw,
+  ]);
+  const cryptoKey = await globalThis.crypto.subtle.importKey(
+    'pkcs8',
+    toArrayBuffer(pkcs8),
+    { name: 'Ed25519' },
+    true,
+    ['sign'],
+  );
+  const jwk = await globalThis.crypto.subtle.exportKey('jwk', cryptoKey);
+  const xB64u = jwk.x;
+  if (typeof xB64u !== 'string') {
+    throw new MarketplaceError('derivePublicKey: JWK missing x coordinate');
+  }
+  // base64url → bytes
+  const xB64 = xB64u.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = xB64 + '='.repeat((4 - (xB64.length % 4)) % 4);
+  const out = b64ToBytes(padded);
+  if (out === null || out.length !== 32) {
+    throw new MarketplaceError('derivePublicKey: invalid public key bytes');
+  }
+  return out;
 }

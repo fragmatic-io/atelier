@@ -31,6 +31,7 @@ import { importOpenApi } from './commands/import-openapi.js';
 import { initCommand } from './commands/init.js';
 import { inspectCommand } from './commands/inspect.js';
 import { lintCommand } from './commands/lint.js';
+import { marketplaceCommand } from './commands/marketplace-publish.js';
 import { validateCommand } from './commands/validate.js';
 import { vaultCommand } from './commands/vault.js';
 import { parseArgs } from './parse-args.js';
@@ -68,6 +69,8 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
       return compileCommand(positionals, flags);
     case 'vault':
       return vaultCommand(positionals, flags);
+    case 'marketplace':
+      return marketplaceCommand(positionals, flags);
     case 'import': {
       // `atelier import openapi <spec> ...` — the importer parses its own flags,
       // so we slice off `import` and the target word and hand the rest over

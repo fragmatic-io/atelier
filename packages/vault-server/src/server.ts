@@ -31,6 +31,13 @@ import {
   handleMarketplaceRequest,
   type MarketplaceStorage,
 } from './marketplace.js';
+import {
+  InMemoryKeyDirectory,
+  InMemoryMarketplaceStore,
+  handleMarketplacePersonaRequest,
+  type KeyDirectory,
+  type MarketplaceStore,
+} from './marketplace/index.js';
 
 /**
  * Shape of the `system.security_revocation` trigger we emit on revoke.
@@ -71,6 +78,21 @@ export interface VaultServerOptions {
    * vault state file.
    */
   marketplaceStorage?: MarketplaceStorage;
+  /**
+   * V-6 persona marketplace store. Powers the new
+   * `POST /marketplace/persona` and `GET /marketplace/persona/...`
+   * routes. When omitted, an in-memory store is created. The legacy
+   * `marketplaceStorage` (above) is a separate adapter for the original
+   * `/vault/marketplace/*` endpoints and is preserved for back-compat.
+   */
+  marketplaceStore?: MarketplaceStore;
+  /**
+   * V-6 author key directory. Required for the new persona-publish
+   * endpoint to accept any author. When omitted, an empty
+   * `InMemoryKeyDirectory` is created — every publish 401s until the
+   * host registers an author key.
+   */
+  keyDirectory?: KeyDirectory;
   /**
    * Optional clock override for tests. Returns Unix seconds.
    * Defaults to `() => Math.floor(Date.now() / 1000)`.
@@ -123,6 +145,8 @@ export class VaultService {
   readonly maxTokenTtlSeconds: number;
   readonly onRevoked: TriggerEmitter | undefined;
   readonly marketplaceStorage: MarketplaceStorage;
+  readonly marketplaceStore: MarketplaceStore;
+  readonly keyDirectory: KeyDirectory;
   readonly now: () => number;
 
   constructor(opts: VaultServerOptions) {
@@ -133,6 +157,8 @@ export class VaultService {
     this.maxTokenTtlSeconds = opts.maxTokenTtlSeconds ?? MAX_TTL;
     this.onRevoked = opts.onRevoked;
     this.marketplaceStorage = opts.marketplaceStorage ?? new MemoryMarketplaceStorage();
+    this.marketplaceStore = opts.marketplaceStore ?? new InMemoryMarketplaceStore();
+    this.keyDirectory = opts.keyDirectory ?? new InMemoryKeyDirectory();
     this.now = opts.now ?? (() => Math.floor(Date.now() / 1000));
   }
 
@@ -249,6 +275,17 @@ export async function handleVaultRequest(
   //     bundle. Returns null when no marketplace route matched.
   const marketplaceResponse = handleMarketplaceRequest(service.marketplaceStorage, req);
   if (marketplaceResponse !== null) return marketplaceResponse;
+
+  // 0b) Marketplace persona endpoints — V-6.a / V-6.b. New routes:
+  //     POST /marketplace/persona, GET /marketplace/persona/<a>/<p>@<v>,
+  //     GET /marketplace/persona/<a>/<p>/latest. Verifies signatures
+  //     against the key directory + content-addresses bundles.
+  const personaResponse = await handleMarketplacePersonaRequest(
+    service.marketplaceStore,
+    service.keyDirectory,
+    req,
+  );
+  if (personaResponse !== null) return personaResponse;
 
   // 1) JWKS — public, unauthenticated.
   if (req.method === 'GET' && req.path === '/.well-known/jwks.json') {

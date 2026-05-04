@@ -20,6 +20,7 @@ Commands:
   inspect <id-or-path>    Pretty-print a manifest (file path or live id).
   compile <intent.json>   Offline compile producing a manifest.
   vault dev               Boot a local intent vault server (ed25519 JWTs).
+  marketplace publish     Publish a signed bundle to the vault marketplace.
 
 Options:
   --help, -h              Show this message.
@@ -135,3 +136,26 @@ PEM is printed to stderr — every restart invalidates outstanding tokens.
 
 JWKS lives at /.well-known/jwks.json; protocol spec at
 docs/vault-protocol.md.`;
+
+export const MARKETPLACE_PUBLISH_USAGE = `usage: atelier marketplace publish <bundle.json> --author <id> --key <path>
+                                          [--vault-url <url>] [--app-id <id>]
+
+Sign a marketplace bundle and POST it to the vault's
+\`/marketplace/persona\` endpoint (V-6.a / V-6.f).
+
+Bundle JSON shape (pre-signing):
+  {
+    "address": "atelier://<author>/<persona>@<version>",
+    "payload": { ... }
+  }
+
+Required:
+  --author <id>      Author handle. Must match the bundle's address.author.
+  --key <path>       Path to PKCS#8 PEM ed25519 private key file.
+
+Optional:
+  --vault-url <url>  Vault base URL. Default http://localhost:4001.
+  --app-id <id>      VaultClient app id. Default cir.cli.
+
+On success, prints the canonical \`atelier://...\` address. On failure,
+prints the underlying error and exits 1.`;

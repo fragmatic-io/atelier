@@ -77,3 +77,18 @@ export {
   verifyBundleSignature,
   type MarketplaceStorage,
 } from './marketplace.js';
+
+// V-6.a / V-6.b — persona marketplace endpoints + key directory + store.
+export {
+  FilesystemMarketplaceStore,
+  InMemoryKeyDirectory,
+  InMemoryMarketplaceStore,
+  MARKETPLACE_PREFIX,
+  StaticKeyDirectory,
+  compareSemver,
+  computeAuthorKeyId,
+  handleMarketplacePersonaRequest,
+  verifyAuthorSignature,
+  type KeyDirectory,
+  type MarketplaceStore,
+} from './marketplace/index.js';

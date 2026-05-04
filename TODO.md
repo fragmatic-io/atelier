@@ -115,12 +115,12 @@ The distribution channel. **The Wave M architectural prerequisite is shipped —
 
 ### P2.2 — V-6 sub-tracks (sequenced)
 
-- [ ] **V-6.a — Publish endpoint.** `POST /atelier/marketplace/persona` accepts a signed bundle, verifies the ed25519 signature, persists to a content-addressed store, indexes by `(author, persona, version)`. **1 wk.**
-- [ ] **V-6.b — Consume endpoint.** `GET /atelier/marketplace/<author>/<persona>@<version>` returns the signed bundle. Browser caches by content hash. **1 wk.**
+- [x] **V-6.a — Publish endpoint.** `POST /marketplace/persona` accepts a signed bundle, verifies the ed25519 signature against the host's `KeyDirectory` (`StaticKeyDirectory` + `InMemoryKeyDirectory` ship), persists to a content-addressed `MarketplaceStore` (`InMemoryMarketplaceStore` + `FilesystemMarketplaceStore` ship), indexes by `(author, persona, version)`. 201 / 400 / 401 / 409 surface.
+- [x] **V-6.b — Consume endpoint.** `GET /marketplace/persona/<author>/<persona>@<version>` returns the signed bundle (long max-age + immutable cache). `GET /marketplace/persona/<author>/<persona>/latest` returns `{ address, bundle }` for the highest semver (short max-age + must-revalidate).
 - [x] **V-6.c — Browse / search UI.** `<MarketplaceBrowser>` baseline primitive shipped (catalog 82 → 83). Renders a filter panel (author / domain / brand kit / search) + scrollable listings; card click opens a preview drawer with a "Use this recipe" CTA that fires `onSelect` + optionally dispatches a `selectCapability` via the host dispatcher. `MockMarketplaceClient` ships alongside for previews / tests; production hosts wire the `@atelier/vault-client`-backed client.
 - [ ] **V-6.d — Review / curation flow.** Maintainer-side approval for personas surfaced in the default index. Could be skipped for v1 in favour of a flat self-publish space. **1 wk.**
 - [ ] **V-6.e — Eval gate.** "Top 10 personas in the marketplace compile cleanly" smoke job that runs nightly. **3 d.**
-- [ ] **V-6.f — Sign capabilities/skills artifacts at publish time.** Per [`docs/production-concerns.md`](docs/production-concerns.md). Needs a key-management decision (per-author key on first publish, or a maintainer-issued cert?). **1 wk.**
+- [x] **V-6.f — Sign capabilities/skills artifacts at publish time.** `publishPersona(client, bundle, author)` in `@atelier/vault-client` builds canonical bytes via `signingInputForBundle`, signs via Web Crypto ed25519, POSTs to `/marketplace/persona`, returns the parsed `MarketplaceAddress`. CLI: `atelier marketplace publish <bundle.json> --author <id> --key <pkcs8.pem>`. Key model: per-author registration in the server's `KeyDirectory` (host curates; static or in-memory impls ship).
 
 **Total V-6**: 4-6 wk depending on whether V-6.d ships in v1.
 

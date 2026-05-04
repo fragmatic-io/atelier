@@ -382,6 +382,9 @@ importers:
       '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
+      '@atelier/vault-client':
+        specifier: workspace:*
+        version: link:../vault-client
       '@atelier/vault-server':
         specifier: workspace:*
         version: link:../vault-server

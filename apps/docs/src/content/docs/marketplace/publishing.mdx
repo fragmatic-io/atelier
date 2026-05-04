@@ -114,40 +114,81 @@ A `SignedBundle`:
 
 4. **Publish to the vault.**
 
+   The CLI is the recommended path (V-6.f shipped):
+
    ```bash
-   curl -X POST http://localhost:4001/vault/marketplace/publish \
+   pnpm atelier marketplace publish bundle.json \
+     --author acme \
+     --key ~/.atelier/keys/acme.private.pem \
+     --vault-url http://localhost:4001
+   ```
+
+   Under the hood the CLI loads the PEM, signs `{address, payload, timestamp}`
+   with ed25519, and POSTs the resulting `SignedBundle` to
+   `POST /marketplace/persona`. On success, the canonical address is
+   printed to stdout and exit code 0 is returned.
+
+   The same flow is available programmatically via
+   `publishPersona(client, bundle, author)` from `@atelier/vault-client`.
+
+   For curl users:
+
+   ```bash
+   # Build the SignedBundle yourself (see step 3) then POST it raw:
+   curl -X POST http://localhost:4001/marketplace/persona \
      -H 'content-type: application/json' \
-     -d @bundle.json
+     -d @signed-bundle.json
    ```
 
    On success: `201 Created` with `{ address, key_id }`.
 
    On failure:
    - `400 { error: 'malformed bundle', issues: [...] }` — schema mismatch.
-   - `400 { error: 'signature verification failed', reason: '...' }` — signature didn't verify against the embedded public key.
-   - `400 { error: 'key_id mismatch' }` — `key_id` is not `sha256(public_key)[:16]`.
+   - `401 { error: 'signature verification failed', reason: '...' }` — the
+     signature didn't verify against the AUTHOR'S registered key in the
+     server's `KeyDirectory`. (Unknown author handles also 401 here.)
+   - `409 { error: 'duplicate', address }` — `(author, persona, version)`
+     is already published. Bump the version to publish again.
 
 5. **Verify the publish.**
 
    ```bash
-   curl http://localhost:4001/vault/marketplace/acme/founder-inbox@1.0.0
+   curl http://localhost:4001/marketplace/persona/acme/founder-inbox@1.0.0
    ```
 
    You should see the bundle round-tripped verbatim. The vault stores what you sent; it never re-signs.
+
+   To grab the highest semver for an `(author, persona)`:
+
+   ```bash
+   curl http://localhost:4001/marketplace/persona/acme/founder-inbox/latest
+   ```
+
+   Returns `{ address, bundle }` — the canonical address of the latest
+   version + the full `SignedBundle` so the client can re-verify.
 
 </Steps>
 
 ## What the vault checks
 
-When a bundle hits `POST /vault/marketplace/publish`:
+When a bundle hits `POST /marketplace/persona`:
 
 1. **Schema parse.** The body must match `SignedBundleSchema`. Malformed → 400.
-2. **Signature verification.** The signature must verify against the embedded public key over the canonical JSON of `{ address, payload, timestamp }`. Bad signature → 400.
-3. **Key id derivation.** `key_id` must equal `sha256(public_key)[:16]`. Mismatch → 400.
-4. **Address validation.** Author / persona / version must match the canonical regex / semver shape. Malformed → 400.
-5. **Store.** If everything passes, the bundle is stored verbatim under `(author, persona, version)`. Republishing the same key overwrites.
+2. **Author registration.** `bundle.address.author` must resolve to a
+   public key in the server's `KeyDirectory`. Unknown → 401.
+3. **Signature verification.** The signature must verify against the
+   AUTHOR'S registered key (not the bundle's embedded `public_key`,
+   which is a verifier-convenience copy) over the canonical JSON of
+   `{ address, payload, timestamp }`. Bad signature → 401.
+4. **Key id check.** `bundle.key_id` must match the registered key's
+   fingerprint. Mismatch → 401.
+5. **Address validation.** Author / persona / version must match the canonical regex / semver shape. Malformed → 400.
+6. **Duplicate check.** `(author, persona, version)` must not already
+   exist in the store. Duplicate → 409.
+7. **Store.** If everything passes, the bundle is persisted verbatim
+   and indexed by `(author, persona, version)`.
 
-The vault never re-signs. It's a durable storage + re-serving surface, not a re-attestation authority.
+The vault never re-signs. It's a durable storage + re-serving surface, not a re-attestation authority. Per-version content is immutable by construction — the server returns 409 on a duplicate; bumping the version is the only way to publish again.
 
 ## Authoring workflow tips
 
@@ -163,20 +204,22 @@ Today, a publish targets one vault. Multi-vault distribution (mirroring across h
 
 ## Republishing semantics
 
-| Scenario                                                    | Result                                                                    |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Republish same `<author>/<persona>@<version>` with same key | Overwrites; consumers see new bytes on next fetch.                        |
-| Republish with a different key                              | Same overwrite; consumers' TOFU cache rejects on next fetch (key change). |
-| Publish a new version                                       | New bundle; old version still fetchable.                                  |
+| Scenario                                                             | Result                                                                                      |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Publish to existing `<author>/<persona>@<version>` (any key)         | `409 duplicate`. Bump the version.                                                          |
+| Publish with a key not in the server's `KeyDirectory` for `<author>` | `401 signature verification failed`.                                                        |
+| Publish a new version                                                | New bundle; old version still fetchable. `latest` route now returns the new highest semver. |
 
-Per-version immutability is roadmap.
+Per-version content is immutable: the new `POST /marketplace/persona` endpoint returns 409 rather than overwriting. (The legacy `POST /vault/marketplace/publish` endpoint is preserved with its overwrite semantics for back-compat with the v0 demos.)
 
 ## Status
 
-- ✅ **V-6 MVP** — addressing, ed25519 signing, TOFU trust model. Server and client implementations.
-- ⏳ **CLI surface** — `atelier marketplace keygen / publish / fetch` subcommands.
-- ⏳ **Per-version immutability**.
-- ⏳ **Mirroring / federation**.
+- ✅ **V-6.a / V-6.b / V-6.f** — `POST /marketplace/persona`, `GET /marketplace/persona/<a>/<p>@<v>`, `GET /marketplace/persona/<a>/<p>/latest`, plus the `publishPersona` client helper and `atelier marketplace publish` CLI surface. Server-side `KeyDirectory` enforces who can publish under each author handle.
+- ✅ **V-6 baseline (legacy)** — addressing, ed25519 signing, TOFU trust model. Original `/vault/marketplace/publish` + `/vault/marketplace/<a>/<p>@<v>` routes preserved for back-compat.
+- ⏳ **V-6.c — Browse / search UI** (sibling PR).
+- ⏳ **V-6.d — Review / curation flow.**
+- ⏳ **V-6.e — Eval gate.**
+- ⏳ **Mirroring / federation.**
 
 ## Next
 

@@ -22,6 +22,7 @@
     "@atelier/compiler": "workspace:*",
     "@atelier/components": "workspace:*",
     "@atelier/schemas": "workspace:*",
+    "@atelier/vault-client": "workspace:*",
     "@atelier/vault-server": "workspace:*"
   },
   "devDependencies": {
