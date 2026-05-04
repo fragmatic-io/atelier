@@ -99,9 +99,12 @@ export {
   CompilerBudgetExhaustedError,
   CompilerOutputError,
   CompilerUnavailableError,
+  type CompileCapabilityResolver,
   type CompileInput,
   type CompileResult,
   type CompilerService,
+  type ResolverQuery,
+  type ResolverResult,
 } from './types.js';
 
 // Compilers

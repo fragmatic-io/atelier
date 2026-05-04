@@ -123,4 +123,33 @@ describe('SubstringCapabilityResolver', () => {
     expect(new SubstringCapabilityResolver().id).toBe('substring');
     expect(new SubstringCapabilityResolver({ id: 'custom-fallback' }).id).toBe('custom-fallback');
   });
+
+  it('returns top-30 from a 200-capability fixture for a known query', async () => {
+    // Build a 200-cap registry where every fifth id mentions "archive"
+    // in either id or description. The substring resolver should rank
+    // those above the rest. We assert top-30 contains all 40 archive-
+    // bearing matches up to the cap.
+    const reg: Record<string, Capability> = {};
+    for (let i = 0; i < 200; i++) {
+      const id = `cap.${String(i).padStart(3, '0')}`;
+      const isArchive = i % 5 === 0;
+      reg[id] = {
+        id,
+        kind: 'action',
+        version: '1.0.0',
+        description: isArchive
+          ? `Archive item number ${String(i)}`
+          : `Item number ${String(i)} (unrelated).`,
+      } as unknown as Capability;
+    }
+    const r = new SubstringCapabilityResolver();
+    const result = await r.scope({ ...REQ, intent: 'archive' }, 30, reg);
+    expect(result).toHaveLength(30);
+    // Every one of the top-30 is an archive-bearing capability (every
+    // 5th id is i*5: 0, 5, 10, ..., 145 for the first 30).
+    for (const ref of result) {
+      const idx = Number(ref.id.slice(4));
+      expect(idx % 5).toBe(0);
+    }
+  });
 });

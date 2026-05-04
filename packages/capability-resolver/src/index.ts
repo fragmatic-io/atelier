@@ -97,3 +97,10 @@ export {
   type EmbeddingErrorObserver,
   type EmbeddingScopeObserver,
 } from './embedding-resolver.js';
+
+export {
+  wrapAsHighLevel,
+  type HighLevelCapabilityResolver,
+  type HighLevelQuery,
+  type HighLevelResult,
+} from './high-level-adapter.js';

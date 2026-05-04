@@ -35,9 +35,9 @@
 | ------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | **M**   | Baseline-first pivot — catalog 62 → 81 (now 83); 3 demos at zero customs; ETHOS #11; eval gate | ✅ shipped                                |
 | **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                          | 🟡 partial — branch protection still TODO |
-| **C**   | Compiler evolution — C-1 ✅ C-2 ✅ C-4 ✅; C-3/S-1 + C-5 (RAG) remain                          | 🟡 partial                                |
+| **C**   | Compiler evolution — C-1 ✅ C-2 ✅ C-3/S-1 ✅ C-4 ✅; C-5 (RAG) remains                        | 🟡 partial                                |
 | **7**   | Personalisation — P-1 / P-8 / P-9 / DD ✅; P-3 / P-4 / P-7 remain                              | 🟡 in flight                              |
-| **10**  | Scale — S-2 / S-3 / S-5 / S-6 / S-7 ✅; S-1 / S-4 remain                                       | 🟡 partial                                |
+| **10**  | Scale — S-1 / S-2 / S-3 / S-5 / S-6 / S-7 ✅; S-4 remains                                      | 🟡 partial                                |
 | **8**   | Vault marketplace — V-1 / V-3 ✅; **V-6 = P2 below**                                           | 📅 planned                                |
 | **11**  | Visual depth — 16 items shipped this session (catalog 65 → 82); long tail remains              | 🟡 partial                                |
 | **12+** | Multi-platform — N-4 ✅; N-1 / N-2 / N-3 / N-5 remain                                          | 🟡 partial                                |
@@ -86,7 +86,7 @@ Compile correctness, scope, retrieval. The next architectural moves after C-1 / 
 
 ### P1.1 — Capability scoping
 
-- [ ] **C-3 / S-1 — Two-stage compile.** Tiny / fast model picks ~30 relevant capabilities from 1-line summaries; full Pro model gets those 30 schemas. With C-2 in place, `findCapability` _is_ the stage-1 call — wire a vector index (or even substring + frequency for the MVP) behind the existing tool. New package `@atelier/capability-resolver`. **2 wk. HIGH.** Trigger: first host with >150 capabilities (we're not there yet, but close).
+- [x] **C-3 / S-1 — Two-stage compile.** New package `@atelier/capability-resolver` ships `SubstringCapabilityResolver` (free baseline), `EmbeddingCapabilityResolver` (vector ranker; S-7), and `TwoStageCapabilityResolver` (production tiny-model pre-pass). `CompileInput` accepts an optional `capabilityResolver` (+ `topN`, default 30); both `GeminiCompiler` and `ToolUsingCompiler` honour it — the resolver runs BEFORE prompt assembly and only the narrowed top-N reaches the prompt. The agent's `lookupCapability` / `listCapabilities` tools still see the full registry. Resolver rejection cascades to the full registry (compile never fails on stage-1 hiccups). Demo wiring in `apps/demo` behind `CIR_CAPABILITY_RESOLVER_ENABLED=1`; docs at `/compiler/capability-scoping/`.
 
 ### P1.2 — Recipe retrieval (RAG)
 

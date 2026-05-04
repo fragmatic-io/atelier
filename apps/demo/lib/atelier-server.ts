@@ -23,9 +23,11 @@ import {
   MemoryManifestStore,
   ServerManifestResolver,
   ToolUsingCompiler,
+  type CompileCapabilityResolver,
   type CompilerService,
   type ManifestStore,
 } from '@atelier/compiler';
+import { SubstringCapabilityResolver } from '@atelier/capability-resolver';
 import type { CompileBudget } from '@atelier/schemas';
 import { SequenceDetector } from '@atelier/policies';
 import { BehavioralTap, StreamingAuditSink } from '@atelier/runtime';
@@ -53,6 +55,17 @@ interface CirServer {
   components: ComponentDefinition[];
   brandKit: typeof DEMO_BRAND_KIT;
   geminiAvailable: boolean;
+  /**
+   * Wave C / Phase C-3 — optional capability scoping resolver. Wired
+   * behind `CIR_CAPABILITY_RESOLVER_ENABLED=1`; absent on default boot
+   * so the showcase is additive. Threaded onto every `CompileInput`
+   * via the manifest endpoint so the compile pipeline narrows the
+   * registry to the top-N most relevant capabilities for the route +
+   * intent before prompt assembly. The agent's `lookupCapability` /
+   * `listCapabilities` tools still see the full registry; only
+   * `findCapability` and the prompt-stuffed set shrink.
+   */
+  capabilityResolver: CompileCapabilityResolver | undefined;
 }
 
 const KEY = '__cir_demo_server';
@@ -241,6 +254,18 @@ function buildServer(): CirServer {
     audit: (e) => audit.emit(e),
   });
 
+  // Wave C / Phase C-3 — optional capability scoping resolver. Off by
+  // default (the showcase remains additive). When `CIR_CAPABILITY_RESOLVER_ENABLED`
+  // is set the demo wires the cheap-and-deterministic
+  // `SubstringCapabilityResolver` so the showcase works offline / with
+  // no embedding setup. Production hosts wire `EmbeddingCapabilityResolver`
+  // (S-7) or `TwoStageCapabilityResolver` (S-1) instead — the
+  // `CompileInput.capabilityResolver` seam is identical.
+  const resolverEnabled = process.env['CIR_CAPABILITY_RESOLVER_ENABLED'] === '1';
+  const capabilityResolver: CompileCapabilityResolver | undefined = resolverEnabled
+    ? new SubstringCapabilityResolver()
+    : undefined;
+
   return {
     compiler,
     store,
@@ -252,6 +277,7 @@ function buildServer(): CirServer {
     components,
     brandKit: DEMO_BRAND_KIT,
     geminiAvailable,
+    capabilityResolver,
   };
 }
 

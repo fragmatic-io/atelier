@@ -5,82 +5,161 @@ description: Two-stage compile that scales past 150 capabilities.
 
 The single-prompt compiler stuffs all capability schemas into the system prompt. That's fine up to ~150 capabilities. Past that, the token budget blows out, the LLM ignores half the registry, and accuracy plummets.
 
-Wave C-3 (a.k.a. S-1) introduces a two-stage compile.
+Wave C-3 (a.k.a. S-1) introduces a two-stage compile: a small / fast resolver picks ~30 relevant capabilities from one-line summaries, and the full Pro model receives only those 30 schemas.
 
 ## The two-stage flow
 
 ```mermaid
 flowchart LR
-  Start([compile request]) --> Stage1[Stage 1: tiny model]
-  Stage1 -->|"30 candidate ids"| Stage2[Stage 2: full Pro model]
+  Start([compile request]) --> Stage1[Stage 1: resolver]
+  Stage1 -->|"top-30 capability ids"| Stage2[Stage 2: full Pro model]
   Registry[capabilities/ registry] -->|1-line summaries| Stage1
   Registry -->|full schemas for selected 30| Stage2
   Stage2 --> Manifest
 ```
 
-**Stage 1** — A fast, cheap model receives the recipe + intent + a flat list of `{ id, summary }` for every capability. Its only job is to pick ~30 capabilities relevant to the route. Cost: a few hundred tokens, ~200ms.
+**Stage 1** — A fast, cheap resolver receives the route + intent + a flat list of `{ id, summary }` for every capability. Its only job is to pick ~30 capabilities relevant to the route. Cost: a few hundred tokens (LLM resolver) or sub-millisecond (substring / vector resolver).
 
 **Stage 2** — The Pro model receives the full schema for those 30 capabilities + the recipe + intent + skill stack. It composes the manifest as before. Cost: the usual 8-20k tokens.
 
 Total: ≈ 200ms slower on cold path; massively cheaper than dragging 1000 schemas through every compile.
 
-## The new package
+## The package — `@atelier/capability-resolver`
 
-`@atelier/capability-resolver` will ship as a sibling to `@atelier/compiler` (gated on track S-1; trigger: first host with >150 capabilities). The interface:
+A pure-function package, sibling to `@atelier/compiler`. The headline interfaces:
 
 ```ts
 export interface CapabilityResolver {
-  scope(input: ScopeInput): Promise<{ capability_ids: string[]; tokens_used: number }>;
+  /** Stable identifier surfaced in audit / logs. */
+  readonly id: string;
+  /**
+   * Lower-level entry-point — the production seam. Returns up to `k`
+   * capability refs (id + description) given a free-form intent +
+   * route + user/app context.
+   */
+  scope(
+    request: ScopeRequest,
+    k: number,
+    registry: Readonly<Record<string, Capability>>,
+  ): Promise<readonly { id: string; description?: string }[]>;
 }
 
-export interface ScopeInput {
-  recipe: Recipe;
-  intent: IntentProfile;
-  route: string;
-  registry: Array<{ id: string; summary: string }>;
-  max_results?: number; // default 30
+export interface HighLevelCapabilityResolver {
+  readonly id: string;
+  /** Pick the top-N most relevant capabilities for a given query. */
+  resolve(query: HighLevelQuery): Promise<HighLevelResult>;
+  /** Index a corpus of capabilities. Idempotent. */
+  index(capabilities: readonly Capability[]): Promise<void>;
 }
 ```
 
-Two reference implementations:
+The package ships three reference implementations:
 
-- `LLMCapabilityResolver` — calls a fast model (Gemini Flash, etc.) with the registry.
-- `VectorCapabilityResolver` — calls a vector store indexed on capability descriptions; no LLM in the scoping step. (Track S-7; higher quality, more setup.)
+- `SubstringCapabilityResolver` — fast / free baseline. No LLM call; substring + token-overlap match against capability id + description. The same logic that ships as `@atelier/compiler`'s `fallbackFindCapability`, but properly packaged. Used as the cascade target for the other resolvers.
+- `EmbeddingCapabilityResolver` — embedding-based ranker. Plugs in any `EmbeddingClient` (OpenAI / Cohere / Gemini / a local model) + a pre-built `EmbeddingIndex`. Cosine similarity over dense vectors; cascades to substring on client errors or empty index.
+- `TwoStageCapabilityResolver` — production. Stage 1 calls a tiny model (`gemini-2.5-flash` by default) over 1-line capability summaries and returns the top-K ids. Cascades to substring on stage-1 failure (LLM error, malformed reply, abort).
 
-## Code
+`wrapAsHighLevel(scopeResolver, registry)` bridges the lower-level `scope()` shape into the simpler `resolve()`/`index()` contract, for ad-hoc tooling that doesn't want to thread route + user context through every call.
+
+## Wiring into the compiler
+
+`CompileInput` carries an optional `capabilityResolver` field. When set, the compiler runs the resolver BEFORE prompt assembly and substitutes the narrowed registry into the system prompt:
 
 ```ts
-import { ToolUsingCompiler, LLMCapabilityResolver } from '@atelier/compiler';
+import { GeminiCompiler, type CompileInput } from '@atelier/compiler';
+import { SubstringCapabilityResolver } from '@atelier/capability-resolver';
 
-const resolver = new LLMCapabilityResolver({
-  apiKey: process.env.GEMINI_API_KEY!,
-  model: 'gemini-1.5-flash',
-});
+const compiler = new GeminiCompiler({ apiKey });
+const resolver = new SubstringCapabilityResolver();
 
-const compiler = new ToolUsingCompiler({
-  apiKey: process.env.GEMINI_API_KEY!,
-  toolEnv: makeToolEnvironment({
-    capabilities: yourFullCapabilityRegistry,
-    components: COMPONENT_BINDINGS_METADATA,
-    policies: BASELINE_POLICIES,
-    capabilityResolver: resolver, // ← C-3 plug-in
-  }),
+await compiler.compile({
+  user_id: 'demo-user',
+  app_id: 'demo',
+  route: '/today',
+  capabilities: FULL_CAPABILITY_REGISTRY, // 200+ entries
+  components: COMPONENT_BINDINGS,
+  capabilityResolver: resolver,
+  topN: 30, // default, optional
+} satisfies CompileInput);
+```
+
+Both compiler implementations honour the resolver:
+
+- **`GeminiCompiler`** (single-shot path) — narrows `capabilities` before `buildPromptContext` so only the top-N schemas reach the prompt.
+- **`ToolUsingCompiler`** (C-2 agent path) — runs the resolver once before the agent loop. The agent's `findCapability(intent)` tool routes through the narrowed subset; `lookupCapability(id)` and `listCapabilities(filter)` still see the FULL registry, so the agent can broaden by id when scoping was too tight.
+
+The resolver is permissive by design: if it throws, returns nothing, or produces only invented ids, the compile falls through to the full registry rather than starving the prompt.
+
+## Wiring into a production resolver
+
+The `TwoStageCapabilityResolver` is the production-grade option:
+
+```ts
+import { GoogleGenAI } from '@google/genai';
+import { TwoStageCapabilityResolver, type ScopingLlmClient } from '@atelier/capability-resolver';
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const stageOne: ScopingLlmClient = {
+  id: 'gemini-2.5-flash-scoping',
+  async pick({ k, summaries, route, intent, signal }) {
+    const r = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: [
+                'You are a capability scoping pre-pass for a UI compiler.',
+                `Given the user intent and route, pick at most ${k} capability ids.`,
+                'Return ONLY a JSON array of capability id strings.',
+                `route: ${route}`,
+                `intent: ${intent}`,
+                `capabilities:\n${summaries.map((s) => `- ${s.id}: ${s.summary}`).join('\n')}`,
+              ].join('\n\n'),
+            },
+          ],
+        },
+      ],
+      config: { responseMimeType: 'application/json' },
+      ...(signal !== undefined ? { abortSignal: signal } : {}),
+    });
+    return {
+      ids: JSON.parse(r.text ?? '[]') as string[],
+      tokenCost: r.usageMetadata?.totalTokenCount ?? 0,
+    };
+  },
+};
+
+const resolver = new TwoStageCapabilityResolver({
+  client: stageOne,
+  // Optional — log every scope call.
+  onScope: (e) =>
+    console.log(`scoping: ${e.route} ${e.pickedCount}/${e.registrySize} ${e.durationMs}ms`),
+  // Optional — get notified when stage-1 falls back to substring.
+  onStageOneFailure: (e) => console.warn(`scoping stage-1 failed for ${e.route}; cascading.`),
 });
 ```
 
-When the agent calls `findCapability(query)`, the tool routes through the resolver. If the host registers a `LLMCapabilityResolver`, that's the stage-1 tiny-model path. If they don't, the tool falls back to substring search across the registry (the default behaviour).
+For an offline / no-API-key option, use `EmbeddingCapabilityResolver` with a local sentence-transformer model. The package's `EmbeddingClient` seam is provider-agnostic — any function that returns dense vectors works.
 
-## Why this composes with C-2
+## How `findCapability` plugs in
 
-The tool-using compiler's `findCapability` tool is the natural surface for capability scoping. Instead of stuffing the full registry into the prompt, the agent calls `findCapability(query)` and the host wires it to whatever scoping strategy makes sense.
+The C-2 `ToolUsingCompiler` already shipped a `findCapability` tool with a substring fallback. C-3 swaps the resolver underneath that tool: when a `capabilityResolver` is wired, `findCapability` returns matches drawn from the resolver's pre-scoped subset instead of the full registry. The substring fallback inside `SubstringCapabilityResolver` becomes the inner default — the same behaviour as before, now properly packaged + tunable + tested.
 
-This means **C-2 is the architectural prerequisite for C-3**. With the agent already calling tools to discover capabilities, C-3 is a pluggable backend swap, not a new architecture.
+## Demo wiring
+
+`apps/demo` ships a default-off integration gated on `CIR_CAPABILITY_RESOLVER_ENABLED=1`. When the flag is set the demo wires `SubstringCapabilityResolver` (no API key required) and threads it onto every compile:
+
+```bash
+CIR_CAPABILITY_RESOLVER_ENABLED=1 pnpm --filter @atelier/demo dev
+```
+
+Production hosts swap in `EmbeddingCapabilityResolver` or `TwoStageCapabilityResolver` for higher-quality scoping.
 
 ## When to enable
 
-Trigger: **first host with >150 capabilities.** Below that, the substring fallback is fine. The LLM's context window is large enough to hold all 150 schemas, and the cost of a single full-registry compile is bounded.
-
-Above 150, the tipping point is sharp:
+Trigger: **first host with >150 capabilities.** Below that, the full registry fits in the prompt and the resolver overhead loses. Above 150, the tipping point is sharp:
 
 | Registry size | Single-prompt cost  | Two-stage cost                    |
 | ------------- | ------------------- | --------------------------------- |
@@ -89,17 +168,11 @@ Above 150, the tipping point is sharp:
 | 500           | 60k tokens (fails)  | 14k tokens                        |
 | 1000          | 110k tokens (fails) | 14k tokens (with vector resolver) |
 
-`LLMCapabilityResolver` works up to ~500 capabilities; past that, `VectorCapabilityResolver` (S-7) is the upgrade.
+`TwoStageCapabilityResolver` works up to ~1000 capabilities; past that, `EmbeddingCapabilityResolver` (S-7) is the upgrade.
 
-## Trigger
+## Tests
 
-Track S-1 is the integration point. The trigger to enable two-stage compile is: **a host registers a registry larger than the default threshold, and the eval harness measures recall drop on the single-prompt path.**
-
-Until that happens, you don't need this. The framework default ships with the substring fallback, which is good enough for every demo and most real apps.
-
-## Status
-
-This page describes a roadmap track. The wrapper interfaces ship; the reference implementations are deferred until a real host hits the scaling cliff. See [TODO.md → Wave C](https://github.com/fragmatic-io/atelier/blob/main/TODO.md) for the current state.
+The package ships ~90 tests covering substring + two-stage + embedding behaviour, the cascade story, and the `wrapAsHighLevel` adapter. The compiler ships ~15 tests covering the resolver-on / resolver-off paths and the rejection cascade. Embedding tests that need a heavy model download are gated behind `CIR_EMBEDDING_TESTS=1`.
 
 ## Next
 

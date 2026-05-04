@@ -57,7 +57,7 @@
  *   - Marketplace recipe RAG (C-5) — gated on V-6.
  */
 
-import { ManifestSchema, type Manifest } from '@atelier/schemas';
+import { ManifestSchema, type Capability, type Manifest } from '@atelier/schemas';
 import {
   CompilerOutputError,
   type CompileInput,
@@ -73,6 +73,7 @@ import {
   type ToolEnvironment,
   type ToolValidationResult,
 } from './tool-environment.js';
+import { applyCapabilityResolver } from './capability-scoping.js';
 
 /**
  * One LLM turn. The agent client is the seam between the wrapper's
@@ -192,6 +193,21 @@ export class ToolUsingCompiler implements CompilerService {
     const startedAt = Date.now();
     let totalTokens = 0;
 
+    // Wave C / Phase C-3 — capability scoping pre-pass. When a resolver
+    // is wired on the input, run it ONCE before the agent loop and
+    // store the narrowed registry. The agent's `findCapability` /
+    // `listCapabilities` tools route through this narrowed set so the
+    // LLM only chooses among the ~30 most relevant capabilities. The
+    // FULL registry is still kept on `#env.capabilities` so
+    // `lookupCapability(id)` can resolve any id the resolver missed —
+    // the agent broadens by id when it suspects scoping was too tight.
+    const scopedCapabilities =
+      input.capabilityResolver !== undefined
+        ? await applyCapabilityResolver(input)
+        : input.capabilities;
+    const scopedRequest =
+      scopedCapabilities !== input.capabilities ? { capabilities: scopedCapabilities } : undefined;
+
     const tools = this.#toolDeclarations();
     const contents: AgentContent[] = [{ role: 'user', text: buildAgentUserPrompt(input) }];
     const systemInstruction = AGENT_SYSTEM_PROMPT;
@@ -225,7 +241,7 @@ export class ToolUsingCompiler implements CompilerService {
         // tool against the environment and append the responses.
         contents.push({ role: 'model', toolCalls: turn.toolCalls });
         for (const call of turn.toolCalls) {
-          const result = this.#dispatchTool(call, input);
+          const result = this.#dispatchTool(call, input, scopedRequest);
           this.#fireOnToolCall(call, result);
           contents.push({ role: 'tool', name: call.name, response: result });
         }
@@ -255,14 +271,34 @@ export class ToolUsingCompiler implements CompilerService {
   // ---------------------------------------------------------------------------
   // Tool dispatch — each tool is a thin wrapper around `ToolEnvironment`.
 
-  #dispatchTool(call: AgentToolCall, input: CompileInput): unknown {
+  #dispatchTool(
+    call: AgentToolCall,
+    input: CompileInput,
+    scopedRequest?: { capabilities: Readonly<Record<string, Capability>> },
+  ): unknown {
     const args = call.args ?? {};
     switch (call.name) {
       case 'lookupCapability':
+        // `lookupCapability(id)` ALWAYS resolves against the full registry
+        // — even when scoping is on. This is the explicit broaden-by-id
+        // escape hatch documented in the C-3 contract. The agent learns
+        // an id from `findCapability` (scoped) or guesses one (full
+        // registry validates) and asks for the full schema here.
         return this.#lookupCapability(asString(args['id']));
       case 'findCapability':
-        return this.#findCapability(asString(args['intent']), asInt(args['k'], 5));
+        // `findCapability(intent)` routes through the scoped set when
+        // C-3 scoping is on (the resolver already pre-picked the
+        // top-N); otherwise falls through to the full registry +
+        // substring fallback.
+        return this.#findCapability(
+          asString(args['intent']),
+          asInt(args['k'], 5),
+          scopedRequest?.capabilities,
+        );
       case 'listCapabilities':
+        // Same broaden semantics — `listCapabilities(filter)` shows the
+        // full registry (filtered by domain/tag) so the agent can
+        // explore beyond the scoped set when needed.
         return this.#listCapabilities(args['filter'] as { domain?: string; tag?: string });
       case 'findComponent':
         return this.#findComponent(asString(args['role']), asString(args['intent']));
@@ -287,8 +323,20 @@ export class ToolUsingCompiler implements CompilerService {
     return cap ?? { error: `unknown capability: ${id}` };
   }
 
-  #findCapability(intent: string, k: number): readonly CapabilityRef[] {
+  #findCapability(
+    intent: string,
+    k: number,
+    scopedCapabilities?: Readonly<Record<string, Capability>>,
+  ): readonly CapabilityRef[] {
     if (!intent) return [];
+    // Wave C / Phase C-3 — when the wrapper has a pre-scoped set from a
+    // `CompileInput.capabilityResolver` call, prefer it: the resolver
+    // already picked the most relevant top-N for this route + intent,
+    // and routing the agent's query through that subset is the entire
+    // point of the two-stage compile.
+    if (scopedCapabilities) {
+      return fallbackFindCapability(scopedCapabilities, intent, k);
+    }
     if (this.#search?.capabilities) return this.#search.capabilities(intent, k);
     return fallbackFindCapability(this.#env.capabilities, intent, k);
   }

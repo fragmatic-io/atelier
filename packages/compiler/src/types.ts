@@ -116,6 +116,93 @@ export interface CompileInput {
    * don't read it degrade to standalone behaviour with no change.
    */
   outline?: AppOutline | undefined;
+  /**
+   * Wave C / Phase C-3 — capability scoping resolver.
+   *
+   * When set, the compiler invokes the resolver BEFORE prompt assembly to
+   * narrow `capabilities` from the full registry (potentially 200+ entries)
+   * to the top-N most relevant for this route + intent. Only the narrowed
+   * subset is stuffed into the system prompt; the agent's tool surface
+   * (`lookupCapability` / `listCapabilities`) still sees the full registry
+   * so the LLM can broaden when needed.
+   *
+   * Compilers that don't read this field degrade gracefully — the scoping
+   * is purely an optimisation and the full registry compile path remains
+   * the default.
+   *
+   * The interface here is structural to avoid a hard package dep on
+   * `@atelier/capability-resolver`; both `CapabilityResolver` (`resolve()`
+   * shape) and `LegacyCapabilityResolver` (`scope()` shape) match.
+   */
+  capabilityResolver?: CompileCapabilityResolver | undefined;
+  /**
+   * Wave C / Phase C-3 — top-N hint for the resolver. Defaults to 30 (a
+   * safe budget for ~150kB of capability schemas). Hosts wiring a known
+   * tighter or looser scope override here.
+   */
+  topN?: number | undefined;
+}
+
+/**
+ * Wave C / Phase C-3 — minimal structural type the compiler relies on
+ * when a `capabilityResolver` is supplied on `CompileInput`. The full
+ * `CapabilityResolver` interface lives in `@atelier/capability-resolver`;
+ * this is the subset the compiler integration touches, declared here to
+ * keep the compiler package free of a hard dep on the resolver package.
+ *
+ * Implementations:
+ *   - The high-level `resolve(query)` shape — typical for new code.
+ *   - The lower-level `scope(request, k, registry)` shape — what the
+ *     resolver package shipped with Wave 10 / S-1. The compiler accepts
+ *     either; `scope` is preferred when present (it carries route + user
+ *     context to the underlying tiny model).
+ */
+export interface CompileCapabilityResolver {
+  readonly id?: string;
+  /**
+   * High-level resolver entry-point. Returns up to `query.topN`
+   * capabilities ranked by relevance to `query.text` / `query.intent`.
+   */
+  resolve?(query: ResolverQuery): Promise<ResolverResult>;
+  /**
+   * Lower-level entry-point matching `@atelier/capability-resolver`'s
+   * `CapabilityResolver.scope`. Returns refs (id + description) the
+   * compiler maps back into its `capabilities` registry.
+   */
+  scope?(
+    request: { intent: string; route: string; userId: string; appId: string; signal?: AbortSignal },
+    k: number,
+    registry: Readonly<Record<string, Capability>>,
+  ): Promise<readonly { id: string; description?: string }[]>;
+}
+
+/**
+ * Wave C / Phase C-3 — query shape for the high-level
+ * `CapabilityResolver.resolve()` surface. All fields optional so simple
+ * callers (tests, ad-hoc tooling) can pass `{ text }` and let defaults
+ * handle the rest.
+ */
+export interface ResolverQuery {
+  /** Route id being compiled (e.g. "/today"). */
+  routeId?: string;
+  /** Intent profile snapshot — additional signal for the resolver. */
+  intent?: IntentProfile;
+  /** Free-text query — typically the route's intent surface description. */
+  text?: string;
+  /** Top-N to return. Defaults to 30 if unset. */
+  topN?: number;
+  /** Optional abort signal (forwarded to the underlying client). */
+  signal?: AbortSignal;
+}
+
+/**
+ * Wave C / Phase C-3 — result shape for `CapabilityResolver.resolve()`.
+ * `scores` is an optional debug channel; hosts wiring observability
+ * record it alongside the picked ids.
+ */
+export interface ResolverResult {
+  capabilities: readonly Capability[];
+  scores?: readonly number[];
 }
 
 export interface CompileResult {

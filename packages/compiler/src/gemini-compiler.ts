@@ -19,6 +19,7 @@ import { GoogleGenAI, type GenerateContentConfig } from '@google/genai';
 import { ManifestSchema, type Manifest } from '@atelier/schemas';
 import { COMPILER_SYSTEM_PROMPT, COMPILER_SYSTEM_PROMPT_VERSION } from './prompts/system.js';
 import { buildPromptContext } from './prompts/builder.js';
+import { applyCapabilityResolver } from './capability-scoping.js';
 import {
   CompilerOutputError,
   CompilerUnavailableError,
@@ -78,7 +79,17 @@ export class GeminiCompiler implements CompilerService {
   }
 
   async compile(input: CompileInput): Promise<CompileResult> {
-    const ctx = buildPromptContext(input);
+    // Wave C / Phase C-3 — capability scoping pre-pass. When a resolver
+    // is wired, narrow `capabilities` to the top-N most relevant for
+    // this route + intent BEFORE prompt assembly; the agent's tool
+    // surface in `ToolUsingCompiler` is the place that still sees the
+    // full registry. For the single-shot Gemini path the prompt-stuffed
+    // set IS what the LLM gets, so the narrowing wins are direct.
+    const scopedInput =
+      input.capabilityResolver !== undefined
+        ? { ...input, capabilities: await applyCapabilityResolver(input) }
+        : input;
+    const ctx = buildPromptContext(scopedInput);
     // Refinement attempts (Wave C / Phase C-1) reuse the diff-tier model: it's
     // faster + cheaper, and the refinement prompt already carries the prior
     // draft as ground truth — exactly the diff-mode shape.

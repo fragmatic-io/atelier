@@ -131,6 +131,9 @@ importers:
 
   apps/demo:
     dependencies:
+      '@atelier/capability-resolver':
+        specifier: workspace:*
+        version: link:../../packages/capability-resolver
       '@atelier/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler

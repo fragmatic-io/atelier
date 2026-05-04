@@ -13,6 +13,7 @@
     "e2e:install": "playwright install chromium"
   },
   "dependencies": {
+    "@atelier/capability-resolver": "workspace:*",
     "@atelier/compiler": "workspace:*",
     "@atelier/components": "workspace:*",
     "@atelier/data-resolvers": "workspace:*",
