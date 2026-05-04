@@ -21,6 +21,7 @@ Commands:
   compile <intent.json>   Offline compile producing a manifest.
   vault dev               Boot a local intent vault server (ed25519 JWTs).
   marketplace publish     Publish a signed bundle to the vault marketplace.
+  marketplace review      Submit a maintainer review for a marketplace bundle.
 
 Options:
   --help, -h              Show this message.
@@ -159,3 +160,28 @@ Optional:
 
 On success, prints the canonical \`atelier://...\` address. On failure,
 prints the underlying error and exits 1.`;
+
+export const MARKETPLACE_REVIEW_USAGE = `usage: atelier marketplace review <address>
+                                          --state <approved|rejected|flagged>
+                                          --reviewer <id> --key <pkcs8.pem>
+                                          [--notes <text>] [--vault-url <url>]
+
+Submit a maintainer review for a marketplace bundle (V-6.d). The bundle
+must already be published; the server-side \`ReviewerKeyDirectory\` must
+list the public key matching \`--key\`.
+
+Required:
+  <address>            \`atelier://<author>/<persona>@<version>\` URI.
+  --state <s>          One of: approved, rejected, flagged. (\`pending\` is
+                       server-only — auto-applied at publish time.)
+  --reviewer <id>      Reviewer handle. Must match the directory entry.
+  --key <path>         Path to PKCS#8 PEM ed25519 private key file.
+
+Optional:
+  --notes <text>       Human-readable note attached to the record.
+  --vault-url <url>    Vault base URL. Default http://localhost:4001.
+  --app-id <id>        VaultClient app id. Default cir.cli.
+
+On success, prints the persisted state + address. On failure (401 unknown
+reviewer, 404 missing bundle, 400 schema fail), prints the underlying
+error and exits 1.`;

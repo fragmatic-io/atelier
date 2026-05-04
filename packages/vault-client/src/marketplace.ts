@@ -26,11 +26,15 @@ import { VaultUnreachableError } from './errors.js';
 import type { VaultClient } from './client.js';
 import {
   MarketplaceAddressSchema,
+  ReviewRecordSchema,
   SignedBundleSchema,
+  canonicalJsonStringify,
   formatMarketplaceAddress,
   parseMarketplaceAddress,
   signingInputForBundle,
   type MarketplaceAddress,
+  type ReviewRecord,
+  type ReviewState,
   type SignedBundle,
 } from '@atelier/schemas';
 
@@ -730,4 +734,285 @@ async function derivePublicKey(privateKeyRaw: Uint8Array): Promise<Uint8Array> {
     throw new MarketplaceError('derivePublicKey: invalid public key bytes');
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// V-6.d — review / curation helpers.
+//
+// Three helpers pair with the new server endpoints:
+//
+//   - `submitReview(client, address, opts)` — builds canonical signing
+//     bytes for the review envelope, signs via Web Crypto ed25519, POSTs
+//     to `/marketplace/review/<a>/<p>@<v>`, returns the persisted
+//     `ReviewRecord`. The signing input is structurally identical to
+//     `signingInputForBundle` but over a `{address, state, reviewer_id,
+//     notes?, timestamp}` envelope so any third-party signer that
+//     already knows how to sign a publish bundle can reuse the canonical
+//     JSON encoder.
+//   - `fetchReview(client, address)` — GETs the record. Returns `null`
+//     on 404 so callers can branch without exception-handling for the
+//     "no record yet" case.
+//   - `listMarketplace(client, query?)` — GETs the curated index. Returns
+//     `MarketplaceListing[]` mirroring the V-6.c `<MarketplaceBrowser>`
+//     shape so a host can wire the browse UI through one fetcher.
+// ---------------------------------------------------------------------------
+
+/**
+ * Mirrors the wire shape returned by `GET /marketplace/index`. We keep
+ * this inline rather than importing from `@atelier/components` because
+ * `@atelier/vault-client` should not take a runtime dep on the
+ * components package. Hosts can pass the result straight into
+ * `<MarketplaceBrowser>`'s `MarketplaceClient.list()` — TypeScript
+ * treats the two structurally identical.
+ */
+export interface MarketplaceListing {
+  address: {
+    scheme: 'atelier';
+    author: string;
+    persona: string;
+    version: string;
+    raw: string;
+  };
+  description: string;
+  domain?: string;
+  brandKitId?: string;
+  publishedAt: string;
+  authorDisplayName?: string;
+  /** V-6.d review state at index time. Always present on indexed rows. */
+  reviewState: ReviewState;
+}
+
+/** Filter shape passed to `listMarketplace`. Mirrors the components-side type. */
+export interface MarketplaceListQuery {
+  author?: string;
+  domain?: string;
+  brandKitId?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+  /**
+   * Maintainer escape hatch: comma-joined or array form is accepted; the
+   * helper renders an array as a comma-joined query param. Each value
+   * must be a valid `ReviewState`. Default is approved-only.
+   */
+  include?: ReviewState | readonly ReviewState[];
+}
+
+/** Build canonical signing bytes for a review envelope. */
+export function signingInputForReview(input: {
+  address: MarketplaceAddress;
+  state: ReviewState;
+  reviewer_id: string;
+  notes?: string;
+  timestamp: string;
+}): string {
+  const address: MarketplaceAddress = {
+    scheme: 'atelier',
+    author: input.address.author,
+    persona: input.address.persona,
+    version: input.address.version,
+  };
+  const envelope: Record<string, unknown> = {
+    address,
+    state: input.state,
+    reviewer_id: input.reviewer_id,
+    timestamp: input.timestamp,
+  };
+  if (input.notes !== undefined) envelope['notes'] = input.notes;
+  return canonicalJsonStringify(envelope);
+}
+
+/** Inputs to `submitReview`. */
+export interface SubmitReviewOptions {
+  /** New state to transition to. */
+  state: ReviewState;
+  /** Optional human note attached to the record. */
+  notes?: string;
+  /** Reviewer handle. The server's `ReviewerKeyDirectory` must know this. */
+  reviewerId: string;
+  /** Raw 32-byte ed25519 private seed. */
+  privateKey: Uint8Array;
+  /** Optional pre-derived public key. Default: derived from `privateKey`. */
+  publicKey?: Uint8Array;
+  /** Optional explicit timestamp. Default: `new Date().toISOString()`. */
+  timestamp?: string;
+}
+
+/**
+ * Sign + POST a review submission to `POST /marketplace/review/...`.
+ * Returns the persisted `ReviewRecord` on success. Throws
+ * `MarketplaceError` on any non-2xx response.
+ */
+export async function submitReview(
+  client: VaultClient,
+  address: MarketplaceAddress | string,
+  opts: SubmitReviewOptions,
+): Promise<ReviewRecord> {
+  const parsedAddress = typeof address === 'string' ? parseMarketplaceAddress(address) : address;
+  if (parsedAddress === null) {
+    const text = typeof address === 'string' ? address : JSON.stringify(address);
+    throw new MarketplaceError(`malformed address: ${text}`);
+  }
+
+  const publicKey = opts.publicKey ?? (await derivePublicKey(opts.privateKey));
+  const timestamp = opts.timestamp ?? new Date().toISOString();
+  const signingArgs: Parameters<typeof signingInputForReview>[0] = {
+    address: parsedAddress,
+    state: opts.state,
+    reviewer_id: opts.reviewerId,
+    timestamp,
+  };
+  if (opts.notes !== undefined) signingArgs.notes = opts.notes;
+  const signingInput = signingInputForReview(signingArgs);
+  const sigBytes = await signCanonicalEd25519(opts.privateKey, signingInput);
+  const keyId = await computeKeyId(publicKey);
+
+  const envelope: {
+    state: ReviewState;
+    reviewer_id: string;
+    notes?: string;
+    timestamp: string;
+    signature: string;
+    public_key: string;
+    key_id: string;
+  } = {
+    state: opts.state,
+    reviewer_id: opts.reviewerId,
+    timestamp,
+    signature: bytesToB64(sigBytes),
+    public_key: bytesToB64(publicKey),
+    key_id: keyId,
+  };
+  if (opts.notes !== undefined) envelope.notes = opts.notes;
+
+  const fetcher: typeof fetch = (client as unknown as { fetcher?: typeof fetch }).fetcher ?? fetch;
+  const vaultUrl: string = (client as unknown as { vaultUrl?: string }).vaultUrl ?? '';
+  if (vaultUrl === '') {
+    throw new MarketplaceError('VaultClient is missing vaultUrl');
+  }
+
+  const path =
+    `${vaultUrl}/marketplace/review/${encodeURIComponent(parsedAddress.author)}/` +
+    `${encodeURIComponent(parsedAddress.persona)}@${encodeURIComponent(parsedAddress.version)}`;
+
+  let res: Response;
+  try {
+    res = await fetcher(path, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(envelope),
+    });
+  } catch (err) {
+    throw new VaultUnreachableError(err as Error);
+  }
+  if (res.status === 401) {
+    throw new MarketplaceError(`submitReview: 401 unauthorized — ${await readErrorReason(res)}`);
+  }
+  if (res.status === 404) {
+    throw new MarketplaceError(`submitReview: 404 not found — ${await readErrorReason(res)}`);
+  }
+  if (!res.ok) {
+    throw new MarketplaceError(
+      `submitReview: HTTP ${String(res.status)} — ${await readErrorReason(res)}`,
+    );
+  }
+  const body = (await res.json()) as unknown;
+  const parsed = ReviewRecordSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new MarketplaceError(`submitReview: malformed response: ${parsed.error.message}`);
+  }
+  return parsed.data;
+}
+
+/**
+ * Fetch the review record at `address`. Returns `null` on 404 (no record
+ * exists yet). Throws `MarketplaceError` on other non-2xx responses.
+ */
+export async function fetchReview(
+  client: VaultClient,
+  address: MarketplaceAddress | string,
+): Promise<ReviewRecord | null> {
+  const parsedAddress = typeof address === 'string' ? parseMarketplaceAddress(address) : address;
+  if (parsedAddress === null) {
+    const text = typeof address === 'string' ? address : JSON.stringify(address);
+    throw new MarketplaceError(`malformed address: ${text}`);
+  }
+  const fetcher: typeof fetch = (client as unknown as { fetcher?: typeof fetch }).fetcher ?? fetch;
+  const vaultUrl: string = (client as unknown as { vaultUrl?: string }).vaultUrl ?? '';
+  if (vaultUrl === '') {
+    throw new MarketplaceError('VaultClient is missing vaultUrl');
+  }
+  const path =
+    `${vaultUrl}/marketplace/review/${encodeURIComponent(parsedAddress.author)}/` +
+    `${encodeURIComponent(parsedAddress.persona)}@${encodeURIComponent(parsedAddress.version)}`;
+  let res: Response;
+  try {
+    res = await fetcher(path);
+  } catch (err) {
+    throw new VaultUnreachableError(err as Error);
+  }
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new MarketplaceError(
+      `fetchReview: HTTP ${String(res.status)} — ${await readErrorReason(res)}`,
+    );
+  }
+  const body = (await res.json()) as unknown;
+  const parsed = ReviewRecordSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new MarketplaceError(`fetchReview: malformed response: ${parsed.error.message}`);
+  }
+  return parsed.data;
+}
+
+/**
+ * Fetch the curated browse index. Returns `MarketplaceListing[]` —
+ * structurally compatible with `<MarketplaceBrowser>`'s
+ * `MarketplaceClient.list()` shape.
+ */
+export async function listMarketplace(
+  client: VaultClient,
+  query?: MarketplaceListQuery,
+): Promise<MarketplaceListing[]> {
+  const fetcher: typeof fetch = (client as unknown as { fetcher?: typeof fetch }).fetcher ?? fetch;
+  const vaultUrl: string = (client as unknown as { vaultUrl?: string }).vaultUrl ?? '';
+  if (vaultUrl === '') {
+    throw new MarketplaceError('VaultClient is missing vaultUrl');
+  }
+
+  const params = new URLSearchParams();
+  if (query?.author !== undefined && query.author !== '') params.set('author', query.author);
+  if (query?.domain !== undefined && query.domain !== '') params.set('domain', query.domain);
+  if (query?.brandKitId !== undefined && query.brandKitId !== '') {
+    params.set('brandKitId', query.brandKitId);
+  }
+  if (query?.search !== undefined && query.search !== '') params.set('search', query.search);
+  if (query?.limit !== undefined) params.set('limit', String(query.limit));
+  if (query?.offset !== undefined) params.set('offset', String(query.offset));
+  if (query?.include !== undefined) {
+    const inc: string = Array.isArray(query.include)
+      ? query.include.join(',')
+      : (query.include as string);
+    if (inc !== '') params.set('include', inc);
+  }
+
+  const qs = params.toString();
+  const path = `${vaultUrl}/marketplace/index${qs.length > 0 ? `?${qs}` : ''}`;
+
+  let res: Response;
+  try {
+    res = await fetcher(path);
+  } catch (err) {
+    throw new VaultUnreachableError(err as Error);
+  }
+  if (!res.ok) {
+    throw new MarketplaceError(
+      `listMarketplace: HTTP ${String(res.status)} — ${await readErrorReason(res)}`,
+    );
+  }
+  const body = (await res.json()) as unknown;
+  if (!Array.isArray(body)) {
+    throw new MarketplaceError('listMarketplace: response is not an array');
+  }
+  return body as MarketplaceListing[];
 }

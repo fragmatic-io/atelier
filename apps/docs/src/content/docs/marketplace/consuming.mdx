@@ -211,6 +211,13 @@ Useful when:
 pnpm atelier marketplace publish bundle.json \
   --author acme \
   --key ~/.atelier/keys/acme.private.pem
+
+# Review / curate (V-6.d — shipped):
+pnpm atelier marketplace review atelier://acme/founder-inbox@1.0.0 \
+  --state approved \
+  --reviewer maint-a \
+  --key ~/.atelier/keys/maint-a.private.pem \
+  --notes "LGTM after security pass."
 ```
 
 The consume / install / trust subcommands remain roadmap:
@@ -222,6 +229,43 @@ pnpm atelier marketplace install atelier://acme/founder-inbox@1.0.0
 pnpm atelier marketplace trust list
 pnpm atelier marketplace trust set <author> <key_id>
 pnpm atelier marketplace trust delete <author>
+```
+
+## Curated browse index (V-6.d)
+
+`GET /marketplace/index` is the default browse surface. It returns
+listings whose latest review state is `approved`. Direct-address fetches
+still resolve unreviewed bundles (`pending`, `rejected`, `flagged`) so
+authors can preview their own work — only the index hides them.
+
+```ts
+import { listMarketplace } from '@atelier/vault-client';
+
+// Default: approved-only.
+const approved = await listMarketplace(client, { domain: 'productivity' });
+
+// Maintainer view: also include pending + flagged bundles.
+const queue = await listMarketplace(client, {
+  include: ['pending', 'flagged'],
+});
+```
+
+Each listing carries a `reviewState` field. `<MarketplaceBrowser>` renders
+a small pill for any state other than `approved` (so the default flow stays
+visually quiet — see [Browse UI](#browse-ui--marketplacebrowser) below).
+
+To inspect the curation state of a single address:
+
+```ts
+import { fetchReview } from '@atelier/vault-client';
+
+const record = await fetchReview(client, 'atelier://acme/founder-inbox@1.0.0');
+if (record === null) {
+  // No review record exists. (Should not happen for published bundles —
+  // publish auto-creates one. Treat as `pending` for UX purposes.)
+} else if (record.state === 'flagged') {
+  // Under review. Surface a warning before installing.
+}
 ```
 
 ## Browse UI — `<MarketplaceBrowser>`
@@ -270,6 +314,7 @@ The component renders:
 
 - A left **filter panel** (author / domain / brand kit / search). Search is debounced ~200 ms.
 - A right **listings panel** (scrollable). Each card shows persona name + version pill + author + a 2-line description + domain / brand-kit chips.
+- A **review-state pill** on every card whose `reviewState` is NOT `approved` (V-6.d). The default state is `approved` and showing a pill on every card is noise — the pill only renders for `pending` / `rejected` / `flagged`.
 - A **preview drawer** that opens on card click. The drawer's "Use this recipe" CTA fires `onSelect(listing)` and (when `selectCapability` is supplied) dispatches the capability with `{ address }` via the host-supplied `dispatcher` — same dispatcher contract as `<DropZone>` / `<SelectionActionBar>`.
 
 Wiring the real vault client is a one-line swap:

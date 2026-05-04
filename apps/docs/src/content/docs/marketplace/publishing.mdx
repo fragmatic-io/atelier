@@ -212,12 +212,89 @@ Today, a publish targets one vault. Multi-vault distribution (mirroring across h
 
 Per-version content is immutable: the new `POST /marketplace/persona` endpoint returns 409 rather than overwriting. (The legacy `POST /vault/marketplace/publish` endpoint is preserved with its overwrite semantics for back-compat with the v0 demos.)
 
+## Review & curation (V-6.d)
+
+When a bundle hits `POST /marketplace/persona`, the server **auto-creates a
+`pending` `ReviewRecord`** alongside the stored bundle. Direct-address fetches
+(`GET /marketplace/persona/<a>/<p>@<v>`) keep working — useful for authors
+previewing their own work — but the **default browse index**
+(`GET /marketplace/index`) only surfaces records whose state is `approved`.
+
+### Review states
+
+| State      | In default index? | Meaning                                                                                |
+| ---------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `pending`  | no                | Auto-applied on first publish. Awaiting maintainer review.                             |
+| `approved` | yes               | Curated and visible in the default browse index.                                       |
+| `rejected` | no                | Refused by a maintainer. Direct fetch still resolves (so the author can see).          |
+| `flagged`  | no                | Under active review (e.g. user report). Visible to maintainers via `?include=flagged`. |
+
+### Submit a review (maintainer)
+
+Maintainer keys are registered in the server's `ReviewerKeyDirectory` (a separate
+directory from the publish-side `KeyDirectory` — a maintainer key proves "I am an
+authorized reviewer", not "I am this author"). The CLI surface signs the review
+envelope with the maintainer's PKCS#8 ed25519 PEM and POSTs it.
+
+```bash
+pnpm atelier marketplace review atelier://acme/founder-inbox@1.0.0 \
+  --state approved \
+  --reviewer maint-a \
+  --key ~/.atelier/keys/maint-a.private.pem \
+  --notes "LGTM after security pass."
+```
+
+On success the persisted state + address are printed to stdout. Failures:
+
+- `401` — reviewer not registered, or signature verification failed.
+- `404` — no bundle exists at that address (bundle must be published first).
+- `400` — schema mismatch in the request body.
+
+### Programmatic API
+
+```ts
+import { submitReview, fetchReview, listMarketplace } from '@atelier/vault-client';
+
+await submitReview(client, 'atelier://acme/founder-inbox@1.0.0', {
+  state: 'approved',
+  reviewerId: 'maint-a',
+  privateKey: maintainerPrivateKeyBytes,
+  notes: 'LGTM after security pass.',
+});
+
+const record = await fetchReview(client, 'atelier://acme/founder-inbox@1.0.0');
+console.log(record?.state);
+
+// Default: approved-only.
+const approved = await listMarketplace(client);
+
+// Maintainer escape hatch — see all curated states.
+const queue = await listMarketplace(client, {
+  include: ['pending', 'flagged', 'rejected'],
+});
+```
+
+### Index query parameters
+
+`GET /marketplace/index` accepts the same filter shape as the V-6.c
+`<MarketplaceBrowser>` component:
+
+| Param        | Effect                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------- |
+| `author`     | Limit to a single author handle.                                                                        |
+| `domain`     | Limit by `payload.domain`.                                                                              |
+| `brandKitId` | Limit by `payload.brand_kit_id` / `payload.brandKitId` (either form).                                   |
+| `search`     | Case-insensitive substring across persona / description / authorDisplayName.                            |
+| `limit`      | Clamp to first n results.                                                                               |
+| `offset`     | Skip first n results.                                                                                   |
+| `include`    | Comma-separated escape hatch. Default: `approved`. Maintainers pass `pending,flagged` to see the queue. |
+
 ## Status
 
 - ✅ **V-6.a / V-6.b / V-6.f** — `POST /marketplace/persona`, `GET /marketplace/persona/<a>/<p>@<v>`, `GET /marketplace/persona/<a>/<p>/latest`, plus the `publishPersona` client helper and `atelier marketplace publish` CLI surface. Server-side `KeyDirectory` enforces who can publish under each author handle.
 - ✅ **V-6 baseline (legacy)** — addressing, ed25519 signing, TOFU trust model. Original `/vault/marketplace/publish` + `/vault/marketplace/<a>/<p>@<v>` routes preserved for back-compat.
-- ⏳ **V-6.c — Browse / search UI** (sibling PR).
-- ⏳ **V-6.d — Review / curation flow.**
+- ✅ **V-6.c — Browse / search UI.**
+- ✅ **V-6.d — Review / curation flow.** `POST /marketplace/review/<a>/<p>@<v>`, `GET /marketplace/review/<a>/<p>@<v>`, `GET /marketplace/index`. Publish auto-creates a pending record. CLI: `atelier marketplace review`.
 - ⏳ **V-6.e — Eval gate.**
 - ⏳ **Mirroring / federation.**
 

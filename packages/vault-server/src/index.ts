@@ -79,16 +79,30 @@ export {
 } from './marketplace.js';
 
 // V-6.a / V-6.b — persona marketplace endpoints + key directory + store.
+// V-6.d additions: review store + reviewer directory + curated index/review routes.
 export {
   FilesystemMarketplaceStore,
+  FilesystemReviewStore,
   InMemoryKeyDirectory,
   InMemoryMarketplaceStore,
+  InMemoryReviewStore,
+  InMemoryReviewerKeyDirectory,
+  MARKETPLACE_INDEX_PATH,
   MARKETPLACE_PREFIX,
+  MARKETPLACE_REVIEW_PREFIX,
   StaticKeyDirectory,
   compareSemver,
   computeAuthorKeyId,
+  handleMarketplaceIndexRequest,
   handleMarketplacePersonaRequest,
+  handleMarketplaceReviewRequest,
+  makePendingReviewRecord,
+  signingInputForReview,
   verifyAuthorSignature,
+  verifyReviewerSignature,
   type KeyDirectory,
+  type MarketplaceListingWire,
   type MarketplaceStore,
+  type ReviewStore,
+  type ReviewerKeyDirectory,
 } from './marketplace/index.js';

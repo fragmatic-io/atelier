@@ -96,6 +96,14 @@ export interface MarketplaceListQuery {
   offset?: number;
 }
 
+/**
+ * Review-state surfaced on listing cards. Mirrors the V-6.d
+ * `ReviewState` enum from `@atelier/schemas` without taking a runtime
+ * dep. Hosts that wire the real review pipeline can pass the
+ * schemas-typed value straight through.
+ */
+export type MarketplaceReviewState = 'pending' | 'approved' | 'rejected' | 'flagged';
+
 /** Single result item returned by the marketplace client. */
 export interface MarketplaceListing {
   address: MarketplaceAddress;
@@ -105,6 +113,13 @@ export interface MarketplaceListing {
   /** ISO datetime of the publish event. */
   publishedAt: string;
   authorDisplayName?: string;
+  /**
+   * V-6.d — optional review state surfaced as a small pill on the
+   * listing card. The default is `approved` (and `approved` listings do
+   * NOT render a pill — showing one on every card is noise). Hosts wire
+   * this from the marketplace index response.
+   */
+  reviewState?: MarketplaceReviewState;
 }
 
 /**
@@ -112,10 +127,21 @@ export interface MarketplaceListing {
  * `@atelier/vault-client`'s shape — the host wires the concrete
  * implementation. `list()` is the primary surface; `get()` is exposed for
  * preview / pin flows but the browser does not call it itself today.
+ *
+ * V-6.d adds an OPTIONAL `reviewState(address)` method that hosts can
+ * implement to surface the per-address curated state. The browser
+ * doesn't call it today — the listing's `reviewState` field is the
+ * primary surface — but the extension point is reserved so a future
+ * iteration (e.g. a "request review" CTA) has a place to land.
  */
 export interface MarketplaceClient {
   list(query?: MarketplaceListQuery): Promise<MarketplaceListing[]>;
   get(address: MarketplaceAddress): Promise<MarketplaceListing | null>;
+  /**
+   * Optional. Look up the review state for an address. Hosts opt in;
+   * `<MarketplaceBrowser>` treats undefined/missing as "no state info".
+   */
+  reviewState?(address: MarketplaceAddress): Promise<MarketplaceReviewState | undefined>;
 }
 
 /**
@@ -216,6 +242,24 @@ function clampDescription(text: string): string {
 /** Produce a stable address-key for the listing list. */
 function keyFor(listing: MarketplaceListing): string {
   return listing.address.raw;
+}
+
+/**
+ * Tailwind class set for a review-state pill. `approved` does not render
+ * a pill (caller short-circuits) so it is intentionally absent here.
+ */
+function reviewStatePillClass(state: MarketplaceReviewState): string {
+  switch (state) {
+    case 'pending':
+      return 'bg-yellow-50 text-yellow-900';
+    case 'rejected':
+      return 'bg-red-50 text-red-900';
+    case 'flagged':
+      return 'bg-orange-50 text-orange-900';
+    default:
+      // `approved` (or any future state) — fall back to neutral gray.
+      return 'bg-gray-100 text-gray-700';
+  }
 }
 
 export function MarketplaceBrowser({
@@ -454,6 +498,18 @@ export function MarketplaceBrowser({
                       >
                         v{listing.address.version}
                       </span>
+                      {listing.reviewState !== undefined && listing.reviewState !== 'approved' ? (
+                        <span
+                          data-cir-part="marketplace-card-review-state"
+                          data-review-state={listing.reviewState}
+                          className={cn(
+                            'text-xs px-1.5 py-0.5 rounded-full',
+                            reviewStatePillClass(listing.reviewState),
+                          )}
+                        >
+                          {listing.reviewState}
+                        </span>
+                      ) : null}
                       {listing.authorDisplayName !== undefined ? (
                         <span
                           data-cir-part="marketplace-card-author"

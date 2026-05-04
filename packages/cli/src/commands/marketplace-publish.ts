@@ -32,6 +32,7 @@ import {
 } from '@atelier/schemas';
 
 import { MARKETPLACE_PUBLISH_USAGE } from '../usage.js';
+import { marketplaceReviewCommand } from './marketplace-review.js';
 
 export interface MarketplacePublishOptions {
   /** Path to the bundle JSON file (pre-signing payload). */
@@ -191,13 +192,16 @@ export async function marketplaceCommand(
     console.error(MARKETPLACE_PUBLISH_USAGE);
     return 1;
   }
-  if (sub !== 'publish') {
-    console.error(
-      `atelier marketplace: unknown subcommand '${sub}'. Try 'atelier marketplace publish'.`,
-    );
-    return 1;
+  if (sub === 'publish') {
+    return marketplacePublishCommand(positionals.slice(1), flags);
   }
-  return marketplacePublishCommand(positionals.slice(1), flags);
+  if (sub === 'review') {
+    return marketplaceReviewCommand(positionals.slice(1), flags);
+  }
+  console.error(
+    `atelier marketplace: unknown subcommand '${sub}'. Try 'atelier marketplace publish' or 'atelier marketplace review'.`,
+  );
+  return 1;
 }
 
 /**

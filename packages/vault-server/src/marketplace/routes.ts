@@ -41,6 +41,7 @@ import {
 import type { VaultRequest, VaultResponse } from '../server.js';
 import type { KeyDirectory } from './key-directory.js';
 import { computeKeyId } from './key-directory.js';
+import { makePendingReviewRecord, type ReviewStore } from './review-store.js';
 import type { MarketplaceStore } from './store.js';
 
 /** Route prefix that this module owns. */
@@ -166,11 +167,17 @@ function decodeSegment(s: string): string | null {
 /**
  * Match + handle a marketplace request. Returns `null` when no route
  * matches so the caller falls through to other handlers.
+ *
+ * The optional `reviewStore` (V-6.d) is wired through so the publish
+ * path can auto-create a `pending` review record on first publish. When
+ * `reviewStore` is undefined the auto-create is skipped — back-compat
+ * with the V-6.a / V-6.b call sites that didn't know about reviews.
  */
 export async function handleMarketplacePersonaRequest(
   store: MarketplaceStore,
   directory: KeyDirectory,
   req: VaultRequest,
+  reviewStore?: ReviewStore,
 ): Promise<VaultResponse | null> {
   // ---- POST /marketplace/persona — publish ------------------------------
   if (req.method === 'POST' && req.path === MARKETPLACE_PREFIX) {
@@ -191,6 +198,16 @@ export async function handleMarketplacePersonaRequest(
         error: 'duplicate',
         address: formatMarketplaceAddress(bundle.address),
       });
+    }
+
+    // V-6.d — auto-create a `pending` review record on first publish.
+    // Idempotent: if a record already exists (it shouldn't, given the
+    // 409 above guarantees first-publish), preserve it.
+    if (reviewStore !== undefined) {
+      const existing = await reviewStore.get(bundle.address);
+      if (existing === undefined) {
+        await reviewStore.put(makePendingReviewRecord(bundle.address, bundle.timestamp));
+      }
     }
 
     return json(201, {

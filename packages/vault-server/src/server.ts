@@ -34,9 +34,15 @@ import {
 import {
   InMemoryKeyDirectory,
   InMemoryMarketplaceStore,
+  InMemoryReviewStore,
+  InMemoryReviewerKeyDirectory,
+  handleMarketplaceIndexRequest,
   handleMarketplacePersonaRequest,
+  handleMarketplaceReviewRequest,
   type KeyDirectory,
   type MarketplaceStore,
+  type ReviewStore,
+  type ReviewerKeyDirectory,
 } from './marketplace/index.js';
 
 /**
@@ -94,6 +100,20 @@ export interface VaultServerOptions {
    */
   keyDirectory?: KeyDirectory;
   /**
+   * V-6.d review-record store. Powers the new
+   * `POST /marketplace/review/...`, `GET /marketplace/review/...`, and
+   * `GET /marketplace/index` routes. When omitted, an in-memory store
+   * is created.
+   */
+  reviewStore?: ReviewStore;
+  /**
+   * V-6.d reviewer key directory. Required for the review-submit
+   * endpoint to accept any maintainer. When omitted, an empty
+   * `InMemoryReviewerKeyDirectory` is created — every review 401s
+   * until the host registers a reviewer key.
+   */
+  reviewerDirectory?: ReviewerKeyDirectory;
+  /**
    * Optional clock override for tests. Returns Unix seconds.
    * Defaults to `() => Math.floor(Date.now() / 1000)`.
    */
@@ -147,6 +167,8 @@ export class VaultService {
   readonly marketplaceStorage: MarketplaceStorage;
   readonly marketplaceStore: MarketplaceStore;
   readonly keyDirectory: KeyDirectory;
+  readonly reviewStore: ReviewStore;
+  readonly reviewerDirectory: ReviewerKeyDirectory;
   readonly now: () => number;
 
   constructor(opts: VaultServerOptions) {
@@ -159,6 +181,8 @@ export class VaultService {
     this.marketplaceStorage = opts.marketplaceStorage ?? new MemoryMarketplaceStorage();
     this.marketplaceStore = opts.marketplaceStore ?? new InMemoryMarketplaceStore();
     this.keyDirectory = opts.keyDirectory ?? new InMemoryKeyDirectory();
+    this.reviewStore = opts.reviewStore ?? new InMemoryReviewStore();
+    this.reviewerDirectory = opts.reviewerDirectory ?? new InMemoryReviewerKeyDirectory();
     this.now = opts.now ?? (() => Math.floor(Date.now() / 1000));
   }
 
@@ -279,13 +303,34 @@ export async function handleVaultRequest(
   // 0b) Marketplace persona endpoints — V-6.a / V-6.b. New routes:
   //     POST /marketplace/persona, GET /marketplace/persona/<a>/<p>@<v>,
   //     GET /marketplace/persona/<a>/<p>/latest. Verifies signatures
-  //     against the key directory + content-addresses bundles.
+  //     against the key directory + content-addresses bundles. The
+  //     review store is threaded through so the publish path can
+  //     auto-create a `pending` ReviewRecord on first publish (V-6.d).
   const personaResponse = await handleMarketplacePersonaRequest(
     service.marketplaceStore,
     service.keyDirectory,
     req,
+    service.reviewStore,
   );
   if (personaResponse !== null) return personaResponse;
+
+  // 0c) Marketplace review + index endpoints — V-6.d.
+  //     POST /marketplace/review/<a>/<p>@<v> — submit a curated state.
+  //     GET  /marketplace/review/<a>/<p>@<v> — fetch the review record.
+  //     GET  /marketplace/index               — curated browse index.
+  const reviewResponse = await handleMarketplaceReviewRequest(
+    service.marketplaceStore,
+    service.reviewStore,
+    service.reviewerDirectory,
+    req,
+  );
+  if (reviewResponse !== null) return reviewResponse;
+  const indexResponse = await handleMarketplaceIndexRequest(
+    service.marketplaceStore,
+    service.reviewStore,
+    req,
+  );
+  if (indexResponse !== null) return indexResponse;
 
   // 1) JWKS — public, unauthenticated.
   if (req.method === 'GET' && req.path === '/.well-known/jwks.json') {

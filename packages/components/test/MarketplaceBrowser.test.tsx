@@ -341,6 +341,33 @@ describe('MarketplaceBrowser', () => {
     });
   });
 
+  describe('review-state pill (V-6.d)', () => {
+    it('renders a pill on listings whose state is NOT approved', async () => {
+      const sample: MarketplaceListing[] = [
+        listing('acme', 'a', '1.0.0', { reviewState: 'approved' }),
+        listing('aurora', 'b', '1.0.0', { reviewState: 'pending' }),
+        listing('marigold', 'c', '1.0.0', { reviewState: 'flagged' }),
+        listing('marigold', 'd', '1.0.0', { reviewState: 'rejected' }),
+      ];
+      const client = new MockMarketplaceClient(sample);
+      const { container, findAllByRole } = render(<MarketplaceBrowser client={client} />);
+      await findAllByRole('listitem');
+      const pills = container.querySelectorAll('[data-cir-part="marketplace-card-review-state"]');
+      // approved should NOT render a pill (default state, suppressed).
+      expect(pills.length).toBe(3);
+      const states = Array.from(pills).map((p) => p.getAttribute('data-review-state'));
+      expect(states.sort()).toEqual(['flagged', 'pending', 'rejected']);
+    });
+
+    it('does NOT render a pill when reviewState is undefined', async () => {
+      const sample: MarketplaceListing[] = [listing('acme', 'a', '1.0.0')];
+      const client = new MockMarketplaceClient(sample);
+      const { container, findByRole } = render(<MarketplaceBrowser client={client} />);
+      await findByRole('list');
+      expect(container.querySelector('[data-cir-part="marketplace-card-review-state"]')).toBeNull();
+    });
+  });
+
   it('binding id matches', () => {
     expect(MarketplaceBrowserBinding.id).toBe('MarketplaceBrowser');
   });

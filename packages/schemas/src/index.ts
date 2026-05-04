@@ -273,6 +273,19 @@ export {
   type SignedBundle,
 } from './marketplace.js';
 
+// -----------------------------------------------------------------------------
+// Marketplace review / curation — Wave 8 / V-6.d
+// `ReviewRecord` + `ReviewState` for the maintainer-curated browse index.
+// See `apps/docs/src/content/docs/marketplace/publishing.mdx` §"Review &
+// curation".
+// -----------------------------------------------------------------------------
+export {
+  ReviewRecordSchema,
+  ReviewStateSchema,
+  type ReviewRecord,
+  type ReviewState,
+} from './marketplace-review.js';
+
 // View definitions — Wave 11 / Cnt-10
 export {
   ViewDefinitionSchema,
