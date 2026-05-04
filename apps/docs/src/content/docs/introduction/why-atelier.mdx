@@ -13,7 +13,7 @@ This is fundamentally backwards once an LLM can reliably translate user intent i
 
 Three reasons:
 
-1. **Token cost.** Free-form HTML/CSS/JSX generation is hundreds of tokens per element. A component name (`<Queue>`) is 1-3 tokens. A 60-component catalog covers 90% of web app patterns at a fraction of the cost.
+1. **Token cost.** Free-form HTML/CSS/JSX generation is hundreds of tokens per element. A component name (`<Queue>`) is 1-3 tokens. An 83-component catalog covers most web app patterns at a fraction of the cost.
 2. **Safety.** Components are pre-vetted for accessibility, responsive behaviour, security. Free-form HTML is an XSS vector waiting to happen.
 3. **Consistency.** When every screen is composed from the same primitive vocabulary, the user gets a coherent experience: same motion, same density, same a11y conventions.
 
@@ -30,6 +30,14 @@ Wave C (compiler evolution) replaces "single big prompt" with **a single tool-us
 
 ## Who is this for?
 
+**You run operational teams with too many internal tools.** Support ops,
+sales/revenue ops, marketplace ops, compliance/risk ops, and engineering ops
+all end up with role-specific queues, review screens, admin panels, and
+dashboards. App builders prove those teams will pay for internal software, but
+the next bottleneck is maintaining many slightly different UIs over the same
+systems. Atelier lets the organisation define capabilities and policies once,
+then compile policy-safe interfaces per role or workflow.
+
 **You ship a SaaS product.** Your customers complain that the UI is too dense / too sparse / too cluttered / too sterile. Different cohorts want different shapes. Customisation toggles plus feature flags become unmaintainable. Atelier's intent profile collapses that into one architecture: the user describes what they want, the compiler emits it.
 
 **You ship a developer tool.** Your power users build their own Linear / Notion / Raycast workflows. You want them to compose new views without writing React. The marketplace primitive — `atelier://author/persona@version` — turns recipe-publishing into a first-class operation.
@@ -42,6 +50,7 @@ Wave C (compiler evolution) replaces "single big prompt" with **a single tool-us
 | --------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Plain React / Vue / Svelte              | Best-in-class authoring experience | Static. Personalisation = feature flags + props.                                                                                                        |
 | Server-driven UI (Airbnb / Lyft / Meta) | Layout JSON over the wire          | Hand-authored on the server. No LLM compile loop. No intent vault.                                                                                      |
+| Retool-style app builders               | Fast internal tools over real data | The app shape is still authored and maintained. Role-specific dashboard sprawl returns as the organisation scales.                                      |
 | v0 / Bolt / Tambo / A2UI                | Free-form generation               | Generates net-new apps from a prompt. Doesn't continuously personalise an existing app's UI per user. No baseline component vocabulary, no marketplace. |
 | Rete / no-code builders                 | Drag-and-drop                      | The user authors layouts. Doesn't translate intent into structure automatically.                                                                        |
 | MCP                                     | Capability protocol                | Just the capability layer. No render layer, no intent vault, no compile loop. Atelier sits on top of MCP-style capability definitions.                  |

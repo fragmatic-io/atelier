@@ -51,21 +51,28 @@ Once the host's request rate justifies it, split the compile loop onto a worker 
               (Redis or KV)
 ```
 
-The host calls the worker over HTTP; the worker hits the LLM, validates against `BASELINE_POLICIES`, stores the manifest in `RedisManifestStore`. The host reads from the same store on subsequent requests.
+The host calls the worker over HTTP; the worker hits the LLM, and the host-side resolver validates the returned manifest against `BASELINE_POLICIES` before storing it in `RedisManifestStore`. The host reads from the same store on subsequent requests.
 
 Concretely:
 
 ```ts
 // lib/cir-server.ts (host side)
-import { ServerManifestResolver, RedisManifestStore } from '@atelier/compiler';
+import {
+  createBaselineManifestValidator,
+  ServerManifestResolver,
+  RedisManifestStore,
+} from '@atelier/compiler';
 
 const resolver = new ServerManifestResolver({
   store: new RedisManifestStore({ url: process.env.REDIS_URL }),
   compileEndpoint: process.env.COMPILE_WORKER_URL, // e.g. https://compile.example/compile
+  validate: createBaselineManifestValidator({
+    grantedFields: (input) => loadGrantedFields(input.user_id),
+  }),
 });
 ```
 
-The worker process imports `GeminiCompiler` directly, validates output, returns the stored manifest id.
+The worker process imports `GeminiCompiler` directly and returns compiler output. `ServerManifestResolver` is the central policy gate before cache write.
 
 ## Trigger bus for multi-region
 

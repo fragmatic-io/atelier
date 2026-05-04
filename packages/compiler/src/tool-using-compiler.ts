@@ -157,6 +157,13 @@ export interface ToolUsingCompilerOptions {
   inner: AgentClient;
   /** Host-supplied data + hooks the tools resolve through. */
   env: ToolEnvironment;
+  /**
+   * Validation provenance mode. `required` means the agent must call
+   * `validateDraft`, the host validator must pass, and the final manifest
+   * must equal that validated draft apart from the server-generated
+   * `manifest_id`. Use `permissive` only for tests or local experiments.
+   */
+  validationMode?: 'required' | 'permissive';
   /** Optional vector / semantic search seam (C-5 RAG). */
   search?: SemanticSearch;
   /**
@@ -181,21 +188,30 @@ export class ToolUsingCompiler implements CompilerService {
   readonly id: string;
   readonly #inner: AgentClient;
   readonly #env: ToolEnvironment;
+  readonly #validationMode: 'required' | 'permissive';
   readonly #search: SemanticSearch | undefined;
   readonly #maxRounds: number;
   readonly #onToolCall: ToolCallObserver | undefined;
+  #lastValidatedDraftFingerprint: string | undefined;
 
   constructor(opts: ToolUsingCompilerOptions) {
     this.#inner = opts.inner;
     this.#env = opts.env;
+    this.#validationMode = opts.validationMode ?? 'required';
     this.#search = opts.search;
     this.#maxRounds = opts.maxToolRounds ?? DEFAULT_MAX_TOOL_ROUNDS;
     this.#onToolCall = opts.onToolCall;
+    if (this.#validationMode === 'required' && !opts.env.validate) {
+      throw new Error(
+        'ToolUsingCompiler validationMode=required needs env.validate. Pass validate: createBaselineManifestValidator(...), or set validationMode: "permissive" only for tests/local experiments.',
+      );
+    }
     this.id = `tool-using[${opts.inner.id}]`;
   }
 
   async compile(input: CompileInput): Promise<CompileResult> {
     const startedAt = Date.now();
+    this.#lastValidatedDraftFingerprint = undefined;
     let totalTokens = 0;
 
     // Wave C / Phase C-3 — capability scoping pre-pass. When a resolver
@@ -263,6 +279,7 @@ export class ToolUsingCompiler implements CompilerService {
           validation.reasons ?? [],
         );
       }
+      this.#assertValidatedDraftProvenance(manifest);
       return {
         manifest,
         token_cost: totalTokens,
@@ -430,13 +447,39 @@ export class ToolUsingCompiler implements CompilerService {
 
   #validateDraft(draft: Manifest | undefined): ToolValidationResult {
     if (!draft) return { ok: false, reasons: ['validateDraft: draft is required'] };
-    if (!this.#env.validate) return { ok: true };
-    return this.#env.validate(draft);
+    if (!this.#env.validate) {
+      return this.#validationMode === 'required'
+        ? { ok: false, reasons: ['validateDraft: env.validate is required'] }
+        : { ok: true };
+    }
+    const result = this.#env.validate(draft);
+    if (result.ok) this.#lastValidatedDraftFingerprint = manifestFingerprint(draft);
+    return result;
   }
 
   #validateFinalManifest(manifest: Manifest): ToolValidationResult {
-    if (!this.#env.validate) return { ok: true };
+    if (!this.#env.validate) {
+      return this.#validationMode === 'required'
+        ? { ok: false, reasons: ['final validation: env.validate is required'] }
+        : { ok: true };
+    }
     return this.#env.validate(manifest);
+  }
+
+  #assertValidatedDraftProvenance(manifest: Manifest): void {
+    if (this.#validationMode !== 'required') return;
+    if (!this.#lastValidatedDraftFingerprint) {
+      throw new CompilerOutputError(
+        'ToolUsingCompiler: final manifest was not preceded by a passing validateDraft call',
+        [],
+      );
+    }
+    if (manifestFingerprint(manifest) !== this.#lastValidatedDraftFingerprint) {
+      throw new CompilerOutputError(
+        'ToolUsingCompiler: final manifest does not match the last validated draft',
+        [],
+      );
+    }
   }
 
   #inspectExistingManifest(route: string): Manifest | null {
@@ -771,6 +814,21 @@ function generateManifestId(): string {
     .toString(36)
     .padStart(4, '0');
   return `m_${ts}${rnd}`;
+}
+
+function manifestFingerprint(manifest: Manifest): string {
+  return stableStringify({ ...manifest, manifest_id: '<server-generated>' });
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  if (value && typeof value === 'object') {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, child]) => `${JSON.stringify(key)}:${stableStringify(child)}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function asString(v: unknown): string {

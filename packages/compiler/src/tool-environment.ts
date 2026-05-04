@@ -71,11 +71,11 @@ export interface RouteOutline {
  * The host-supplied bag of pure-data lookups. Every tool the agent calls
  * resolves through one of these fields.
  *
- * Optional hooks (`validate`, `inspectExistingManifest`, `listSiblingRoutes`)
- * degrade gracefully when not supplied — the corresponding tool returns a
- * benign default (`{ ok: true }` / `null` / `[]`) rather than throwing. This
- * keeps the surface stable across hosts that have differing levels of
- * runtime introspection.
+ * `validate` is required by `ToolUsingCompiler`'s default production mode.
+ * The agent must call `validateDraft`, receive a passing result, and then emit
+ * that same draft as the final manifest. Optional introspection hooks
+ * (`inspectExistingManifest`, `listSiblingRoutes`) still degrade gracefully
+ * when not supplied.
  */
 export interface ToolEnvironment {
   /** Capabilities the agent may reference. Keyed by `Capability.id`. */
@@ -83,8 +83,8 @@ export interface ToolEnvironment {
   /** Components the agent may compose. Each carries `id` + description. */
   components: ComponentDefinition[];
   /**
-   * Optional policy/composition validator. When the agent calls
-   * `validateDraft`, this hook gates the answer. Returning
+   * Policy/composition validator for production compiler paths. When the
+   * agent calls `validateDraft`, this hook gates the answer. Returning
    * `{ ok: false, reasons: [...] }` lets the agent self-correct before
    * declaring its final answer.
    */

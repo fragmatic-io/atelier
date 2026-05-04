@@ -35,9 +35,9 @@ In order of recency:
 
 - **Marketplace pivot (Wave M)** — 12 commits across the 2026-05-02 session. ETHOS principle #11 codified. All three demos ship zero custom bindings.
 - **C-1 (validation feedback loop)** — `497e99d`. `ValidationFeedbackCompiler` mirrors `BudgetMeteredCompiler` wrapper pattern. Cumulative `token_cost`/`duration_ms`/reasoning across attempts. Cascade-friendly via `CompilerOutputError`.
-- **C-2 (tool-using compiler MVP)** — `ToolUsingCompiler` wraps `GeminiAgentClient`. Nine tools: `lookupCapability` / `findCapability` / `listCapabilities`, `findComponent` / `inspectComponent` / `listComponents`, `validateDraft`, `inspectExistingManifest` / `listSiblingRoutes`. Default-on as of TODO P1.1 (2026-05-04); opt out via `ATELIER_COMPILER_TOOLS=off`.
+- **C-2 (tool-using compiler MVP)** — `ToolUsingCompiler` wraps `GeminiAgentClient`. Ten tools: `lookupCapability` / `findCapability` / `listCapabilities`, `findComponent` / `inspectComponent` / `listComponents`, `validateDraft`, `inspectExistingManifest` / `listSiblingRoutes`, and `findRecipe`. Default-on in the demos; opt out via `ATELIER_COMPILER_TOOLS=off`.
 - **N-4 (marketing site)** — `fe240d5`. `apps/marketing/` (5 pages). `actions/deploy-pages@v4` workflow. Vanilla CSS + `prefers-color-scheme` dark mode.
-- **S-2 (virtualization)** — `<VirtualList>` + `<VirtualTable>` under `@tanstack/react-virtual`. `CursorPaginatedResult` envelope on `DataBinding`. New `Capability.expected_count?` field. Catalog 65 → 67.
+- **S-2 (virtualization)** — `<VirtualList>` + `<VirtualTable>` under `@tanstack/react-virtual`. `CursorPaginatedResult` envelope on `DataBinding`. New `Capability.expected_count?` field.
 - **S-6 (compile cost budget)** — `bc92956`. `BudgetMeteredCompiler`, `BudgetCounter`, `mergeCompileBudgets`, `BudgetExceededError.code`.
 - **P-8 (composition policy for empty/loading/error states)** — `7589281` + `1bc2174`. Schema slots + walker substitution + demo showcase.
 - **P-9 (information hierarchy / salience)** — Categorical `Capability.salience_level` + intent `priority_overrides` + `resolveSalience` helper + `salienceResolved` advisory policy + `salience-aware-rendering` skill + data-resolver auto-emphasis.

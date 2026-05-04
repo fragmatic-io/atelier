@@ -344,6 +344,7 @@ describe('ToolUsingCompiler — capability scoping integration', () => {
     ]);
     const findCalls: { result: unknown }[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: { capabilities: reg, components: buildComponents() },
       onToolCall: (call, result) => {
@@ -379,6 +380,7 @@ describe('ToolUsingCompiler — capability scoping integration', () => {
     ]);
     const findCalls: { result: unknown }[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: { capabilities: reg, components: buildComponents() },
       onToolCall: (call, result) => {
@@ -416,6 +418,7 @@ describe('ToolUsingCompiler — capability scoping integration', () => {
     ]);
     const lookupResults: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: { capabilities: reg, components: buildComponents() },
       onToolCall: (call, result) => {
@@ -449,6 +452,7 @@ describe('ToolUsingCompiler — capability scoping integration', () => {
     ]);
     const listResults: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: { capabilities: reg, components: buildComponents() },
       onToolCall: (call, result) => {
@@ -485,6 +489,7 @@ describe('ToolUsingCompiler — capability scoping integration', () => {
     ]);
     const findCalls: { result: unknown }[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: { capabilities: reg, components: buildComponents() },
       onToolCall: (call, result) => {

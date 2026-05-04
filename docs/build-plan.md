@@ -4,8 +4,8 @@
 
 What landed where (mapping):
 
-- **Phase 0–1** — schemas, baseline component catalog, eval harness, runtime → shipped as `@atelier/schemas`, `@atelier/components` (56 primitives), `@atelier/evals`, `@atelier/runtime`.
-- **Phase 2 — customization** — intent vault contract, customize flow, trigger bus, policy engine (7 baseline), audit log → shipped as `@atelier/policies`, `IntentProfileSchema`, `InMemoryTriggerBus` + `SseTriggerTransport`, `AuditEventSchema`. The vault itself is referenced by ID; demo ships a localStorage shim.
+- **Phase 0–1** — schemas, baseline component catalog, eval harness, runtime → shipped as `@atelier/schemas`, `@atelier/components` (83 primitives), `@atelier/evals`, `@atelier/runtime`.
+- **Phase 2 — customization** — intent vault contract, customize flow, trigger bus, policy engine (10 baseline), audit log → shipped as `@atelier/policies`, `IntentProfileSchema`, `InMemoryTriggerBus` + `SseTriggerTransport`, `AuditEventSchema`. The vault itself is referenced by ID; demo ships a localStorage shim.
 - **Phase 3 — production hardening** — eval suite, observability, multi-tier cache → shipped as `MemoryManifestCache` + `IndexedDBManifestCache` (Tier 4/5), `MemoryManifestStore` + `RedisManifestStore` (Tier 3), `StreamingAuditSink`, nightly Gemini eval workflow.
 - **Phase 4 — expansion** — second domain, cross-app, adapters → partial. The OpenAPI importer (`atelier import openapi`) brings external services in as drafts; cross-app workflow compilation is roadmap.
 - **Phase 5 — platform** — marketplace, mobile, OS integration → roadmap.

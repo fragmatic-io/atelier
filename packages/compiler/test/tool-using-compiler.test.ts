@@ -145,7 +145,11 @@ describe('ToolUsingCompiler', () => {
     const { agent, turns } = scriptedAgent('gemini-agent', [
       { text: finalManifestText, tokenCost: 350, model: 'gemini-2.5-pro' },
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv() });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+    });
 
     const r = await c.compile(fixtureCompileInput());
     expect(r.manifest.manifest_id).toMatch(/^m_[a-z0-9]{8,}$/);
@@ -173,6 +177,7 @@ describe('ToolUsingCompiler', () => {
 
   it('id namespaces the inner agent id', () => {
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: scriptedAgent('gemini-agent[pro,flash]', []).agent,
       env: defaultEnv(),
     });
@@ -186,7 +191,12 @@ describe('ToolUsingCompiler', () => {
       { text: finalManifestText, tokenCost: 200, model: 'gemini-2.5-pro' },
     ]);
     const onToolCall = vi.fn();
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv(), onToolCall });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+      onToolCall,
+    });
 
     const r = await c.compile(fixtureCompileInput());
 
@@ -220,6 +230,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -242,6 +253,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -262,6 +274,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -290,6 +303,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -299,7 +313,7 @@ describe('ToolUsingCompiler', () => {
     expect(observed[1]).toEqual({ error: 'unknown component: NotExist' });
   });
 
-  it('validateDraft returns ok:true by default when env supplies no validator', async () => {
+  it('validateDraft returns ok:true in permissive mode when env supplies no validator', async () => {
     const draft = fixtureManifest();
     const { agent } = scriptedAgent('gemini-agent', [
       { toolCalls: [{ name: 'validateDraft', args: { draft } }], tokenCost: 10, model: 'm' },
@@ -307,6 +321,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -326,6 +341,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: { ...defaultEnv(), validate },
       onToolCall: (_call, result) => observed.push(result),
@@ -340,10 +356,72 @@ describe('ToolUsingCompiler', () => {
     const { agent } = scriptedAgent('gemini-agent', [
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env: { ...defaultEnv(), validate } });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: { ...defaultEnv(), validate },
+    });
 
     await expect(c.compile(fixtureCompileInput())).rejects.toBeInstanceOf(CompilerOutputError);
     expect(validate).toHaveBeenCalledTimes(1);
+  });
+
+  it('requires env.validate by default', () => {
+    const { agent } = scriptedAgent('gemini-agent', []);
+
+    expect(() => new ToolUsingCompiler({ inner: agent, env: defaultEnv() })).toThrow(
+      /env\.validate/,
+    );
+  });
+
+  it('requires a passing validateDraft call before accepting the final manifest', async () => {
+    const draft = fixtureManifest({ manifest_id: 'm_draftok01' });
+    const { agent } = scriptedAgent('gemini-agent', [
+      { toolCalls: [{ name: 'validateDraft', args: { draft } }], tokenCost: 10, model: 'm' },
+      { text: JSON.stringify(draft), tokenCost: 10, model: 'm' },
+    ]);
+    const validate = vi.fn(() => ({ ok: true }));
+    const c = new ToolUsingCompiler({
+      inner: agent,
+      env: { ...defaultEnv(), validate },
+    });
+
+    const result = await c.compile(fixtureCompileInput());
+
+    expect(result.manifest.routes[0]?.title).toBe(draft.routes[0]?.title);
+    expect(validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects a final manifest that skips validateDraft in required mode', async () => {
+    const validate = vi.fn(() => ({ ok: true }));
+    const { agent } = scriptedAgent('gemini-agent', [
+      { text: finalManifestText, tokenCost: 10, model: 'm' },
+    ]);
+    const c = new ToolUsingCompiler({
+      inner: agent,
+      env: { ...defaultEnv(), validate },
+    });
+
+    await expect(c.compile(fixtureCompileInput())).rejects.toThrow(/validateDraft/);
+  });
+
+  it('rejects a final manifest that differs from the validated draft', async () => {
+    const draft = fixtureManifest({ manifest_id: 'm_draftok01' });
+    const final = fixtureManifest({
+      manifest_id: 'm_finalok01',
+      routes: [{ ...draft.routes[0]!, title: 'Changed' }],
+    });
+    const validate = vi.fn(() => ({ ok: true }));
+    const { agent } = scriptedAgent('gemini-agent', [
+      { toolCalls: [{ name: 'validateDraft', args: { draft } }], tokenCost: 10, model: 'm' },
+      { text: JSON.stringify(final), tokenCost: 10, model: 'm' },
+    ]);
+    const c = new ToolUsingCompiler({
+      inner: agent,
+      env: { ...defaultEnv(), validate },
+    });
+
+    await expect(c.compile(fixtureCompileInput())).rejects.toThrow(/does not match/);
   });
 
   it('inspectExistingManifest returns null when env supplies no hook; uses hook when supplied', async () => {
@@ -362,6 +440,7 @@ describe('ToolUsingCompiler', () => {
       inspectExistingManifest: (route) => (route === '/today' ? seenManifest : null),
     };
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env,
       onToolCall: (_call, result) => observed.push(result),
@@ -377,6 +456,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -407,6 +487,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       search,
@@ -430,7 +511,12 @@ describe('ToolUsingCompiler', () => {
       toolCallTurn,
       toolCallTurn, // 4th turn — would push the wrapper past maxToolRounds=3
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv(), maxToolRounds: 3 });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+      maxToolRounds: 3,
+    });
     await expect(c.compile(fixtureCompileInput())).rejects.toBeInstanceOf(CompilerOutputError);
   });
 
@@ -440,6 +526,7 @@ describe('ToolUsingCompiler', () => {
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: () => {
@@ -457,6 +544,7 @@ describe('ToolUsingCompiler', () => {
     ]);
     const observed: unknown[] = [];
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -469,14 +557,22 @@ describe('ToolUsingCompiler', () => {
     const { agent } = scriptedAgent('gemini-agent', [
       { text: 'this is not json', tokenCost: 10, model: 'm' },
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv() });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+    });
     await expect(c.compile(fixtureCompileInput())).rejects.toBeInstanceOf(CompilerOutputError);
   });
 
   it('strips ```json fences when the model wraps its final answer', async () => {
     const fenced = '```json\n' + finalManifestText + '\n```';
     const { agent } = scriptedAgent('gemini-agent', [{ text: fenced, tokenCost: 10, model: 'm' }]);
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv() });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+    });
     const r = await c.compile(fixtureCompileInput());
     expect(r.manifest.manifest_id).toMatch(/^m_[a-z0-9]{8,}$/);
   });
@@ -485,7 +581,11 @@ describe('ToolUsingCompiler', () => {
     const { agent, turns } = scriptedAgent('gemini-agent', [
       { text: finalManifestText, tokenCost: 10, model: 'gemini-2.5-flash' },
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv() });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+    });
     const r = await c.compile(fixtureCompileInput({ previousManifest: fixtureManifest() }));
     expect(r.diff_mode).toBe(true);
     expect(turns[0]?.temperature).toBe(0);
@@ -496,7 +596,11 @@ describe('ToolUsingCompiler', () => {
     const { agent, turns } = scriptedAgent('gemini-agent', [
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv() });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+    });
     await c.compile(fixtureCompileInput({ signal: ctrl.signal }));
     expect(turns[0]?.signal).toBe(ctrl.signal);
   });
@@ -513,7 +617,11 @@ describe('ToolUsingCompiler', () => {
       // Second compile call (refinement): final answer immediately
       { text: JSON.stringify(draft2), tokenCost: 50, model: 'gemini-2.5-flash' },
     ]);
-    const tu = new ToolUsingCompiler({ inner: agent, env: defaultEnv() });
+    const tu = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+    });
 
     const validate = vi
       .fn<(m: Manifest) => { ok: boolean; reasons?: readonly string[] }>()
@@ -542,7 +650,11 @@ describe('ToolUsingCompiler', () => {
       id: 'fallback-generic',
       compile: async (_input: CompileInput) => fallbackResult,
     };
-    const tu = new ToolUsingCompiler({ inner: failingAgent, env: defaultEnv() });
+    const tu = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: failingAgent,
+      env: defaultEnv(),
+    });
     const composite = new CompositeCompiler([tu, fallback]);
     const r = await composite.compile(fixtureCompileInput());
     expect(r.model).toBe('fallback-generic');

@@ -127,7 +127,7 @@ const orgBudget = new BudgetMeteredCompiler(userBudget, {
 
 ## Demo wiring
 
-**Default-on** as of TODO P1.1 (2026-05-04): the demo wires `BudgetMeteredCompiler` automatically because every production host needs cost limits. Opt out via `ATELIER_COMPILE_BUDGET=off`; legacy `CIR_COMPILE_BUDGET_ENABLED=0` honoured for one release cycle. The threshold knobs (`CIR_COMPILE_BUDGET_TOKENS`, `CIR_COMPILE_BUDGET_TOKENS_PER_DAY`, `CIR_COMPILE_BUDGET_CALLS_PER_HOUR`, `CIR_COMPILE_BUDGET_WINDOW_MS`) stay as `CIR_*` for one release, then rename to `ATELIER_*` with the same legacy-tolerant pattern.
+**Default-on in the demo:** the demo wires `BudgetMeteredCompiler` automatically because every production host needs cost limits. Opt out via `ATELIER_COMPILE_BUDGET=off`; legacy `CIR_COMPILE_BUDGET_ENABLED=0` honoured for one release cycle. The threshold knobs (`CIR_COMPILE_BUDGET_TOKENS`, `CIR_COMPILE_BUDGET_TOKENS_PER_DAY`, `CIR_COMPILE_BUDGET_CALLS_PER_HOUR`, `CIR_COMPILE_BUDGET_WINDOW_MS`) stay as `CIR_*` for one release, then rename to `ATELIER_*` with the same legacy-tolerant pattern.
 
 ```bash
 # Default — budget enforcement is on at 50k tokens / day, 30 calls / hour:

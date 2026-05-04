@@ -63,10 +63,11 @@ The package is ESM-only (`"type": "module"`). Node ≥ 22.
 
 ## Build pipeline (in-monorepo)
 
-`@atelier/schemas` is the **P2.1 build-artifact pilot** for the Atelier
-monorepo. Until the rest of the 14 packages migrate, every other
-`packages/*` still exports `./src/index.ts` directly via pnpm symlinks;
-this one is the only package that produces a `dist/` tree.
+`@atelier/schemas` started as the build-artifact pilot; the workspace now uses
+that same dist-first contract across publishable packages. Runtime imports
+resolve through `dist/`, not `src/`, so run the root build before commands that
+execute package bins or bare-Node package imports. `pnpm validate` and CI do
+this automatically.
 
 ```bash
 pnpm --filter @atelier/schemas build         # tsc -b tsconfig.build.json
@@ -77,8 +78,8 @@ pnpm --filter @atelier/schemas clean         # rm -rf dist .tsbuildinfo
 Or from the repo root:
 
 ```bash
-pnpm build                                   # alias for the schemas filter
-pnpm smoke-test:pack                         # pack + install + typecheck a tiny consumer
+pnpm build                                   # recursive workspace build
+pnpm smoke-test:pack                         # pack + install + bare-node artifact smoke
 ```
 
 The two tsconfigs split responsibilities cleanly:
@@ -116,7 +117,7 @@ ships with `@atelier/policies`.
 
 ### Draft-safety: the `_review` envelope
 
-`CapabilitySchema` accepts an optional `_review` envelope: `{ status: 'draft' | 'reviewed', generated_from?, notes? }`. The OpenAPI importer (`pnpm atelier import openapi`) stamps generated capabilities with `_review.status = 'draft'` so a CI gate can refuse them until a human signs off. `validate-data --strict` fails on every draft; PRs adding new capabilities run the strict path in CI.
+`CapabilitySchema` accepts an optional `_review` envelope: `{ status: 'draft' | 'reviewed', generated_from?, notes? }`. The OpenAPI importer (`pnpm atelier import openapi`) stamps generated capabilities with `_review.status = 'draft'` so strict validation can refuse them until a human signs off. `validate-data --strict` fails on every draft; run it before publishing imported capabilities.
 
 ### Composition rules
 

@@ -72,6 +72,7 @@ const compiler = new ToolUsingCompiler({
   env: {
     capabilities,
     components,
+    validate,
     recipeResolver: resolver,
   },
 });
@@ -121,11 +122,11 @@ The trigger to upgrade to embeddings: **the recipe corpus grows past ~100 entrie
 
 ## V-6 dependency
 
-C-5's TODO note says it depends on V-6 (publish/consume) — the reasoning was "V-6 ships the corpus to index". For this commit, `LocalRecipeStore` is enough: the resolver protocol, the embedding pipeline, and the compiler tool all land. V-6 swaps the `RecipeStore` impl when it ships.
+C-5 originally depended on V-6 (publish/consume) because V-6 supplies the corpus to index. The local implementation uses `LocalRecipeStore`: the resolver protocol, embedding pipeline, and compiler tool are live, and V-6 swaps the `RecipeStore` implementation for hosted marketplace data.
 
 ## Demo wiring
 
-**Default-on** as of TODO P1.1 (2026-05-04): `apps/demo` instantiates `SubstringRecipeResolver` over a `LocalRecipeStore` pointing at the in-tree `recipes/` directory. Opt out via `ATELIER_RECIPE_RAG=off`; legacy `CIR_RECIPE_RAG_ENABLED=0` honoured for one release cycle. Production hosts swap in `EmbeddingRecipeResolver` for richer retrieval.
+**Default-on in the demo:** `apps/demo` instantiates `SubstringRecipeResolver` over a `LocalRecipeStore` pointing at the in-tree `recipes/` directory. Opt out via `ATELIER_RECIPE_RAG=off`; legacy `CIR_RECIPE_RAG_ENABLED=0` honoured for one release cycle. Production hosts swap in `EmbeddingRecipeResolver` for richer retrieval.
 
 ## Testing
 
@@ -135,6 +136,6 @@ C-5's TODO note says it depends on V-6 (publish/consume) — the reasoning was "
 
 ## Next
 
-- [Compiler → Tools](/compiler/tools/) — the existing nine tools the agent calls.
+- [Compiler → Tools](/compiler/tools/) — the existing ten tools the agent calls.
 - [Compiler → Capability scoping](/compiler/capability-scoping/) — the parallel S-1 / S-7 story for capabilities.
 - [Compiler → Validation feedback](/compiler/validation-feedback/) — composes around the tool-using compiler.

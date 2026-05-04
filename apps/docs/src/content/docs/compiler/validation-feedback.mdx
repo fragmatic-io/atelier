@@ -99,7 +99,13 @@ In practice, with C-2 enabled, `ValidationFeedbackCompiler` rarely retries. When
 import { CompositeCompiler } from '@atelier/compiler';
 
 const compiler = new CompositeCompiler([
-  new ValidationFeedbackCompiler(new ToolUsingCompiler({ apiKey: ... }), { maxRetries: 2 }),
+  new ValidationFeedbackCompiler(
+    new ToolUsingCompiler({
+      inner,
+      env: { capabilities, components, validate },
+    }),
+    { maxRetries: 2 },
+  ),
   new GenericFallbackCompiler(),
 ]);
 ```

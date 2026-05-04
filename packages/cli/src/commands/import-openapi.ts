@@ -849,7 +849,7 @@ function renderReviewMarkdown(args: {
   lines.push('');
   lines.push('This capability was generated automatically from an OpenAPI spec. Every');
   lines.push('heuristic decision below must be audited before this file can land on `main`.');
-  lines.push('CI (`atelier-schemas validate-data --strict`) will refuse to merge it while');
+  lines.push('Strict validation (`atelier-schemas validate-data --strict`) will refuse it while');
   lines.push('the `_review` field is still present.');
   lines.push('');
   lines.push('## Heuristic decisions');
@@ -1182,7 +1182,7 @@ export async function importOpenApi(args: string[]): Promise<void> {
   console.error(
     `NOTE: ${imported} capabilit${imported === 1 ? 'y' : 'ies'} written as DRAFTS. ` +
       'Review the .review.md sidecars, fix the JSON, drop the _review field, then ' +
-      '`pnpm validate:data --strict`. CI will refuse to merge unreviewed drafts.',
+      '`pnpm validate:data --strict` before publishing unreviewed drafts.',
   );
 }
 
