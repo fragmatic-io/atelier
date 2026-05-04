@@ -118,6 +118,49 @@ Body.
     }
   });
 
+  it('SkillParseError fields are stable when the YAML engine omits a mark', () => {
+    // Constructing a SkillParseError with null line/column directly
+    // exercises the message-formatting branch that omits the
+    // "at line X, column Y" suffix.
+    const e = new SkillParseError({
+      reason: 'made up',
+      line: null,
+      column: null,
+      snippet: null,
+      cause: new Error('underlying'),
+    });
+    expect(e.line).toBeNull();
+    expect(e.column).toBeNull();
+    expect(e.snippet).toBeNull();
+    expect(e.message).toContain('made up');
+    // No "at line X, column Y" suffix when line/col are missing.
+    expect(e.message).not.toMatch(/line/);
+    expect(e.message).not.toMatch(/column/);
+    expect(e.name).toBe('SkillParseError');
+  });
+
+  // Mock-based branches for non-YAMLException + missing-mark paths live in
+  // `skill-parser-mock.test.ts` so the full-file `vi.mock('gray-matter')`
+  // doesn't pollute the canonical happy-path assertions in this file.
+
+  it('rounds out the YAML happy path: even valid frontmatter without a body returns body=""', () => {
+    const source = `---
+name: minimal-skill
+version: 0.1.0
+description: minimal but valid
+capabilities_used:
+  - x
+when_to_use: w
+when_not_to_use: w
+example_flow: f
+known_failure_modes:
+  - m
+---`;
+    const { skill, body } = parseSkillMarkdown(source);
+    expect(skill.name).toBe('minimal-skill');
+    expect(body).toBe('');
+  });
+
   it('SkillParseError captures a snippet of the offending line', () => {
     // A scalar followed by an over-indented mapping entry — js-yaml's
     // canonical `bad indentation of a mapping entry` failure with a

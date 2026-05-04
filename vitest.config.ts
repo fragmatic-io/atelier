@@ -66,12 +66,14 @@ export default defineConfig({
         // @atelier/schemas: schemas are nearly all declarative.
         // 2026-05-04: branches dropped 95→74 after view-definition + app-outline
         // + marketplace-review schemas landed without paired branch coverage.
-        // Lowered to current measured (74) with a ratchet-back-up TODO under
-        // P0 follow-ups. Lines/functions/statements still locked at high bar.
+        // 2026-05-04 ratchet-back-up: re-tested marketplace canonicalEncode
+        // (function/symbol/undefined branches) + skill-parser non-YAMLException
+        // and missing-mark fallbacks; branches climb to ~96. Lock the original
+        // 95 bar back in. P0 ratchet item: closed.
         'packages/schemas/src/**/*.ts': {
           lines: 99,
           functions: 95,
-          branches: 74,
+          branches: 95,
           statements: 99,
         },
         // @atelier/policies: pure-function validators. The base set lands at
@@ -94,49 +96,67 @@ export default defineConfig({
         },
         // @atelier/runtime: orchestration (cache + fetch + dispatch + bus).
         // 2026-05-04: drops to 91/90/85/91 after S-4 distributed TriggerBus
-        // (TriggerTransport + InMemoryTriggerTransport + SseTriggerTransport
-        // + TriggerCoordinator) + P0.5a Zod hardening (manifest fetch + IDB
-        // + dispatcher input). Lowered thresholds to current measured;
-        // ratchet-back-up TODO under P0 follow-ups.
+        // + P0.5a Zod hardening. 2026-05-04 ratchet-back-up: added
+        // rate-limiter unit tests (file 0→100%), sse-trigger-transport unit
+        // suite covering publish + subscribe error branches, and registry
+        // helper coverage. Aggregate climbed; thresholds raised back to
+        // 95/95/87/95. Lines/statements 1pp below original (96), branches
+        // 1pp below original (88). P0 ratchet item: closed.
         'packages/runtime/src/**/*.ts': {
-          lines: 91,
-          functions: 90,
-          branches: 85,
-          statements: 91,
+          lines: 95,
+          functions: 95,
+          branches: 87,
+          statements: 95,
         },
         // @atelier/components: React components with happy-dom tests.
-        // 2026-05-04: drops to 93/88/84/93 after the catalog grew 65→83
-        // baseline primitives this session (Vis-5/8, Cnt-10/11, Int-5/10/14,
-        // Nav-6, AI-1/3, V-6.c). New components have their own tests but
-        // cover-aggregate dropped because not every variant/state path is
-        // hit. Lowered to current measured; ratchet-back-up TODO under P0.
+        // 2026-05-04: drops to 93/88/84/93 after the catalog grew 65→83.
+        // 2026-05-04 ratchet-back-up: added detect-language coverage in
+        // src/lib (61→96), tightening the per-package aggregate to
+        // ~93.6/91/85.2/93.6 (lines/functions/branches/statements). Bumped
+        // branches +1 to 85 (matches the original); lines/statements held
+        // at 93 (still 2pp below the original 95) because individual
+        // components in the 65→83 expansion still have a few unhit variant
+        // branches. Wave 11 polish closes the rest.
         'packages/components/src/**/*.{ts,tsx}': {
           lines: 93,
           functions: 88,
-          branches: 84,
+          branches: 85,
           statements: 93,
         },
         // @atelier/react: provider, hooks, render walker, confirm portal.
         // 2026-05-04: drops to 87/90/84/87 after Cnt-10 useSavedView, Cnt-11
-        // useAutosave + useVersionHistory landed. Lowered to current measured;
-        // ratchet-back-up TODO under P0.
+        // useAutosave + useVersionHistory landed. 2026-05-04 ratchet-back-up:
+        // added focused tests for the previously untested Int-1 motion
+        // hooks (use-data-pulse, use-shimmer-on-change, use-tween-number)
+        // plus deepCopy/randomUUID fallback paths in useVersionHistory.
+        // hooks subdir climbed 85.1→93.93/82.45/91.76. Thresholds raised
+        // to 92/90/84/92 — lines/statements 2pp below original (94),
+        // branches matched at 84 (still 4pp below original 88, since
+        // saved-view URL-parse branches are not yet exercised). P0 ratchet
+        // item: closed for lines/statements; remainder tracked under Wave
+        // 11 polish (saved-view branches, undoable-dispatch error paths).
         'packages/react/src/**/*.{ts,tsx}': {
-          lines: 87,
+          lines: 92,
           functions: 90,
           branches: 84,
-          statements: 87,
+          statements: 92,
         },
         // @atelier/compiler: first unit-test pass landed (Phase 5c).
-        // 2026-05-04: drops to 80/91/81/80 after C-3 capability scoping +
-        // C-4 outline + multi-route compiler + C-5 findRecipe tool integration
-        // landed. Each piece has its own tests but cover-aggregate slipped on
-        // less-trafficked branches. Lowered to current measured; ratchet-
-        // back-up TODO under P0.
+        // 2026-05-04: drops to 80/91/81/80 after C-3/C-4/C-5 landed. The
+        // package's lines/statements were dragged hardest by zero-coverage
+        // helper files (BudgetMeter class, generic-fallback compiler,
+        // gemini-agent-client, composite-compiler budget integration paths,
+        // gemini-compiler policyFixGuidance retry messages).
+        // 2026-05-04 ratchet-back-up: filled all of the above. Aggregate
+        // climbed to 96.65/86.78/99.27/96.65 (lines/branches/functions/
+        // statements). Thresholds raised to 95/94/86/95 — lines/statements
+        // back to original 95, branches now ABOVE original (81→86),
+        // functions 1pp below original (95). P0 ratchet item: closed.
         'packages/compiler/src/**/*.ts': {
-          lines: 80,
-          functions: 91,
-          branches: 81,
-          statements: 80,
+          lines: 95,
+          functions: 94,
+          branches: 86,
+          statements: 95,
         },
         // @atelier/cli (Wave 2 / track P2.5; Wave 4 P-CLI-2 added inspect,
         // compile, and dev --tail): scaffold + shell-out wrappers + the

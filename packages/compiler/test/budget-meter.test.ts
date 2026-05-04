@@ -21,6 +21,7 @@
 import type { CompileBudget } from '@atelier/schemas';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  BudgetMeter,
   BudgetMeteredCompiler,
   InMemoryBudgetCounter,
   mergeCompileBudgets,
@@ -400,6 +401,114 @@ describe('mergeCompileBudgets — stricter wins per axis', () => {
     const a: CompileBudget = { on_exhausted: 'fall_through' };
     const b: CompileBudget = { on_exhausted: 'fall_through' };
     expect(mergeCompileBudgets(a, b)?.on_exhausted).toBe('fall_through');
+  });
+});
+
+describe('BudgetMeter (per-process tally, used by CompositeCompiler)', () => {
+  // The reference budget — a sane default tests can reuse via spread.
+  const baseBudget: CompileBudget = {
+    max_tokens_per_day: 1000,
+    max_calls_per_hour: 5,
+    on_exhausted: 'fall_through',
+  };
+
+  it('check() allows under-budget calls and increments the call counter', () => {
+    const m = new BudgetMeter({ budget: { ...baseBudget } });
+    const r = m.check();
+    expect(r.allowed).toBe(true);
+    expect(r.remaining_calls).toBe(4);
+    expect(r.remaining_tokens).toBe(1000);
+    expect(m.state().calls_this_hour).toBe(1);
+  });
+
+  it('check() blocks once the call cap is reached and reports remaining tokens', () => {
+    const now = 1_700_000_000_000;
+    const m = new BudgetMeter({ budget: { ...baseBudget }, now: () => now });
+    for (let i = 0; i < 5; i += 1) m.check();
+    const r = m.check();
+    expect(r.allowed).toBe(false);
+    expect(r.reason).toBe('call rate exceeded');
+    expect(r.remaining_tokens).toBe(1000);
+    expect(r.remaining_calls).toBe(0);
+  });
+
+  it('check() blocks once the daily token cap is reached', () => {
+    const m = new BudgetMeter({
+      budget: { max_tokens_per_day: 100, on_exhausted: 'fall_through' },
+    });
+    m.check();
+    m.record(150);
+    const r = m.check();
+    expect(r.allowed).toBe(false);
+    expect(r.reason).toBe('token cap exhausted');
+    expect(r.remaining_tokens).toBe(0);
+    expect(r.remaining_calls).toBeUndefined();
+  });
+
+  it('record() clamps non-finite / negative values to zero', () => {
+    const m = new BudgetMeter({
+      budget: { max_tokens_per_day: 100, on_exhausted: 'fall_through' },
+    });
+    m.record(Number.NaN);
+    m.record(-50);
+    m.record(Number.POSITIVE_INFINITY);
+    expect(m.state().tokens_used_today).toBe(0);
+  });
+
+  it('record() floors fractional token counts', () => {
+    const m = new BudgetMeter({ budget: { ...baseBudget } });
+    m.record(99.7);
+    expect(m.state().tokens_used_today).toBe(99);
+  });
+
+  it('rolls over the hour window when wall clock advances past it', () => {
+    let now = 1_700_000_000_000;
+    const m = new BudgetMeter({ budget: { ...baseBudget }, now: () => now });
+    for (let i = 0; i < 5; i += 1) m.check();
+    expect(m.check().allowed).toBe(false);
+    // Advance > 1h; the hour window should reset.
+    now += 65 * 60 * 1000;
+    const r = m.check();
+    expect(r.allowed).toBe(true);
+    expect(m.state().calls_this_hour).toBe(1);
+  });
+
+  it('rolls over the day window when wall clock advances past it', () => {
+    let now = 1_700_000_000_000;
+    const m = new BudgetMeter({
+      budget: { max_tokens_per_day: 100, on_exhausted: 'fall_through' },
+      now: () => now,
+    });
+    m.record(120);
+    expect(m.check().allowed).toBe(false);
+    // Advance > 24h.
+    now += 25 * 60 * 60 * 1000;
+    const r = m.check();
+    expect(r.allowed).toBe(true);
+    expect(m.state().tokens_used_today).toBe(0);
+  });
+
+  it('reset() clears tokens + call counters', () => {
+    const m = new BudgetMeter({ budget: { ...baseBudget } });
+    m.check();
+    m.record(500);
+    m.reset();
+    expect(m.state().tokens_used_today).toBe(0);
+    expect(m.state().calls_this_hour).toBe(0);
+  });
+
+  it('budget() returns the configured shape', () => {
+    const budget: CompileBudget = { ...baseBudget };
+    const m = new BudgetMeter({ budget });
+    expect(m.budget()).toEqual(budget);
+  });
+
+  it('uncapped axes are not reported as remaining numbers', () => {
+    const m = new BudgetMeter({ budget: { on_exhausted: 'fall_through' } });
+    const r = m.check();
+    expect(r.allowed).toBe(true);
+    expect(r.remaining_tokens).toBeUndefined();
+    expect(r.remaining_calls).toBeUndefined();
   });
 });
 

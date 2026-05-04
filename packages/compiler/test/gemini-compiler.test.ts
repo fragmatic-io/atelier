@@ -175,4 +175,118 @@ describe('GeminiCompiler', () => {
     expect(c.id).toContain('diff-y');
     expect(c.id.startsWith('gemini-compiler[')).toBe(true);
   });
+
+  describe('host validate hook + retry guidance', () => {
+    it('semantic-validation failure on first response, success on retry', async () => {
+      const { client, generateContent } = makeFakeClient([
+        {
+          text: validManifestJson,
+          usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 },
+        },
+        {
+          text: validManifestJson,
+          usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 },
+        },
+      ]);
+      let calls = 0;
+      const c = new GeminiCompiler({
+        apiKey: 'key',
+        client,
+        validate: () => {
+          calls += 1;
+          if (calls === 1) return { errors: ['Stack requires at least 1 children; got 0'] };
+          return { errors: [] };
+        },
+      });
+      const r = await c.compile(fixtureCompileInput());
+      expect(generateContent).toHaveBeenCalledTimes(2);
+      // The retry user message should carry the empty-container guidance.
+      const retryArgs = (
+        generateContent.mock.calls[1] as unknown as [
+          { contents: Array<{ parts: Array<{ text: string }> }> },
+        ]
+      )[0];
+      const retryText = retryArgs.contents[0]?.parts[0]?.text ?? '';
+      expect(retryText).toContain('Empty container fix');
+      expect(retryText).toContain('PREVIOUS ATTEMPT FAILED VALIDATION');
+      expect(r.diff_mode).toBe(false);
+    });
+
+    it('throws CompilerOutputError when semantic validation keeps failing past maxRetries', async () => {
+      const { client } = makeFakeClient([{ text: validManifestJson }, { text: validManifestJson }]);
+      const c = new GeminiCompiler({
+        apiKey: 'key',
+        client,
+        maxRetries: 1,
+        validate: () => ({ errors: ['Manifest IDs must match m_'] }),
+      });
+      await expect(c.compile(fixtureCompileInput())).rejects.toBeInstanceOf(CompilerOutputError);
+    });
+
+    it.each([
+      ['Stack requires at least 1 children; got 0', 'Empty container fix'],
+      ['List has data binding but no empty_state declared', 'Data binding state-slots fix'],
+      [
+        'Rate-limited action "send.email" is exposed without a visible quota indicator',
+        'Rate-limit fix',
+      ],
+      [
+        'Reversible action "delete.draft" has no undo affordance for rollback "restore.draft"',
+        'Reversibility fix',
+      ],
+      ['Component "Icon" is a leaf and cannot have children', 'Leaf component fix'],
+      ['Manifest IDs must match m_[a-z0-9]', 'manifest_id fix'],
+    ])(
+      'retry message contains specific guidance for "%s"',
+      async (validationMsg, guidanceFragment) => {
+        const { client, generateContent } = makeFakeClient([
+          { text: validManifestJson },
+          { text: validManifestJson },
+        ]);
+        let calls = 0;
+        const c = new GeminiCompiler({
+          apiKey: 'key',
+          client,
+          validate: () => {
+            calls += 1;
+            if (calls === 1) return { errors: [validationMsg] };
+            return { errors: [] };
+          },
+        });
+        await c.compile(fixtureCompileInput());
+        const retryArgs = (
+          generateContent.mock.calls[1] as unknown as [
+            { contents: Array<{ parts: Array<{ text: string }> }> },
+          ]
+        )[0];
+        const retryText = retryArgs.contents[0]?.parts[0]?.text ?? '';
+        expect(retryText).toContain(guidanceFragment);
+      },
+    );
+
+    it('falls back to a general fix message when no known pattern matches', async () => {
+      const { client, generateContent } = makeFakeClient([
+        { text: validManifestJson },
+        { text: validManifestJson },
+      ]);
+      let calls = 0;
+      const c = new GeminiCompiler({
+        apiKey: 'key',
+        client,
+        validate: () => {
+          calls += 1;
+          if (calls === 1) return { errors: ['totally novel error string'] };
+          return { errors: [] };
+        },
+      });
+      await c.compile(fixtureCompileInput());
+      const retryArgs = (
+        generateContent.mock.calls[1] as unknown as [
+          { contents: Array<{ parts: Array<{ text: string }> }> },
+        ]
+      )[0];
+      const retryText = retryArgs.contents[0]?.parts[0]?.text ?? '';
+      expect(retryText).toContain('General fix');
+    });
+  });
 });
