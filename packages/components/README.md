@@ -107,6 +107,37 @@ declarations). Every component exposes:
 Hosts paint these via Tailwind or vanilla CSS. `apps/demo` ships a
 Tailwind 4 baseline.
 
+## Brand kit presets
+
+`@atelier/components` ships three free starter design systems as
+`BrandKit` contracts:
+
+- `neutralBrandKit` — calm default for internal tools.
+- `commerceBrandKit` — warmer marketplace and support-ops surfaces.
+- `consoleBrandKit` — dense dark operations and engineering consoles.
+
+Use `brandKitToCssVars()` to project a kit into CSS variables, then apply
+those variables at the app or route boundary:
+
+```tsx
+import { brandKitToCssVars, neutralBrandKit } from '@atelier/components';
+
+const vars = brandKitToCssVars(neutralBrandKit);
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div data-atelier-brand={neutralBrandKit.id} style={vars}>
+      {children}
+    </div>
+  );
+}
+```
+
+Storybook exposes the same presets through the **Design system** toolbar.
+The presets are defaults, not a replacement for app branding: production
+hosts should publish their own versioned BrandKit and pass it to the
+compiler, policy engine, and runtime CSS bridge.
+
 ## Variants
 
 Wave 6 / P-10 added a small `variant` (and where applicable `size`) prop

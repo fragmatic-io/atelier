@@ -717,6 +717,21 @@ export type { IconSize } from './components/_variants.js';
 export { iconSizePx } from './components/_variants.js';
 
 // -----------------------------------------------------------------------------
+// Brand kits / design-system presets
+// -----------------------------------------------------------------------------
+export { brandKitToCssVars, toCssTokenName } from './brand/css-vars.js';
+export type { BrandCssVariableName, BrandCssVariables } from './brand/css-vars.js';
+export {
+  atelierBrandKits,
+  commerceBrandKit,
+  consoleBrandKit,
+  defaultBrandKitId,
+  neutralBrandKit,
+  resolveAtelierBrandKit,
+} from './brand/presets.js';
+export type { AtelierBrandKitId } from './brand/presets.js';
+
+// -----------------------------------------------------------------------------
 // Registry, composition rules, text renderers
 // -----------------------------------------------------------------------------
 export {
