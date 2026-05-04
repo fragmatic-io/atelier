@@ -1,0 +1,30 @@
+{
+  "name": "@atelier/eval-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Atelier marketplace eval gate — runs the top-N approved personas through a frozen reference compile + ManifestSchema + policy validation, surfaces an EvalReport per nightly run",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@atelier/policies": "workspace:*",
+    "@atelier/schemas": "workspace:*",
+    "@atelier/vault-server": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

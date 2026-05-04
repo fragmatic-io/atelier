@@ -29,6 +29,9 @@ importers:
       '@atelier/docs':
         specifier: workspace:*
         version: link:apps/docs
+      '@atelier/eval-marketplace':
+        specifier: workspace:*
+        version: link:packages/eval-marketplace
       '@atelier/evals':
         specifier: workspace:*
         version: link:packages/evals
@@ -471,6 +474,28 @@ importers:
       '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@24.12.2)(happy-dom@15.11.7)(lightningcss@1.32.0)
+
+  packages/eval-marketplace:
+    dependencies:
+      '@atelier/policies':
+        specifier: workspace:*
+        version: link:../policies
+      '@atelier/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+      '@atelier/vault-server':
+        specifier: workspace:*
+        version: link:../vault-server
     devDependencies:
       tsx:
         specifier: ^4.19.2

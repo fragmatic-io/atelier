@@ -1,0 +1,80 @@
+---
+title: Marketplace eval gate
+description: 'V-6.e — nightly compile-clean check on the top-N approved personas.'
+---
+
+The marketplace eval gate is a nightly job that proves the **top-N currently-approved personas** still compile cleanly against the framework's CURRENT contract. If they don't — e.g. a baseline policy tightened, a component composition rule changed, the manifest schema gained a required field — the breakage shows up in a `marketplace-eval` regression issue **before users hit it**.
+
+The gate is bounded: at most 10 personas per run, ranked alphabetically on the canonical `atelier://author/persona@version` string for v0. That's a deterministic ordering, easy to audit, and a sensible "top 10" until V-6.d ships explicit curation signals (download counts, manual approval). Total runtime budgeted to stay under 15 minutes.
+
+## What the gate proves
+
+Per persona:
+
+1. **Consume** the bundle via `GET /marketplace/persona/<author>/<persona>@<version>` (V-6.b).
+2. **Verify** the ed25519 signature in the same way `@atelier/vault-server`'s publish endpoint does — wrong signature → `skipped` (publishing was buggy, not a framework regression).
+3. **Parse** the bundle's payload as a `Manifest` per `@atelier/schemas/ManifestSchema`. Recipes ARE manifests on the wire.
+4. **Compile** every layout-bearing route in the recipe through a frozen reference capability + component set (see [`packages/eval-marketplace/src/fixtures/`](https://github.com/fragmatic-io/atelier/tree/main/packages/eval-marketplace/src/fixtures)). The default compiler is a deterministic synthesizer — no LLM dep, no Gemini key required, every CI run reproducible.
+5. **Validate** each compiled manifest against `ManifestSchema` again AND the baseline policies in [`@atelier/policies`](/atelier/concepts/policies/) (`empty_loading_error_handled`, `data_access_within_grant`, `composes_hierarchy_for_long_lists`, etc.).
+6. **Record** the per-persona status: `passed` (every route validated), `failed` (≥1 error-severity policy violation), or `skipped` (couldn't reach validation — fetch/verify/parse failed).
+
+## Report shape
+
+```ts
+interface EvalReport {
+  generated_at: string; // ISO datetime
+  reference_versions: {
+    capabilities_hash: string; // SHA-256 of the frozen capability fixtures
+    components_hash: string; // SHA-256 of the frozen component fixtures
+    compiler_version: string; // e.g. 'eval-marketplace-fallback'
+  };
+  personas: PersonaEvalResult[];
+  summary: { total; passed; failed; skipped; duration_ms };
+}
+```
+
+The fixture hashes lock down what the run was evaluated against. A regression report taken in May is reproducible against the same fixtures in July — the hashes either match (true regression) or differ (the reference set itself moved, which is its own audit signal).
+
+## The ranking choice
+
+> "Top N" needs a definition. v0 picks **alphabetically first** on the canonical address.
+
+Why alphabetical and not "most-downloaded" or "most-recent"? Three reasons:
+
+1. **Determinism.** The same approved set always produces the same eval set, run-to-run. No flakiness from a fluctuating download counter.
+2. **No metric to leak.** Download counts, install counts, and review-store metadata don't exist yet (V-6.d). Picking a metric we'd have to build before the gate ships kills the gate's three-day budget.
+3. **Easy to override.** `runMarketplaceEval` accepts an `opts.rank` comparator — hosts that wire a metric later swap it in without changing the gate's contract. The default flips when V-6.d lands.
+
+## CI wiring
+
+[`.github/workflows/marketplace-eval.yml`](https://github.com/fragmatic-io/atelier/blob/main/.github/workflows/marketplace-eval.yml) runs at **04:00 UTC daily** + on `workflow_dispatch`. It:
+
+- Calls `pnpm marketplace:eval --vault-url "$MARKETPLACE_VAULT_URL" --top 10 --out eval-results/marketplace.json`.
+- Uploads `eval-results/marketplace.json` as the `marketplace-eval` artifact (90-day retention).
+- On non-zero exit (i.e. ≥1 `failed`), runs an `actions/github-script` step that opens — or updates — an issue tagged `marketplace-eval` with the report excerpt. The "or updates" part keeps the inbox sane: a persistent regression doesn't spam a fresh issue every night.
+
+## Stub mode
+
+`MARKETPLACE_VAULT_URL` is a secret. When it isn't configured, the CLI falls through to the documented placeholder `https://vault.example.invalid`. The CLI's HTTP listing strategy — `GET <vaultUrl>/marketplace/personas` — gracefully handles the unreachable / 404 case by returning an empty approved list. The gate runs, finds no work, reports `0/0/0` and exits **0**. That's the intended behaviour: the gate is provisioned-by-default, gate-failures-only when there's a real vault to talk to.
+
+## Local debugging
+
+```bash
+# Stub mode — empty list, exits 0:
+pnpm marketplace:eval --top 3 --out eval-results/local.json
+
+# Smoke mode — point at a fixture file with hand-curated addresses:
+MARKETPLACE_EVAL_FIXTURE=./scripts/fixtures/approved.json \
+  pnpm marketplace:eval --vault-url http://localhost:4001 --top 3
+```
+
+The fixture file format is either `MarketplaceAddress[]` or an array of canonical `atelier://...` strings.
+
+## Next: V-6.d integration
+
+When V-6.d ships maintainer-side curation, two things change:
+
+1. **Source of truth.** `ApprovedPersonaList.list()` becomes the curated set (a vault endpoint or a static file the maintainer pushes).
+2. **Ranking.** The default `opts.rank` flips from alphabetical to "highest curated score" so the gate's "top 10" matches the marketplace front-page's "top 10."
+
+The `EvalReport` shape doesn't change — the dashboard and the issue-opener already consume the stable form.

@@ -174,6 +174,7 @@ export default defineConfig({
             { label: 'Trust on first use', link: '/marketplace/tofu' },
             { label: 'Publishing', link: '/marketplace/publishing' },
             { label: 'Consuming', link: '/marketplace/consuming' },
+            { label: 'Eval gate', link: '/marketplace/eval-gate' },
           ],
         },
         {

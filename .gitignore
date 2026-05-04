@@ -14,6 +14,10 @@ coverage/
 .nyc_output/
 *.lcov
 
+# Marketplace eval gate output (V-6.e). The CI uploads this as an artifact;
+# locally it's regenerated per `pnpm marketplace:eval` invocation.
+eval-results/
+
 # Logs
 *.log
 npm-debug.log*

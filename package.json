@@ -62,6 +62,7 @@
     "schemas:check-ajv": "tsx scripts/check-schemas-ajv.ts",
     "validate:data": "atelier-schemas validate-data",
     "evals": "atelier-evals run",
+    "marketplace:eval": "tsx scripts/marketplace-eval.ts",
     "validate:fast": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm capabilities:index:check && pnpm validate:data && pnpm schemas:check-ajv",
     "validate": "pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm capabilities:index:check && pnpm validate:data && pnpm schemas:check-ajv && pnpm test",
     "prepare": "husky"
@@ -74,6 +75,7 @@
     "@atelier/data-resolvers": "workspace:*",
     "@atelier/demo": "workspace:*",
     "@atelier/demo-dummyjson": "workspace:*",
+    "@atelier/eval-marketplace": "workspace:*",
     "@atelier/evals": "workspace:*",
     "@atelier/policies": "workspace:*",
     "@atelier/react": "workspace:*",
