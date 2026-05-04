@@ -16,17 +16,23 @@ This page is the production checklist. The walkthrough version is at [Getting st
 
 ### Environment variables
 
-| Variable                       | Required | Purpose                                                                    |
-| ------------------------------ | -------- | -------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`               | optional | LLM compiler key. Without it, `FallbackCompiler` runs.                     |
-| `NEXT_PUBLIC_VAULT_URL`        | yes      | Where the host's vault-client points. Defaults to `http://localhost:4001`. |
-| `NEXT_PUBLIC_VAULT_FALLBACK`   | optional | `disabled` to forbid `localStorage` fallback when vault unreachable.       |
-| `REDIS_URL`                    | optional | For `RedisManifestStore` / future `RedisTriggerBus`.                       |
-| `CIR_COMPILE_BUDGET_ENABLED`   | optional | Enables `BudgetMeteredCompiler`.                                           |
-| `CIR_COMPILE_BUDGET_TOKENS`    | optional | Token ceiling per window.                                                  |
-| `CIR_COMPILE_BUDGET_WINDOW_MS` | optional | Window length in ms.                                                       |
-| `CIR_COMPILER_TOOLS_ENABLED`   | optional | Enables the `ToolUsingCompiler` (Wave C-2).                                |
-| `CIR_MARKETPLACE_ENABLED`      | optional | Boots the V-6 marketplace surface.                                         |
+The five `_ENABLED` feature paths below are **default-on** as of TODO P1.1 (2026-05-04). Each ships a single opt-out env var (`ATELIER_*=off`); the legacy `CIR_*_ENABLED=0` form is honoured for one release cycle. See [Operations → Env vars](/operations/env-vars/) for the full list and the deprecation timeline.
+
+| Variable                            | Required | Default | Purpose                                                                    |
+| ----------------------------------- | -------- | ------- | -------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                    | optional | unset   | LLM compiler key. Without it, `FallbackCompiler` runs.                     |
+| `NEXT_PUBLIC_VAULT_URL`             | yes      | —       | Where the host's vault-client points. Defaults to `http://localhost:4001`. |
+| `NEXT_PUBLIC_VAULT_FALLBACK`        | optional | unset   | `disabled` to forbid `localStorage` fallback when vault unreachable.       |
+| `REDIS_URL`                         | optional | unset   | For `RedisManifestStore` / future `RedisTriggerBus`.                       |
+| `ATELIER_COMPILER_TOOLS`            | optional | on      | `off` disables `ToolUsingCompiler` (Wave C-2). Default-on.                 |
+| `ATELIER_CAPABILITY_RESOLVER`       | optional | on      | `off` disables capability scoping (C-3 / S-1). Default-on.                 |
+| `ATELIER_RECIPE_RAG`                | optional | on      | `off` disables recipe RAG (`findRecipe` / C-5). Default-on.                |
+| `ATELIER_MARKETPLACE`               | optional | on      | `off` disables the V-6 marketplace surface. Default-on.                    |
+| `ATELIER_COMPILE_BUDGET`            | optional | on      | `off` disables `BudgetMeteredCompiler` (S-6). Default-on.                  |
+| `CIR_COMPILE_BUDGET_TOKENS`         | optional | unset   | Token ceiling per window. Tuning knob; kept as `CIR_*` for one release.    |
+| `CIR_COMPILE_BUDGET_TOKENS_PER_DAY` | optional | 50000   | Token-per-day cap. Tuning knob; kept as `CIR_*` for one release.           |
+| `CIR_COMPILE_BUDGET_CALLS_PER_HOUR` | optional | 30      | Per-hour call cap. Tuning knob; kept as `CIR_*` for one release.           |
+| `CIR_COMPILE_BUDGET_WINDOW_MS`      | optional | unset   | Window length in ms. Tuning knob; kept as `CIR_*` for one release.         |
 
 ### Secrets posture
 

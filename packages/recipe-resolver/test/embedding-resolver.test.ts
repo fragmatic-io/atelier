@@ -3,7 +3,8 @@
 /**
  * Tests for `EmbeddingRecipeResolver`. We drive it with a hand-rolled
  * `EmbeddingClient` stub so behaviour is fully deterministic. The real-
- * embedding integration test is gated behind `CIR_EMBEDDING_TESTS=1` —
+ * embedding integration test is gated behind `ATELIER_EMBEDDING_TESTS=1`
+ * (legacy `CIR_EMBEDDING_TESTS=1` honoured for one release cycle) —
  * cache + fallback are tested unconditionally.
  *
  * Coverage:
@@ -313,17 +314,17 @@ describe('EmbeddingRecipeResolver — cache + fallback (unconditional)', () => {
 });
 
 // Real-embedding integration test — gated. Hosts that want to validate
-// against an actual embedding provider set CIR_EMBEDDING_TESTS=1 and
-// supply a working `OPENAI_API_KEY` / `GEMINI_API_KEY` / similar. We
-// don't ship a real provider here; the gate just asserts the flag is
-// honoured so CI doesn't accidentally hit the network.
-describe.skipIf(process.env['CIR_EMBEDDING_TESTS'] !== '1')(
-  'EmbeddingRecipeResolver — real provider',
-  () => {
-    it('builds + resolves against a real provider when CIR_EMBEDDING_TESTS=1', () => {
-      // Hosts wire a real `EmbeddingClient` here. Left as a stub because
-      // we don't want CI to depend on a paid endpoint.
-      expect(process.env['CIR_EMBEDDING_TESTS']).toBe('1');
-    });
-  },
-);
+// against an actual embedding provider set ATELIER_EMBEDDING_TESTS=1
+// (legacy CIR_EMBEDDING_TESTS=1 still honoured for one release cycle)
+// and supply a working `OPENAI_API_KEY` / `GEMINI_API_KEY` / similar.
+// We don't ship a real provider here; the gate just asserts the flag
+// is honoured so CI doesn't accidentally hit the network.
+const embeddingTestsEnabled =
+  process.env['ATELIER_EMBEDDING_TESTS'] === '1' || process.env['CIR_EMBEDDING_TESTS'] === '1';
+describe.skipIf(!embeddingTestsEnabled)('EmbeddingRecipeResolver — real provider', () => {
+  it('builds + resolves against a real provider when ATELIER_EMBEDDING_TESTS=1', () => {
+    // Hosts wire a real `EmbeddingClient` here. Left as a stub because
+    // we don't want CI to depend on a paid endpoint.
+    expect(embeddingTestsEnabled).toBe(true);
+  });
+});

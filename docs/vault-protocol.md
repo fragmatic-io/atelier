@@ -339,7 +339,7 @@ A key change is **not** automatically accepted; the application surfaces both fi
 
 ### Demo toggle
 
-The reference demo (`apps/demo`) gates marketplace boot behind `CIR_MARKETPLACE_ENABLED=1`. Default boot is unchanged. When the flag is set, `getCirServer()` exposes a `marketplace` surface the integration smoke can drive.
+**Default-on** as of TODO P1.1 (2026-05-04): the V-6 marketplace endpoints in `@atelier/vault-server` ship enabled. Opt out via `ATELIER_MARKETPLACE=off`; legacy `CIR_MARKETPLACE_ENABLED=0` honoured for one release cycle.
 
 ---
 

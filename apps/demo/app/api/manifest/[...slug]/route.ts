@@ -46,11 +46,14 @@ export async function GET(req: Request, { params }: RouteParams): Promise<Respon
       components: server.components,
       brandKit: server.brandKit,
       signal: req.signal,
-      // Wave C / Phase C-3 — when capability scoping is enabled
-      // (`CIR_CAPABILITY_RESOLVER_ENABLED=1`), the resolver picks the
-      // top-N most relevant capabilities for this route + intent so
-      // only that subset lands in the prompt-stuffed set. Threading
-      // `undefined` when disabled is a no-op in the compile pipeline.
+      // Wave C / Phase C-3 — capability scoping is default-on
+      // (TODO P1.1, 2026-05-04). Opt out via
+      // `ATELIER_CAPABILITY_RESOLVER=off`; legacy
+      // `CIR_CAPABILITY_RESOLVER_ENABLED=0` honoured for one release
+      // cycle. The resolver picks the top-N most relevant capabilities
+      // for this route + intent so only that subset lands in the
+      // prompt-stuffed set. Threading `undefined` when disabled is a
+      // no-op in the compile pipeline.
       ...(server.capabilityResolver !== undefined
         ? { capabilityResolver: server.capabilityResolver }
         : {}),

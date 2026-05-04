@@ -149,10 +149,14 @@ The C-2 `ToolUsingCompiler` already shipped a `findCapability` tool with a subst
 
 ## Demo wiring
 
-`apps/demo` ships a default-off integration gated on `CIR_CAPABILITY_RESOLVER_ENABLED=1`. When the flag is set the demo wires `SubstringCapabilityResolver` (no API key required) and threads it onto every compile:
+**Default-on** as of TODO P1.1 (2026-05-04): `apps/demo` wires `SubstringCapabilityResolver` (no API key required) and threads it onto every compile. Opt out via `ATELIER_CAPABILITY_RESOLVER=off`; legacy `CIR_CAPABILITY_RESOLVER_ENABLED=0` honoured for one release cycle:
 
 ```bash
-CIR_CAPABILITY_RESOLVER_ENABLED=1 pnpm --filter @atelier/demo dev
+# Default — substring scoping is on:
+pnpm --filter @atelier/demo dev
+
+# Disable for the full-prompt path:
+ATELIER_CAPABILITY_RESOLVER=off pnpm --filter @atelier/demo dev
 ```
 
 Production hosts swap in `EmbeddingCapabilityResolver` or `TwoStageCapabilityResolver` for higher-quality scoping.
@@ -172,7 +176,7 @@ Trigger: **first host with >150 capabilities.** Below that, the full registry fi
 
 ## Tests
 
-The package ships ~90 tests covering substring + two-stage + embedding behaviour, the cascade story, and the `wrapAsHighLevel` adapter. The compiler ships ~15 tests covering the resolver-on / resolver-off paths and the rejection cascade. Embedding tests that need a heavy model download are gated behind `CIR_EMBEDDING_TESTS=1`.
+The package ships ~90 tests covering substring + two-stage + embedding behaviour, the cascade story, and the `wrapAsHighLevel` adapter. The compiler ships ~15 tests covering the resolver-on / resolver-off paths and the rejection cascade. Embedding tests that need a heavy model download are gated behind `ATELIER_EMBEDDING_TESTS=1` (legacy `CIR_EMBEDDING_TESTS=1` honoured for one release cycle).
 
 ## Next
 

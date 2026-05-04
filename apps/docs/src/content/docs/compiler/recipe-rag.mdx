@@ -125,12 +125,12 @@ C-5's TODO note says it depends on V-6 (publish/consume) — the reasoning was "
 
 ## Demo wiring
 
-Optional, gated behind `CIR_RECIPE_RAG_ENABLED=1`: `apps/demo` instantiates `EmbeddingRecipeResolver` over a `LocalRecipeStore` pointing at the in-tree `recipes/` directory. Default boot is unchanged.
+**Default-on** as of TODO P1.1 (2026-05-04): `apps/demo` instantiates `SubstringRecipeResolver` over a `LocalRecipeStore` pointing at the in-tree `recipes/` directory. Opt out via `ATELIER_RECIPE_RAG=off`; legacy `CIR_RECIPE_RAG_ENABLED=0` honoured for one release cycle. Production hosts swap in `EmbeddingRecipeResolver` for richer retrieval.
 
 ## Testing
 
 - **Substring resolver** — fully deterministic; tests assert top-5 ordering, domain wins, brand-fit re-ranking.
-- **Embedding resolver** — gated behind `CIR_EMBEDDING_TESTS=1` for the real-provider path. Cache + fallback are tested unconditionally with a hand-rolled `EmbeddingClient` stub.
+- **Embedding resolver** — gated behind `ATELIER_EMBEDDING_TESTS=1` (legacy `CIR_EMBEDDING_TESTS=1` honoured for one release cycle) for the real-provider path. Cache + fallback are tested unconditionally with a hand-rolled `EmbeddingClient` stub.
 - **`findRecipe` tool** — drives the full agent loop with a stub `AgentClient` and a structurally-typed `RecipeResolverLike`; asserts the agent receives the slim projection (no `manifest` leak), failures degrade to `{ recipes: [] }`, and the tool reaches the resolver with the right query.
 
 ## Next

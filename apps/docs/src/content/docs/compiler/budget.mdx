@@ -127,13 +127,19 @@ const orgBudget = new BudgetMeteredCompiler(userBudget, {
 
 ## Demo wiring
 
-The demo wires `BudgetMeteredCompiler` behind `CIR_COMPILE_BUDGET_ENABLED=1` (default off so the dev flow stays unconstrained):
+**Default-on** as of TODO P1.1 (2026-05-04): the demo wires `BudgetMeteredCompiler` automatically because every production host needs cost limits. Opt out via `ATELIER_COMPILE_BUDGET=off`; legacy `CIR_COMPILE_BUDGET_ENABLED=0` honoured for one release cycle. The threshold knobs (`CIR_COMPILE_BUDGET_TOKENS`, `CIR_COMPILE_BUDGET_TOKENS_PER_DAY`, `CIR_COMPILE_BUDGET_CALLS_PER_HOUR`, `CIR_COMPILE_BUDGET_WINDOW_MS`) stay as `CIR_*` for one release, then rename to `ATELIER_*` with the same legacy-tolerant pattern.
 
 ```bash
-CIR_COMPILE_BUDGET_ENABLED=1 \
+# Default — budget enforcement is on at 50k tokens / day, 30 calls / hour:
+pnpm --filter @atelier/demo dev
+
+# Tune the thresholds:
 CIR_COMPILE_BUDGET_TOKENS=20000 \
 CIR_COMPILE_BUDGET_WINDOW_MS=3600000 \
 pnpm --filter @atelier/demo dev
+
+# Disable entirely (e.g. local dev iteration):
+ATELIER_COMPILE_BUDGET=off pnpm --filter @atelier/demo dev
 ```
 
 20k tokens / hour for the demo user. Hit the limit by spamming the lens switcher; watch the audit stream show `compile.rejected` events.

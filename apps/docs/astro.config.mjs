@@ -193,6 +193,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             { label: 'Deploying', link: '/operations/deploying' },
+            { label: 'Env vars', link: '/operations/env-vars' },
             { label: 'Observability', link: '/operations/observability' },
             { label: 'Cost control', link: '/operations/cost-control' },
             { label: 'Performance', link: '/operations/performance' },

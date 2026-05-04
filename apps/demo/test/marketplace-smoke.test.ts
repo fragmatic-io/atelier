@@ -8,9 +8,12 @@
  * `@atelier/vault-client` `MarketplaceClient`. No sockets, no env-flag gating
  * at the test layer — the test owns its own tiny vault service.
  *
- * The demo's runtime gating (`CIR_MARKETPLACE_ENABLED=1`) is independent
- * of this smoke; this test simply asserts the ergonomics work end-to-end
- * so a follow-up that wires the demo's UI has a known-good baseline.
+ * The V-6 marketplace endpoints in `@atelier/vault-server` are now
+ * default-on (TODO P1.1, 2026-05-04). Hosts that need to disable them
+ * use `ATELIER_MARKETPLACE=off`; legacy `CIR_MARKETPLACE_ENABLED=0` is
+ * honoured for one release cycle. This smoke is independent of either
+ * gate — it asserts the ergonomics work end-to-end so a follow-up that
+ * wires the demo's UI has a known-good baseline.
  */
 import { describe, expect, it } from 'vitest';
 import { generateKeyPairSync } from 'node:crypto';

@@ -59,14 +59,16 @@ interface CirServer {
   brandKit: typeof DEMO_BRAND_KIT;
   geminiAvailable: boolean;
   /**
-   * Wave C / Phase C-3 — optional capability scoping resolver. Wired
-   * behind `CIR_CAPABILITY_RESOLVER_ENABLED=1`; absent on default boot
-   * so the showcase is additive. Threaded onto every `CompileInput`
-   * via the manifest endpoint so the compile pipeline narrows the
-   * registry to the top-N most relevant capabilities for the route +
-   * intent before prompt assembly. The agent's `lookupCapability` /
-   * `listCapabilities` tools still see the full registry; only
-   * `findCapability` and the prompt-stuffed set shrink.
+   * Wave C / Phase C-3 — capability scoping resolver. Default-on
+   * (TODO P1.1, 2026-05-04) with `SubstringCapabilityResolver` as the
+   * baseline; opt out via `ATELIER_CAPABILITY_RESOLVER=off`. Legacy
+   * `CIR_CAPABILITY_RESOLVER_ENABLED=0` honoured for one release cycle.
+   * Threaded onto every `CompileInput` via the manifest endpoint so the
+   * compile pipeline narrows the registry to the top-N most relevant
+   * capabilities for the route + intent before prompt assembly. The
+   * agent's `lookupCapability` / `listCapabilities` tools still see the
+   * full registry; only `findCapability` and the prompt-stuffed set
+   * shrink.
    */
   capabilityResolver: CompileCapabilityResolver | undefined;
 }
@@ -94,20 +96,28 @@ function buildServer(): CirServer {
   // The compile chain is `[Gemini, GenericFallbackCompiler]`; the host's
   // `lib/fake-manifests.ts` is a baseline-only reference exercised by
   // tests, not served at runtime.
-  // Wave 10 S-6 — optional compile-cost budget enforcement. Off by default
-  // so the existing default boot is unchanged. When `CIR_COMPILE_BUDGET_ENABLED`
-  // is set, the LLM-backed Gemini compiler is wrapped in a
-  // `BudgetMeteredCompiler`. If a user blows past their budget the
-  // CompositeCompiler cascades to `GenericFallbackCompiler` and the audit
-  // event records `compiler_model: 'fallback-generic'` — no separate
-  // budget-blocked event is emitted.
+  // Wave 10 S-6 — compile-cost budget enforcement. Default-on
+  // (TODO P1.1, 2026-05-04) because every production host needs cost
+  // limits. Opt out via `ATELIER_COMPILE_BUDGET=off`. Legacy
+  // `CIR_COMPILE_BUDGET_ENABLED=0` honoured for one release cycle.
+  // The threshold knobs (`CIR_COMPILE_BUDGET_TOKENS_PER_DAY`,
+  // `CIR_COMPILE_BUDGET_CALLS_PER_HOUR`, etc.) stay as `CIR_*` for one
+  // release, then rename to `ATELIER_*` with the same legacy-tolerant
+  // pattern.
   //
-  // The budget shape below is illustrative — real deployments would source
-  // it from `intent.compile_budget` and/or `brandKit.compile_budget` per
+  // When the budget wraps the LLM-backed compiler and the user blows
+  // past it, the CompositeCompiler cascades to `GenericFallbackCompiler`
+  // and the audit event records `compiler_model: 'fallback-generic'` —
+  // no separate budget-blocked event is emitted.
+  //
+  // The budget shape below is illustrative — real deployments source it
+  // from `intent.compile_budget` and/or `brandKit.compile_budget` per
   // request and merge with `mergeCompileBudgets`. The demo's seed (here)
   // is a process-wide cap because the demo doesn't yet model per-user
   // intent profiles at the server level.
-  const budgetEnabled = process.env['CIR_COMPILE_BUDGET_ENABLED'] === '1';
+  const budgetEnv = process.env['ATELIER_COMPILE_BUDGET'];
+  const legacyBudgetDisabled = process.env['CIR_COMPILE_BUDGET_ENABLED'] === '0';
+  const budgetEnabled = !legacyBudgetDisabled && budgetEnv !== 'off';
   const demoBudget: CompileBudget | undefined = budgetEnabled
     ? {
         max_tokens_per_day: Number(process.env['CIR_COMPILE_BUDGET_TOKENS_PER_DAY'] ?? 50_000),
@@ -203,15 +213,18 @@ function buildServer(): CirServer {
   const legacyDisabled = process.env['CIR_COMPILER_TOOLS_ENABLED'] === '0';
   const useTools = !legacyDisabled && compilerToolsEnv !== 'off';
 
-  // Wave C / Phase C-5 — opt-in recipe RAG. When the env flag is set,
-  // we wire a `SubstringRecipeResolver` over the in-tree `recipes/`
-  // directory and seed it from `LocalRecipeStore.list()`. The agent's
-  // `findRecipe` tool then routes through this resolver. The substring
-  // baseline is enough for the demo corpus (~2 recipes); production
-  // hosts swap in `EmbeddingRecipeResolver` over a real embedding
-  // client. Default boot is unchanged — the tool returns
-  // `{ recipes: [] }` when no resolver is wired.
-  const useRecipeRag = process.env['CIR_RECIPE_RAG_ENABLED'] === '1';
+  // Wave C / Phase C-5 — recipe RAG. Default-on (TODO P1.1, 2026-05-04)
+  // with `LocalRecipeStore` seeding a `SubstringRecipeResolver` over the
+  // in-tree `recipes/` directory. The agent's `findRecipe` tool routes
+  // through this resolver. The substring baseline is enough for the
+  // demo corpus (~2 recipes); production hosts swap in
+  // `EmbeddingRecipeResolver` over a real embedding client.
+  // Opt out via `ATELIER_RECIPE_RAG=off`. Legacy
+  // `CIR_RECIPE_RAG_ENABLED=0` honoured for one release cycle. When
+  // disabled, the tool returns `{ recipes: [] }`.
+  const recipeRagEnv = process.env['ATELIER_RECIPE_RAG'];
+  const legacyRecipeRagDisabled = process.env['CIR_RECIPE_RAG_ENABLED'] === '0';
+  const useRecipeRag = !legacyRecipeRagDisabled && recipeRagEnv !== 'off';
   let recipeResolver: RecipeResolverLike | undefined;
   if (useRecipeRag) {
     const recipesDir = join(process.cwd(), 'recipes');
@@ -291,14 +304,18 @@ function buildServer(): CirServer {
     audit: (e) => audit.emit(e),
   });
 
-  // Wave C / Phase C-3 — optional capability scoping resolver. Off by
-  // default (the showcase remains additive). When `CIR_CAPABILITY_RESOLVER_ENABLED`
-  // is set the demo wires the cheap-and-deterministic
-  // `SubstringCapabilityResolver` so the showcase works offline / with
-  // no embedding setup. Production hosts wire `EmbeddingCapabilityResolver`
-  // (S-7) or `TwoStageCapabilityResolver` (S-1) instead — the
+  // Wave C / Phase C-3 — capability scoping resolver. Default-on
+  // (TODO P1.1, 2026-05-04) with the cheap-and-deterministic
+  // `SubstringCapabilityResolver` baseline (no embedding setup, no
+  // external dependencies). Opt out via
+  // `ATELIER_CAPABILITY_RESOLVER=off`. Legacy
+  // `CIR_CAPABILITY_RESOLVER_ENABLED=0` honoured for one release cycle.
+  // Production hosts swap in `EmbeddingCapabilityResolver` (S-7) or
+  // `TwoStageCapabilityResolver` (S-1) — the
   // `CompileInput.capabilityResolver` seam is identical.
-  const resolverEnabled = process.env['CIR_CAPABILITY_RESOLVER_ENABLED'] === '1';
+  const capabilityResolverEnv = process.env['ATELIER_CAPABILITY_RESOLVER'];
+  const legacyResolverDisabled = process.env['CIR_CAPABILITY_RESOLVER_ENABLED'] === '0';
+  const resolverEnabled = !legacyResolverDisabled && capabilityResolverEnv !== 'off';
   const capabilityResolver: CompileCapabilityResolver | undefined = resolverEnabled
     ? new SubstringCapabilityResolver()
     : undefined;

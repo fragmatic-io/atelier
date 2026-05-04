@@ -125,10 +125,14 @@ Today's `findCapability` and `findComponent` fall back to substring search acros
 
 ## Showcase
 
-The demo runs the tool-using compiler behind `CIR_COMPILER_TOOLS_ENABLED=1`:
+The demo runs the tool-using compiler **by default** as of TODO P1.1 (2026-05-04). Opt out via `ATELIER_COMPILER_TOOLS=off`; legacy `CIR_COMPILER_TOOLS_ENABLED=0` honoured for one release cycle:
 
 ```bash
-CIR_COMPILER_TOOLS_ENABLED=1 pnpm --filter @atelier/demo dev
+# Default — tool-using compiler is on:
+pnpm --filter @atelier/demo dev
+
+# Disable for the deterministic single-shot path:
+ATELIER_COMPILER_TOOLS=off pnpm --filter @atelier/demo dev
 ```
 
 The audit stream shows every tool call:

@@ -147,7 +147,7 @@ console.log(result.tool_call_count); // observability
 ## What ships today
 
 - ✅ **C-1** — Validation feedback loop. Wraps any compiler. (`497e99d`)
-- ✅ **C-2** — Tool-using compiler. Nine tools, behind `CIR_COMPILER_TOOLS_ENABLED=1` in the demo. (this commit's prior history)
+- ✅ **C-2** — Tool-using compiler. Nine tools, **default-on** as of TODO P1.1 (2026-05-04); opt out via `ATELIER_COMPILER_TOOLS=off`. Legacy `CIR_COMPILER_TOOLS_ENABLED=0` honoured for one release cycle.
 - ⏳ **C-3 / S-1** — Capability scoping. Two-stage compile: tiny model picks 30 from 1-line summaries; full Pro model gets those 30 schemas. Trigger: first host with >150 capabilities.
 - ⏳ **C-4** — Outline agent for multi-route apps.
 - ⏳ **C-5** — Marketplace retrieval (RAG; gated on V-6).

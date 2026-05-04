@@ -87,36 +87,37 @@ The review's headline issue: `scripts/marketplace-eval.ts` line 40 imports `@ate
 
 ### Inventory (every gate today)
 
-| Env var                                                                       | Gates                                 | Decision                                                                            |
-| ----------------------------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------- |
-| `CIR_COMPILER_TOOLS_ENABLED`                                                  | C-2 tool-using compiler in apps/demo  | **Flip to default** — C-2 has 21 + 10 tests, used in production-shaped tests.       |
-| `CIR_CAPABILITY_RESOLVER_ENABLED`                                             | P1.1 capability-resolver in apps/demo | **Flip to default** with `SubstringCapabilityResolver` baseline.                    |
-| `CIR_CAPABILITY_SCOPING_ENABLED`                                              | Two-stage compile pipeline            | Same — fold into the above.                                                         |
-| `CIR_RECIPE_RAG_ENABLED`                                                      | C-5 recipe RAG in apps/demo           | **Flip to default** with `LocalRecipeStore`.                                        |
-| `CIR_MARKETPLACE_ENABLED`                                                     | V-6 endpoints in vault-server         | **Flip to default** — published, signed, reviewed, eval-gated.                      |
-| `CIR_COMPILE_BUDGET_ENABLED`                                                  | S-6 compile-budget enforcement        | **Flip to default** — production hosts always need this.                            |
-| `CIR_COMPILE_BUDGET_*` (CALLS_PER_HOUR / TOKENS / TOKENS_PER_DAY / WINDOW_MS) | Budget thresholds                     | **Keep as config** (legitimate tuning knob).                                        |
-| `CIR_SCOPING_MODEL`                                                           | Stage-1 model name                    | **Keep as config** (legitimate).                                                    |
-| `CIR_DIFF_BASE`                                                               | Eval diff base                        | **Keep as config**.                                                                 |
-| `CIR_EMBEDDING_TESTS`                                                         | Heavy embedding tests                 | **Rename to `ATELIER_EMBEDDING_TESTS`** (we left `CIR_` for renamed work; cleanup). |
+| Env var                                                                       | Gates                                 | Decision                                                                              |
+| ----------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------- |
+| `CIR_COMPILER_TOOLS_ENABLED`                                                  | C-2 tool-using compiler in apps/demo  | ✅ **Flipped to default** in `d4fe259`. Opt-out: `ATELIER_COMPILER_TOOLS=off`.        |
+| `CIR_CAPABILITY_RESOLVER_ENABLED`                                             | P1.1 capability-resolver in apps/demo | ✅ **Flipped to default** _this commit_. Opt-out: `ATELIER_CAPABILITY_RESOLVER=off`.  |
+| `CIR_CAPABILITY_SCOPING_ENABLED`                                              | Two-stage compile pipeline            | ✅ **Flipped** in `d4fe259` (folded under `ATELIER_COMPILER_TOOLS=off`).              |
+| `CIR_RECIPE_RAG_ENABLED`                                                      | C-5 recipe RAG in apps/demo           | ✅ **Flipped to default** _this commit_. Opt-out: `ATELIER_RECIPE_RAG=off`.           |
+| `CIR_MARKETPLACE_ENABLED`                                                     | V-6 endpoints in vault-server         | ✅ **Flipped to default** _this commit_. Opt-out: `ATELIER_MARKETPLACE=off`.          |
+| `CIR_COMPILE_BUDGET_ENABLED`                                                  | S-6 compile-budget enforcement        | ✅ **Flipped to default** _this commit_. Opt-out: `ATELIER_COMPILE_BUDGET=off`.       |
+| `CIR_COMPILE_BUDGET_*` (CALLS_PER_HOUR / TOKENS / TOKENS_PER_DAY / WINDOW_MS) | Budget thresholds                     | **Keep as config** (legitimate tuning knob); rename to `ATELIER_*` next release.      |
+| `CIR_SCOPING_MODEL`                                                           | Stage-1 model name                    | **Keep as config** (legitimate); rename to `ATELIER_*` next release.                  |
+| `CIR_DIFF_BASE`                                                               | Eval diff base                        | **Keep as config**; rename to `ATELIER_*` next release.                               |
+| `CIR_EMBEDDING_TESTS`                                                         | Heavy embedding tests                 | ✅ **Renamed** to `ATELIER_EMBEDDING_TESTS` _this commit_; legacy honoured 1 release. |
 
 ### P1.1 — Default-on the `_ENABLED` group, delete the gates
 
 For each of the six `_ENABLED` flags:
 
-- [x] **`CIR_COMPILER_TOOLS_ENABLED` → default-on.** ToolUsingCompiler is now the default production compiler in `apps/demo` + `apps/demo-github`. Opt-out via `ATELIER_COMPILER_TOOLS=off` for hosts that need the deterministic single-shot path. Legacy `CIR_COMPILER_TOOLS_ENABLED=0` honoured for one release cycle. Same flip applied to `CIR_CAPABILITY_SCOPING_ENABLED` (folded — only meaningful when tools are enabled). _This commit._
-- [ ] **`CIR_CAPABILITY_RESOLVER_ENABLED` + `CIR_CAPABILITY_SCOPING_ENABLED` → merge + default-on.** Substring resolver is the baseline; embedding resolver opts in via env. **2 d.**
-- [ ] **`CIR_RECIPE_RAG_ENABLED` → default-on** with `LocalRecipeStore`. **1 d.**
-- [ ] **`CIR_MARKETPLACE_ENABLED` → default-on** in vault-server. **1 d.**
-- [ ] **`CIR_COMPILE_BUDGET_ENABLED` → default-on** in apps/demo. **1 d.**
+- [x] **`CIR_COMPILER_TOOLS_ENABLED` → default-on.** ToolUsingCompiler is now the default production compiler in `apps/demo` + `apps/demo-github`. Opt-out via `ATELIER_COMPILER_TOOLS=off` for hosts that need the deterministic single-shot path. Legacy `CIR_COMPILER_TOOLS_ENABLED=0` honoured for one release cycle. Same flip applied to `CIR_CAPABILITY_SCOPING_ENABLED` (folded — only meaningful when tools are enabled). `d4fe259`.
+- [x] **`CIR_CAPABILITY_RESOLVER_ENABLED` + `CIR_CAPABILITY_SCOPING_ENABLED` → merge + default-on.** `SubstringCapabilityResolver` baseline wired by default in `apps/demo`. Opt-out via `ATELIER_CAPABILITY_RESOLVER=off`; legacy `CIR_CAPABILITY_RESOLVER_ENABLED=0` honoured for one release cycle. _This commit._
+- [x] **`CIR_RECIPE_RAG_ENABLED` → default-on** with `LocalRecipeStore` + `SubstringRecipeResolver`. Opt-out via `ATELIER_RECIPE_RAG=off`; legacy `CIR_RECIPE_RAG_ENABLED=0` honoured for one release cycle. _This commit._
+- [x] **`CIR_MARKETPLACE_ENABLED` → default-on** in vault-server. V-6.a/b/c/d/e/f all shipped with full test coverage. Opt-out via `ATELIER_MARKETPLACE=off`; legacy `CIR_MARKETPLACE_ENABLED=0` honoured for one release cycle. _This commit._
+- [x] **`CIR_COMPILE_BUDGET_ENABLED` → default-on** in apps/demo. Every production host needs cost limits. Opt-out via `ATELIER_COMPILE_BUDGET=off`; legacy `CIR_COMPILE_BUDGET_ENABLED=0` honoured for one release cycle. Threshold knobs (`CIR_COMPILE_BUDGET_*`) stay as `CIR_*` for one release. _This commit._
+- [x] **`CIR_EMBEDDING_TESTS` → `ATELIER_EMBEDDING_TESTS`** (test-suite gate, not a feature flag). Legacy honoured for one release cycle. _This commit._
 
 ### P1.2 — Rename surface
 
-- [ ] **All `CIR_*` env vars renamed to `ATELIER_*`** (consistent with the package rename). Old names accepted with a one-release-cycle deprecation warning. **<1 d.**
+- [ ] **All `CIR_*` env vars renamed to `ATELIER_*`** (consistent with the package rename). The 5 `_ENABLED` flags + `CIR_EMBEDDING_TESTS` are done (P1.1, _this commit_); the tuning knobs (`CIR_COMPILE_BUDGET_*`, `CIR_SCOPING_MODEL`, `CIR_DIFF_BASE`) remain. Old names accepted with a one-release-cycle deprecation warning. **<1 d.**
 
 ### P1.3 — Document the surface
 
-- [ ] **`apps/docs/src/content/docs/operations/env-vars.mdx`** — every supported env var, default, valid range, what it gates. **<1 d.**
+- [x] **`apps/docs/src/content/docs/operations/env-vars.mdx`** — every supported env var, default, valid range, what it gates, and the deprecation timeline for the legacy `CIR_*` names. _This commit._
 
 ---
 
