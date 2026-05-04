@@ -17,7 +17,7 @@
  * currently doesn't.
  *
  * Lifecycle:
- *   const transport = new SseTriggerTransport({ url: '/api/triggers/stream', bus });
+ *   const transport = new SseTriggerStreamBridge({ url: '/api/triggers/stream', bus });
  *   transport.connect();
  *   // … later …
  *   transport.close();
@@ -43,7 +43,7 @@ export interface EventSourceLike {
 
 export type EventSourceCtor = new (url: string) => EventSourceLike;
 
-export interface SseTriggerTransportOptions {
+export interface SseTriggerStreamBridgeOptions {
   /** SSE endpoint URL. The server streams `data: <json-trigger>` lines. */
   url: string;
   /** The local bus that `emit()` is forwarded to. */
@@ -61,7 +61,7 @@ export interface SseTriggerTransportOptions {
   onParseError?: (raw: string, err: unknown) => void;
 }
 
-export class SseTriggerTransport {
+export class SseTriggerStreamBridge {
   readonly #url: string;
   readonly #bus: TriggerSubscription;
   readonly #EventSourceImpl: EventSourceCtor | undefined;
@@ -71,7 +71,7 @@ export class SseTriggerTransport {
   #es: EventSourceLike | null = null;
   #closed = false;
 
-  constructor(opts: SseTriggerTransportOptions) {
+  constructor(opts: SseTriggerStreamBridgeOptions) {
     this.#url = opts.url;
     this.#bus = opts.bus;
     this.#EventSourceImpl =
@@ -96,7 +96,7 @@ export class SseTriggerTransport {
     if (this.#es || this.#closed) return;
     if (!this.#EventSourceImpl) {
       throw new Error(
-        'SseTriggerTransport: no EventSource available. In Node, pass EventSourceImpl explicitly.',
+        'SseTriggerStreamBridge: no EventSource available. In Node, pass EventSourceImpl explicitly.',
       );
     }
     const es = new this.#EventSourceImpl(this.#url);

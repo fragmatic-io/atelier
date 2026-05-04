@@ -135,8 +135,10 @@ adjacent packages):**
 - Component implementations (Stack, Card, Button, ...) — `@atelier/components`.
 - LLM-backed compile service — `@atelier/compiler`.
 - Real WebSocket / SSE / long-poll transport for the trigger bus — per
-  deployment. `SseTriggerTransport` ships here; the Next.js demo wires it
-  to `/api/triggers/stream`.
+  deployment. `SseTriggerStreamBridge` (consume an SSE stream into a local
+  bus) and `SseTriggerTransport` (full-duplex distributed transport
+  paired with `createTriggerCoordinator()`) both ship here; the Next.js
+  demo wires the bridge to `/api/triggers/stream`.
 
 Live-query subscriptions remain on the future-work list.
 

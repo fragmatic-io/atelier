@@ -37,7 +37,7 @@
 | **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                          | 🟡 partial — branch protection still TODO |
 | **C**   | Compiler evolution — C-1 ✅ C-2 ✅ C-3/S-1 ✅ C-4 ✅; C-5 (RAG) remains                        | 🟡 partial                                |
 | **7**   | Personalisation — P-1 / P-8 / P-9 / DD ✅; P-3 / P-4 / P-7 remain                              | 🟡 in flight                              |
-| **10**  | Scale — S-1 / S-2 / S-3 / S-5 / S-6 / S-7 ✅; S-4 remains                                      | 🟡 partial                                |
+| **10**  | Scale — S-1 / S-2 / S-3 / S-4 / S-5 / S-6 / S-7 ✅                                             | ✅ shipped                                |
 | **8**   | Vault marketplace — V-1 / V-3 ✅; **V-6 = P2 below**                                           | 📅 planned                                |
 | **11**  | Visual depth — 16 items shipped this session (catalog 65 → 82); long tail remains              | 🟡 partial                                |
 | **12+** | Multi-platform — N-4 ✅; N-1 / N-2 / N-3 / N-5 remain                                          | 🟡 partial                                |
@@ -94,7 +94,7 @@ Compile correctness, scope, retrieval. The next architectural moves after C-1 / 
 
 ### P1.3 — Distributed trigger bus
 
-- [ ] **S-4 — Distributed `TriggerBus`.** Today: in-memory pub-sub. Need: cross-process / cross-host so a marketplace-distributed recipe can subscribe to events from a different process. **2 wk.** Triggered by V-6 actually shipping multi-host workflows.
+- [x] **S-4 — Distributed `TriggerBus`.** New `TriggerTransport` interface (`publish` + `subscribe` + optional `close`); `InMemoryTriggerBus.setTransport(transport)` makes `emit()` write to BOTH local subscribers AND the transport. Loop prevention via per-process `originNodeId` rounds-tripped on the wire. Two reference implementations ship: `InMemoryTriggerTransport` (multi-bus fan-out for tests) and `SseTriggerTransport` paired with `createTriggerCoordinator()` (host-pluggable Node HTTP handler with `POST /triggers/publish`, `GET /triggers/subscribe` SSE, `GET /triggers/health`). Hosts mount the coordinator under any path (`stripPrefix`), and Redis/NATS/Kafka transports remain a host responsibility wired against the same interface.
 
 ### P1.4 — Plumbing follow-ups
 

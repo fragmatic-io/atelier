@@ -3,7 +3,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { InMemoryTriggerBus } from '../../src/triggers/memory-bus.js';
 import {
-  SseTriggerTransport,
+  SseTriggerStreamBridge,
   type EventSourceCtor,
   type EventSourceLike,
 } from '../../src/triggers/sse-transport.js';
@@ -37,14 +37,14 @@ class FakeEventSource implements EventSourceLike {
 
 const FakeEventSourceCtor = FakeEventSource as unknown as EventSourceCtor;
 
-describe('SseTriggerTransport', () => {
+describe('SseTriggerStreamBridge', () => {
   it('forwards parsed triggers to the bus', async () => {
     FakeEventSource.instances = [];
     const bus = new InMemoryTriggerBus();
     const handler = vi.fn();
     bus.subscribe('*', handler);
 
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus,
       EventSourceImpl: FakeEventSourceCtor,
@@ -73,7 +73,7 @@ describe('SseTriggerTransport', () => {
     FakeEventSource.instances = [];
     const bus = new InMemoryTriggerBus();
     const onParseError = vi.fn();
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus,
       EventSourceImpl: FakeEventSourceCtor,
@@ -92,7 +92,7 @@ describe('SseTriggerTransport', () => {
     const handler = vi.fn();
     bus.subscribe('*', handler);
     const onParseError = vi.fn();
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus,
       EventSourceImpl: FakeEventSourceCtor,
@@ -108,7 +108,7 @@ describe('SseTriggerTransport', () => {
   it('connect() is idempotent', () => {
     FakeEventSource.instances = [];
     const bus = new InMemoryTriggerBus();
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus,
       EventSourceImpl: FakeEventSourceCtor,
@@ -122,7 +122,7 @@ describe('SseTriggerTransport', () => {
   it('close() closes the underlying EventSource and prevents reconnect', () => {
     FakeEventSource.instances = [];
     const bus = new InMemoryTriggerBus();
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus,
       EventSourceImpl: FakeEventSourceCtor,
@@ -138,7 +138,7 @@ describe('SseTriggerTransport', () => {
 
   it('throws when no EventSource impl is available', () => {
     const bus = new InMemoryTriggerBus();
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus,
       // no EventSourceImpl, and the global is undefined under Node test env
@@ -151,7 +151,7 @@ describe('SseTriggerTransport', () => {
     const bus = new InMemoryTriggerBus();
     const onOpen = vi.fn();
     const onError = vi.fn();
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus,
       EventSourceImpl: FakeEventSourceCtor,

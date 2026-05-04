@@ -1,6 +1,6 @@
 ---
 title: Trigger bus
-description: InMemoryTriggerBus + future RedisTriggerBus.
+description: InMemoryTriggerBus + pluggable distributed TriggerTransport (SSE coordinator, Redis, NATS).
 ---
 
 The `TriggerBus` is the runtime's invalidation pipeline. Every cache invalidation, every recompile, every cross-tab notification flows through it.
@@ -90,19 +90,59 @@ The matcher is glob-style (`*` matches one segment). Future versions may support
 
 The handler computes which manifest keys are affected and calls `manifestStore.invalidate(predicate)`.
 
-## RedisTriggerBus (S-4 roadmap)
+## Distributed transports (S-4)
 
-For multi-process / multi-region deploys, the seam is the same `TriggerBus` interface. Wave S-4 ships `RedisTriggerBus`:
+For multi-process / multi-host deploys, the bus accepts a pluggable `TriggerTransport`. The bus stays in-memory; the transport carries triggers across the cluster. Loop prevention is automatic — every bus has a per-process `originNodeId`, the transport rounds-trips it, and the bus drops self-echoes on the inbound path.
 
 ```ts
-import { RedisTriggerBus } from '@atelier/runtime';
+import {
+  InMemoryTriggerBus,
+  SseTriggerTransport,
+  createTriggerCoordinator,
+} from '@atelier/runtime';
 
-const bus = new RedisTriggerBus({ url: process.env.REDIS_URL });
+// 1. On the coordinator node — mount the handler under any path.
+import { createServer } from 'node:http';
+const coord = createTriggerCoordinator({ stripPrefix: '/internal' });
+createServer(coord.handler).listen(9100);
+
+// 2. On every host — attach an SSE transport pointed at the coordinator.
+const bus = new InMemoryTriggerBus();
+const transport = new SseTriggerTransport({
+  endpoint: 'http://coordinator:9100/internal',
+});
+bus.setTransport(transport);
+
+// 3. Use the bus normally. emit() writes to local subscribers AND the cluster.
+await bus.emit({ type: 'capability.changed' /* … */ });
 ```
 
-Pub/sub via Redis channels; every subscriber across the cluster receives the trigger. Latency: &lt;10ms within a region; ~50ms cross-region.
+The transport interface is small enough that hosts can wire Redis, NATS, Kafka, or anything else against it:
 
-A `NATSTriggerBus` is a sibling option for hosts already running NATS.
+```ts
+export interface TriggerTransport {
+  publish(trigger: Trigger, originNodeId: string): Promise<void>;
+  subscribe(handler: (trigger: Trigger, meta?: { originNodeId?: string }) => void): () => void;
+  close?(): Promise<void>;
+}
+```
+
+### Reference implementations
+
+- **`InMemoryTriggerTransport`** — process-local fan-out. Multiple `InMemoryTriggerBus` instances in the same Node process can share one transport. Used in tests; also useful in single-process hosts that want consistent semantics with the distributed transports.
+- **`SseTriggerTransport`** + **`createTriggerCoordinator()`** — host-pluggable HTTP/SSE transport. Publishes via `POST <endpoint>/triggers/publish`; subscribes via SSE on `<endpoint>/triggers/subscribe`. The coordinator is a stateless Node HTTP handler — mount it under any path (`stripPrefix` config). State is in-memory and ephemeral by design; clients reconnect through `EventSource`'s built-in retry on coordinator restart.
+
+### Coordinator endpoints
+
+The coordinator factory returns a Node HTTP request handler that responds to three path-relative routes:
+
+- `POST /triggers/publish` — body `{ origin_node_id: string, trigger: Trigger }`. Returns `202 { ok: true }`.
+- `GET /triggers/subscribe` — SSE stream. One `event: trigger\ndata: <envelope-json>\n\n` frame per published trigger. The envelope round-trips `origin_node_id` so subscribers can drop self-echoes.
+- `GET /triggers/health` — `{ subscribers: N, lastPublishedAt: ISO|null }`.
+
+### Other transports
+
+Hosts that need durable / at-least-once delivery wire their own transport against `TriggerTransport`. Redis pub/sub and NATS adapters ship in `@atelier/runtime` as `RedisTriggerBus` / `NATSTriggerBus` for hosts that prefer the legacy direct-bus integration; new code should prefer the `TriggerTransport` seam — the bus owns local fan-out and loop prevention; the transport just moves bytes.
 
 ## The trigger schema
 

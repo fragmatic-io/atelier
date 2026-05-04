@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 /**
- * SSE endpoint. The demo's `SseTriggerTransport` connects here and listens
- * for trigger events broadcast by `/api/triggers/publish`.
+ * SSE endpoint. The demo's `SseTriggerStreamBridge` connects here and
+ * listens for trigger events broadcast by `/api/triggers/publish`.
  */
 
 import { addClient, removeClient } from '@/lib/trigger-bus-server';

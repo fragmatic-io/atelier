@@ -28,6 +28,12 @@ describe('@atelier/runtime public surface', () => {
     expect(runtime.InMemoryTriggerBus).toBeTruthy();
     expect(typeof runtime.wireTriggerInvalidation).toBe('function');
 
+    // Distributed transport (S-4)
+    expect(runtime.InMemoryTriggerTransport).toBeTruthy();
+    expect(runtime.SseTriggerTransport).toBeTruthy();
+    expect(runtime.SseTriggerStreamBridge).toBeTruthy();
+    expect(typeof runtime.createTriggerCoordinator).toBe('function');
+
     // Registries
     expect(runtime.EMPTY_REGISTRY).toBeTruthy();
     expect(runtime.MapComponentRegistry).toBeTruthy();

@@ -27,7 +27,7 @@ import {
   MapActionRegistry,
   MapComponentRegistry,
   MemoryManifestCache,
-  SseTriggerTransport,
+  SseTriggerStreamBridge,
   StreamingAuditSink,
   wireTriggerInvalidation,
   withUndo,
@@ -406,7 +406,7 @@ export function CirProviders({ children }: { children: ReactNode }): React.JSX.E
   // invalidation wiring listens to.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const transport = new SseTriggerTransport({
+    const transport = new SseTriggerStreamBridge({
       url: '/api/triggers/stream',
       bus: services.bus,
       onError: (err) => {

@@ -104,11 +104,30 @@ export {
   type WireTriggerInvalidationOptions,
 } from './triggers/invalidation.js';
 export {
+  SseTriggerStreamBridge,
+  type SseTriggerStreamBridgeOptions,
+  type EventSourceLike as SseStreamBridgeEventSourceLike,
+  type EventSourceCtor as SseStreamBridgeEventSourceCtor,
+} from './triggers/sse-transport.js';
+export type {
+  TriggerEnvelope,
+  TriggerTransport,
+  TriggerTransportHandler,
+  TriggerTransportUnsubscribe,
+} from './triggers/trigger-transport.js';
+export { InMemoryTriggerTransport } from './transports/in-memory-trigger-transport.js';
+export {
   SseTriggerTransport,
   type SseTriggerTransportOptions,
   type EventSourceLike,
   type EventSourceCtor,
-} from './triggers/sse-transport.js';
+  type FetchLike,
+} from './transports/sse-trigger-transport.js';
+export {
+  createTriggerCoordinator,
+  type TriggerCoordinator,
+  type TriggerCoordinatorOptions,
+} from './transports/trigger-coordinator.js';
 export {
   DEFAULT_REDIS_CHANNEL_PREFIX,
   REDIS_TRIGGER_ENVELOPE_VERSION,

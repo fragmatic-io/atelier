@@ -3,7 +3,7 @@
 /**
  * WebSocket transport for the trigger bus.
  *
- * Sibling of `SseTriggerTransport`. SSE covers ~95% of cases; WebSocket
+ * Sibling of `SseTriggerStreamBridge`. SSE covers ~95% of cases; WebSocket
  * matters for proxy compatibility, bidirectional control channels, and
  * platforms (notably Cloudflare) that prefer WS over long-lived HTTP. This
  * adapter is purely additive — it never modifies the `TriggerSubscription`
