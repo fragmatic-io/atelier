@@ -113,10 +113,24 @@ capability dispatch with rollback, etc. If a demo could be implemented
 as a static React app with the same UX, it does not belong as a Atelier
 demo.
 
-### 11. The marketplace is the product; custom bindings are a last resort
+### 11. Baseline-first: the catalog is the product, custom bindings are a last resort
+
+> **Naming note.** Two distinct things in this codebase share the word
+> "marketplace":
+>
+> - **The catalog** (this principle) — the set of baseline primitives
+>   `@atelier/components` ships, plus the recipes / brand kits / skills
+>   built on top. This is the **product**. It is what hosts compose with.
+> - **The distribution channel** (Wave 8 / V-6) — `atelier://author/persona@version`
+>   addressing, ed25519-signed bundles, TOFU verification. The technical
+>   infrastructure that lets the catalog reach hosts.
+>
+> Throughout this document, the unqualified word "marketplace" refers to
+> **the catalog**. When we mean the distribution channel we say
+> "**vault marketplace**" or cite "V-6".
 
 The framework's promise is "give the LLM a rich enough primitive
-marketplace and it will compose any domain UI." That promise is only
+catalog and it will compose any domain UI." That promise is only
 real if hosts can ship apps **without** writing per-host React for every
 domain shape. Each per-host `ComponentBinding` registered on top of
 `@atelier/components`'s `COMPONENT_BINDINGS` is a local escape hatch — a
@@ -131,11 +145,12 @@ Most "custom bindings" are smell:
 - **Header / chrome.** `OctantHeader` / `MarigoldHeader` / `Wordmark`
   are usually just `<Stack(Logo, NavBar, StatusBar)>`. Compose, don't
   author.
-- **Domain shapes that the marketplace doesn't yet cover.** Inbox /
-  task / issue queues, product cards, conversation lists. The right
-  response is **promote the shape to baseline**, not entrench another
-  per-host binding. `Queue` and `Logo` were promoted in the marketplace
-  pivot exactly to collapse the inbox / task / wordmark patterns.
+- **Domain shapes the catalog doesn't yet cover.** Inbox / task / issue
+  queues, product cards, conversation lists. The right response is
+  **promote the shape to baseline**, not entrench another per-host
+  binding. `Queue` and `Logo` were promoted during the baseline-first
+  pivot (Wave M) exactly to collapse the inbox / task / wordmark
+  patterns.
 
 The remaining defensible reasons for a custom binding:
 
@@ -154,8 +169,8 @@ baseline promotion or (b) a composition fails the gate. Lowering the
 ceiling by deleting a binding is the only way to grow the marketplace.
 
 A demo's custom-binding count is the single best smell test for whether
-the framework's marketplace promise is being kept. **Aurora ships zero.**
-Octant and Marigold are on the migration plan to follow.
+the framework's baseline-first promise is being kept. **Aurora ships
+zero.** Octant and Marigold are on the migration plan to follow.
 
 ---
 

@@ -1,336 +1,285 @@
 # TODO
 
-> Single source of truth for what's planned vs what's shipped. Updated 2026-05-02 (marketplace-pivot consolidation).
+> Single source of truth for what's planned vs what's shipped. Updated 2026-05-04 (stability-first replan; marketplace nomenclature disambiguated).
 >
-> For the historical record of what _did_ land in each phase, see [`docs/build-plan.md`](docs/build-plan.md) and the `## What's shipped` section of the root [`README.md`](README.md).
+> Historical record of phases that landed: [`docs/build-plan.md`](docs/build-plan.md) and the `## What's shipped` section of the root [`README.md`](README.md).
+
+---
+
+## Reading guide
+
+**Priority is stability over expansion.** The order below is what I'd ship next, not what's most exciting. Within a band, items are listed in execution order (top first).
+
+| Band   | Bucket                                                          | What it's for                                               | Time-box    |
+| ------ | --------------------------------------------------------------- | ----------------------------------------------------------- | ----------- |
+| **P0** | [Stability & op-debt](#p0--stability--op-debt)                  | Velocity-killers — fix before adding more surface           | <1 wk total |
+| **P1** | [Compile quality](#p1--compile-quality)                         | Correctness + scope (C-3/S-1, RAG via C-5, distributed bus) | 4-6 wk      |
+| **P2** | [Marketplace completion (V-6)](#p2--marketplace-completion-v-6) | The distribution channel + browse / publish / consume UI    | 4-6 wk      |
+| **P3** | [Site consolidation](#p3--site-consolidation--branding)         | Fold marketing into docs; one nav, one design               | 2-3 d       |
+| **P4** | [Wave 11 polish remaining](#p4--wave-11-polish-remaining)       | Visual / interaction / content / nav / coll / AI long tail  | 6-10 mo     |
+| **P5** | [Personalisation continuity](#p5--personalisation-continuity)   | P-3 / P-4 / P-7 finishing                                   | 3 wk        |
+| **P6** | [Multi-platform & long tail](#p6--multi-platform--long-tail)    | iOS / Android / RN / cross-platform variants / open Qs      | 12-16 wk    |
+
+> **Naming note (marketplace).** Two distinct things in this codebase share the word "marketplace":
 >
-> Streamlined order top → bottom: smallest mandatory blockers, then highest-leverage architectural moves, then bounded-but-large feature tracks, then long-tail operational debt.
+> - **The catalog** — the set of baseline primitives `@atelier/components` ships, plus the recipes / brand kits / skills built on top. This is the _product_. The Wave M architectural pivot was about the catalog. Codified as ETHOS principle #11 ("baseline-first").
+> - **The vault marketplace** — the distribution channel (atelier://author/persona@version, ed25519 signing, TOFU). The technical infrastructure that lets the catalog reach hosts. This is **V-6** in Wave 8.
+>
+> Throughout this file, when we say "marketplace" alone we mean the distribution channel (V-6). The catalog principle is referred to as **"baseline-first"** or **"the catalog"**.
 
 ---
 
 ## At a glance
 
-| Wave    | Scope                                                                                                                                                                                              | Status         | Priority            | Est        | Depends on     |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------- | ---------- | -------------- |
-| **M**   | Marketplace pivot — promote `<Queue>` / `<Logo>` / `<MetaBadge>` to baseline; collapse 15 customs across 3 demos to **0**; ETHOS principle #11; eval gate                                          | ✅ **shipped** | —                   | done       | —              |
-| **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                                                                                                                              | 🟡 partial     | HIGH (release gate) | <1d total  | —              |
-| **C**   | Compiler evolution — single tool-using agent + validation feedback loop + scoping (NEW track; supersedes "single big-prompt" architecture; **C-1 ✅ shipped**)                                     | 🟡 partial     | HIGH                | 3 wk left  | M              |
-| **7**   | Personalisation — P-3, P-4, P-7 (P-1 / P-8 / P-9 / DD shipped)                                                                                                                                     | 🟡 in flight   | mixed               | 3 wk       | C-Phase-1      |
-| **10**  | Scale tracks — S-1, S-4 (HIGH); S-2 + S-3 + S-5 + S-6 + S-7 ✅ shipped                                                                                                                             | 🟡 partial     | mixed               | 3 wk       | C-Phase-2      |
-| **8**   | Vault marketplace — V-6 (V-1, V-3 ✅ shipped)                                                                                                                                                      | 📅 planned     | MEDIUM              | 4-6 wk     | C, 7           |
-| **11**  | Visual depth — Vis / Int / Cnt / Nav / Coll / AI (~50 items; Vis-2, Int-2, Int-3, Int-4, Int-5, Int-11, Int-13, Cnt-1, Cnt-2, Cnt-3, Cnt-4, Cnt-5, Cnt-8, Cnt-9, Cnt-10, Cnt-11, Nav-4 ✅ shipped) | 📅 partial     | varies              | 6-10 mo    | C, P-7, S-3    |
-| **12+** | Multi-platform + marketing — N-1..N-5 (**N-4 ✅ shipped**)                                                                                                                                         | 🟡 partial     | LOWER               | 12-16 wk   | M (now proven) |
-| **Op**  | Operational + hardening debt — small, bounded items, do anytime                                                                                                                                    | 📅 open        | LOWER               | <1 wk each | —              |
+| Wave    | Scope                                                                                          | Status                                    |
+| ------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **M**   | Baseline-first pivot — catalog 62 → 81 (now 82); 3 demos at zero customs; ETHOS #11; eval gate | ✅ shipped                                |
+| **R**   | Release blockers — public-facing mailbox placeholders + repo metadata                          | 🟡 partial — branch protection still TODO |
+| **C**   | Compiler evolution — C-1 ✅ C-2 ✅ C-4 ✅; C-3/S-1 + C-5 (RAG) remain                          | 🟡 partial                                |
+| **7**   | Personalisation — P-1 / P-8 / P-9 / DD ✅; P-3 / P-4 / P-7 remain                              | 🟡 in flight                              |
+| **10**  | Scale — S-2 / S-3 / S-5 / S-6 / S-7 ✅; S-1 / S-4 remain                                       | 🟡 partial                                |
+| **8**   | Vault marketplace — V-1 / V-3 ✅; **V-6 = P2 below**                                           | 📅 planned                                |
+| **11**  | Visual depth — 16 items shipped this session (catalog 65 → 82); long tail remains              | 🟡 partial                                |
+| **12+** | Multi-platform — N-4 ✅; N-1 / N-2 / N-3 / N-5 remain                                          | 🟡 partial                                |
+| **Op**  | Operational + hardening debt                                                                   | 📅 see P0                                 |
 
-**Recommended sequence (next):** **C-Phase-2 (tools, 2 wk)** → S-1 (when first host hits >150 capabilities) → Vis-3 (icon resolver) → 11.x polish picks → V-6 (marketplace) → balance of 11 / 12. _(P-9 ✅ landed.)_
-
-_Already shipped (in order): R → C-Phase-1 → N-4 → marketplace pivot (Wave M) + adjacent (P-8, S-6) before that._
+**Recently shipped this session** (`fc5aa32` → `4f02ea6`, 16 catalog promotions): Vis-5 (illustration resolver), Vis-8 (skeleton-as-shape), Cnt-10 (saved views), Cnt-11 (autosave + version history), Int-5 (TourStep / TourProgress / Confetti), Int-10 (DropZone), Int-14 (Lightbox + Image), Nav-6 (FilterQueryBar), AI-1 (SelectionActionBar), AI-3 (GenerativeLayout), C-4 (outline + multi-route fan-out). Plus docs site shipped at https://fragmatic-io.github.io/atelier/docs/.
 
 ---
 
-## Wave M — Marketplace pivot (closed)
+## P0 — Stability & op-debt
 
-12 commits across the 2026-05-02 session. ETHOS principle #11 codified. All three demos ship zero custom bindings.
+Cheap to fix, expensive to ignore. **Do these next.**
 
-### What landed
+### P0.1 — Test-suite stability
 
-**Promotions to baseline (catalog 62 → 65):**
+- [ ] **Fix 4 pre-existing test failures.** `evals/end-to-end/gemini-smoke.test.ts` (3 cases) and `packages/schemas/test/golden.test.ts` (1 case) fail on a clean tree. Either fix or quarantine + label as `it.skip` with a tracking comment. Without this, every agent has to mentally subtract 4 noise failures from its run, and a real regression hides easily. **<1 d.**
+- [ ] **`use-optimistic-action.test.tsx` TS errors (lines 96/151/152).** `Property 'ok' / 'error' does not exist on type 'never'.` — pre-existing, blocks `pnpm typecheck`. **<2 h.**
 
-- ✅ `<Queue>` + `<Logo>` — `f2ef2d9` (feat: promote Queue + Logo to baseline; collapse 12 customs across demos)
-- ✅ `<MetaBadge>` — `7241dd3` (small inline status pill)
-- ✅ Data-aware `<Grid>` + tile-shaped `<Card>` — `dbb57ca`
-- ✅ Data-aware `<Gallery>` — `ae2ae76`
-- ✅ Per-item `emphasis` flag on `<Queue>` — `f53058a` (mirrors `pinned: true`)
-- ✅ Inline-state branches stripped from data-bound primitives — `1bc2174` (P-8 closing; walker substitutes manifest-supplied or resolver-default state slots)
+### P0.2 — Pre-commit / pre-push hooks
 
-**Demos at zero customs (was 17 customs across the three):**
+- [ ] **Lint-staged worktree-stash leak.** `.husky/pre-commit`'s `git stash --include-untracked` sweeps files from sibling worktrees that share `.git`. Cost this session: ~3 manual recoveries, ~30 min lost each. Replace with a per-file stash scoped to the staged set, OR move format/lint inline (no stash). Document. **<1 d.**
+- [ ] **`pre-push` runs full-monorepo `validate:fast` (~60 s × N agents).** Move to a per-package gate, OR cache typecheck results between runs, OR shrink to staged-package-only. **<1 d.**
 
-- ✅ Aurora (`apps/demo`) — `f2ef2d9` (DecisionQueue / TaskQueue / ThreadView / UndoBar all retired; ambient `<UndoBar>` via `UNDO_TOAST_AMBIENT_SATISFIER`)
-- ✅ Octant (`apps/demo-github`) — `f2ef2d9` + `f53058a` (Wordmark / OctantHeader / RepoTable / RateLimitStatusBar / IssueQueue retired; Stack(Logo, NavBar, StatusBar) chrome)
-- ✅ Marigold (`apps/demo-dummyjson`) — `f2ef2d9` + `dbb57ca` + `ae2ae76` (MarigoldHeader / Wordmark / RateLimitChip / ProductCard / ProductGrid / ProductDetail / CartItemList / CheckoutWizard retired)
+### P0.3 — Repo settings (one-time, manual)
 
-**Framework wins shipped alongside:**
+- [ ] **Branch protection on `main`** — require CI green, require PR review (1 reviewer), no force-push. _Repo-owner action via `gh repo edit` or Settings UI._
+- [ ] **Project board / discussions / wiki** — enable once team grows beyond one. _Repo-owner action._
 
-- ✅ `GenericFallbackCompiler` in `@atelier/compiler` — `769c7ad` (fallback lives in framework, not per-demo)
-- ✅ ETHOS principle #11 codified — in `f2ef2d9` (`docs/ethos.md`)
-- ✅ `tests/marketplace-pressure.test.ts` eval gate — ceilings only ratchet down
+### P0.4 — Marketplace nomenclature cleanup (this commit)
 
-**Adjacent tracks closed in this window:**
+- [x] **ETHOS #11 retitled and disambiguated.** Title now "Baseline-first: the catalog is the product". Glossary box at the top of the principle distinguishes catalog (= the product) from vault marketplace (= V-6 distribution channel). Wave M references rephrased to "baseline-first pivot" where they previously read "marketplace pivot". This file's reading-guide also documents the split.
 
-- ✅ **P-8** — empty / loading / error first-class composition policy. `7589281` (schema slots + walker substitution + demo showcase) + `1bc2174` (inline branches stripped)
-- ✅ **S-6** — compile cost budget enforcement (`BudgetMeteredCompiler`, `BudgetCounter` interface, `mergeCompileBudgets`, `BudgetExceededError.code`). `bc92956`. Demo wiring env-gated via `CIR_COMPILE_BUDGET_ENABLED`.
+### P0.5 — Misc fast wins
 
-**Tech-debt resolved in the same window:**
-
-- ✅ TS5097 import-extension errors workspace-wide (152 imports rewritten across 80 files in 7 packages). `2998b2c`
-- ✅ Dead `ambientPolicySatisfiers` field on `CirRuntimeServices` (Path B — drop dead code; matches ETHOS principle #4 constrained surface). `b413c91`
-- ✅ TS18046 in `packages/schemas/test/json-schema.test.ts`. `970c8ed`
-- ✅ TS2322 in `packages/components/test/Table.test.tsx` (11 errors via single `idOf` widening). `73a7284`
-
-**Test count over the pivot:** 1939 → 2002 (+63).
-
-### Trade-offs accepted (documented in commit bodies)
-
-- Plainer per-row rendering on `<Queue>` (no hover-card mention previews, no mono refs, no chips on rows). Manifests can't pass `renderItem` functions.
-- Multi-select dropped from Octant inbox (baseline `<List>` + `<BulkActionBar>` covers it; promoting onto `<Queue>` is a separate decision).
-- Qty selector dropped from Marigold cart rows (`<Queue>` lacks an inline-form per-row slot).
-- 5-star rating + strike-through original price dropped from Marigold product detail (no inline rating slot on `<Card>` yet).
-- Sidebar wizard + progressive disclosure dropped from Marigold checkout (`<Wizard>` consumes ReactNode step bodies; not manifest-driveable yet).
+- [ ] **`ManifestFetcher` Zod-validation on response body.** `ManifestResolver.validate` is the only client-side defense today. Add structural parse on response. **<1 d.**
+- [ ] **`IndexedDBManifestCache` runtime sanity check on read.** Casts stored values without parse. Add defensive parse on `get`. **<1 d.**
+- [ ] **`ActionDispatcher` Zod-validate input against `capability.input`.** Host is on the hook today. **<1 d.**
+- [ ] **JSON-Schema export AJV-strict CI step.** `pnpm schemas:dump` regenerates `.well-known/schemas/*.json`; default output sometimes uses formats AJV strict mode rejects. Add a CI gate that loads each through AJV strict and fails on rejection. **<1 d.**
+- [ ] **Skill-markdown YAML strictness.** `parseSkillMarkdown` could surface a clearer error message; an `atelier lint skill <path>` would front-run validation. **<1 d.**
 
 ---
 
-## Wave R — Release blockers (small, mandatory)
+## P1 — Compile quality
 
-These ship before opening the repo to outside reporters. One cleanup commit, ~1 hour.
+Compile correctness, scope, retrieval. The next architectural moves after C-1 / C-2 / C-4.
 
-- [x] **Security contact** — `security@cir.dev` placeholder in [`SECURITY.md`](SECURITY.md) replaced with `v@fragmatic.io` (monitored maintainer mailbox). Note in file to switch to a shared `security@` once the team grows.
-- [x] **Conduct contact** — `conduct@cir.dev` placeholder in [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) replaced with `v@fragmatic.io`. Note in file to switch to a shared `conduct@` once the team grows.
-- [ ] **Branch protection on `main`** — require CI green, require PR review, no force-push. _GitHub-settings; user enacts via `gh`._
-- [x] **CI Node matrix** — widened from `[22]` → `[22, 24]` in `.github/workflows/ci.yml` (Node 24 became LTS 2025-10).
-- [x] **`actionlint` on Dependabot** — conservative path taken: Dependabot PRs stay IN scope of the existing `pull_request` trigger so its workflow-YAML mutations get linted. Documented in `.github/workflows/actionlint.yml` (no `pull_request_target`, no Dependabot skip).
-- [ ] **Project board / discussions / wiki** — set preferences once the team grows beyond one. _GitHub-settings; user enacts via UI / `gh`._
+### P1.1 — Capability scoping
 
----
+- [ ] **C-3 / S-1 — Two-stage compile.** Tiny / fast model picks ~30 relevant capabilities from 1-line summaries; full Pro model gets those 30 schemas. With C-2 in place, `findCapability` _is_ the stage-1 call — wire a vector index (or even substring + frequency for the MVP) behind the existing tool. New package `@atelier/capability-resolver`. **2 wk. HIGH.** Trigger: first host with >150 capabilities (we're not there yet, but close).
 
-## Wave C — Compiler evolution (NEW track)
+### P1.2 — Recipe retrieval (RAG)
 
-> The Atelier compiler today is a single LLM call with everything in the prompt. The evolution is **single tool-using agent + validation feedback loop**, NOT a flat multi-agent orchestration. Tools + reflection capture ~80% of multi-agent benefit at ~20% of cost. Latency stays bounded; per-compile token cost drops; accuracy improves.
+- [ ] **C-5 — Recipe RAG.** Recipes vector-indexed by description / domain / brand fit. Compiler agent gets a `findRecipe` tool (the seam was reserved during C-2). Same single-agent + tools pattern. **2 wk.** **Depends on V-6 publishing endpoint** (so there's something to index from) — but the plumbing (embedding pipeline, vector store, the tool) can land before V-6 with a local-recipes fixture index.
 
-### Why this matters
+### P1.3 — Distributed trigger bus
 
-Today's failure modes that get worse at scale:
+- [ ] **S-4 — Distributed `TriggerBus`.** Today: in-memory pub-sub. Need: cross-process / cross-host so a marketplace-distributed recipe can subscribe to events from a different process. **2 wk.** Triggered by V-6 actually shipping multi-host workflows.
 
-| Scenario                  | Today                             | Why it breaks                         |
-| ------------------------- | --------------------------------- | ------------------------------------- |
-| >200 capabilities         | All schemas in prompt             | Token budget blown; LLM ignores half  |
-| >50 components            | All descriptions in prompt        | Same; LLM picks wrong primitives      |
-| Validation cascade        | Falls through to fallback         | LLM never gets to fix its own mistake |
-| Multi-route apps          | Each route compiled independently | Chrome / brand drift across routes    |
-| Marketplace recipes (V-6) | Stuff all candidates in prompt    | Same scale problem                    |
+### P1.4 — Plumbing follow-ups
 
-### Phase C-1 — validation feedback loop (1 wk; biggest single-day win)
-
-- [x] **C-1** — On policy violation in the validate hook, re-prompt the SAME LLM with `{draft, violations}` and ask it to patch. Bound to 2-3 retries before cascading to `GenericFallbackCompiler`. Track via the existing `compile.budget_used` audit event so visibility is preserved. **Shipped `497e99d`** — `ValidationFeedbackCompiler` mirrors the `BudgetMeteredCompiler` wrapper pattern from S-6; new `priorDraft` + `violations` fields on `CompileInput`; refinement-prompt path in `prompts/builder.ts`; demo wiring + tests; cumulative `token_cost`/`duration_ms`/reasoning across attempts; cascade-friendly via `CompilerOutputError`.
-
-### Phase C-2 — tool-using compiler (2 wk; real architecture shift)
-
-- [x] **C-2** — `GeminiCompiler` → single tool-using agent. **MVP shipped** (this commit) — `ToolUsingCompiler` wraps `GeminiAgentClient` (a function-calling-aware sibling of `GeminiCompiler`) and drives a bounded agent loop against a host-supplied `ToolEnvironment`. Nine tools landed: `lookupCapability` / `findCapability` / `listCapabilities` (discovery), `findComponent` / `inspectComponent` / `listComponents` (component selection), `validateDraft` (C-1 validation feedback as a tool), `inspectExistingManifest` / `listSiblingRoutes` (cross-route coherence). `explainViolation` and `findRecipe` deferred (the latter gated on V-6 / C-5; the former rolled into the violation strings the validator already returns). Substring-fallback search for `findCapability` / `findComponent` is the seam C-5 RAG swaps in for. Showcased in `apps/demo` behind `CIR_COMPILER_TOOLS_ENABLED=1`. Wraps cleanly inside `ValidationFeedbackCompiler`; cascades through `CompositeCompiler` on `CompilerOutputError`. Default boot unchanged. Tests in `tool-using-compiler.test.ts` (21) + `tool-environment.test.ts` (10). Replication to other demos + production polish remain follow-ups.
-
-### Phase C-3 — capability scoping (= Wave 10 S-1)
-
-- [ ] **C-3 / S-1** — Two-stage compile: tiny / fast model picks 30 relevant capabilities from 1-line summaries; full Pro model gets those 30 schemas. New package `@atelier/capability-resolver`. With C-2 in place, `findCapability` can BE the stage-1 tiny-model call. **2 wk. HIGH.** Trigger: first host with >150 capabilities.
-
-### Phase C-4 — outline agent for multi-route apps (only when needed)
-
-- [x] **C-4** — One-time "app outline" pass produces brand chrome shape (`Stack(Logo, NavBar, StatusBar)`), nav structure, common policies, skill stack. Per-route compiles inherit. Bounded multi-agent — work parallelises (one outline + N route compiles fan out). Helps cross-route coherence in V-6 marketplace apps. **Shipped** — `AppOutlineSchema` + `NavEntrySchema` in `@atelier/schemas`; `OutlineCompiler` interface + `DeterministicOutlineCompiler` baseline in `@atelier/compiler` (chrome = `Stack(Logo, NavBar, StatusBar)` with StatusBar pinned bottom, nav sorted by `(order, routeId)`, `commonPolicies` = intersection across routes, `skillStack` = union deduped + sorted); `MultiRouteCompiler` fan-out (one outline pass + N parallel route compiles via `Promise.all`, each receiving the outline via the new `CompileInput.outline` field). LLM-driven outline-compiler-agent left as a follow-up; the contract + deterministic baseline + plumbing ship now.
-
-### Phase C-5 — marketplace retrieval (RAG; gated on V-6)
-
-- [ ] **C-5** — Recipes vector-indexed by description / domain / brand fit. Compiler agent gets a `findRecipe` tool. Genuine RAG; same single-agent + tools pattern. **2 wk.** **Depends on V-6.**
-
-### What we explicitly do NOT do
-
-- ❌ Flat Plan→Compose→Validate→Refine multi-agent pipeline as the default. High latency (60-90s vs today's 22s), high cost, marginal accuracy gain over C-1.
-- ❌ Per-component specialist agents ("a `<Queue>` agent, a `<Card>` agent"). Component selection is a single decision; splitting into N agents is overengineering.
-- ❌ Free-form agent loops with conversation between agents. Atelier compilation is structured output, not research.
+- [ ] **`BehaviorPatternDetectedTrigger` schema variant.** V-4 emits `behavior.workaround_detected`; we also want a non-workaround `behavior.pattern_detected` so promote-to-recipe doesn't fire on pure-workaround sequences. **<1 d.**
+- [ ] **Behavioral pattern detector implementations.** `BehavioralPatternDetector` interface + `NoopBehavioralDetector` ship; no real heuristics. **2-3 d.**
+- [ ] **Cross-app workflow compilation.** Single-app compile is shipped; "Gmail + Calendar + Linear in one lens" needs a neutral compiler host. See [`docs/open-questions.md`](docs/open-questions.md) §1. **1-2 wk after V-6.**
 
 ---
 
-## Wave 7 — Personalisation (in flight)
+## P2 — Marketplace completion (V-6)
 
-(Phase 6+ roadmap track; some items shipped pre-pivot, P-8 closed during pivot.)
+The distribution channel. **The Wave M architectural prerequisite is shipped — the demos prove the principle. V-6 is what turns it into a product.**
 
-- [x] **P-1** — Density skill + `intent.global_preferences.density`. Shipped Wave 6.
-- [ ] **P-3** — Refinement loop (right-click any component → describe tweak → diff-compile → manifest update + new scoped intent rule). Depends on P-1. 1.5 wk.
-- [ ] **P-4** — Engagement signals back into compiler (component.viewed / dismissed / bounced + per-user aggregator). 1 wk.
-- [ ] **P-7** — Motion / view-transitions / animation layer (foundation for Wave 11 Int-1). 1.5 wk.
-- [x] **P-8** — Empty / loading / error first-class composition policy. `7589281` + `1bc2174`.
-- [x] **P-9** — Information hierarchy. Categorical `Capability.salience_level` + intent `priority_overrides` + `resolveSalience` helper + `salienceResolved` advisory policy + `salience-aware-rendering` skill + data-resolver auto-emphasis (`withHighSalienceEmphasis`) + compiler-prompt nudges (legacy + tool-using). Showcase: github demo's `issue.list` / `issue.close` / `issue.archive` carry `salience_level: 'high'`. **Direct continuation of M** — principled re-introduction of the salience signal stripped during the marketplace pivot.
-- [x] **DD** — Full personalisation chain integration eval. Shipped at `evals/end-to-end/personalisation-chain.eval.ts`.
+### P2.1 — Endpoints + signing (V-1 ✅ V-3 ✅ already)
 
----
+- [x] **V-1 — `MarketplaceAddress` + `SignedBundle` schemas + ed25519 signing.** Shipped.
+- [x] **V-3 — TOFU verification.** Shipped.
 
-## Wave 10 — Scale tracks
+### P2.2 — V-6 sub-tracks (sequenced)
 
-The framework today handles single-app, ≤200-capability registries with low-cardinality data fine. Past those limits these tracks fix the failure modes.
+- [ ] **V-6.a — Publish endpoint.** `POST /atelier/marketplace/persona` accepts a signed bundle, verifies the ed25519 signature, persists to a content-addressed store, indexes by `(author, persona, version)`. **1 wk.**
+- [ ] **V-6.b — Consume endpoint.** `GET /atelier/marketplace/<author>/<persona>@<version>` returns the signed bundle. Browser caches by content hash. **1 wk.**
+- [ ] **V-6.c — Browse / search UI.** A docs-side page (or a primitive in `@atelier/components`) that lists / filters available recipes. **1 wk.**
+- [ ] **V-6.d — Review / curation flow.** Maintainer-side approval for personas surfaced in the default index. Could be skipped for v1 in favour of a flat self-publish space. **1 wk.**
+- [ ] **V-6.e — Eval gate.** "Top 10 personas in the marketplace compile cleanly" smoke job that runs nightly. **3 d.**
+- [ ] **V-6.f — Sign capabilities/skills artifacts at publish time.** Per [`docs/production-concerns.md`](docs/production-concerns.md). Needs a key-management decision (per-author key on first publish, or a maintainer-issued cert?). **1 wk.**
 
-- [ ] **S-1 — Capability scoping (two-stage compile).** See `Wave C / Phase C-3` above for the integrated plan; `findCapability` is the natural surface. 2 wk. **HIGH.**
-- [x] **S-2 — Virtualized List/Table + cursor pagination on `DataResolver`.** Shipped. `<VirtualList>` + `<VirtualTable>` (under `@tanstack/react-virtual`) mirror the `<List>` / `<Table>` surface and emit `onFetchMore` / `onFetchPrev` at scroll edges; backed by a new `CursorPaginatedResult` envelope on `DataBinding` + `paginate()` helper in `@atelier/data-resolvers`. The `composes_hierarchy_for_long_lists` policy now nudges the swap to the virtual variant when a bound capability's `expected_count > VIRTUAL_THRESHOLD` (default 500). New `Capability.expected_count?` field declares the cardinality once at the capability layer. Catalog 65 → 67. Marigold showcase via `apps/demo-dummyjson/test/virtual-pagination.test.ts`. Back-compat across the whole protocol: bindings without `pagination` default to `'none'`; resolvers returning plain arrays continue to work.
-- [x] **S-3 — Streaming subscriptions on `DataResolver`.** Shipped. `DataResolver` extended with optional `subscribe(binding) → AsyncIterable<unknown>` (back-compat: legacy resolvers untouched; the property is optional on the function shape, same idiom `withCache(...)` uses for `.size()` / `.evict()`). Two transports in `@atelier/data-resolvers/subscriptions`: `SseSubscriptionResolver` (Server-Sent Events; mirrors the runtime's `SseTriggerTransport` `EventSourceLike` seam, default transparent reconnect on transport error, `urlFor(binding)` returns `undefined` to opt a binding out) and `InMemorySubscriptionResolver` (test / fixture path, factory-driven). `consumeSubscription(iterable, opts)` helper for hosts that want a callback + cleanup function. New `useSubscription({ resolver, binding })` hook in `@atelier/react` owns the iterator's lifecycle (open on mount, `iterator.return()` on unmount / binding change), exposes `{ data, loading, error, reconnect }`. **Unblocks Coll-1..5** (multiplayer presence / cursors / comments / follow-mode / selection halos).
-- [x] **S-4 — Distributed `TriggerBus` (`RedisTriggerBus` primary, `NATSTriggerBus` optional).** Shipped. `RedisTriggerBus` (Redis pub/sub, channel `atelier:triggers:<app_id>`) and `NATSTriggerBus` (subject `atelier.triggers.<app_id>`) both implement the existing `TriggerSubscription` seam. Wire envelope `{ v: 1, origin, trigger }` with origin-id self-echo suppression so emitter handlers fire exactly once. Minimal `RedisLike{Publisher,Subscriber}` / `NATSLikeConnection` interfaces — no hard `ioredis` / `nats` dep; hosts pass any client that satisfies the shape. Local fan-out delegates to `InMemoryTriggerBus` so error semantics, wildcard subscribe, and registration order all match.
-- [x] **S-5 — Hierarchical capability registry + generated index + incremental validation.** Shipped. Capability JSON files now live at arbitrary depth under `capabilities/` (`capabilities/github/issue/list.json` is fine; `id` stays canonical). New `CapabilityIndexSchema` in `@atelier/schemas` (registered in the schema dump + `validate-data` registry). New `pnpm capabilities:index` (write) + `pnpm capabilities:index:check` (CI gate, drift detection with `__GENERATED_AT__` timestamp normalization) hooked into `pnpm validate` / `validate:fast`. Per-directory + root `_index.json` summarises `{ id, version, path }` entries plus immediate-child `subdirectories`. New `pnpm capabilities:validate-changed` runs `git diff --name-only origin/main...HEAD` (or `--cached` for staged), filters to `capabilities/**.json`, validates ONLY the changed set — sub-second on the common PR. `validate-data`'s `PathDispatchEntry` extended with `basenameOverrides` so any-depth `_index.json` files dispatch to `capability-index` without enumerating each nested path. 24 new tests across `scripts/test/{generate-capability-index,validate-capabilities-incremental}.test.ts`.
-- [x] **S-6 — Compile cost budget enforcement.** `BudgetMeteredCompiler`, `BudgetCounter`, `mergeCompileBudgets`, `BudgetExceededError.code`. `bc92956`. Demo wiring env-gated.
-- [x] **S-7 — Capability vector embeddings (RAG variant of S-1).** Higher-quality scoping when registries grow past ~1000 capabilities. Shipped as `EmbeddingCapabilityResolver` + `InMemoryEmbeddingIndex` in `@atelier/capability-resolver` — same `CapabilityResolver` seam as S-1, swap in without touching `ToolUsingCompiler` / `semanticSearchFromResolver`. Pluggable `EmbeddingClient` (no hard dep on a specific embedding provider — hosts plug in OpenAI / Cohere / Gemini / local sentence transformers); brute-force cosine search adequate to ~10k vectors with `Float32Array` math; `serialize` / `load` round-trip so boot doesn't re-embed. Cascades to the substring fallback on cold-start, client error, or all-stale hits — same idiom as S-1's `TwoStageCapabilityResolver`. 41 new tests (28 index + 13 resolver).
+**Total V-6**: 4-6 wk depending on whether V-6.d ships in v1.
 
-**Recommended order for "real-app scale":** S-1 → S-4. (S-2 + S-3 + S-5 + S-6 + S-7 already done.)
+### P2.3 — Marketplace-adjacent primitives (separate from V-6)
+
+- [ ] **Marketplace browse-page primitive.** A reusable `<MarketplaceBrowser>` baseline component that consumes the V-6.b endpoint, lets users filter by author / domain / brand-fit, and previews a persona before consuming. Catalog entry. **1 wk after V-6.b.**
 
 ---
 
-## Wave 8 — Vault marketplace
+## P3 — Site consolidation & branding
 
-(Wave 7 V-1 + Wave 8 V-3 already shipped; V-6 is the remaining big chunk.)
+We ship **two** Astro sites today, on **one** Pages domain:
 
-- [x] **V-1** — Real intent vault backend (`@atelier/vault-server` + `@atelier/vault-client`). Wire-format spec at [`docs/vault-protocol.md`](docs/vault-protocol.md). Roadmap items: SQLite adapter (gated on Node 24's stable `node:sqlite`), multi-key JWKS rotation, encryption-at-rest.
-- [x] **V-3** — Permission grant UI against the real vault. Vault renders OAuth-style consent screen; CSRF bound by HMAC nonce. Per-jti revocation cascades `system.security_revocation`. Follow-up: rich consent-screen styling, on-vault profile seeding endpoint.
-- [ ] **V-6 — Marketplace primitives** (`atelier://author/persona@version` addressing, ed25519 signing, TOFU trust model, review flow). **Depends on V-1 + V-4.** 4-6 wk. **The marketplace pivot (Wave M) was the architectural prerequisite — the demos prove the marketplace promise. V-6 is what turns it into a product.** Direct continuation of Wave M.
+- `fragmatic-io.github.io/atelier/` — marketing (`apps/marketing`, plain Astro)
+- `fragmatic-io.github.io/atelier/docs/` — developer docs (`apps/docs`, Astro Starlight)
 
----
+That split costs us:
 
-## Wave 11 — Visual depth (path to world-class web app UI)
+1. Duplicate branding (logos, fonts, colour tokens diverge).
+2. Two builds in CI.
+3. Different nav idioms — marketing uses Astro pages, docs uses Starlight sidebar; they don't cross-link cleanly.
 
-Atelier today produces competent, on-brand professional UIs. Reaching the perceived quality of best-in-class web apps requires the additive tracks below — Vis (visual system), Int (interaction), Cnt (content rendering), Nav (information architecture), Coll (collaboration / real-time), AI (inline AI surfaces). None of it re-architects; each track adds a polish dimension.
+### P3.1 — Merge plan (recommended)
 
-The original Linear/Supabase parity scope was deliberately broadened into a **10-app survey** so the catalog covers the breadth of what users now expect from production web tools.
+- [ ] **Fold `apps/marketing` into `apps/docs` as a custom homepage + `/start/` / `/architecture/` / `/ethos/` / `/demos/` Starlight pages.** Starlight already has a `template: splash` for hero pages (the docs index uses it). The 5 marketing pages (`index`, `start`, `architecture`, `ethos`, `demos`) become 5 Starlight pages with `template: splash`. Keep the marketing visual language by porting the `apps/marketing/src/styles` into `apps/docs/src/styles/atelier-splash.css`. Remove the dual-deploy step from `site-deploy.yml`. **2-3 d.**
+- [ ] **Drop `apps/marketing/` package** after the merge. **<1 d.**
+- [ ] **Single canonical URL: `fragmatic-io.github.io/atelier/`** with the docs sidebar visible everywhere except the splash homepage and the 4 marketing-shaped pages.
+- [ ] **Custom domain.** Once we own one (e.g. `atelier.dev`), drop the `/atelier/docs/` path-prefix entirely — the rehype-internal-links plugin handles that automatically via the `DOCS_BASE` env var.
 
-### Reference apps surveyed
+### P3.2 — If we keep both (alternative)
 
-Each entry names the specific UX trait that earned its place.
+- [ ] **Unify branding tokens.** A shared `apps/_shared/brand-tokens.css` consumed by both Astro projects. **1 d.**
+- [ ] **Cross-site top nav.** Same header on both surfaces with active-tab logic. **1 d.**
+- [ ] **Search across both.** Pagefind currently only indexes `apps/docs/dist`. Either point it at the merged `_site/`, or add a second index for marketing content. **1 d.**
 
-- **Linear** — Cmd+K command palette with weighted-recency fuzzy match, sub-150ms optimistic mutations, "0.16x" motion duration scale, triage view's three-pane layout, dense issue list with single-line item + tag-pill row, undo toasts on every destructive action, keyboard-first nav (`g i` / `g a`), saved views with shareable URLs, in-app activity feed with diff-collapse, command-line-style filter syntax in the top bar.
-- **Supabase** — SQL editor with Monaco + saved snippets, table editor with inline-edit cells and column-resize, request-log tail with severity filter, project switcher in the top-left, function logs with structured JSON pretty-print, RLS policy designer with live-validate, side-drawer doc references on hover, dark-mode as a first-class surface (not a re-skin).
-- **Notion** — slash-command menu (`/`) for inline block creation across 50+ block types, drag-handle on every block (left gutter), block-level @-mention with hover-card preview, smart paste (URL → unfurl card, code → fenced block with detected lang), inline AI ("Ask AI", "Summarize") on selection, sync-block + database views, version history per page, multi-cursor selection within a doc.
-- **Figma** — live multiplayer cursors with name labels and color tokens per user, follow-mode that mirrors another user's viewport, 16ms-budget input loop, contextual right-panel that switches per selection class, properties panel with mixed-value indicators, comment pins anchored to canvas coordinates that survive layout changes, observe-mode with smooth-scroll catchup.
-- **Stripe Dashboard** — chronological events log with diff-style payload expansion, dense data tables with column show/hide + density toggle, drilldown breadcrumbs ("Charges › ch_xxx › Refund r_xxx"), inline JSON tree with copy-as-cURL, time-range picker that persists per page, in-context API docs pane, settings with global search, status / system-health bar in the chrome.
-- **Vercel** — real-time deploy log streaming with line-anchor URLs, build step accordion with per-step duration, env-var editor with masked-by-default + reveal-on-click, project switcher with team scope, deployment list with branch + commit chips, inline command output rendering (ANSI colors preserved), error groupings with stack traces folded by default.
-- **Raycast / Arc** — root command palette as the primary navigation surface, fuzzy-search across actions+files+tabs, two-pane preview-on-hover, Cmd+P "go to anything" distinct from Cmd+K "do anything", chord shortcuts (`g g`), action-aliases per user, sub-menu drilldown without leaving keyboard, AI chat inline with the launcher.
-- **Airtable / Tana** — saved view system (grid, kanban, calendar, gallery) per table with shareable URLs, field-type-aware cells (rating, attachment, formula, lookup), bulk-action floating bar with selection count and quick destructive ops, inline filter chips that compose, view-grouping with collapsible groups, hybrid doc+db nodes (Tana) where any node can be a row or a paragraph.
-- **Slack / Discord** — multi-pane layout (sidebar + thread + main + details), unread badges grouped by workspace/server with mention-vs-message distinction, presence dots with per-channel granularity, threaded replies anchored to a message, slash commands (`/remind`, `/giphy`), drag-and-drop file upload anywhere in the app, persistent unread state across reloads, scroll-to-unread-anchor on channel switch, code-fence with language detection in messages.
-- **Pitch / Tome / Gamma** — AI-assisted slide generation from a single prompt, per-slide regenerate / restyle, theme-coherent layout suggestions, smart-paste of links into rich blocks, presenter-view with timer, real-time co-editing with selection halos, inline image generation tied to slide content.
-
-### Vis — visual system
-
-- [x] **Vis-1** — Typography depth. Shipped: `BrandTokensSchema.typography` gains optional `letter_spacing` / `line_height` scales + an `opentype` flag map (tabular numerals, ligatures, optical sizing, fractions, super/sub). `atelier init`'s Tailwind template bridges to `--cir-tracking-*` / `--cir-leading-*` / `--cir-font-feature-settings` CSS variables. `<Table>` numeric columns and `<StatCard>` values emit `data-tnum="true"` for hosts to consume. Aurora kit extended as the worked example. **DONE.**
-- [x] **Vis-2** — Dark mode as a real surface across all 65 components. Every entry in `_variants.ts` ships paired light + `dark:` Tailwind utilities. Regression gate at `test/_variants-dark.test.ts`. **DONE.**
-- [ ] **Vis-3** — Icon resolver + `<Icon>` integration. `iconography.allowed_sets` declares which packs are allowed; need a real `<Icon set="lucide" name="archive" />` resolver layer + integration so components like `<Button icon="archive">` work without authoring per-component icon props. **1 wk.** Reference: Linear renders ~120 distinct icons across the app from a single set with consistent stroke-width.
-- [ ] **Vis-4** — Variant pass for the remaining 32 components. Wave 6 P-10 covered 24/56. The other 32 (inputs, charts, navigation primitives, niche specialised) need the same `variant` + `size` treatment. **Less work after the marketplace pivot — fewer customs to author tables for.** Now ~1.5 wk.
-- [x] **Vis-5** — Custom illustration support. **Shipped this commit.** New `IllustrationResolver` protocol mirrors the Vis-3 `IconResolver` pattern: `MapIllustrationResolver` / `NoopIllustrationResolver` + `<IllustrationResolverProvider>` + `useIllustrationResolver()`. `<EmptyState illustration="inbox-zero">` reads the active resolver, injects the SVG inline above the title, applies the resolver's optional ARIA `label` (else marks the slot decorative), and falls through to "no slot" when the resolver returns null or no provider is in scope. Bundled curated set ships in `./illustrations/builtins.ts` — `inbox-zero`, `no-results`, `error`, `loading`, `placeholder` — as `currentColor`-tinted geometric mascots so dark-mode + brand-tint adaptation come for free. Hosts opt in via `createDefaultIllustrationResolver()` (or compose their own pack). Illustration takes precedence over the small Vis-3 `icon` hero when both are supplied (no stacked heroes). **DONE.**
-- [x] **Vis-6** — Density toggles per surface. New `density-aware-rendering` skill formalises the contract; `IntentProfile.density_overrides` adds per-route glob → density (precedence over the global preference); `resolveDensity(intent, route)` is the canonical resolver; render walker emits `data-cir-density` on the route's outermost wrapper AND threads the resolved density to every density-aware component (Stack, Container, Card, Grid, List, Table, Queue, KPIRow, StatCard, DetailView, Skeleton, VirtualList, VirtualTable). CSS-variable bridge (`--atelier-density-padding` / `--atelier-density-row-padding` / `--atelier-density-gap-multiplier`) projected per-route via `[data-cir-density]` blocks in each demo's `globals.css`. Marigold's existing LensSwitcher continues to drive the per-user signal through `intent.global_preferences.density`. **Shipped this commit.**
-- [ ] **Vis-7** — Elevation / surface system. 5-step elevation token scale (resting / hover / popover / modal / commandbar) with paired light-and-dark shadow recipes. **3 d on top of Vis-2.**
-- [x] **Vis-8** — Skeleton-as-shape, not as block. **Shipped this commit.** `<Skeleton>` extended with a 9-shape canonical catalog (`rectangle` / `circle` / `line` / `stack` / `card` / `table-row` / `kpi` / `list-row` / `detail-block`) — each renders a layout-faithful composition matching the real component (Linear / Stripe pattern). New `count?: number` prop tiles the row-style shapes (`table-row`, `list-row`, `line`); `columns?: number` controls `table-row` cell count; row vertical padding tracks the resolved density via `DENSITY_ROW_PADDING_PX` so loading rows match populated row height. New `skeletonShapeClass` table in `_variants.ts` exposes the per-shape Tailwind layout utility (zero-CSS hosts ignore it; the per-shape inline styles still drive layout). ARIA upgraded to `role="status"` + `aria-busy="true"` + `aria-label="Loading"` (overridable via `ariaLabel`). Legacy Wave 7b shape names (`rect`, `text-line`, `avatar-with-2-lines`, `kpi-tile`, `detail-view`, `gallery-tile`, `timeline-event`, `text-paragraph`) normalise to the canonical catalog at render time — no consumer migration needed. 38 tests across the catalog, density threading, distinct-DOM fingerprint, alias normalisation, and `prefers-reduced-motion` shimmer suppression.
-- [x] **Vis-9** — Status / system-health bar primitive expansion. **Shipped this commit.** `<StatusBar>` now wires to a `system.status` capability shape: when the manifest declares `data: { source: 'system.status' }`, the runtime threads the resolved `{ status, message, detail? }` payload through `props.data` and the component reads from it (with `level` accepted as a `status` alias and a permissive parser that falls through to explicit props on malformed payloads, so the bar never blanks while a binding hydrates). Click-through landed: `href` (existing) wraps the bar in a same-origin `<a>`; new `onClick` is the alternative for client-side routers (Next.js / TanStack / React Router) and can coexist with `href` — handlers can `preventDefault()` to suppress browser navigation; with `onClick` alone the bar renders as a `<button>` so keyboard activation matches expectations. Severity-icon slot resolves via the Vis-3 `IconResolver` — `circle-check` for operational, `alert-triangle` for degraded/incident, `wrench` for maintenance — with a clean fallback to the existing Unicode glyph when no resolver is wired or the lookup misses (the package keeps its zero-icon-pack-default posture). Text-render adapter honours the same capability binding so audit/non-DOM consumers see the same final string. New `data-cir-bound="system.status"` and `data-cir-icon-source="resolver|unicode"` data-attrs for hosts/tests. (Note: the original `<StatusBar>` baseline shipped from Wave M; this commit closes the system-health binding contract Vis-9 was scoped to.)
-- [x] **Vis-10** — Notification badge system. **Shipped this commit.** New `NotificationAggregator` (host-owned in-memory store: `set` / `get` / `rollup(prefix)` / `list` / `subscribe` / `clear` + monotonic `version()` for `useSyncExternalStore`-clean snapshots) backs the Slack/Discord/Linear grouped-badge surface. `<Sidebar>` extended with `aggregator` + per-item `badgeScope` (treated as a rollup PREFIX so `workspace-acme` aggregates every `workspace-acme.channel-*` underneath); per-item rollup paints a `<MetaBadge>` next to the label, mention-bearing rollups flip the variant to `live` so call-outs read distinctly from quiet unread bubbles. New `BrandTokensSchema.tokens.notification` (`counter_bg` / `counter_fg` / `mention_bg` / `mention_fg` / `pulse_ms`) — fully optional, pre-existing kits stay valid. Mini-rail collapse hides the badge (no room); zero-total entries are suppressed entirely; `badgeScope` without an aggregator is silently ignored. 21 aggregator tests + 8 sidebar-integration tests + 6 brand-kit token tests. Built on Vis-9 + the marketplace-pivot `<MetaBadge>`.
-
-### Int — interaction depth
-
-- [ ] **Int-1** — Motion layer extension beyond Wave 7 P-7. Per-component entry/exit animations, data-update animations (row shimmer on update, badge pulse on increment, count tick-up easing), respect `motion.duration_scale` from BrandKit. Linear's "0.16x" scale is the reference. **2 wk on top of P-7.**
-- [x] **Int-2** — `<Tooltip>` primitive with proper timing. Shipped: 400ms initial delay, 100ms re-show delay inside a 1500ms sticky window (Linear/Stripe "snappy when scanning, polite when not" feel), 8px configurable offset, single-axis edge-flip (top↔bottom, left↔right) with viewport clamp, 100ms opacity fade honouring `prefers-reduced-motion: reduce`, focus + Escape + outside-click dismiss, `aria-describedby` wiring while open, long-press fallback on touch. Pure `computeTooltipPosition` helper exported for hosts; portal renders to `document.body` so `overflow: hidden` ancestors do not clip. 25 tests added (`packages/components/test/Tooltip.test.tsx`). No new deps. Pairs with the `tooltip-tone` skill.
-- [x] **Int-3** — Global keyboard registry + Cmd+K command palette everywhere. New `@atelier/keyboard` package (`InMemoryKeyboardRegistry`, `InMemoryRecencyTracker`, hotkey parser/matcher with portable `cmd+k` ↔ Meta/Ctrl mapping). `<KeyboardProvider>` + `useKeyboardAction` hook in `@atelier/components` (mirrors the `IconResolverContext` pattern so `<CommandPalette>` doesn't take a runtime dep on `@atelier/react`). `<CommandPalette>` auto-discovers commands when no `commands` prop is passed, renders hotkey hint chips formatted per-platform, renders lucide icons via the Vis-3 resolver, weights fuzzy-match by recency. Aurora ambient-mounts `<AmbientCommandPalette>`; Cmd+K opens it from anywhere. Int-6 / Int-7 / Int-12 build on the same registry.
-- [x] **Int-4** — Optimistic UI default. Shipped in `5b882fe`. `useOptimisticAction` auto-wires for any capability with `reversible: true && low_stakes: true`.
-- [x] **Int-5** — Onboarding microinteractions. **Shipped** — three new baseline primitives in `@atelier/components` (catalog 73 → 76): `<TourStep>` overlays a translucent box-shadow cutout + tooltip card around a target element (CSS selector OR `HTMLElement`) with Skip / Prev / Next controls and a `<TourProgress>` strip in the footer; last-step Next labels itself "Done" and calls `onComplete`. Honours `prefers-reduced-motion` (snap-into-position; no entrance animation). Keyboard: Escape skips, Enter advances, Tab focus-traps inside the card. `<TourProgress>` ships three variants (`dots` default, `bar`, `fraction`). `<Confetti>` is a CSS-only celebration burst (24 default span-particles, 1200ms default duration) that fires `onDone` on completion; reduced-motion collapses to onDone-only (zero particles, microtask flush). All three are leaves; tour data is intentionally NOT a Atelier schema (the host orchestrates which step shows). Composition rules registered alongside Tooltip / HoverCard.
-- [ ] **Int-6** — Quick-switcher (`Cmd+P`) distinct from command palette. Raycast/Arc/Linear all separate "go to anything" (Cmd+P) from "do anything" (Cmd+K). New `<QuickSwitcher>` that resolves a capability-typed `quickswitch_index` per app. Depends on Int-3. **1 wk.**
-- [ ] **Int-7** — Chord shortcuts + per-user aliases. Linear's `g i` / `g a` and Raycast's user-defined aliases. The `@atelier/keyboard` registry needs a chord state machine + per-user alias overlay stored in the intent vault. **1 wk on top of Int-3.**
-- [x] **Int-8** — Undo toast on every destructive action. Shipped: `withUndo()` middleware in `@atelier/runtime` (Proxy-wraps any `ActionDispatcher`, fires `UndoToastEmitter.show()` on every successful undoable dispatch); `<Toast variant="undo">` baseline (countdown progress bar + `Undo` button + dismiss + dual-toned dark mode); `useUndoToastEmitter()` + `createUndoToastEmitter()` hooks in `@atelier/react` with a paired `<Sink>` host; Aurora wired (`thread.archive`, `task.complete`, `task.snooze`, `task.create_from_thread` all carry `undoable: true` + `undo_window_ms: 5000`); rollback capabilities (`thread.unarchive`, `task.reopen`, `task.unsnooze`, `task.delete`) registered. `UNDO_TOAST_AMBIENT_SATISFIER` coverage preserved.
-- [x] **Int-9** — Bulk-action floating bar wired across `List` / `Table` / `Grid` / `Queue` (and the S-2 Virtual variants). The bar already existed and List/Table/Grid auto-mounted it; this closed the gap on `<Queue>` (multi-select + checkbox + Shift-range + auto-mount + optimistic-hide drops dismissed ids from the selection set) and extended the same shape to `<VirtualList>` / `<VirtualTable>`. `BulkActionBar` registers a scoped `bulk.clear` action with the `<KeyboardProvider>` registry when one is in scope (Int-3 integration) and falls back to a `window` keydown listener otherwise. Singular/plural label handling already shipped earlier — verified. Reference: Linear, Stripe events, Airtable.
-- [x] **Int-10** — Drag-and-drop file upload everywhere. **Shipped** — `<DropZone>` baseline primitive in `@atelier/components` (catalog 73→74). Wraps a region (the children prop) and turns it into a drop target; `host=true` widens the listener target to `document.body` so the entire viewport accepts drops while the children render normally. Validates files by MIME (`image/*` wildcard or exact), extension (`.png` / bare `png`, case-insensitive), and `maxSize`; rejected files come back with a `reason` string (`'mime'` / `'size'`). On drop with at least one accepted file, dispatches `{ capability, params: { files: accepted } }` via a host-supplied `dispatcher` (typically `useDispatcher()` from `@atelier/react`); default capability id is `'file.upload'`. Always also fires `onDrop(accepted, rejected)` so hosts that prefer a non-capability path (or want to surface rejection toasts) can consume the validated arrays directly. The runtime treats `File` as an opaque pass-through — no serialisation between dispatcher and handler. Drag-counter pattern (increment on `dragenter`, decrement on `dragleave`) prevents nested children from flickering the overlay; `data-cir-dragging="true"` lands on the root while a drag is active for CSS-driven overlay styling. `multiple={false}` truncates accepted to 1 file. `disabled` ignores all drag events and resets the counter. 24 component tests + text-render + registry coverage.
-- [x] **Int-11** — Preserved scroll + view state across nav. **Shipped** — `useViewState({ routeKey, scope?, defaultValue })` and `useScrollRestore({ containerRef, routeKey, scope? })` hooks in `@atelier/react`, both thin wrappers over Nav-2's `usePersistedState`. View state is keyed `${routeKey}.view`, scroll state `${routeKey}.scroll` — a single `routeKey` covers both shapes without collision. Default scope is `'session'` (Linear/Slack semantics: persist within a session, reset on browser quit); `'local'` and `'vault'` scopes inherited from Nav-2. SSR-safe: returns `defaultValue` server-side, reconciles in the first client effect. `useScrollRestore` records on the container's `scroll` event (passive listener) and restores via direct `scrollTop` assignment in an effect — no flash-to-top → snap-back. Composes cleanly with the Nav-2 sidebar (`<Sidebar storageKey="…">`) — namespaces never overlap. 16 new tests. The Nav-2 sidebar can now drive selection / filter shape from the same `routeKey`.
-- [x] **Int-12** — Settings search. **Shipped** — `<SettingsSearch>` in `@atelier/components` (catalog 67→68). Stripe / Slack / Notion-style inline search box: fuzzy-matches across `label` / `description` / `keywords`, groups results under `section` headings (first-seen order preserved on empty query), keyboard navigation (↑ ↓ Enter Esc) with cross-group traversal. Self-registers a `settings.search` keyboard action when a `<KeyboardProvider>` is in scope (Int-3) so the configured `hotkey` (default `'/'`, override with `'cmd+/'` etc., or `null` to skip) focuses the input from anywhere — graceful fallback when no provider is wired. 20 component tests + text-render + registry coverage. Mirrors the `<CommandPalette>` (Int-3) pattern in spirit but is an inline panel rather than a modal dialog.
-- [x] **Int-13** — Hover-card / preview-on-hover. Shipped in `e4f7d31` (Wave 7c).
-- [x] **Int-14** — Image / media zoom + lightbox. **Shipped** — `<Lightbox>` baseline primitive in `@atelier/components` rendering a fullscreen portal dialog over an `items[]` array with prev/next navigation, click-to-zoom (1× ↔ 2× toggle), Escape / backdrop / × close, focus trap (Tab cycle), Home/End jump, ←/→ navigate (no looping; clamps at edges), +/- zoom keys, and an optional thumbnails strip (visible by default when `items.length > 1`; click jumps to that index, active outlined via `data-active`). Reduced-motion mode skips the transform transition. ARIA: `role="dialog"` + `aria-modal="true"` + `aria-label="Image viewer"`. Also new: `<Image>` single-image leaf primitive (figure + lazy `<img>` + optional caption) with an opt-in `lightbox?: boolean` prop — when true, clicking the image (or pressing Enter/Space) opens a single-item Lightbox. This is the "click any image to zoom" reflex without boilerplate. Catalog 73→**75** (Image + Lightbox both new). New leaf composition rules. 38 new tests across the lightbox surface (open/close, navigation, clamping, zoom toggle via click and double-click, +/- key zoom, thumbnails interaction, focus trap, reduced-motion data attribute, single-item integration). Pure portal — `createPortal(document.body)` so an overflowing list ancestor cannot clip the viewer.
-- [ ] **Int-15** — Smart paste with link unfurl. **1.5 wk.** _Unblocked by Cnt-4._
-
-### Cnt — content rendering
-
-- [x] **Cnt-1** — Code rendering at depth. Shipped: Shiki (de-facto standard, picked over Starry-Night) wired into `<CodeView>` + `<CodeBlock>` as an OPTIONAL peer dependency — hosts that don't render code don't pay the bundle cost; if Shiki isn't installed the dynamic import rejects and the components fall back to plain-text rendering. New `packages/components/src/code/{shiki,use-highlighted}.ts`. Lazy per-language grammar load + memoised singleton highlighter. Dual-theme render (`github-light` / `github-dark` defaults) so Vis-2 dark-mode toggling is a CSS-only paint, not a re-tokenise. New `language` / `theme` / `foldable` / `highlightLines` / `linkLines` props on `<CodeView>` (forwarded by `<CodeBlock>`). Folding kicks in past 20 lines (Vercel deploy-log pattern); `linkLines` adds `id="L<n>"` for `#L42`-style anchor scrolling; `highlightLines` emits `data-highlight="true"`. Back-compat preserved: no `language` = pre-Cnt-1 behaviour. 15 new tests in `test/code-{shiki,highlight-integration}.test.tsx`. Demo wiring deferred — no natural fit in Aurora today; will land when `<Markdown>` Cnt-5 swaps fences over.
-- [x] **Cnt-2** — Diff rendering (Linear/GitHub-style). Shipped: `<DiffView>` extended with the GitHub / Linear hunk model — `DiffHunk` carries `(oldStart, oldLines, newStart, newLines, lines, contextHidden?)` plus a `DiffLine[]` so the component speaks "unified-diff dialect" without inventing a new schema. Three render modes: `unified` (GitHub-style stacked rows, default), `split` (side-by-side, deletions left + additions right, paired by run-index), and `minimal` (today's pre-Cnt-2 row-only behaviour, default for legacy callers). Per-hunk syntax highlighting reuses Cnt-1's lazy Shiki bridge — one `highlight()` call per hunk (not per line) so multi-line constructs keep grammar state, then `<span class="line">` extraction splits the highlighted HTML back to per-row dual-theme markup. `onExpandContext` callback per hunk + `contextHidden` field render an "Expand N lines" button between hunks (GitHub up/down chevron pattern). `data-diff="add"|"del"|"context"` lands on every row; `linkLines` adds `id="L<n>"` keyed off new-side line number; `highlightLines` flips `data-highlight="true"`. Back-compat: legacy flat-row list (`{kind, line, oldNumber, newNumber}`) detected via `isHunk` discriminator and routed to a synthetic single-hunk renderer at the `minimal` variant. Legacy `'remove'` kind normalised to `'del'` (spec-canonical). 19 new tests across all modes + Shiki mock + expand-context + linkLines/highlightLines + `code` prop fallback. Unblocks Cnt-9 (activity feed with diff visualization).
-- [x] **Cnt-3** — Mention / @user / #issue / link auto-resolution. Shipped: pluggable per-prefix `MentionResolver` protocol + `parseMentions` tokenizer + `<Mention>` chip + `<MentionAware>` host-level wrapper that scans raw text and renders each match (with optional `<HoverCard>` preview when the resolver supplies a `preview` ReactNode). New `packages/components/src/mentions/{parser,resolver}.ts` (pure / no React deps) + `packages/components/src/components/Mention{,Aware}.tsx`. Resolver protocol: sync OR async return; `null` → fallback-to-raw contract for unknown ids; rejection treated like `null`. `combineMentionResolvers` composes per-prefix resolvers (`@`, `#`, `!`) into one. Boundary rule (`isBoundaryBefore` + `isIdChar`) prevents `noreply@example.com` from being parsed as a mention; trailing `.` is left in the literal chunk so prose punctuation renders. `<Mention>` is NOT in the manifest catalog — it's a host-level composition primitive (per ETHOS principle #11). 42 new tests across `test/mentions/{parser,resolver}.test.ts` + `test/Mention{,Aware}.test.tsx`. Cnt-5 (markdown at Linear quality) will compose this from the markdown renderer side.
-- [x] **Cnt-4** — Embed system. Shipped: pluggable per-provider `EmbedResolver` protocol + ordered `EmbedRegistry` / `InMemoryEmbedRegistry` + `<Embed url= registry=>` rendering primitive that resolves URLs, renders an iframe (video / generic), a link card (thumbnail + title + description), or raw HTML (oEmbed `rich`), with a `Loading…` placeholder while async resolution is pending and a plain-link fallback when the registry returns null. Built-in resolvers ship for YouTube (multi-shape id extraction across `youtu.be` / watch / embed / shorts / live / music), Loom (share / embed), and Figma (file / proto / design); a generic `oembedResolver` factory accepts a host-supplied `fetch` and endpoint so this package never depends on `globalThis.fetch`. Tweet / Twitter is intentionally delegated to oEmbed (no first-party API surface). New `packages/components/src/embeds/{resolver,registry,builtin}.ts` + `packages/components/src/components/Embed.tsx`. `<Embed>` is NOT a manifest-bound component (host-level composition per ETHOS principle #11); Cnt-5 (markdown) and Int-15 (smart paste) consume it directly. 50 new tests across `test/embeds/{registry,builtin}.test.ts` + `test/Embed.test.tsx`. Unblocks Cnt-5 + Int-15.
-- [x] **Cnt-5** — Markdown at Linear quality. Shipped: `<Markdown>` upgraded with a Linear-tight spacing rhythm (CSS variables `--atelier-prose-spacing-paragraph` / `-heading` / `-list` / `-quote` / `-tight` projected on the wrapper from a per-variant inline style; default + tight share the scale, loose roughly doubles), per-element renderer overrides (`components` prop bag mirroring `react-markdown`'s `Components` API so hosts plug in `{ p, h1, h2, …, code, a, blockquote, … }` and our defaults add `data-cir-part="md-…"` hooks for theming), auto-mention integration (`mentionResolver` prop runs every text node inside paragraphs / list items / table cells / blockquotes through `<MentionAware>`; headings + code stay plain), auto-embed integration (`embedRegistry` prop replaces a paragraph whose entire body is one bare URL with `<Embed>` — both plain-text and GFM-autolinked shapes detected via the hast `node`; inline `[text](url)` and multi-line links stay plain), code-fence routing to `<CodeBlock>` (Cnt-1's Shiki path inherits language + theme + folding for free), and Linear-style blockquotes (left-border tinted via `currentColor`, smaller block margin via `--atelier-prose-spacing-quote`). The `variant` axis was reframed from a SURFACE token (`bordered/elevated/ghost/tinted` — surface chrome now lives in host composition with `<Card>` / `<Container>` or `className`) to a SPACING token (`'default' | 'tight' | 'loose'`). 18 tests in `test/Markdown.test.tsx` (+11 new). Markdown bundle size unchanged (`react-markdown` + `remark-gfm` + `rehype-sanitize` were already deps); CodeBlock + MentionAware + Embed are tree-shaken when the corresponding props aren't passed.
-- [x] **Cnt-6** — Slash-command menu for block creation. Shipped: new `<BlockMenu>` baseline component + `BlockKindRegistry` (per-surface). Notion's `/` menu — inline command palette scoped to "what kind of block do I want here", anchored to a host-supplied caret position rather than a modal dialog. New `packages/components/src/blocks/registry.ts` (registry + `InMemoryBlockKindRegistry`) + `packages/components/src/components/BlockMenu.tsx`. Surface filter (`'doc'` / `'chat'` / `'comment'` / wildcard `'*'`), fuzzy-match across label / description / keywords / group, ↑↓ Enter Esc keyboard nav, Tab autocompletes a unique group prefix. `useSyncExternalStore` re-renders when plugins / AI providers add kinds at runtime. Catalog 68→**69**. New `BlockMenu` composition rule (`'leaf'`). 30 new tests across `test/blocks/registry.test.ts` + `test/BlockMenu.test.tsx`. Unblocks Cnt-7 (block editor) and AI-2 (slash-AI shortcuts).
-- [x] **Cnt-7** — Block-based content editing. Shipped: new `<BlockEditor>` baseline component composing typed blocks (paragraph / heading / callout / toggle / code / embed / quote / divider — 8 baseline types). Each block renders through a per-type primitive — paragraph / heading / quote / callout / toggle bodies are `contentEditable`; code uses a `<textarea>` paired with `<CodeBlock>`; embed surfaces a URL input + preview frame; divider is an `<hr>`; toggle is a `<details>` with nested children. Slash-trigger (`'/'`) opens `<BlockMenu>` (Cnt-6) anchored at the active block; picking a kind inserts a fresh block of that type below the active one via the `baseline.<type>` kind id. ↑↓ moves focus between blocks (caret lands at start / end of the target editable). Enter at end of paragraph creates a new empty paragraph below; Backspace at start of an empty block deletes it. Drag-and-drop reorder uses the HTML5 drag API (no `react-dnd` dep) — handle's `dragstart` writes the block id into `dataTransfer`, the row's `dragover` opts into being a drop target, `drop` reorders via `onChange`. Slash-trigger pass-through inside code / embed (so `/` stays a literal character there). Auto-bootstraps an empty document with a starter paragraph. New `packages/components/src/components/BlockEditor.tsx` + `packages/components/test/BlockEditor.test.tsx`. Catalog 70→**71**. New `BlockEditor` composition rule (`'leaf'`). 16 new tests across the editor surface (8 block types render, slash-menu open, kind insert, Enter creates paragraph, Backspace deletes empty block, ↑↓ moves focus, drag reorder, draggable gating, auto-bootstrap, text-render). Unblocks AI-1 ("Ask AI" on selection — depends on a structured editor surface).
-- [x] **Cnt-8** — Inline code-block with language detection. Shipped in `73cd9c5`.
-- [x] **Cnt-9** — Activity feed with diff visualization. **Shipped** — `<ActivityFeed>` baseline primitive in `@atelier/components` (catalog 71 → 72). Renders a vertical list of typed events with avatar + actor + label + ISO timestamp; per-row "View diff" toggle expands `<DiffView>` (Cnt-2) inline (collapsed by default; `expandDiffsByDefault` flips); per-row "Show payload" toggle expands a JSON `<pre>` (Stripe events log style). Adjacent same-`group` events collapse into a stacked head row labelled "(N times)" with the tails rendered under a nested `<ol>` (`groupAdjacentEvents` exported pure helper). Infinite scroll: when `onLoadMore` is provided, the component watches its own viewport and fires the callback once when the user scrolls within `LOAD_MORE_THRESHOLD_PX` (64px) of the bottom; in-flight ref dedupes threshold crossings until the parent's promise resolves. `diff` accepts both the post-Cnt-2 `DiffHunk` shape AND the legacy `{kind, line, oldNumber, newNumber}` row shape via `ActivityDiff = DiffHunk | LegacyDiffRow`. 12 component tests + registry / text-render coverage. Linear / Stripe reference.
-- [x] **Cnt-10** — Saved views / saved filters. Linear's "Active issues", Airtable's grid/kanban/calendar views. **Shipped** — new `ViewDefinition` schema in `@atelier/schemas` (filters + sort + group_by + density + display) plus `useSavedView` hook in `@atelier/react` with `?view=` base64-URL serialization, `activate()` / `save()`, default-view fallback, and structural ViewDefinition mirror so the React adapter stays free of a runtime dep on `@atelier/schemas`. 17 hook tests passing.
-- [x] **Cnt-11** — Form auto-save with version history. **Shipped** — two new hooks in `@atelier/react`. `useAutosave({ value, save, debounceMs?, onSaved?, onError? })` debounces value changes (default 800 ms), runs at-most-one in-flight `save()` (a change during a save coalesces into exactly one chained follow-up), exposes a `'idle' | 'pending' | 'saving' | 'saved' | 'error'` state machine plus `lastSavedAt` and an `error` slot, and surfaces a `flush()` escape hatch that bypasses the debounce / awaits the in-flight save (drives beforeunload + retry affordances). `useVersionHistory({ storageKey, value, maxVersions?, scope? })` snapshots the current `value` on `commit(note?)` (deep-copied via JSON round-trip, structural-equality skip against the last snapshot), persists the array via Nav-2's `usePersistedState` (default `'local'` scope, `maxVersions` defaults to 50, FIFO eviction past the cap), exposes `restore(id)` returning a fresh deep-copy and `clear()`. The pair composes — call `commit()` from `useAutosave`'s `onSaved` to keep history aligned with persisted snapshots. 13 + 14 hook tests covering debounce coalescing, status transitions, flush bypass, error path, structural-equality skip, FIFO cap, restore, and persistence round-trip across mounts. Notion / Coda reference.
-
-### Coll — collaboration & real-time
-
-Capabilities best-in-class apps ship that Atelier has no track for today. **S-3 (real-time transport) ✅ shipped — Coll-1..5 unblocked.** Pair `useSubscription({ resolver, binding })` with `SseSubscriptionResolver` / `InMemorySubscriptionResolver` from `@atelier/data-resolvers`.
-
-- [ ] **Coll-1** — Multiplayer presence indicators. Figma's name-tagged cursors, Linear's "X is viewing this issue" pill. New `<Presence>` primitive backed by a `presence.subscribe` capability. **1.5 wk.** S-3 ✅ unblocked.
-- [ ] **Coll-2** — Live cursors on canvas / list / doc surfaces. Figma-style remote cursors with smooth interpolation + name label. **2 wk.** Depends on Coll-1. S-3 ✅ unblocked.
-- [ ] **Coll-3** — Threaded comments anchored to content. Notion / Figma / Linear all ship comments that anchor to a specific node. New `comment_anchor` schema + `<CommentThread>` primitive. **2.5 wk.** Depends on Cnt-3. S-3 ✅ unblocked.
-- [ ] **Coll-4** — Real-time follow-mode / observe-mode. Figma's "follow Vid". Bounded scope: read-only follow on doc / canvas surfaces. **2 wk.** Depends on Coll-1. S-3 ✅ unblocked.
-- [ ] **Coll-5** — Selection halos for collaborative selection. **1 wk.** Depends on Coll-1. S-3 ✅ unblocked.
-
-### Nav — navigation & information architecture
-
-- [x] **Nav-1** — Multi-pane layout primitive. **Shipped** — `<MultiPane>` baseline component. CSS-grid with N panes (≥2), per-pane `defaultSize` / `minSize` / `maxSize` (px), `collapsible`, `defaultCollapsed`. Drag handles between every consecutive non-collapsed pair; pair-conserving resize (`left += delta`, `right -= delta`) with min/max clamps applied to both panes. Collapsed panes hide via `display: none` semantics (the pane is replaced by a 28 px rail in the grid track) so descendant focus / timers / selection survive; clicking the rail expands. `storageKey` namespaces two `localStorage` keys — `${storageKey}.sizes` (per-pane px map) and `${storageKey}.collapsed` (per-pane boolean map) — through the same `readPersistedJson` / `writePersistedJson` shape `<Sidebar>` (Nav-2) uses, so `@atelier/components` stays free of an `@atelier/react` runtime dep. Hosts that want vault-tier persistence reach for `usePersistedState` directly. Supports `'horizontal'` / `'vertical'` direction. Composition rule: `{ can_contain: '*', min_children: 2 }`. 21 component tests covering N-pane render, handle count (N-1), drag pair-conservation, min/max clamp on both panes, collapse hide+show, persistence round-trip, vertical direction, text-render. Catalog +1 (72 → 73, alongside Cnt-9 ActivityFeed). Distinct from `<Split>` (which stays bounded at exactly 2 children).
-- [x] **Nav-2** — Sidebar persistence & collapse memory. Shipped: `usePersistedState` hook in `@atelier/react` (`session` / `local` / `vault` scopes, SSR-safe, optional cross-tab sync via `storage` events, opt-in vault writer via `PersistedVaultContext` with localStorage fallback when no client is wired). `<Sidebar>` extended with `storageKey` (namespaces `${key}.collapsed` + `${key}.expanded`), `collapseHotkey` alias for `toggleShortcut`, and per-tree-node expand/collapse memory (chevron toggle, persisted JSON id-set). When a `<KeyboardProvider>` is in scope the Sidebar auto-registers `sidebar.toggle` so Cmd+K palettes discover it (Int-3 integration). Composes with the Int-11 view-state middleware (`useViewState` / `useScrollRestore`, shipped) — the hook backs scroll position, filter chips, and saved-view selection alongside Sidebar shape under a shared `routeKey`.
-- [x] **Nav-3** — Sticky / pinned content within scroll regions. **Shipped** — `<List>` / `<Table>` already partitioned + stuck pinned items since Wave 7b; the gap was `<Queue>` (per-item `pinned: true` rendered `data-pinned="true"` but didn't partition or stick). Closes that gap: pinned items partition to the top of each group's visible rows, pick up `position: sticky` (top: 0, z-index 10), and a faint separator divides the pinned block from the unpinned tail. New `pinIcon?: IconRef | null` prop on `<List>` / `<Queue>` / `<Table>` — `null` disables the glyph, an `IconRef` (string or `{ set, name }`) renders via the Vis-3 `IconResolver`, `undefined` keeps the Unicode pushpin. `pinAriaLabel` and `showPinnedSeparator` reach parity across all three. Density-aware: pinned section emits `data-cir-density` so host CSS can tune the sticky offset under `compact`.
-- [x] **Nav-4** — Drilldown breadcrumb with shareable URLs. **Shipped** — `TrailSegment` + `serializeTrail` / `parseTrail` (`packages/components/src/breadcrumb/trail.ts`) emit a Stripe-shaped `?_trail=charges|ch_xxx_ch_xxx|refund_r_yyy` wire format with `_`/`|` payload-escape so structural delimiters stay unambiguous. `<Breadcrumb>` extended with `trail` / `onNavigate` / `homeLabel` / `separator` (back-compat preserved — existing `items` mode untouched). New `useTrail({ syncToUrl })` hook in `@atelier/react` owns state + `window.history.replaceState` round-trip; SSR-safe (empty trail when no `window`). Host stays the router; Atelier owns the data shape + the `?_trail=` query slot.
-- [x] **Nav-5** — Project / team / workspace switcher in chrome. **Shipped** — `<ScopeSwitcher>` baseline (catalog 68 → 69; trigger button + grouped fuzzy-search popover anchored under the trigger; ↑↓ Enter Esc keyboard nav across group boundaries; outside-click + Escape close; per-option `IconRef` resolved through the Vis-3 `IconResolver`). Self-registers a `scope.switcher` keyboard action with the `<KeyboardProvider>` registry when one is in scope (Int-3) so the configured `hotkey` (default `'cmd+shift+o'`) opens the popover from anywhere — graceful fallback when no provider is wired. New `IntentProfile.scope_active?: string` carries the persisted active scope id; the `<RenderNode>` walker reads it and threads it as a default for any component that opts in via its manifest contract. Visually distinct from `<CommandPalette>` (popover, not a dialog) and `<SettingsSearch>` (chrome-anchored, not page-flow). 25 component tests + text-render + registry coverage + 3 schema tests for the new field.
-- [x] **Nav-6** — Filter syntax in top bar. **Shipped** — new `<FilterQueryBar>` baseline primitive (separate from the existing `<FilterBar>` filter-strip; the two compose — the chip bar at the very top for power users, the structured strip just under it for click-driven discovery). The user types `field:value` tokens (e.g. `assignee:me priority:high`) and each completed token becomes an inline chip the moment a trailing space seals it. Operators: `:` (eq), `:!` (ne), `:,` (in), `:>` (gt), `:<` (lt), `:~` (contains); quoted values (`assignee:"Joe Smith"`) round-trip through `raw`. The pure parser `parseFilterQuery(query, fields)` is exposed for headless / server-side use (eval harness, route prefetch). Backspace at the start of the empty input removes the last chip; clicking a chip's × removes it; Enter promotes the in-progress token without trailing space. Unknown tokens (no `field:value` shape, or unknown field) flow to `onTextChange` so the host's free-text search input picks them up. Catalog 79 → 80.
-
-### AI — inline AI surfaces
-
-The Notion-AI / Tome / Gamma generation surface is its own track. Atelier's compiler is already AI-native; what's missing is the **end-user-facing AI** that lives inside content surfaces.
-
-- [x] **AI-1** — "Ask AI" on selection. **Shipped** — new `<SelectionActionBar>` baseline primitive: a floating toolbar that mounts above the active text selection inside any `[data-cir-ai-selectable="true"]` subtree (or a host-supplied `container`). Default actions (Summarize / Improve / Translate / Ask AI) dispatch `ai.<id>` capabilities with `{ text, surface }` params via a host-supplied dispatcher (same shape as `useDispatcher()` from `@atelier/react`); per-action `visible` predicate + `onAction` callback alongside the dispatch. Escape dismisses; Enter triggers the first visible action; click-outside on a collapsed selection dismisses. ARIA: `role="toolbar"` + `aria-label="AI actions for selection"`. The `DEFAULT_AI_SELECTION_ACTIONS` constant is exported so hosts can extend / replace pieces while keeping the standard verb shape. Catalog 80 → 81.
-- [ ] **AI-2** — Slash-command AI shortcuts in editors. `/summarize` / `/translate` / `/brainstorm` inside the slash menu. **1 wk.** Cnt-6 ✅ unblocked; still depends on AI-1.
-- [x] **AI-3** — AI-generated layouts (Tome / Gamma model). **Shipped** — new `<GenerativeLayout>` baseline primitive: a panel that takes a host-supplied async `generate({ prompt, restyle?, expand?, regenerateBlockId?, currentBlocks? })` and renders the resulting `GenerativeBlock[]` (paragraph / heading / callout / code / quote / divider — a structural mirror of Cnt-7's `<BlockEditor>` `Block` shape, kept decoupled to avoid a circular dep) inline. End-user-visible affordances: Regenerate (re-call with original prompt) / Restyle (re-call with `restyle: true`) / Expand (re-call with `expand: true` + dedupe-by-id merge of incoming blocks into current set) on the whole document; per-block Regenerate (re-call with `regenerateBlockId` + `currentBlocks`) and Delete on each block. Skeleton strip (`<Skeleton shape="line" count>`) while generating; on rejection the previous blocks stay visible with the error surfaced in a non-destructive footer. Auto-generate on mount when `initialPrompt` + `autoGenerate=true` (and no `initialBlocks`); `onChange` + `onGenerated` callbacks dispatched-style (component owns the lifecycle). `readOnly` hides the Regenerate / Restyle / Expand row + per-block actions. ARIA: `role="region"` + `aria-label="Generative layout"`; the prompt textarea has its own connected label. Exports a `generativeBlocksToBlockEditor(blocks)` adapter that maps the generative shape into `<BlockEditor>`'s `Block[]` shape (kind→type; per-kind extras → `meta.{level,severity,language}`) so a host can drop the generated layout straight into a live editor. Catalog 81 → 82.
-- [ ] **AI-4** — Inline AI chat docked to surface. Raycast-style chat that has read-context of the current capability bindings. **2 wk.**
-
-**Realistic budget for world-class web app parity:** Wave 11 ≈ **6-10 months of focused work** on top of Waves 7-10, depending on whether the Coll track ships (real-time transport is the gating dependency). Most of the perceived-quality gap on solo surfaces still closes by **adding more skills + brand-kit depth** rather than writing more TypeScript — but Coll, Cnt-7 (block editor), AI-1, and the Nav layout primitives are real implementation work.
+**Recommendation:** P3.1 (merge). Marketing copy is 80% docs anyway; Starlight's splash template is good enough; one less surface to maintain.
 
 ---
 
-## Wave 12+ — Multi-platform + marketing
+## P4 — Wave 11 polish remaining
 
-Kept on the roadmap; not on the personalised-web critical path. The marketplace pivot (Wave M) makes these substantially cheaper because every retired custom is one less component to re-implement per platform.
+The long tail of visual / interaction / content / nav / collaboration / AI primitives. Sequence within each sub-bucket is execution order; sub-buckets are independent.
+
+### P4.1 — Vis (visual depth)
+
+- [x] Vis-2, Vis-3, Vis-5, Vis-8 shipped.
+- [ ] **Vis-4** — Variant pass for the remaining 32 components (after Wave 6 P-10 covered 24/56). Less work after the catalog grew — fewer customs to author tables for. **~1.5 wk.**
+- [ ] **Vis-7** — Elevation / surface system. 5-step elevation token scale (resting / hover / popover / modal / commandbar) with paired light/dark shadow recipes. **3 d on top of Vis-2.**
+- [ ] **Vis-9, Vis-10** — Open visual-debt items (consult original list).
+
+### P4.2 — Int (interaction)
+
+- [x] Int-2, Int-3, Int-4, Int-5, Int-10, Int-11, Int-13, Int-14 shipped.
+- [ ] **Int-1** — Motion layer extension beyond P-7. Per-component entry/exit, data-update animations (row shimmer on update, badge pulse on increment, count tick-up easing). Linear's "0.16x" scale is the reference. **2 wk on top of P-7.**
+- [ ] **Int-6** — Quick-switcher (`Cmd+P`) distinct from command palette. Capability-typed `quickswitch_index` per app. Depends on Int-3. **1 wk.**
+- [ ] **Int-7** — Chord shortcuts + per-user aliases. `g i` / `g a` style. `@atelier/keyboard` registry needs a chord state machine + per-user alias overlay in the intent vault. Depends on Int-3. **1 wk.**
+- [ ] **Int-15** — Smart paste with link unfurl. Cnt-4 ✅ unblocked. **1.5 wk.**
+
+### P4.3 — Cnt (content)
+
+- [x] Cnt-1..5, Cnt-7..11 shipped.
+- [ ] **Cnt-6** — Block-menu base (BlockKindRegistry already shipped via Cnt-7). Open question whether anything remains here separate from Cnt-7. Audit + close. **<1 d audit.**
+
+### P4.4 — Nav (navigation)
+
+- [x] Nav-4, Nav-5, Nav-6 shipped.
+- [ ] **Nav-1** — Navigation rail / app shell upgrade. Linear / Notion / Figma all ship a left rail with collapsible sections + per-section persistence. Sidebar already has persistence (Nav-2); this is the rail-shaped upgrade. **1 wk.**
+
+### P4.5 — Coll (collaboration; S-3 ✅ unblocked the whole bucket)
+
+- [ ] **Coll-1** — Multiplayer presence indicators. `<Presence>` primitive backed by a `presence.subscribe` capability. **1.5 wk.**
+- [ ] **Coll-2** — Live cursors on canvas / list / doc surfaces. Figma-style remote cursors with smooth interpolation. Depends on Coll-1. **2 wk.**
+- [ ] **Coll-3** — Threaded comments anchored to content. `comment_anchor` schema + `<CommentThread>` primitive. Depends on Cnt-3. **2.5 wk.**
+- [ ] **Coll-4** — Real-time follow-mode / observe-mode. Bounded scope: read-only follow on doc / canvas. Depends on Coll-1. **2 wk.**
+- [ ] **Coll-5** — Selection halos for collaborative selection. Depends on Coll-1. **1 wk.**
+
+### P4.6 — AI (inline AI surfaces)
+
+- [x] AI-1, AI-3 shipped.
+- [ ] **AI-2** — Slash-command AI shortcuts in editors. `/summarize` / `/translate` / `/brainstorm` inside the slash menu (Cnt-6). Depends on AI-1. **1 wk.**
+- [ ] **AI-4** — Inline AI chat docked to surface. Raycast-style chat with read-context of the current capability bindings. **2 wk.**
+
+---
+
+## P5 — Personalisation continuity
+
+P-1 / P-8 / P-9 / DD shipped; the remainder.
+
+- [ ] **P-3** — Refinement loop (right-click any component → describe tweak → diff-compile → manifest update + new scoped intent rule). Depends on P-1 (✅). **1.5 wk.**
+- [ ] **P-4** — Engagement signals back into the compiler (component.viewed / dismissed / bounced + per-user aggregator). **1 wk.**
+- [ ] **P-7** — Motion / view-transitions / animation layer (foundation for Int-1). **1.5 wk.**
+
+---
+
+## P6 — Multi-platform & long tail
+
+Last band — only after P0–P5 settle.
+
+### P6.1 — Native renderers
 
 - [ ] **N-1** — iOS SwiftUI native renderer. **4-6 wk.**
 - [ ] **N-2** — Android Jetpack Compose native renderer. **4-6 wk.**
 - [ ] **N-3** — React Native bindings (cheaper bridge — share more with `@atelier/react`). **2-3 wk.**
-- [x] **N-4** — Marketing site / public docs. Astro + GitHub Pages. **Shipped `fe240d5`** — `apps/marketing/` (5 pages: `/`, `/ethos`, `/start`, `/architecture`, `/demos`), `actions/deploy-pages@v4` workflow at `.github/workflows/marketing-deploy.yml`, vanilla CSS + `prefers-color-scheme` dark mode. **User must enable** Settings → Pages → Source: GitHub Actions before the deploy step fires; build validates on PR regardless.
 - [ ] **N-5** — Cross-platform component variant authoring (one source → web + native). **2 wk.**
 
----
+### P6.2 — Tooling polish
 
-## Operational + hardening debt
-
-Bounded items, do anytime. Most can fold into a single sprint.
-
-### Compiler / runtime hardening
-
-- [ ] **`ManifestFetcher` Zod-validation on response body.** `ManifestResolver`'s optional `validate` is the only client-side defense today. Acceptable layering; revisit when the host-vs-runtime trust boundary is finalized.
-- [ ] **`IndexedDBManifestCache` runtime sanity check on read.** Casts stored values without parse. Add defensive parse on `get` if we widen the threat model to "attacker who can write to the user's IDB".
-- [ ] **`ActionDispatcher` Zod-validate input against `capability.input`.** Host is on the hook for shape validation. Documented intentionally; revisit if the dispatcher should run a Zod-ish parse.
-- [ ] **IndexedDB LRU eviction is O(n) per write.** Fine at the default cap of 200 entries; revisit with byte-accounting work.
-- [ ] **Sign capabilities/skills artifacts at publish time** per [`docs/production-concerns.md`](docs/production-concerns.md). Needs a key-management decision.
-- [x] **TS2352 / TS2493 in `packages/compiler/test/gemini-compiler.test.ts`** lines 75 + 96. Surfaced after `2998b2c` removed the TS5097 short-circuit. Fixed inline during C-2.
-
-### Detector + adapter scaffolding
-
-- [ ] **Behavioral pattern detector implementations.** The `BehavioralPatternDetector` interface and `NoopBehavioralDetector` ship; no real detector heuristics ship.
-- [x] **Live-query subscriptions.** Shipped as Wave 10 / S-3 — `DataResolver.subscribe(binding) → AsyncIterable<unknown>` + `useSubscription` hook + SSE / in-memory transports. SWR + optimistic UI still cover the common cases; subscriptions layer on top for live presence / cursors / comments.
-- [ ] **Cross-app workflow compilation.** Single-app compile is shipped; "Gmail + Calendar + Linear in one lens" needs a neutral compiler host. See [`docs/open-questions.md`](docs/open-questions.md) §1.
-
-### Tooling + observability
-
-- [x] **Audit endpoint in the demo.** Wave 7c track B.
-- [ ] **`@atelier/react/debug` host-side smoke test.** The subpath export is wired and the panel renders; the end-to-end developer experience (drop into a fresh Next.js app, see live events) hasn't been smoke-tested outside the monorepo.
-- [ ] **`atelier init` standalone-publish hardening.** Today `atelier init` and `atelier components-sync` assume the Atelier monorepo layout. npm-installable templates and host-project pre-flight are roadmap.
+- [ ] **`atelier init` standalone-publish hardening.** Today assumes the Atelier monorepo layout. npm-installable templates and host-project pre-flight are roadmap.
 - [ ] **Vite support in `atelier init`.** Hardcoded to Next.js 15 today.
 - [ ] **`atelier validate` host pre-flight.** Today shells out to `pnpm validate` blindly.
 - [ ] **Eval harness wired into `pnpm validate`.** Will flip on once enough scenarios are load-bearing.
+- [ ] **`@atelier/react/debug` host-side smoke test.** Subpath export wired; end-to-end developer experience hasn't been smoke-tested outside the monorepo.
+- [ ] **Component-variants demo / Storybook.** A dedicated visual gallery (Storybook or a custom MDX route) is roadmap — should compose with P3.1 site consolidation if it lands.
+- [ ] **IndexedDB LRU eviction is O(n) per write.** Fine at the default cap of 200; revisit with byte-accounting work.
 
-### Operational findings (from Wave 6 fan-out)
+---
 
-- [ ] **JSON Schema export sanity check.** `pnpm schemas:dump` regenerates `.well-known/schemas/*.json` from Zod via `toJsonSchema`. Default output sometimes uses formats AJV strict mode rejects. Add CI step that loads each generated schema through AJV strict and fails on rejection.
-- [x] **Worktree isolation for parallel agents.** Implicitly resolved in Wave M — the marketplace-pivot agent fan-out used `isolation: 'worktree'` and rebased on push, eliminating cross-track contamination.
-- [x] **lint-staged worktree-stash leak.** During the Wave 11 batch (Vis-7 / P-7 / Int-2 fan-out) noticed that `lint-staged`'s `git stash --include-untracked` swept in OTHER linked-worktrees' untracked files. Documented in `.husky/pre-commit` with mitigation guidance for agents (use explicit-path `git add` not `git add -A`); structural fix would be lint-staged supporting per-worktree stash isolation OR agents using non-linked worktrees.
-- [x] **Commitlint scope-enum** updated to include `keyboard`, `react`, `data-resolvers`, `capability-resolver`, `vault-server`, `vault-client`, `marketing`. Int-3 had to use `components` as a workaround for the keyboard package's commit; the gap is now closed.
-- [x] **Rename verification gap.** During the cir → atelier rename (`7e8909a`), the agent's `grep -rln "@cir/"` silently skipped 3 files containing NUL/binary bytes. Hotfix at `3fa9569` used `grep -a`. Documented: rename-style codemod agents should use `grep -a` (treat-binary-as-text) AND run a build, since the test suite alone doesn't catch unresolved imports when stale dist artifacts mask the regression.
-- [ ] **Skill markdown YAML strictness.** A few skill files in Wave 6 shipped briefly with malformed YAML frontmatter. `parseSkillMarkdown` could surface a clearer error message; `atelier lint skill <path>` could front-run validation.
-- [ ] **`BehaviorPatternDetectedTrigger` schema variant.** V-4 ships `SequenceDetector` emitting `behavior.workaround_detected` because `behavior.pattern_detected` doesn't exist yet in `TriggerSchema`. These are different concepts — promote-to-recipe should not fire on workarounds. Add the new variant in the consolidation pass.
+## What's shipped — historical record
 
-### Marketplace + ecosystem (legacy items, mostly subsumed)
+For full prose-form context on every landed item see the per-wave sections preserved below.
 
-- [ ] **Marketplace for community recipes** — covered by Wave 8 V-6 + Wave C / Phase C-5 (RAG-flavored recipe retrieval).
-- [ ] **Mobile + native render runtimes** — covered by Wave 12+ N-1 / N-2 / N-3.
-- [x] **Additional demo apps** — `apps/demo-dummyjson` and `apps/demo-github` shipped; both at zero customs post-marketplace-pivot.
+### Wave M — Baseline-first pivot (closed)
 
-### Component-variants follow-up
+12 commits across the 2026-05-02 session. ETHOS principle #11 codified. All three demos ship zero custom bindings.
 
-- [ ] **Variants for the remaining 32 components** — see Wave 11 / Vis-4. Less work after the marketplace pivot.
-- [ ] **Component-variants demo / Storybook.** No Storybook in this pass; a dedicated visual gallery (Storybook or a custom MDX route in `apps/demo`) is roadmap.
+**Promotions to baseline (catalog 62 → 65):**
+
+- ✅ `<Queue>` + `<Logo>` — `f2ef2d9`
+- ✅ `<MetaBadge>` — `7241dd3`
+- ✅ Data-aware `<Grid>` + tile-shaped `<Card>` — `dbb57ca`
+- ✅ Data-aware `<Gallery>` — `ae2ae76`
+- ✅ Per-item `emphasis` flag on `<Queue>` — `f53058a`
+- ✅ Inline-state branches stripped from data-bound primitives — `1bc2174`
+
+**Demos at zero customs (was 17 customs across the three):** Aurora ✅ Octant ✅ Marigold ✅.
+
+**Adjacent tracks closed:** P-8 (empty/loading/error policy), S-6 (compile budget enforcement), Wave R (release blockers).
+
+### Wave 11 — shipped this session (catalog 65 → 82, +16 in one session)
+
+Vis-5 (illustrations) `d9789cc` · Vis-8 (skeleton-as-shape) `0bf58fa` · Cnt-10 (saved views) `f410775` · Cnt-11 (autosave + version history) `6443904` · Int-10 (DropZone) `448b170` · Int-5 (TourStep + TourProgress + Confetti) `fc5aa32` · Int-14 (Lightbox + Image) `23d90f3` · C-4 (outline + multi-route fan-out) `ea98644` · Nav-6 (FilterQueryBar) + AI-1 (SelectionActionBar) `0504090` · AI-3 (GenerativeLayout) `4f02ea6` · docs site `d100dcf`.
+
+Plus prior session: Vis-2, Int-2, Int-3, Int-4, Int-11, Int-13, Cnt-1, Cnt-2, Cnt-3, Cnt-4, Cnt-5, Cnt-8, Cnt-9, Nav-4, Nav-5.
+
+### Compiler — shipped this track
+
+- ✅ **C-1** — Validation feedback loop (`497e99d`). `ValidationFeedbackCompiler` wraps the base compiler, re-prompts on policy violation up to 2-3 retries, cumulative budget tracking.
+- ✅ **C-2** — Tool-using compiler (MVP). 9 tools (`lookupCapability` / `findCapability` / `listCapabilities` / `findComponent` / `inspectComponent` / `listComponents` / `validateDraft` / `inspectExistingManifest` / `listSiblingRoutes`). Showcased in `apps/demo` behind `CIR_COMPILER_TOOLS_ENABLED=1`.
+- ✅ **C-4** — Outline + multi-route fan-out (`ea98644`). `AppOutlineSchema`, `DeterministicOutlineCompiler`, `MultiRouteCompiler` (one outline + N parallel route compiles).
+
+### What we explicitly do NOT do (compiler track)
+
+- ❌ Flat Plan→Compose→Validate→Refine multi-agent pipeline as the default. High latency (60-90s vs today's 22s), high cost, marginal accuracy gain over C-1.
+- ❌ Per-component specialist agents ("a `<Queue>` agent, a `<Card>` agent"). Component selection is a single decision; splitting into N agents is overengineering.
+
+---
+
+## Maintenance
+
+- This file is the **planning surface**. Per-commit prose-form descriptions of shipped items live in commit messages and `docs/build-plan.md`.
+- When a P0 item lands, mark it `[x]` and add the commit hash. When a P1+ item lands, do the same and consider whether it should be promoted out of the planning surface (i.e. inlined into the `What's shipped` section) on the next quarterly cleanup.
+- The marketplace nomenclature note at the top of this file should NOT be removed without consensus — it's preventing real confusion in PR review.
