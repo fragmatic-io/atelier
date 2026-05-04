@@ -41,6 +41,7 @@ export {
 export {
   ManifestFetcher,
   ManifestFetchError,
+  ManifestShapeError,
   type FetchedManifest,
   type ManifestFetcherOptions,
 } from './manifest/fetcher.js';
@@ -60,6 +61,7 @@ export {
 export {
   ActionDispatcher,
   DEFAULT_UNDO_WINDOW_MS,
+  DispatchInputError,
   optimisticDispatch,
   UndoExpiredError,
   type ActionDispatcherOptions,

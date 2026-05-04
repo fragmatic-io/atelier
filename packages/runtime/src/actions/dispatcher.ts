@@ -17,6 +17,7 @@
  */
 
 import type { AuditEvent, Capability } from '@atelier/schemas';
+import { z } from 'zod';
 import type { AuditSink } from '../audit/emit.js';
 import { NoopAuditSink } from '../audit/emit.js';
 import { isoNow, type Clock } from '../types.js';
@@ -71,6 +72,80 @@ export interface UndoResult extends ActionResult {
  * a reasonable undo, short enough that the action effectively commits.
  */
 export const DEFAULT_UNDO_WINDOW_MS = 5000;
+
+/**
+ * Thrown when a `dispatch()` call's `input` does not match the capability's
+ * declared input shape. Distinct from a denial (`ok: false`, recorded in
+ * audit) because validation is a contract failure between the caller and
+ * the dispatcher — the host should fix its call site rather than retry.
+ */
+export class DispatchInputError extends Error {
+  readonly capability_id: string;
+  readonly issues: readonly string[];
+  constructor(capability_id: string, issues: readonly string[]) {
+    super(
+      `Dispatch input failed validation for ${capability_id}${
+        issues.length ? `: ${issues.join('; ')}` : ''
+      }`,
+    );
+    this.name = 'DispatchInputError';
+    this.capability_id = capability_id;
+    this.issues = issues;
+  }
+}
+
+/**
+ * Synthesize a Zod schema from the descriptor record on `Capability.input`.
+ *
+ * Capabilities declare inputs as a flat `{ field: '<type-name>' }` record
+ * (see `docs/artifacts.md` §Capability and `@atelier/schemas` Capability).
+ * The runtime previously trusted the host to honor that contract; we now
+ * enforce it on dispatch.
+ *
+ * Recognized type-name strings produce strict checks; anything else collapses
+ * to `z.unknown()` so the gate is additive — capabilities using shapes the
+ * synthesizer cannot reason about (nested objects, custom JSON Schema) still
+ * dispatch, and only the recognized primitive declarations gain the check.
+ *
+ * Empty input descriptors permit anything (matches existing dispatch tests
+ * for `task.complete: input: {}`).
+ */
+function buildDispatchInputSchema(input: Capability['input']): z.ZodTypeAny {
+  const keys = Object.keys(input);
+  if (keys.length === 0) return z.unknown();
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const k of keys) {
+    const decl = input[k];
+    shape[k] = leafSchemaFor(decl);
+  }
+  return z.object(shape);
+}
+
+function leafSchemaFor(decl: unknown): z.ZodTypeAny {
+  if (typeof decl !== 'string') return z.unknown();
+  switch (decl) {
+    case 'string':
+      return z.string();
+    case 'number':
+      return z.number();
+    case 'integer':
+      return z.number().int();
+    case 'boolean':
+      return z.boolean();
+    case 'string[]':
+    case 'string_array':
+      return z.array(z.string());
+    case 'number[]':
+    case 'number_array':
+      return z.array(z.number());
+    case 'datetime':
+      // ISO 8601 with offset — matches the rest of the schema package's
+      // datetime conventions.
+      return z.string().datetime({ offset: true });
+    default:
+      return z.unknown();
+  }
+}
 
 /**
  * Thrown by `undoFromToken()` when the token is unknown or its window has
@@ -174,6 +249,8 @@ export class ActionDispatcher {
   readonly #timer: UndoTimer;
   readonly #generateUndoToken: () => string;
   readonly #openTokens = new Map<string, OpenUndoToken>();
+  /** Per-capability synthesized input schema, lazily built and memoized. */
+  readonly #inputSchemas = new Map<string, z.ZodTypeAny>();
 
   constructor(opts: ActionDispatcherOptions) {
     this.#capabilities = opts.capabilities;
@@ -196,6 +273,12 @@ export class ActionDispatcher {
     if (!capability) {
       return this.#deny(ctx, capabilityId, `unknown capability: ${capabilityId}`);
     }
+
+    // Contract check: the capability declares its input shape; reject calls
+    // whose payload does not match before we touch the handler. Throws
+    // `DispatchInputError` so the host fixes the call site (this is not a
+    // user-recoverable denial like a declined confirmation).
+    this.#validateDispatchInput(capability, input);
 
     if (requiresConfirmation(capability.confirmation)) {
       // `requiresConfirmation` returns true only for 'modal' | 'verbal_required'.
@@ -396,6 +479,9 @@ export class ActionDispatcher {
     if (!capability) {
       return this.#deny(ctx, capabilityId, `unknown capability: ${capabilityId}`);
     }
+    // Same contract check as the public dispatch path so undo / rollback
+    // calls cannot smuggle malformed input around the gate.
+    this.#validateDispatchInput(capability, input);
     const handler = this.#registry.get(capabilityId);
     if (!handler) {
       return this.#deny(ctx, capabilityId, `no handler registered for ${capabilityId}`, capability);
@@ -414,6 +500,26 @@ export class ActionDispatcher {
       audit_id,
       side_effects: [...capability.side_effects],
     };
+  }
+
+  /**
+   * Parse `input` against the capability's declared input shape. Throws
+   * `DispatchInputError` on failure. Schemas are synthesized lazily and
+   * cached per capability id.
+   */
+  #validateDispatchInput(capability: Capability, input: unknown): void {
+    let schema = this.#inputSchemas.get(capability.id);
+    if (!schema) {
+      schema = buildDispatchInputSchema(capability.input);
+      this.#inputSchemas.set(capability.id, schema);
+    }
+    const parsed = schema.safeParse(input);
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map(
+        (i) => `${i.path.join('.') || '<root>'}: ${i.message}`,
+      );
+      throw new DispatchInputError(capability.id, issues);
+    }
   }
 
   async #deny(

@@ -36,6 +36,7 @@ import {
   set as idbSet,
   type UseStore,
 } from 'idb-keyval';
+import { ManifestSchema } from '@atelier/schemas';
 
 import {
   deserializeCacheKey,
@@ -66,6 +67,14 @@ export interface IndexedDBManifestCacheOptions {
    * subsystem). When omitted, the cache calls `createStore(dbName, storeName)`.
    */
   store?: UseStore;
+  /**
+   * Reporter invoked when a stored entry fails `ManifestSchema.safeParse` on
+   * `get`. The corrupted entry is evicted and `get` returns `null` (cache
+   * miss semantics) regardless. When omitted, the cache logs via
+   * `console.warn`. Hosts that route to a structured audit sink should
+   * supply a custom reporter.
+   */
+  onCorrupt?: (key: ManifestCacheKey, issues: readonly string[]) => void;
 }
 
 const DEFAULT_DB = 'cir-manifests';
@@ -95,17 +104,39 @@ export class IndexedDBManifestCache implements ManifestCache {
   readonly #store: UseStore;
   readonly #maxEntries: number;
   readonly #maxBytes: number;
+  readonly #onCorrupt: (key: ManifestCacheKey, issues: readonly string[]) => void;
 
   constructor(opts: IndexedDBManifestCacheOptions = {}) {
     this.#maxEntries = Math.max(1, opts.maxEntries ?? DEFAULT_MAX_ENTRIES);
     this.#maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
     this.#store =
       opts.store ?? createStore(opts.dbName ?? DEFAULT_DB, opts.storeName ?? DEFAULT_STORE);
+    this.#onCorrupt =
+      opts.onCorrupt ??
+      ((key, issues) => {
+        console.warn(
+          `[IndexedDBManifestCache] corrupt entry evicted for ${key.user_id}/${key.app_id}${key.route}: ${issues.join('; ')}`,
+        );
+      });
   }
 
   async get(key: ManifestCacheKey): Promise<CachedManifest | null> {
     const value = await idbGet<StoredManifest>(serializeCacheKey(key), this.#store);
     if (!value) return null;
+    // Defend against poisoned IDB contents: a different version of the app,
+    // a hand-edited entry, or schema drift can leave a stored manifest that
+    // no longer matches `ManifestSchema`. Surface as a cache miss + evict.
+    const parsed = ManifestSchema.safeParse(value.manifest);
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map(
+        (i) => `${i.path.join('.') || '<root>'}: ${i.message}`,
+      );
+      this.#onCorrupt(key, issues);
+      // Best-effort eviction; ignore errors here so a flaky IDB does not
+      // shadow the underlying validation failure for the caller.
+      await idbDel(serializeCacheKey(key), this.#store).catch(() => undefined);
+      return null;
+    }
     // Strip the private byte hint from the public-facing return.
     const { __bytes: _bytes, ...rest } = value;
     return rest;

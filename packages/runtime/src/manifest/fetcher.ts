@@ -16,7 +16,7 @@
  * unsafe characters survive the round trip.
  */
 
-import type { Manifest } from '@atelier/schemas';
+import { ManifestSchema, type Manifest } from '@atelier/schemas';
 import type { ManifestCacheKey } from './cache.js';
 
 export interface ManifestFetcherOptions {
@@ -53,6 +53,29 @@ export class ManifestFetchError extends Error {
   }
 }
 
+/**
+ * Thrown when the Manifest Store returns a 2xx response whose body does not
+ * structurally satisfy `ManifestSchema`. The wire was reachable, the server
+ * was happy, but the payload is malformed — treat it as a non-retriable
+ * failure so the host's resolver fallback (`@atelier/runtime` resolver
+ * already propagates the throw) can surface an explicit error rather than
+ * letting a bogus manifest leak through `Manifest`-typed APIs.
+ */
+export class ManifestShapeError extends Error {
+  readonly key: ManifestCacheKey;
+  readonly issues: readonly string[];
+  constructor(key: ManifestCacheKey, issues: readonly string[]) {
+    super(
+      `Manifest shape mismatch for ${key.user_id}/${key.app_id}${key.route}${
+        issues.length ? `: ${issues.join('; ')}` : ''
+      }`,
+    );
+    this.name = 'ManifestShapeError';
+    this.key = key;
+    this.issues = issues;
+  }
+}
+
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_DELAY_MS = 250;
 
@@ -86,7 +109,19 @@ export class ManifestFetcher {
           ...(this.#signal ? { signal: this.#signal } : {}),
         });
         if (response.ok) {
-          const manifest = (await response.json()) as Manifest;
+          const body: unknown = await response.json();
+          const parsed = ManifestSchema.safeParse(body);
+          if (!parsed.success) {
+            // Wire-level shape failure. NON-retriable: the server replied
+            // 2xx so retrying will deterministically produce the same body.
+            // Surface via the typed error so callers / hosts can distinguish
+            // a transport failure from a contract failure.
+            const issues = parsed.error.issues.map(
+              (i) => `${i.path.join('.') || '<root>'}: ${i.message}`,
+            );
+            throw new ManifestShapeError(key, issues);
+          }
+          const manifest: Manifest = parsed.data;
           const etag = response.headers.get('etag') ?? undefined;
           return etag ? { manifest, etag } : { manifest };
         }
@@ -103,6 +138,8 @@ export class ManifestFetcher {
         if (err instanceof ManifestFetchError && err.status >= 400 && err.status < 500) {
           throw err;
         }
+        // Wire shape mismatches are deterministic — retrying does not help.
+        if (err instanceof ManifestShapeError) throw err;
         lastError = err;
       }
       attempt += 1;

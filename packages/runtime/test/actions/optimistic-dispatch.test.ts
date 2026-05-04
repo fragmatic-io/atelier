@@ -187,7 +187,7 @@ describe('optimisticDispatch', () => {
 
     const result = await optimisticDispatch(dispatcher, {
       capability: reversibleOnlyCap,
-      input: { thread_id: 't1' },
+      input: { product_id: 1 },
       ctx,
       optimisticOutcome: () => ({ predicted: true }),
       onApply,
@@ -212,7 +212,7 @@ describe('optimisticDispatch', () => {
 
     const result = await optimisticDispatch(dispatcher, {
       capability: lowStakesOnlyCap,
-      input: { thread_id: 't1' },
+      input: { product_id: 1 },
       ctx,
       optimisticOutcome: () => ({ predicted: true }),
       onApply,
@@ -357,7 +357,7 @@ describe('optimisticDispatch', () => {
 
     await optimisticDispatch(dispatcher, {
       capability: reversibleOnlyCap,
-      input: { thread_id: 't1' },
+      input: { product_id: 1 },
       ctx,
       optimisticOutcome: synth,
       onApply: () => undefined,

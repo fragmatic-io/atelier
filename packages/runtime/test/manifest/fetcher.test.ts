@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ManifestFetcher, ManifestFetchError } from '../../src/manifest/fetcher.js';
+import {
+  ManifestFetcher,
+  ManifestFetchError,
+  ManifestShapeError,
+} from '../../src/manifest/fetcher.js';
 import type { ManifestCacheKey } from '../../src/manifest/cache.js';
 import { fixtureManifest } from '../fixtures/manifest.js';
 
@@ -106,6 +110,40 @@ describe('ManifestFetcher', () => {
     });
     await expect(fetcher.fetch(KEY)).rejects.toMatchObject({ name: 'AbortError' });
     expect(fakeFetch).not.toHaveBeenCalled();
+  });
+
+  it('throws ManifestShapeError when the response body fails ManifestSchema parse', async () => {
+    // Server returns a 200 with a payload that is structurally not a Manifest.
+    const fakeFetch = vi.fn(() => Promise.resolve(jsonResponse({ not_a_manifest: true })));
+    const fetcher = new ManifestFetcher({
+      baseUrl: 'https://m.example',
+      fetch: fakeFetch,
+      retries: 3,
+      retryDelayMs: 1,
+    });
+    await expect(fetcher.fetch(KEY)).rejects.toBeInstanceOf(ManifestShapeError);
+    // Shape errors are deterministic — must NOT retry.
+    expect(fakeFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('ManifestShapeError carries Zod-issue summaries and the cache key', async () => {
+    const broken = { ...fixtureManifest(), routes: 'not-an-array' };
+    const fakeFetch = vi.fn(() => Promise.resolve(jsonResponse(broken)));
+    const fetcher = new ManifestFetcher({
+      baseUrl: 'https://m.example',
+      fetch: fakeFetch,
+      retryDelayMs: 1,
+    });
+    try {
+      await fetcher.fetch(KEY);
+      throw new Error('expected throw');
+    } catch (err) {
+      expect(err).toBeInstanceOf(ManifestShapeError);
+      const e = err as ManifestShapeError;
+      expect(e.key).toEqual(KEY);
+      expect(e.issues.length).toBeGreaterThan(0);
+      expect(e.issues.some((s) => s.includes('routes'))).toBe(true);
+    }
   });
 
   it('honors AbortSignal between retries', async () => {

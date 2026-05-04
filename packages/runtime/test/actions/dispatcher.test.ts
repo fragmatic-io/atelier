@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AuditEvent, Capability } from '@atelier/schemas';
-import { ActionDispatcher } from '../../src/actions/dispatcher.js';
+import { ActionDispatcher, DispatchInputError } from '../../src/actions/dispatcher.js';
 import type { AuditSink } from '../../src/audit/emit.js';
 import {
   ALWAYS_CONFIRM,
@@ -349,6 +349,88 @@ describe('ActionDispatcher', () => {
     await dispatcher.undo();
     expect(seenInputs).toHaveLength(1);
     expect(seenInputs[0]).toEqual(args);
+  });
+
+  it('throws DispatchInputError when input misses a declared key', async () => {
+    const registry = new MapActionRegistry();
+    const handler = vi.fn(() => Promise.resolve({}));
+    registry.register('thread.archive', handler);
+    const dispatcher = new ActionDispatcher({
+      capabilities: fixtureCapabilities(),
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+    await expect(
+      // `thread.archive` declares `{ thread_id: 'string' }`; passing an
+      // empty object violates the contract.
+      dispatcher.dispatch('thread.archive', {}, ctx),
+    ).rejects.toBeInstanceOf(DispatchInputError);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('throws DispatchInputError when a declared key has the wrong type', async () => {
+    const registry = new MapActionRegistry();
+    const handler = vi.fn(() => Promise.resolve({}));
+    registry.register('thread.archive', handler);
+    const dispatcher = new ActionDispatcher({
+      capabilities: fixtureCapabilities(),
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+    let caught: unknown;
+    try {
+      await dispatcher.dispatch('thread.archive', { thread_id: 42 }, ctx);
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(DispatchInputError);
+    const e = caught as DispatchInputError;
+    expect(e.capability_id).toBe('thread.archive');
+    expect(e.issues.some((s) => s.includes('thread_id'))).toBe(true);
+    // Handler is never reached on contract violation.
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('passes input validation and runs the handler when input matches', async () => {
+    const registry = new MapActionRegistry();
+    const handler = vi.fn(() => Promise.resolve({ archived_at: 'now' }));
+    registry.register('thread.archive', handler);
+    const dispatcher = new ActionDispatcher({
+      capabilities: fixtureCapabilities(),
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+    const result = await dispatcher.dispatch('thread.archive', { thread_id: 't1' }, ctx);
+    expect(result.ok).toBe(true);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it('skips type-checking for capability fields with unrecognized type names', async () => {
+    // Capability declares a complex/nested input the synthesizer cannot
+    // reason about — additive contract: anything dispatches.
+    const caps: Record<string, Capability> = {
+      'doc.upload': {
+        id: 'doc.upload',
+        kind: 'action',
+        version: '1.0.0',
+        input: { payload: 'object' }, // not a recognized leaf type-name
+        output: {},
+        side_effects: [],
+        permissions: ['doc:write'],
+        confirmation: 'none',
+        reversible: false,
+      },
+    };
+    const registry = new MapActionRegistry();
+    registry.register('doc.upload', () => Promise.resolve({}));
+    const dispatcher = new ActionDispatcher({
+      capabilities: caps,
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+    // Any payload satisfies the unknown leaf — no throw.
+    const result = await dispatcher.dispatch('doc.upload', { payload: { any: 'shape' } }, ctx);
+    expect(result.ok).toBe(true);
   });
 
   it('emits action.executed without manifest_id when omitted', async () => {

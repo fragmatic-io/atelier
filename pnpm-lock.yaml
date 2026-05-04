@@ -349,25 +349,6 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
-  apps/marketing:
-    dependencies:
-      astro:
-        specifier: ^5.0.0
-        version: 5.18.1(@types/node@24.12.2)(idb-keyval@6.2.2)(jiti@2.6.1)(lightningcss@1.32.0)(rollup@4.60.2)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
-    devDependencies:
-      '@astrojs/check':
-        specifier: ^0.9.4
-        version: 0.9.9(prettier-plugin-astro@0.14.1)(prettier@3.8.3)(typescript@5.9.3)
-      prettier:
-        specifier: ^3.4.1
-        version: 3.8.3
-      prettier-plugin-astro:
-        specifier: ^0.14.1
-        version: 0.14.1
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-
   packages/capability-resolver:
     dependencies:
       '@atelier/compiler':
@@ -596,6 +577,9 @@ importers:
       idb-keyval:
         specifier: ^6.2.1
         version: 6.2.2
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       fake-indexeddb:
         specifier: ^6.0.0
@@ -7091,6 +7075,14 @@ snapshots:
     optionalDependencies:
       vite: 5.4.21(@types/node@22.19.17)(lightningcss@1.32.0)
 
+  '@vitest/mocker@2.1.9(vite@5.4.21(@types/node@24.12.2)(lightningcss@1.32.0))':
+    dependencies:
+      '@vitest/spy': 2.1.9
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 5.4.21(@types/node@24.12.2)(lightningcss@1.32.0)
+
   '@vitest/pretty-format@2.1.9':
     dependencies:
       tinyrainbow: 1.2.0
@@ -10627,7 +10619,7 @@ snapshots:
   vitest@2.1.9(@types/node@24.12.2)(happy-dom@15.11.7)(lightningcss@1.32.0):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.21(@types/node@22.19.17)(lightningcss@1.32.0))
+      '@vitest/mocker': 2.1.9(vite@5.4.21(@types/node@24.12.2)(lightningcss@1.32.0))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9

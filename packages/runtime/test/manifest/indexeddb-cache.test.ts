@@ -1,8 +1,9 @@
 // Set up the fake-indexeddb shim BEFORE idb-keyval is imported.
 import 'fake-indexeddb/auto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createStore } from 'idb-keyval';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createStore, set as idbSet } from 'idb-keyval';
 import { IndexedDBManifestCache } from '../../src/manifest/indexeddb-cache.js';
+import { serializeCacheKey } from '../../src/manifest/cache.js';
 import type { CachedManifest, ManifestCacheKey } from '../../src/manifest/cache.js';
 import { fixtureManifest } from '../fixtures/manifest.js';
 
@@ -135,6 +136,49 @@ describe('IndexedDBManifestCache', () => {
     expect(got).not.toBeNull();
     // The returned shape must match CachedManifest exactly — no __bytes leak.
     expect(Object.keys(got!).sort()).toEqual(['fetched_at', 'last_used', 'manifest']);
+  });
+
+  it('treats a corrupt stored entry as a cache miss and evicts it', async () => {
+    // Plant a malformed entry directly into the IDB store (simulates schema
+    // drift / hand-edited DevTools entry / cross-version write).
+    const dbN = `cir-manifests-corrupt-${Math.random().toString(36).slice(2)}`;
+    const store = createStore(dbN, 'manifests');
+    const onCorrupt = vi.fn();
+    const c = new IndexedDBManifestCache({ store, onCorrupt });
+    const k: ManifestCacheKey = { user_id: 'vid', app_id: 'mail', route: '/today' };
+    await idbSet(
+      serializeCacheKey(k),
+      // Missing required fields — violates ManifestSchema.
+      { manifest: { not_a_manifest: true }, fetched_at: 'x', last_used: 'y' },
+      store,
+    );
+    expect(await c.get(k)).toBeNull();
+    expect(onCorrupt).toHaveBeenCalledOnce();
+    // Evicted: a follow-up read still returns null (no double-warn either).
+    expect(await c.get(k)).toBeNull();
+    expect(onCorrupt).toHaveBeenCalledOnce();
+  });
+
+  it('falls back to console.warn when no onCorrupt reporter is supplied', async () => {
+    const dbN = `cir-manifests-corrupt-warn-${Math.random().toString(36).slice(2)}`;
+    const store = createStore(dbN, 'manifests');
+    const c = new IndexedDBManifestCache({ store });
+    const k: ManifestCacheKey = { user_id: 'vid', app_id: 'mail', route: '/today' };
+    await idbSet(
+      serializeCacheKey(k),
+      { manifest: { broken: true }, fetched_at: 'x', last_used: 'y' },
+      store,
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      expect(await c.get(k)).toBeNull();
+      expect(warn).toHaveBeenCalledOnce();
+      const msg = String(warn.mock.calls[0]?.[0] ?? '');
+      expect(msg).toContain('IndexedDBManifestCache');
+      expect(msg).toContain('vid/mail/today');
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it('markStale flips matching entries without removing them', async () => {
