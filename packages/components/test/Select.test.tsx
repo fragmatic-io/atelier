@@ -12,26 +12,27 @@ const OPTS = [
 ];
 
 describe('Select', () => {
-  it('renders all options', () => {
+  it('renders a Radix combobox trigger with the selected option', () => {
     render(<Select label="Fruit" options={OPTS} value="a" onChange={() => undefined} />);
-    expect(screen.getAllByRole('option')).toHaveLength(3);
+    const trigger = screen.getByRole('combobox', { name: 'Fruit' });
+    expect(trigger.textContent).toContain('Apple');
   });
 
-  it('reflects value as selected option', () => {
+  it('reflects value as selected trigger text', () => {
     render(<Select label="Fruit" options={OPTS} value="b" onChange={() => undefined} />);
-    const select = screen.getByLabelText<HTMLSelectElement>('Fruit');
-    expect(select.value).toBe('b');
+    expect(screen.getByRole('combobox', { name: 'Fruit' }).textContent).toContain('Banana');
   });
 
-  it('fires onChange with the new value', () => {
+  it('fires onChange with the new value', async () => {
     function Harness(): ReactNode {
       const [v, setV] = useState('a');
       return <Select label="Fruit" options={OPTS} value={v} onChange={setV} />;
     }
     render(<Harness />);
-    const select = screen.getByLabelText<HTMLSelectElement>('Fruit');
-    fireEvent.change(select, { target: { value: 'c' } });
-    expect(select.value).toBe('c');
+    const trigger = screen.getByRole('combobox', { name: 'Fruit' });
+    fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' });
+    fireEvent.click(await screen.findByRole('option', { name: 'Cherry' }));
+    expect(screen.getByRole('combobox', { name: 'Fruit' }).textContent).toContain('Cherry');
   });
 
   it('binding id matches', () => {

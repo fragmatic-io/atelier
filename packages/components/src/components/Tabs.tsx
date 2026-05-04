@@ -3,10 +3,11 @@
 
 'use client';
 /**
- * Tabs — uncontrolled tabbed interface. Variants (Wave 6 / P-10): bordered,
- * elevated, ghost (default), tinted.
+ * Tabs — Radix-backed uncontrolled tabbed interface. Variants (Wave 6 / P-10):
+ * bordered, elevated, ghost (default), tinted.
  */
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import * as RadixTabs from '@radix-ui/react-tabs';
+import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { cn, layoutVariantClass, type LayoutVariant } from './_variants.js';
 
@@ -30,10 +31,8 @@ export function Tabs({
   variant = 'ghost',
   className,
 }: TabsProps): ReactNode {
-  const baseId = useId();
   const initial = defaultActiveId ?? tabs[0]?.id ?? '';
-  const [activeId, setActiveId] = useState<string>(initial);
-  const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [activeId, setActiveId] = useState(initial);
 
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>): void => {
     const idx = tabs.findIndex((t) => t.id === activeId);
@@ -46,60 +45,38 @@ export function Tabs({
     else return;
     e.preventDefault();
     const target = tabs[next];
-    if (!target) return;
-    setActiveId(target.id);
-    buttonRefs.current.get(target.id)?.focus();
+    if (target) setActiveId(target.id);
   };
 
-  const active = tabs.find((t) => t.id === activeId);
-
   return (
-    <div
+    <RadixTabs.Root
+      value={activeId}
+      onValueChange={setActiveId}
       data-cir-component="Tabs"
       data-variant={variant}
       className={cn(layoutVariantClass[variant], className)}
     >
-      <div role="tablist" data-cir-part="tabs-list">
-        {tabs.map((t) => {
-          const tabBtnId = `${baseId}-tab-${t.id}`;
-          const panelId = `${baseId}-panel-${t.id}`;
-          const selected = t.id === activeId;
-          return (
-            <button
-              key={t.id}
-              ref={(el): void => {
-                if (el) buttonRefs.current.set(t.id, el);
-                else buttonRefs.current.delete(t.id);
-              }}
-              type="button"
-              role="tab"
-              id={tabBtnId}
-              aria-selected={selected}
-              aria-controls={panelId}
-              tabIndex={selected ? 0 : -1}
-              data-cir-part="tab"
-              data-active={selected ? 'true' : 'false'}
-              onClick={(): void => {
-                setActiveId(t.id);
-              }}
-              onKeyDown={onKeyDown}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-      {active ? (
-        <div
-          role="tabpanel"
-          id={`${baseId}-panel-${active.id}`}
-          aria-labelledby={`${baseId}-tab-${active.id}`}
-          data-cir-part="tab-panel"
-        >
-          {active.content}
-        </div>
-      ) : null}
-    </div>
+      <RadixTabs.List data-cir-part="tabs-list">
+        {tabs.map((t) => (
+          <RadixTabs.Trigger
+            key={t.id}
+            value={t.id}
+            data-cir-part="tab"
+            onClick={() => {
+              setActiveId(t.id);
+            }}
+            onKeyDown={onKeyDown}
+          >
+            {t.label}
+          </RadixTabs.Trigger>
+        ))}
+      </RadixTabs.List>
+      {tabs.map((t) => (
+        <RadixTabs.Content key={t.id} value={t.id} data-cir-part="tab-panel">
+          {t.content}
+        </RadixTabs.Content>
+      ))}
+    </RadixTabs.Root>
   );
 }
 Tabs.displayName = 'Tabs';

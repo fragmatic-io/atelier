@@ -3,9 +3,9 @@
 
 'use client';
 /**
- * CommandPalette — controlled, dialog-backed quick-launcher. Mirrors the
- * Modal pattern (HTML `<dialog>` for focus trap + Escape) and adds a search
- * input that filters `commands` live by label / keywords / group.
+ * CommandPalette — controlled, Radix dialog-backed quick-launcher. Mirrors the
+ * Modal pattern for focus trap + Escape and adds a search input that filters
+ * `commands` live by label / keywords / group.
  *
  * Wave 11 / Int-3 upgrade:
  *
@@ -30,7 +30,7 @@
  * Keyboard:
  *  - ArrowDown / ArrowUp move the highlight through the visible commands.
  *  - Enter triggers the highlighted command's `onSelect` and closes.
- *  - Escape closes (via the `<dialog>`'s `cancel` event).
+ *  - Escape closes through Radix Dialog's open-state callback.
  *
  * Filtering is case-insensitive substring matching against `label`, the
  * optional `group`, and any `keywords`. Commands group visually under their
@@ -47,6 +47,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
+import * as RadixDialog from '@radix-ui/react-dialog';
 import type { ComponentBinding } from '@atelier/runtime';
 import {
   detectPlatform,
@@ -186,7 +187,6 @@ export function CommandPalette({
   onOpen,
   platform,
 }: CommandPaletteProps): ReactNode {
-  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const inputId = useId();
   const [query, setQuery] = useState('');
   const [highlight, setHighlight] = useState(0);
@@ -272,26 +272,6 @@ export function CommandPalette({
   );
   const filtered = useMemo(() => scored.map((s) => s.command), [scored]);
 
-  // Sync open/close with native <dialog> state.
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    if (open && !dlg.open) {
-      if (typeof dlg.showModal === 'function') {
-        try {
-          dlg.showModal();
-        } catch {
-          dlg.setAttribute('open', '');
-        }
-      } else {
-        dlg.setAttribute('open', '');
-      }
-    } else if (!open && dlg.open) {
-      if (typeof dlg.close === 'function') dlg.close();
-      else dlg.removeAttribute('open');
-    }
-  }, [open]);
-
   // Reset query + highlight when re-opening so a stale state never persists.
   useEffect(() => {
     if (open) {
@@ -299,20 +279,6 @@ export function CommandPalette({
       setHighlight(0);
     }
   }, [open]);
-
-  // Mirror native cancel (Escape) onto onClose.
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const onCancel = (e: Event): void => {
-      e.preventDefault();
-      onClose();
-    };
-    dlg.addEventListener('cancel', onCancel);
-    return (): void => {
-      dlg.removeEventListener('cancel', onCancel);
-    };
-  }, [onClose]);
 
   // Clamp highlight when filtered shrinks.
   useEffect(() => {
@@ -341,86 +307,111 @@ export function CommandPalette({
   };
 
   return (
-    <dialog
-      ref={dialogRef}
-      data-cir-component="CommandPalette"
-      data-variant={variant}
-      data-cir-source={sourceIsProp ? 'prop' : 'registry'}
-      data-elevation="commandbar"
-      aria-label="Command palette"
-      className={cn(commandPaletteVariantClass[variant], elevationClass.commandbar, className)}
+    <RadixDialog.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
     >
-      <div data-cir-part="palette-search">
-        <label htmlFor={inputId} data-cir-part="palette-label">
-          Command
-        </label>
-        <input
-          id={inputId}
-          type="search"
-          placeholder={placeholder}
-          value={query}
-          onChange={(e) => {
-            setQuery(e.currentTarget.value);
-          }}
-          onKeyDown={onKeyDown}
-          data-cir-part="palette-input"
-          autoFocus
-        />
-      </div>
-      <ul role="listbox" data-cir-part="palette-list" aria-label="Commands">
-        {filtered.length === 0 ? (
-          <li data-cir-part="palette-empty" role="presentation">
-            No matching commands.
-          </li>
-        ) : (
-          filtered.map((cmd, i) => (
-            <li
-              key={cmd.id}
-              role="option"
-              aria-selected={i === highlight}
-              data-cir-part="palette-item"
-              data-highlighted={i === highlight ? 'true' : 'false'}
-              data-group={cmd.group ?? ''}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  cmd.onSelect();
-                  onClose();
+      <RadixDialog.Portal>
+        <RadixDialog.Overlay data-cir-part="palette-backdrop" />
+        <RadixDialog.Content asChild aria-describedby={undefined}>
+          <dialog
+            open={open}
+            data-cir-component="CommandPalette"
+            data-variant={variant}
+            data-cir-source={sourceIsProp ? 'prop' : 'registry'}
+            data-elevation="commandbar"
+            aria-label="Command palette"
+            className={cn(
+              commandPaletteVariantClass[variant],
+              elevationClass.commandbar,
+              className,
+            )}
+            onCancel={(e) => {
+              e.preventDefault();
+              onClose();
+            }}
+          >
+            <RadixDialog.Title asChild>
+              <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>
+                Command palette
+              </span>
+            </RadixDialog.Title>
+            <div data-cir-part="palette-search">
+              <label htmlFor={inputId} data-cir-part="palette-label">
+                Command
+              </label>
+              <input
+                id={inputId}
+                type="search"
+                placeholder={placeholder}
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.currentTarget.value);
                 }}
-                onMouseEnter={() => {
-                  setHighlight(i);
-                }}
-                style={{
-                  display: 'flex',
-                  width: '100%',
-                  textAlign: 'left',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                {cmd.icon !== undefined ? (
-                  <span data-cir-part="palette-icon">
-                    <Icon set="lucide" name={cmd.icon} ariaLabel={cmd.label} />
-                  </span>
-                ) : null}
-                <span style={{ flex: 1 }}>
-                  {cmd.group !== undefined ? (
-                    <span data-cir-part="palette-group">{cmd.group}</span>
-                  ) : null}
-                  <span data-cir-part="palette-label-text">{cmd.label}</span>
-                </span>
-                {cmd.hotkey !== undefined ? (
-                  <kbd data-cir-part="palette-hotkey">
-                    {formatHotkey(parseHotkey(cmd.hotkey), activePlatform)}
-                  </kbd>
-                ) : null}
-              </button>
-            </li>
-          ))
-        )}
-      </ul>
-    </dialog>
+                onKeyDown={onKeyDown}
+                data-cir-part="palette-input"
+                autoFocus
+              />
+            </div>
+            <ul role="listbox" data-cir-part="palette-list" aria-label="Commands">
+              {filtered.length === 0 ? (
+                <li data-cir-part="palette-empty" role="presentation">
+                  No matching commands.
+                </li>
+              ) : (
+                filtered.map((cmd, i) => (
+                  <li
+                    key={cmd.id}
+                    role="option"
+                    aria-selected={i === highlight}
+                    data-cir-part="palette-item"
+                    data-highlighted={i === highlight ? 'true' : 'false'}
+                    data-group={cmd.group ?? ''}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        cmd.onSelect();
+                        onClose();
+                      }}
+                      onMouseEnter={() => {
+                        setHighlight(i);
+                      }}
+                      style={{
+                        display: 'flex',
+                        width: '100%',
+                        textAlign: 'left',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      {cmd.icon !== undefined ? (
+                        <span data-cir-part="palette-icon">
+                          <Icon set="lucide" name={cmd.icon} ariaLabel={cmd.label} />
+                        </span>
+                      ) : null}
+                      <span style={{ flex: 1 }}>
+                        {cmd.group !== undefined ? (
+                          <span data-cir-part="palette-group">{cmd.group}</span>
+                        ) : null}
+                        <span data-cir-part="palette-label-text">{cmd.label}</span>
+                      </span>
+                      {cmd.hotkey !== undefined ? (
+                        <kbd data-cir-part="palette-hotkey">
+                          {formatHotkey(parseHotkey(cmd.hotkey), activePlatform)}
+                        </kbd>
+                      ) : null}
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </dialog>
+        </RadixDialog.Content>
+      </RadixDialog.Portal>
+    </RadixDialog.Root>
   );
 }
 

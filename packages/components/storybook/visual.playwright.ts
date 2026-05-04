@@ -82,3 +82,52 @@ test('interaction primitives story exercises Radix-backed surfaces', async ({ pa
   await page.getByRole('button', { name: 'Close' }).click();
   await expect(page.getByRole('dialog', { name: 'Customer context' })).toHaveCount(0);
 });
+
+test('ExceptionReviewWorkbench resolves with confirmation and audit', async ({ page }) => {
+  await page.goto(
+    '/iframe.html?id=components-operational-workflows--exception-review-workbench&viewMode=story&globals=designSystem:neutral',
+  );
+
+  await expect(page.locator('[data-cir-workflow="ExceptionReviewWorkbench"]')).toBeVisible();
+  await page.locator('[data-cir-queue-item]', { hasText: 'EX-1038' }).click();
+  await expect(page.locator('[data-cir-record-id]')).toHaveText('EX-1038');
+
+  await page.locator('[data-cir-resolve-exception]').click();
+  await expect(page.getByRole('dialog', { name: 'Confirm exception resolution' })).toBeVisible();
+  await page.locator('[data-cir-confirm-resolution]').click();
+  await expect(page.locator('[data-cir-audit-line]')).toContainText('Resolved EX-1038');
+});
+
+test('CustomerContextPanel switches customer context and opens risk notes', async ({ page }) => {
+  await page.goto(
+    '/iframe.html?id=components-operational-workflows--customer-context-panel&viewMode=story&globals=designSystem:neutral',
+  );
+
+  await expect(page.locator('[data-cir-workflow="CustomerContextPanel"]')).toBeVisible();
+  await page.locator('[data-cir-customer-row]', { hasText: 'Arden Health' }).click();
+  await expect(page.locator('[data-cir-workflow-header] h2')).toHaveText('Arden Health');
+
+  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await expect(page.locator('[data-cir-mini-timeline]')).toContainText(
+    'Policy evaluator requested',
+  );
+
+  await page.locator('[data-cir-open-notes]').click();
+  await expect(page.getByRole('dialog', { name: 'Risk notes' })).toBeVisible();
+});
+
+test('ApprovalCommandCenter runs command palette approval flow', async ({ page }) => {
+  await page.goto(
+    '/iframe.html?id=components-operational-workflows--approval-command-center&viewMode=story&globals=designSystem:neutral',
+  );
+
+  await expect(page.locator('[data-cir-workflow="ApprovalCommandCenter"]')).toBeVisible();
+  await page.locator('[data-cir-approval-item]', { hasText: 'APR-2197' }).click();
+  await page.locator('[data-cir-open-command-palette]').click();
+
+  await expect(page.getByRole('dialog', { name: 'Command palette' })).toBeVisible();
+  await page.getByRole('button', { name: /Approve APR-2197/i }).click();
+  await expect(page.getByRole('dialog', { name: 'Confirm approval dispatch' })).toBeVisible();
+  await page.locator('[data-cir-confirm-approval]').click();
+  await expect(page.locator('[data-cir-audit-line]')).toContainText('Approved APR-2197');
+});

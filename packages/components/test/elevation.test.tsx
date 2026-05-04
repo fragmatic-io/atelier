@@ -158,7 +158,7 @@ describe('Vis-7 — component opt-ins emit data-elevation + utility class', () =
   });
 
   it('CommandPalette — data-elevation="commandbar" and shadow-xl', () => {
-    const { container } = render(
+    render(
       <CommandPalette
         open={true}
         commands={[{ id: 'a', label: 'A', onSelect: () => undefined }]}
@@ -166,7 +166,7 @@ describe('Vis-7 — component opt-ins emit data-elevation + utility class', () =
         bindOpenHotkey={false}
       />,
     );
-    const root = container.querySelector('[data-cir-component="CommandPalette"]');
+    const root = document.querySelector('[data-cir-component="CommandPalette"]');
     expect(root).not.toBeNull();
     expect(root!.getAttribute('data-elevation')).toBe('commandbar');
     expect(root!.getAttribute('class') ?? '').toMatch(/\bshadow-xl\b/);
