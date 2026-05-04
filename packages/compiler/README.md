@@ -55,6 +55,7 @@ import {
   MemoryManifestStore,
   RedisManifestStore,
   ServerManifestResolver,
+  createBaselineManifestValidator,
 } from '@atelier/compiler';
 import { createClient } from 'redis';
 
@@ -77,8 +78,22 @@ const prodStore = new RedisManifestStore({
 // ...later, on shutdown:
 await client.quit();
 
-const resolver = new ServerManifestResolver({ compiler, store: prodStore });
+const resolver = new ServerManifestResolver({
+  compiler,
+  store: prodStore,
+  validate: createBaselineManifestValidator({
+    // Sourced from the user's vault grant for this app/route.
+    grantedFields: (input) => input.intent?.global_preferences['granted_fields'] ?? [],
+    // Sourced from app/tenant policy metadata.
+    piiFields: ['email'],
+  }),
+});
 ```
+
+`ServerManifestResolver` always runs `ManifestSchema` before cache writes. In
+production it also requires a manifest policy validator unless the host
+explicitly opts out with `allowUnvalidatedManifests`; use
+`createBaselineManifestValidator(...)` for the standard baseline policy bridge.
 
 ### Key-shape compatibility
 

@@ -79,7 +79,7 @@ A **component catalog** is also public. It lists the UI primitives the app suppo
 
 These three things — capability registry, skill library, component catalog — are the **complete public surface** of an app in Atelier. Everything else (default UI, marketing pages, onboarding) is built on top of them, including by the company itself.
 
-See [`component-catalog.md`](component-catalog.md) for the 56-component baseline that covers 90% of web app patterns.
+See [`component-catalog.md`](component-catalog.md) for the 83-component baseline that covers most web app patterns.
 
 ---
 

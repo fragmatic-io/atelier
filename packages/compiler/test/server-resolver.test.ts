@@ -13,9 +13,10 @@ import type { AuditEvent } from '@atelier/schemas';
 import { MemoryManifestStore } from '../src/manifest-store.js';
 import {
   BudgetExceededError,
+  createBaselineManifestValidator,
   ServerManifestResolver,
   type TokenBudgetCounter,
-} from '../src/server-resolver.js';
+} from '../src/index.js';
 import { CompilerOutputError, type CompilerService, type CompileResult } from '../src/types.js';
 import { fixtureCompileInput, fixtureIntent, fixtureManifest } from './_fixtures.js';
 
@@ -120,6 +121,39 @@ describe('ServerManifestResolver', () => {
     expect(validate).toHaveBeenCalledTimes(1);
     expect(await store.get(r.key)).not.toBeNull();
     expect(audit.mock.calls[0]?.[0].policy_evaluations).toEqual(policy_evaluations);
+  });
+
+  it('provides a baseline validator factory for the central cache boundary', async () => {
+    const audit = vi.fn<(e: AuditEvent) => void>();
+    const { compiler } = stubCompiler(12);
+    const store = new MemoryManifestStore();
+    const resolver = new ServerManifestResolver({
+      compiler,
+      store,
+      audit,
+      validate: createBaselineManifestValidator({ grantedFields: [] }),
+    });
+
+    const result = await resolver.resolve(fixtureCompileInput());
+
+    expect(await store.get(result.key)).not.toBeNull();
+    expect(audit.mock.calls[0]?.[0].policy_evaluations.length).toBeGreaterThan(0);
+    expect(audit.mock.calls[0]?.[0].policy_evaluations.some((row) => !row.passed)).toBe(false);
+  });
+
+  it('makes schema-only production resolver construction an explicit opt-out', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const { compiler } = stubCompiler(12);
+    const store = new MemoryManifestStore();
+
+    expect(() => new ServerManifestResolver({ compiler, store })).toThrow(
+      /requires a manifest validator/,
+    );
+    expect(
+      () => new ServerManifestResolver({ compiler, store, allowUnvalidatedManifests: true }),
+    ).not.toThrow();
+
+    vi.unstubAllEnvs();
   });
 
   it('rejects host validation failures before storing', async () => {

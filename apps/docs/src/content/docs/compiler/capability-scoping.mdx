@@ -149,7 +149,7 @@ The C-2 `ToolUsingCompiler` already shipped a `findCapability` tool with a subst
 
 ## Demo wiring
 
-**Default-on** as of TODO P1.1 (2026-05-04): `apps/demo` wires `SubstringCapabilityResolver` (no API key required) and threads it onto every compile. Opt out via `ATELIER_CAPABILITY_RESOLVER=off`; legacy `CIR_CAPABILITY_RESOLVER_ENABLED=0` honoured for one release cycle:
+**Default-on in the demo:** `apps/demo` wires `SubstringCapabilityResolver` (no API key required) and threads it onto every compile. Opt out via `ATELIER_CAPABILITY_RESOLVER=off`; legacy `CIR_CAPABILITY_RESOLVER_ENABLED=0` honoured for one release cycle:
 
 ```bash
 # Default — substring scoping is on:

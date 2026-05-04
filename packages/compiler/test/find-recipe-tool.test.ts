@@ -106,6 +106,7 @@ describe('findRecipe compiler tool', () => {
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env,
       onToolCall: (_call, result) => observed.push(result),
@@ -147,7 +148,11 @@ describe('findRecipe compiler tool', () => {
       },
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env,
+    });
     await c.compile(fixtureCompileInput());
     expect(seen[0]?.topN).toBe(5);
   });
@@ -163,6 +168,7 @@ describe('findRecipe compiler tool', () => {
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env: defaultEnv(),
       onToolCall: (_call, result) => observed.push(result),
@@ -184,7 +190,11 @@ describe('findRecipe compiler tool', () => {
       },
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
-    const c = new ToolUsingCompiler({ inner: agent, env });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env,
+    });
     await c.compile(fixtureCompileInput());
     expect(seen).toHaveLength(1);
     // topN still defaults.
@@ -208,6 +218,7 @@ describe('findRecipe compiler tool', () => {
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env,
       onToolCall: (_call, result) => observed.push(result),
@@ -233,6 +244,7 @@ describe('findRecipe compiler tool', () => {
       { text: finalManifestText, tokenCost: 10, model: 'm' },
     ]);
     const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
       inner: agent,
       env,
       onToolCall: (_call, result) => observed.push(result),
@@ -271,7 +283,11 @@ describe('findRecipe compiler tool', () => {
         return Promise.resolve({ text: finalManifestText, tokenCost: 10, model: 'm' });
       },
     };
-    const c = new ToolUsingCompiler({ inner: agent, env: defaultEnv() });
+    const c = new ToolUsingCompiler({
+      validationMode: 'permissive',
+      inner: agent,
+      env: defaultEnv(),
+    });
     await c.compile(fixtureCompileInput());
     expect(surfacedTools).toContain('findRecipe');
   });

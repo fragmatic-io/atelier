@@ -10,6 +10,21 @@ Software ships **capabilities and skills** (typed actions, data, usage knowledge
 
 Atelier is the integration of pieces that already exist — MCP-style capabilities, skills, JSON manifest UI, intent profiles, multi-tier caching, pub-sub triggers — into one principled architecture. Compile rarely, render constantly. **The interface is not the product. The capability is.**
 
+## Target audience
+
+Atelier is for **ops-heavy organisations whose internal software fragments by role**:
+support ops, sales/revenue ops, marketplace ops, compliance/risk ops, and
+engineering/platform ops. These teams already have real systems of record,
+APIs, permissions, and audit obligations. Their pain is maintaining many
+slightly different dashboards, queues, review tools, and action surfaces for
+different teams.
+
+The first wedge is not "replace every app builder." It is: **replace stale,
+role-specific operational dashboards with policy-safe compiled interfaces over
+the same capability surface.** Retool-style tools prove teams will pay for
+internal apps; Atelier targets the next bottleneck, where the app itself needs
+to adapt per user/workflow without forking the frontend.
+
 ---
 
 ## Quick start (10 minutes from `git clone` to a personalised UI)
@@ -76,7 +91,7 @@ graph TB
   subgraph Public["PUBLIC SURFACE (per app, signed, versioned)"]
     Caps[/"Capabilities<br/>typed actions + data"/]
     Skills[/"Skills<br/>usage knowledge"/]
-    Components[/"Component catalog<br/>56 primitives + composition rules"/]
+    Components[/"Component catalog<br/>83 primitives + composition rules"/]
     Policies[/"Policies<br/>safety rules"/]
     Brand[/"Brand kit<br/>tokens + variants + voice"/]
   end
@@ -151,18 +166,23 @@ Cost: 1 LLM call on cold path (~5–20k tokens). Zero LLM calls on the hot path.
 
 ## Packages
 
-| Package                 | One-liner                                                                                                                                                                                                                                                                        |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@atelier/schemas`      | Zod schemas + JSON Schema codegen for every Atelier artifact (Capability, Skill, Component, Manifest, Trigger, Intent, Audit, BrandKit, Policy, CompositionRules). [README](packages/schemas/README.md).                                                                         |
-| `@atelier/policies`     | 7 baseline pure-function validators + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` interface. [README](packages/policies/README.md).                                                                                                          |
-| `@atelier/runtime`      | Framework-agnostic core: manifest cache (Memory + IndexedDB), fetcher, resolver, action dispatcher (modal + verbal-phrase confirm + LRU undo), trigger bus + SSE transport, render-plan builder, audit sinks (incl. `StreamingAuditSink`). [README](packages/runtime/README.md). |
-| `@atelier/components`   | 56 baseline React primitives (Layout, Display, Input, Navigation, Feedback, Action, Specialized) with composition rules + per-component metadata. [README](packages/components/README.md).                                                                                       |
-| `@atelier/react`        | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirmation portal, SWR + optimistic UI, `@atelier/react/debug` subpath for the floating audit panel. [README](packages/react/README.md).                                                                   |
-| `@atelier/compiler`     | LLM-backed compile service: `GeminiCompiler` + `FallbackCompiler` + `CompositeCompiler`, `compileIntentProfile()` for LLM-assisted onboarding, `MemoryManifestStore` + `RedisManifestStore`, `ServerManifestResolver`. [README](packages/compiler/README.md).                    |
-| `@atelier/evals`        | Eval harness, `defineEval()`, `atelier-evals` CLI. End-to-end Gemini smoke + nightly workflow. [README](packages/evals/README.md).                                                                                                                                               |
-| `@atelier/cli`          | Unified developer CLI: `atelier init / dev / add / components-sync / validate / import openapi / inspect / compile / vault dev`, with `--tail` for terminal-side audit observability. [README](packages/cli/README.md).                                                          |
-| `@atelier/vault-server` | The reference intent vault server. `node:http` + ed25519 JWTs + JSON-file storage. Mints scoped tokens, enforces scope-based read/write filtering, emits `system.security_revocation` triggers. [README](packages/vault-server/README.md).                                       |
-| `@atelier/vault-client` | Typed wire client for the vault. Local JWKS-cached signature verification, pluggable token storage (browser localStorage + in-memory + custom), typed errors for clean fall-through. [README](packages/vault-client/README.md).                                                  |
+| Package                        | One-liner                                                                                                                                                                                                                                                                        |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@atelier/schemas`             | Zod schemas + JSON Schema codegen for every Atelier artifact (Capability, Skill, Component, Manifest, Trigger, Intent, Audit, BrandKit, Policy, CompositionRules). [README](packages/schemas/README.md).                                                                         |
+| `@atelier/policies`            | 10 baseline pure-function validators + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` interface. [README](packages/policies/README.md).                                                                                                         |
+| `@atelier/runtime`             | Framework-agnostic core: manifest cache (Memory + IndexedDB), fetcher, resolver, action dispatcher (modal + verbal-phrase confirm + LRU undo), trigger bus + SSE transport, render-plan builder, audit sinks (incl. `StreamingAuditSink`). [README](packages/runtime/README.md). |
+| `@atelier/components`          | 83 baseline React primitives (Layout, Display, Input, Navigation, Feedback, Action, Specialized) with composition rules + per-component metadata. [README](packages/components/README.md).                                                                                       |
+| `@atelier/react`               | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirmation portal, SWR + optimistic UI, `@atelier/react/debug` subpath for the floating audit panel. [README](packages/react/README.md).                                                                   |
+| `@atelier/compiler`            | LLM-backed compile service: `GeminiCompiler`, `ToolUsingCompiler`, validation provenance, baseline policy validation, `MemoryManifestStore` + `RedisManifestStore`, `ServerManifestResolver`. [README](packages/compiler/README.md).                                             |
+| `@atelier/evals`               | Eval harness, `defineEval()`, `atelier-evals` CLI. End-to-end Gemini smoke + nightly workflow. [README](packages/evals/README.md).                                                                                                                                               |
+| `@atelier/cli`                 | Unified developer CLI: `atelier init / dev / add / components-sync / validate / import openapi / inspect / compile / vault dev`, with `--tail` for terminal-side audit observability. [README](packages/cli/README.md).                                                          |
+| `@atelier/vault-server`        | The reference intent vault server. `node:http` + ed25519 JWTs + JSON-file storage. Mints scoped tokens, enforces scope-based read/write filtering, emits `system.security_revocation` triggers. [README](packages/vault-server/README.md).                                       |
+| `@atelier/vault-client`        | Typed wire client for the vault. Local JWKS-cached signature verification, pluggable token storage (browser localStorage + in-memory + custom), typed errors for clean fall-through. [README](packages/vault-client/README.md).                                                  |
+| `@atelier/capability-resolver` | Two-stage capability scoping helpers for large registries. [README](packages/capability-resolver/README.md).                                                                                                                                                                     |
+| `@atelier/recipe-resolver`     | Recipe retrieval and resolver primitives for marketplace/RAG-backed recipe selection. [README](packages/recipe-resolver/README.md).                                                                                                                                              |
+| `@atelier/data-resolvers`      | Runtime data-binding resolver helpers. [README](packages/data-resolvers/README.md).                                                                                                                                                                                              |
+| `@atelier/eval-marketplace`    | Marketplace eval fixtures and harness extensions. [README](packages/eval-marketplace/README.md).                                                                                                                                                                                 |
+| `@atelier/keyboard`            | Keyboard registry, shortcut resolution, and command palette support. [README](packages/keyboard/README.md).                                                                                                                                                                      |
 
 ---
 
@@ -192,28 +212,27 @@ The two packages plug into the existing trigger bus via `system.security_revocat
 
 ```mermaid
 graph TB
-  subgraph Shipped["Shipped (verifiable in this commit)"]
+  subgraph Shipped["Shipped (verifiable in the current tree)"]
     direction TB
-    S1["56 baseline components<br/>+ composition rules JSON sibling"]
-    S2["7 baseline policies<br/>+ PolicyRegistry for app-defined"]
+    S1["83 baseline components<br/>+ composition rules JSON sibling"]
+    S2["10 baseline policies<br/>+ PolicyRegistry for app-defined"]
     S3["LLM compiler<br/>Gemini + Fallback + Composite"]
     S4["StreamingAuditSink<br/>+ IndexedDB cache + SSE transport"]
     S5["Public artifacts<br/>capabilities/ skills/ recipes/ policies/<br/>+ .well-known/cir.json"]
-    S6["_review envelope<br/>+ validate-data --strict CI gate<br/>for OpenAPI imports"]
+    S6["_review envelope<br/>+ strict validate-data gate<br/>for OpenAPI imports"]
     S7["LLM-assisted onboarding<br/>compileIntentProfile + /onboarding/describe<br/>+ /onboarding/review human gate"]
-    S8["8-subcommand atelier CLI<br/>incl. atelier inspect / compile / dev --tail"]
+    S8["atelier CLI<br/>incl. inspect / compile / dev / vault / marketplace"]
     S9["Nightly Gemini eval workflow<br/>auth-fail vs no-key distinction"]
-    S10["984 tests across 136 files<br/>15 schema-validated artifact files"]
+    S10["3800+ tests across 320+ files<br/>schema-validated artifact files"]
   end
 
   subgraph Roadmap["Roadmap / not yet shipped"]
     direction TB
-    R3["Behavioral pattern detector implementations<br/>(interface only)"]
-    R4["Audit sink server endpoint in the demo<br/>(atelier dev --tail is a contract)"]
-    R5["Marketplace / community recipes"]
-    R6["Live-query subscriptions<br/>(SWR + optimistic UI cover the common cases)"]
-    R7["Cross-app workflow compilation"]
-    R8["Mobile + native render runtimes"]
+    R3["Cross-app workflow compilation"]
+    R4["Hosted vault + marketplace operations"]
+    R5["Live-query subscriptions<br/>(SWR + optimistic UI cover the common cases)"]
+    R6["Native/mobile render runtimes"]
+    R7["Richer marketplace provenance + security review"]
   end
 ```
 
@@ -269,7 +288,7 @@ See [`apps/demo/README.md`](apps/demo/README.md) for what's wired and how to swa
 ```bash
 pnpm validate                 # license + typecheck + lint + format + components:check + validate-data + tests
 pnpm validate:fast            # everything except tests (pre-push hook)
-pnpm test                     # vitest (984 tests across 136 files at this commit)
+pnpm test                     # vitest (3800+ tests across 320+ files)
 pnpm test:coverage            # detailed coverage by package
 pnpm exec atelier-schemas dump --out .well-known/schemas      # regenerate published JSON Schemas
 pnpm exec atelier-schemas validate-data --strict              # fail on _review drafts
@@ -292,7 +311,7 @@ atelier/
 ├── AGENTS.md                   # Coding-agent instructions
 ├── README.md                   # ← this file
 ├── docs/                       # framework chapters + chat/voice/agent extensions
-├── packages/                   # pnpm workspace (8 published packages)
+├── packages/                   # pnpm workspace (15 @atelier packages)
 ├── apps/demo/                  # Next.js 15 end-to-end showcase
 ├── capabilities/               # typed action+data definitions (with _review envelope)
 ├── skills/                     # markdown skills with YAML frontmatter

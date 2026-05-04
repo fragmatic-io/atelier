@@ -20,7 +20,7 @@ flowchart TB
   Services --> Bus["triggerBus<br/>(InMemory or Redis)"]
   Services --> DataResolver["dataResolver<br/>(per-capability fetchers)"]
   Services --> AuditSink["auditSink<br/>(StreamingAuditSink)"]
-  Services --> Bindings["componentBindings<br/>(67 baselines)"]
+  Services --> Bindings["componentBindings<br/>(83 baselines)"]
   Services --> Policies["policies<br/>(BASELINE_POLICIES + custom)"]
   Services --> Brand["brandKit"]
 ```
@@ -34,6 +34,7 @@ import { configureCirRuntime } from '@atelier/runtime';
 import { COMPONENT_BINDINGS } from '@atelier/components';
 import { BASELINE_POLICIES, PolicyRegistry } from '@atelier/policies';
 import {
+  createBaselineManifestValidator,
   ToolUsingCompiler,
   ValidationFeedbackCompiler,
   CompositeCompiler,
@@ -44,11 +45,22 @@ import {
 
 const policyRegistry = new PolicyRegistry();
 for (const p of BASELINE_POLICIES) policyRegistry.register(p);
+const components = loadComponents('./components/registry.json');
+const validate = createBaselineManifestValidator({
+  grantedFields: (input) => loadGrantedFields(input.user_id),
+});
 
 const services = configureCirRuntime({
   compiler: new CompositeCompiler([
     new ValidationFeedbackCompiler(
-      new ToolUsingCompiler({ apiKey: process.env.GEMINI_API_KEY!, toolEnv }),
+      new ToolUsingCompiler({
+        inner,
+        env: {
+          capabilities: loadCapabilities('./capabilities'),
+          components,
+          validate,
+        },
+      }),
       { maxRetries: 2 },
     ),
     new GenericFallbackCompiler(),

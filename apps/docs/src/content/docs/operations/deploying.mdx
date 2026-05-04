@@ -16,7 +16,7 @@ This page is the production checklist. The walkthrough version is at [Getting st
 
 ### Environment variables
 
-The five `_ENABLED` feature paths below are **default-on** as of TODO P1.1 (2026-05-04). Each ships a single opt-out env var (`ATELIER_*=off`); the legacy `CIR_*_ENABLED=0` form is honoured for one release cycle. See [Operations → Env vars](/operations/env-vars/) for the full list and the deprecation timeline.
+The feature paths below are **default-on** in the demo and reference host. Each ships a single opt-out env var (`ATELIER_*=off`); the legacy `CIR_*_ENABLED=0` form is honoured for one release cycle. See [Operations → Env vars](/operations/env-vars/) for the full list and the deprecation timeline.
 
 | Variable                            | Required | Default | Purpose                                                                    |
 | ----------------------------------- | -------- | ------- | -------------------------------------------------------------------------- |
@@ -102,11 +102,18 @@ Once the host's request rate justifies it:
 Wire via `ServerManifestResolver`:
 
 ```ts
-import { ServerManifestResolver, RedisManifestStore } from '@atelier/compiler';
+import {
+  createBaselineManifestValidator,
+  ServerManifestResolver,
+  RedisManifestStore,
+} from '@atelier/compiler';
 
 const resolver = new ServerManifestResolver({
   store: new RedisManifestStore({ url: process.env.REDIS_URL! }),
   compileEndpoint: process.env.COMPILE_WORKER_URL!, // worker's HTTP endpoint
+  validate: createBaselineManifestValidator({
+    grantedFields: (input) => loadGrantedFields(input.user_id),
+  }),
 });
 ```
 

@@ -67,9 +67,9 @@ pnpm atelier inspect manifests/m_xyz.json
 ## 6. Verify the whole tree
 
 ```bash
-pnpm validate                 # license + typecheck + lint + format + tests
-pnpm test                     # vitest (3000+ tests at HEAD)
-pnpm exec cir-evals run       # eval suite
+pnpm validate                 # license + typecheck + lint + format + data/schema checks + tests
+pnpm test                     # vitest (3800+ tests at HEAD)
+pnpm exec atelier-evals run   # eval suite
 ```
 
 ## What's next

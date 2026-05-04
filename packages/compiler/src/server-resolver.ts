@@ -4,7 +4,7 @@
  * Server-side resolver. Glues compiler + manifest store + audit emission
  * into one entry point that route handlers call:
  *
- *   const resolver = new ServerManifestResolver({ compiler, store, audit });
+ *   const resolver = new ServerManifestResolver({ compiler, store, audit, validate });
  *   const result = await resolver.resolve(input);  // hit OR cold compile
  *
  * Trigger-driven invalidation lives here too: `invalidate(predicate)` walks
@@ -70,8 +70,18 @@ export interface ServerManifestResolverOptions {
    * Optional host policy validator. The resolver always performs structural
    * ManifestSchema validation before storing; this hook adds app-specific
    * policy/composition validation at the central cache boundary.
+   *
+   * Production safety: in `NODE_ENV=production`, constructing a resolver
+   * without this hook throws unless `allowUnvalidatedManifests` is explicitly
+   * set. Use `createBaselineManifestValidator(...)` for the standard baseline
+   * policy bridge.
    */
   validate?: ManifestValidator;
+  /**
+   * Explicit escape hatch for local demos/tests that intentionally exercise
+   * schema-only compiler paths. Do not set this in production hosts.
+   */
+  allowUnvalidatedManifests?: boolean;
 }
 
 export interface TokenBudgetCounter {
@@ -142,6 +152,15 @@ export class ServerManifestResolver {
   readonly #validate: ManifestValidator | undefined;
 
   constructor(opts: ServerManifestResolverOptions) {
+    if (
+      !opts.validate &&
+      !opts.allowUnvalidatedManifests &&
+      process.env['NODE_ENV'] === 'production'
+    ) {
+      throw new Error(
+        'ServerManifestResolver requires a manifest validator in production. Pass validate: createBaselineManifestValidator(...) or set allowUnvalidatedManifests only for non-production experiments.',
+      );
+    }
     this.#compiler = opts.compiler;
     this.#store = opts.store;
     this.#audit = opts.audit;

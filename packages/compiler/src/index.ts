@@ -12,6 +12,7 @@
  *   import {
  *     CompositeCompiler, GeminiCompiler, FallbackCompiler,
  *     MemoryManifestStore, ServerManifestResolver,
+ *     createBaselineManifestValidator,
  *   } from '@atelier/compiler';
  *
  *   const compiler = new CompositeCompiler([
@@ -19,7 +20,11 @@
  *     new FallbackCompiler({ lookup: manifestForRoute }),
  *   ]);
  *   const store = new MemoryManifestStore();
- *   const resolver = new ServerManifestResolver({ compiler, store });
+ *   const resolver = new ServerManifestResolver({
+ *     compiler,
+ *     store,
+ *     validate: createBaselineManifestValidator({ grantedFields: [] }),
+ *   });
  *
  * ## Compile cost budgets (Wave 10 S-6)
  *
@@ -209,6 +214,10 @@ export {
   type ServerManifestResolverOptions,
   type TokenBudgetCounter,
 } from './server-resolver.js';
+export {
+  createBaselineManifestValidator,
+  type BaselineManifestValidatorOptions,
+} from './manifest-policy-validator.js';
 
 // Outline compiler + multi-route fan-out (Wave C / Phase C-4)
 export {

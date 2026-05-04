@@ -29,35 +29,36 @@ pnpm atelier dev --tail # tail audit events
 
 Most changes touch one package + one demo. Tests and typecheck both watch the workspace.
 
-## Build artifacts (P2.1 pilot)
+## Build artifacts
 
-`@atelier/schemas` is the first package to ship as a pre-built `dist/` tree —
-its `exports` map points at `./dist/index.js` + `./dist/index.d.ts`, so even
-in-monorepo consumers resolve through the built artefact. The other 14
-packages still export `./src/*.ts` directly; they follow once the pilot
-pattern is reviewed.
+Publishable `@atelier/*` packages resolve through built `dist/` artifacts, not
+raw `src/*.ts`. The first migration wave covers the framework core and CLI
+paths that must run under bare Node: schemas, runtime, policies, compiler,
+vault client/server, and CLI. Follow-up migrations use the same contract:
+`exports` points at `dist`, type declarations are emitted, and runtime smokes
+exercise real import/command paths.
 
 ```bash
-pnpm build                                            # build the pilot
-pnpm --filter @atelier/schemas build:watch            # rebuild on change
-pnpm smoke-test:pack                                  # pack + install + typecheck a scratch consumer
-pnpm build:all                                        # recursive build (every pkg with a build script)
+pnpm build                                            # build package artifacts
+pnpm build:all                                        # recursive build (every package with a build script)
+pnpm --filter @atelier/schemas build:watch            # rebuild schemas while editing contracts
+pnpm smoke-test:pack                                  # pack/install smoke + CLI subcommand smoke
 ```
 
-The CI pipeline runs `pnpm build` _before_ `pnpm test` and a separate
-smoke-test step that packs `@atelier/schemas`, installs it from the tgz, and
-typechecks a tiny external consumer. If the public surface or the package's
-`exports` map breaks, that step catches it on the PR.
+The CI pipeline runs package builds before tests and includes a pack/runtime
+smoke. The smoke packs `@atelier/schemas`, installs it into a scratch consumer,
+typechecks and executes that consumer, verifies workspace package imports, and
+runs CLI help paths that lazy-load vault and marketplace command modules.
 
 When working on `packages/schemas` itself, run `pnpm --filter @atelier/schemas
 build:watch` in a separate terminal so other workspace packages and the demos
-pick up your changes via the rebuilt `dist/` tree.
+pick up contract changes through the rebuilt `dist/` tree.
 
 ## What lives where
 
 ```text
 atelier/
-├── packages/                # 14 published @atelier/* packages
+├── packages/                # 15 @atelier/* workspace packages
 ├── apps/
 │   ├── demo/                # Aurora — the personalisation showcase
 │   ├── demo-dummyjson/      # Marigold — e-commerce
@@ -80,12 +81,13 @@ atelier/
 Conventional commits. Header ≤ 100 chars. Body ≥ 1 paragraph for non-trivial changes.
 
 ```text
-feat(compiler): tool-using agent with 9 tools
+feat(compiler): tool-using agent with 10 tools
 
 ToolUsingCompiler wraps GeminiAgentClient and drives a bounded agent loop
-against a host-supplied ToolEnvironment. Nine tools landed: lookupCapability,
+against a host-supplied ToolEnvironment. Ten tools landed: lookupCapability,
 findCapability, listCapabilities, findComponent, inspectComponent,
-listComponents, validateDraft, inspectExistingManifest, listSiblingRoutes.
+listComponents, validateDraft, inspectExistingManifest, listSiblingRoutes,
+findRecipe.
 
 Co-Authored-By: ...
 ```
@@ -114,10 +116,11 @@ Every TS / JS / CSS file starts with:
 Shipped artifacts (capabilities, skills, components, policies, recipes) must validate against their schemas in CI:
 
 ```bash
-pnpm exec atelier-schemas validate-data --strict
+pnpm exec atelier-schemas validate-data
 ```
 
-`--strict` rejects `_review` envelope drafts. CI runs this on every PR.
+`pnpm validate:data` is the PR gate. Use `--strict` when validating imported
+capability drafts because it rejects `_review` envelopes before publication.
 
 ## Honouring the ETHOS
 
@@ -160,7 +163,7 @@ The pattern (set by Wave M's `<Queue>` and `<Logo>` promotions):
 PRs are reviewed against:
 
 - ETHOS principles.
-- Schema validity (`validate-data --strict`).
+- Schema validity (`validate-data`; `--strict` for imported drafts).
 - Test count (monotone).
 - License headers (CI gate).
 - Type safety (no `any`; `as` casts flagged in review).

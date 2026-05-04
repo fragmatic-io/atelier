@@ -27,6 +27,7 @@
     "access": "restricted"
   },
   "dependencies": {
+    "@atelier/policies": "workspace:*",
     "@atelier/schemas": "workspace:*",
     "@google/genai": "^1.50.1",
     "redis": "^5.12.1"

@@ -339,7 +339,7 @@ A key change is **not** automatically accepted; the application surfaces both fi
 
 ### Demo toggle
 
-**Default-on** as of TODO P1.1 (2026-05-04): the V-6 marketplace endpoints in `@atelier/vault-server` ship enabled. Opt out via `ATELIER_MARKETPLACE=off`; legacy `CIR_MARKETPLACE_ENABLED=0` honoured for one release cycle.
+**Default-on in the reference vault:** the V-6 marketplace endpoints in `@atelier/vault-server` ship enabled. Opt out via `ATELIER_MARKETPLACE=off`; legacy `CIR_MARKETPLACE_ENABLED=0` honoured for one release cycle.
 
 ---
 

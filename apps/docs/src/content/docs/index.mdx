@@ -67,6 +67,17 @@ One LLM call on the cold path (≈ 5–20k tokens). Zero LLM calls on the hot pa
 
 [See the architecture →](/atelier/architecture/)
 
+## First audience
+
+Atelier is aimed first at ops-heavy organisations with many internal-tool
+variants: support ops, sales/revenue ops, marketplace ops, compliance/risk ops,
+and engineering/platform ops. These teams already pay for internal software.
+The pain is maintaining role-specific queues, dashboards, review flows, and
+action surfaces over the same systems of record.
+
+The wedge is not "replace every app builder." It is **policy-safe, per-workflow
+interfaces over a stable capability surface**.
+
 ## Three jumps
 
 <CardGrid>
@@ -82,7 +93,7 @@ One LLM call on the cold path (≈ 5–20k tokens). Zero LLM calls on the hot pa
   />
   <LinkCard
     title="The compiler"
-    description="A single tool-using agent with a validation-feedback loop. Nine tools, retries on policy violation, budget-metered."
+    description="A single tool-using agent with a validation-feedback loop. Ten tools, validation provenance, policy-gated serving, budget-metered."
     href="/atelier/compiler/overview/"
   />
 </CardGrid>
@@ -103,7 +114,7 @@ One LLM call on the cold path (≈ 5–20k tokens). Zero LLM calls on the hot pa
 
   </Card>
   <Card title="See the roadmap" icon="list-format">
-    Wave M (baseline-first pivot) shipped 2026-05-02. Compiler tools (C-2) shipped. Capability scoping (C-3 / S-1) is next.
+    Wave M (baseline-first pivot) shipped 2026-05-02. Compiler tools, capability scoping, recipe retrieval, and compile budgets are default-on in the demos.
 
     [Roadmap →](/atelier/roadmap/)
 

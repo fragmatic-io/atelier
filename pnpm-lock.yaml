@@ -413,6 +413,9 @@ importers:
 
   packages/compiler:
     dependencies:
+      '@atelier/policies':
+        specifier: workspace:*
+        version: link:../policies
       '@atelier/schemas':
         specifier: workspace:*
         version: link:../schemas

@@ -27,7 +27,7 @@ flowchart TB
   CheckBudget -->|no| Throw[BudgetExceededError]
 ```
 
-The agent gets a system prompt, the recipe, the user's intent slice, and access to nine tools. It calls tools to discover what it needs, drafts a manifest, calls `validateDraft` against the policy engine, patches if violations come back, and emits when validate is ok.
+The agent gets a system prompt, the recipe, the user's intent slice, and access to ten tools. It calls tools to discover what it needs, drafts a manifest, calls `validateDraft` against the policy engine, patches if violations come back, and emits when validate is ok. In production mode, the final manifest must match a draft that passed validation.
 
 ## The packages
 
@@ -54,7 +54,7 @@ import {
 } from '@atelier/compiler';
 
 const llmCompiler = new ValidationFeedbackCompiler(
-  new ToolUsingCompiler({ apiKey: process.env.GEMINI_API_KEY!, toolEnv }),
+  new ToolUsingCompiler({ inner, env: { ...toolEnv, validate } }),
   { maxRetries: 2 },
 );
 
@@ -121,16 +121,19 @@ A future C-4 ("outline agent for multi-route apps") may add a one-time outline p
 ## Code: a minimal compile
 
 ```ts
-import { ToolUsingCompiler, makeToolEnvironment } from '@atelier/compiler';
-import { BASELINE_POLICIES } from '@atelier/policies';
+import { ToolUsingCompiler, createBaselineManifestValidator } from '@atelier/compiler';
+
+const components = loadComponents('./components/registry.json');
 
 const compiler = new ToolUsingCompiler({
-  apiKey: process.env.GEMINI_API_KEY!,
-  toolEnv: makeToolEnvironment({
+  inner: geminiAgentClient,
+  env: {
     capabilities: loadCapabilities('./capabilities'),
-    components: loadComponents('./components/registry.json'),
-    policies: BASELINE_POLICIES,
-  }),
+    components,
+    validate: createBaselineManifestValidator({
+      grantedFields: (input) => loadGrantedFields(input.user_id),
+    }),
+  },
 });
 
 const result = await compiler.compile({
@@ -147,8 +150,8 @@ console.log(result.tool_call_count); // observability
 ## What ships today
 
 - ✅ **C-1** — Validation feedback loop. Wraps any compiler. (`497e99d`)
-- ✅ **C-2** — Tool-using compiler. Nine tools, **default-on** as of TODO P1.1 (2026-05-04); opt out via `ATELIER_COMPILER_TOOLS=off`. Legacy `CIR_COMPILER_TOOLS_ENABLED=0` honoured for one release cycle.
-- ⏳ **C-3 / S-1** — Capability scoping. Two-stage compile: tiny model picks 30 from 1-line summaries; full Pro model gets those 30 schemas. Trigger: first host with >150 capabilities.
+- ✅ **C-2** — Tool-using compiler. Ten tools, default-on in the demos; opt out via `ATELIER_COMPILER_TOOLS=off`. Legacy `CIR_COMPILER_TOOLS_ENABLED=0` honoured for one release cycle.
+- ✅ **C-3 / S-1** — Capability scoping. Two-stage compile: small resolver picks a bounded set from summaries; the full compiler gets those schemas.
 - ⏳ **C-4** — Outline agent for multi-route apps.
 - ⏳ **C-5** — Marketplace retrieval (RAG; gated on V-6).
 
@@ -168,7 +171,7 @@ The demo's `<CompileBadge>` surfaces this in the chrome — token count, duratio
 
 ## Next
 
-- [Compiler → Tools](/compiler/tools/) — the nine tools the agent calls.
+- [Compiler → Tools](/compiler/tools/) — the ten tools the agent calls.
 - [Compiler → Validation feedback](/compiler/validation-feedback/) — Wave C-1 in detail.
 - [Compiler → Capability scoping](/compiler/capability-scoping/) — Wave C-3 / S-1.
 - [Compiler → Budget enforcement](/compiler/budget/) — `BudgetMeteredCompiler`.

@@ -1,10 +1,10 @@
 # Component Catalog
 
-The component catalog is what gives Atelier coverage. A small, well-designed catalog of ~50 primitives covers 90% of what web apps do.
+The component catalog is what gives Atelier coverage. A well-designed catalog of 83 primitives covers most of what web apps do.
 
 ---
 
-## The 50-component baseline
+## The baseline catalog
 
 **Layout (8)**: Container, Stack, Split, Grid, Tabs, Accordion, Modal, Drawer
 
@@ -20,7 +20,7 @@ The component catalog is what gives Atelier coverage. A small, well-designed cat
 
 **Specialized (8)**: Kanban, Calendar, ChatThread, Form, Wizard, FilterBar, KPIRow, Gallery
 
-That's 56 components. With composition rules (a Stack of Cards is a Feed; a Grid of StatCards is a Dashboard; a Stack of FilterBar + Table is a database UI), you cover the vast majority of web app patterns.
+The current synced registry contains 83 components. With composition rules (a Stack of Cards is a Feed; a Grid of StatCards is a Dashboard; a Stack of FilterBar + Table is a database UI), you cover the vast majority of web app patterns.
 
 ---
 
@@ -72,7 +72,7 @@ A general catalog covers 90%. The remaining 10% lives in domain-specific extensi
 - **Finance apps**: TransactionList, PortfolioGrid, AccountSummary
 - **Analytics apps**: DimensionPivot, MetricSelector, CohortChart
 
-The 50 + ~10-20 domain primitives = full coverage for that domain.
+The baseline plus a small number of honest domain primitives = full coverage for that domain.
 
 ---
 

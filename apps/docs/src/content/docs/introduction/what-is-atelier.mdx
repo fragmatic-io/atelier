@@ -19,13 +19,26 @@ The first is public, signed by the company, versioned like a database schema. Th
 
 Get this separation right and 90% of software's flexibility problems collapse into one architecture.
 
+## Target organisation
+
+The first buyer is not "anyone who wants generated UI." It is an operational
+organisation drowning in internal-tool variants: support ops, sales/revenue
+ops, marketplace ops, compliance/risk ops, and engineering/platform ops. These
+teams already have systems of record and internal app builders. Their problem
+is that each role, region, queue, or review workflow wants a different screen,
+and maintaining those screens becomes its own product surface.
+
+Atelier's wedge is to define the capability surface once, validate every
+manifest against policy, and compile the interface per role/workflow instead of
+forking the frontend.
+
 ## The five public artifacts
 
 These are owned by the app. Signed. Versioned. Cacheable at the edge.
 
 - **Capabilities** (`@atelier/schemas` `CapabilitySchema`) — typed actions + data resources.
 - **Skills** (markdown with YAML frontmatter) — usage knowledge, when-to / when-not-to-use.
-- **Components** (`@atelier/components`) — 67 baseline React primitives plus per-component metadata.
+- **Components** (`@atelier/components`) — 83 baseline React primitives plus per-component metadata.
 - **Policies** (`@atelier/policies`) — pure-function validators, baseline + custom.
 - **Brand kit** (`BrandTokensSchema`) — design tokens, typography, density, motion, voice.
 
@@ -50,7 +63,7 @@ github.com/fragmatic-io/atelier
 ├── README.md                 # repo intro
 ├── docs/                     # internal architecture chapters (the source for this site)
 ├── apps/docs/                # ← this Starlight site at /atelier/ (homepage + splash + developer docs)
-└── packages/                 # 14 published packages
+└── packages/                 # 15 @atelier workspace packages
 ```
 
 This site at [`/atelier/`](https://fragmatic-io.github.io/atelier/) covers the brand pitch (homepage + `/start/` + `/architecture/` + `/demos/`) AND the developer documentation (everything reachable via the sidebar). After the P3 merge in 2026-05-04 there is no separate marketing site.

@@ -1,11 +1,11 @@
 ---
 title: Compiler tools
-description: The nine tools the agent calls during a compile.
+description: The ten tools the agent calls during a compile.
 ---
 
-The tool-using compiler exposes nine tools to the LLM agent. The agent calls them via Gemini's function-calling protocol. The host provides the implementations through a `ToolEnvironment`.
+The tool-using compiler exposes ten tools to the LLM agent. The agent calls them via Gemini's function-calling protocol. The host provides the registry data and optional resolver hooks through a `ToolEnvironment`.
 
-## The nine tools
+## The ten tools
 
 | Tool                      | Purpose                                                                    | Phase |
 | ------------------------- | -------------------------------------------------------------------------- | ----- |
@@ -14,7 +14,7 @@ The tool-using compiler exposes nine tools to the LLM agent. The agent calls the
 | `listCapabilities`        | Flat list of all capability ids and one-line summaries (used for scoping). | C-2   |
 | `findComponent`           | Search the component catalog by hint ("queue with grouping").              | C-2   |
 | `inspectComponent`        | Get a component's full prop schema, composition rules, slot contracts.     | C-2   |
-| `listComponents`          | Flat list of all 67 baseline components.                                   | C-2   |
+| `listComponents`          | Flat list of all 83 baseline components.                                   | C-2   |
 | `validateDraft`           | Run the draft manifest through the policy engine; return ok or violations. | C-2   |
 | `inspectExistingManifest` | Read a prior manifest for the same user/route (cross-route coherence).     | C-2   |
 | `listSiblingRoutes`       | List the other routes in the recipe (so chrome / nav stay consistent).     | C-2   |
@@ -27,48 +27,42 @@ One more is deferred:
 ## The `ToolEnvironment` interface
 
 ```ts
-import type { Capability, Component, Manifest } from '@atelier/schemas';
+import type { Capability, ComponentDefinition, Manifest } from '@atelier/schemas';
+import type { RecipeResolver } from '@atelier/recipe-resolver';
 
 export interface ToolEnvironment {
-  capabilities: {
-    lookup(id: string): Promise<Capability | null>;
-    find(query: string): Promise<Capability[]>;
-    list(): Promise<Array<{ id: string; summary: string }>>;
-  };
-  components: {
-    find(hint: string): Promise<Component[]>;
-    inspect(name: string): Promise<Component | null>;
-    list(): Promise<Array<{ name: string; summary: string }>>;
-  };
-  manifests: {
-    inspect(input: { user_id: string; route: string }): Promise<Manifest | null>;
-    listSiblingRoutes(input: { recipe_id: string }): Promise<string[]>;
-  };
-  policies: {
-    validate(draft: Manifest): Promise<{ ok: true } | { ok: false; violations: string[] }>;
-  };
+  capabilities: Record<string, Capability>;
+  components: ComponentDefinition[];
+  validate?: (draft: Manifest) => Promise<{ ok: true } | { ok: false; violations: string[] }>;
+  inspectExistingManifest?: (input: { user_id: string; route: string }) => Promise<Manifest | null>;
+  listSiblingRoutes?: (input: { recipe_id: string }) => Promise<string[]>;
+  recipeResolver?: RecipeResolver;
 }
 ```
 
-`@atelier/compiler` exports `makeToolEnvironment(...)` that wires the default in-memory implementations. Hosts swap in their own when capabilities live in a database or the registry is served from a CDN.
+The default lookup/search behavior is intentionally simple: the compiler searches the supplied capability map and component array. Hosts swap in larger-scale retrieval by constraining the capability set before compile, by providing `recipeResolver`, or by wrapping the compiler with `TwoStageCapabilityResolver`.
 
 ## Code: a custom tool environment
 
 ```ts
-import { makeToolEnvironment } from '@atelier/compiler';
+import { createBaselineManifestValidator } from '@atelier/compiler';
 import type { ToolEnvironment } from '@atelier/compiler';
 
-const env: ToolEnvironment = makeToolEnvironment({
+const env: ToolEnvironment = {
   capabilities: loadCapabilities('./capabilities'),
   components: COMPONENT_BINDINGS_METADATA,
-  policies: BASELINE_POLICIES,
-});
-
-// Override `find` with vector search:
-env.capabilities.find = async (query: string) => {
-  const hits = await vectorClient.search('capability_index', { query, k: 10 });
-  return hits.map((h) => h.metadata as Capability);
+  validate: createBaselineManifestValidator({
+    grantedFields: (input) => loadGrantedFields(input.user_id),
+  }),
 };
+
+// For very large registries, scope capabilities before calling compile:
+const scoped = await capabilityResolver.resolve({
+  query: recipe.description,
+  grantedCapabilityIds: recipe.capabilities,
+  limit: 30,
+});
+env.capabilities = Object.fromEntries(scoped.map((capability) => [capability.id, capability]));
 ```
 
 This is the seam C-3 (capability scoping) and C-5 (marketplace RAG) plug into. The substring fallback ships out of the box; production deploys swap in vector search when registries grow past ~1000 capabilities.
@@ -99,7 +93,7 @@ const TOOL_DECLARATIONS = [
       required: ['hint'],
     },
   },
-  // ... (full list in @atelier/compiler/src/tools/declarations.ts)
+  // ... (full list in @atelier/compiler/src/tool-using-compiler.ts)
 ];
 ```
 
@@ -117,7 +111,7 @@ tool reply: { ok: true }
 agent: Final answer: { manifest: ... }
 ```
 
-This is the same loop Wave C-1's `ValidationFeedbackCompiler` runs externally, but now the LLM can fix issues mid-compose without needing the wrapper. The wrapper still catches the case where the LLM's final emit has a violation (a post-hoc check); the in-loop tool-call lets the agent self-correct earlier.
+This is the same loop Wave C-1's `ValidationFeedbackCompiler` runs externally, but now the LLM can fix issues mid-compose without needing the wrapper. In production mode, `ToolUsingCompiler` also enforces validation provenance: the final answer must match a draft that passed `validateDraft` (ignoring server-assigned `manifest_id`). Hosts can only bypass that guard with an explicit test-only option.
 
 ## Substring fallback for C-5
 
@@ -125,7 +119,7 @@ Today's `findCapability` and `findComponent` fall back to substring search acros
 
 ## Showcase
 
-The demo runs the tool-using compiler **by default** as of TODO P1.1 (2026-05-04). Opt out via `ATELIER_COMPILER_TOOLS=off`; legacy `CIR_COMPILER_TOOLS_ENABLED=0` honoured for one release cycle:
+The demo runs the tool-using compiler **by default**. Opt out via `ATELIER_COMPILER_TOOLS=off`; legacy `CIR_COMPILER_TOOLS_ENABLED=0` is honoured for one release cycle:
 
 ```bash
 # Default — tool-using compiler is on:
