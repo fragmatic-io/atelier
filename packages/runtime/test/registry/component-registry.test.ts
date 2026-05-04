@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  actionSlotsFromBindings,
   compositionRolesFromBindings,
   EMPTY_REGISTRY,
+  manifestContractsFromBindings,
   MapComponentRegistry,
+  requiresExplicitStateSlotsFromBindings,
   type ComponentBinding,
 } from '../../src/registry/component-registry.js';
 
@@ -83,5 +86,72 @@ describe('compositionRolesFromBindings', () => {
         Card: { id: 'Card', factory: 1 },
       }),
     ).toEqual({});
+  });
+});
+
+describe('requiresExplicitStateSlotsFromBindings', () => {
+  it('returns the set of binding ids that opt into the strict state-slot check', () => {
+    const bindings: Record<string, ComponentBinding> = {
+      IssueQueue: { id: 'IssueQueue', factory: 1, requiresExplicitStateSlots: true },
+      RepoTable: { id: 'RepoTable', factory: 2, requiresExplicitStateSlots: false },
+      Logo: { id: 'Logo', factory: 3 },
+    };
+    const out = requiresExplicitStateSlotsFromBindings(bindings);
+    expect(out.has('IssueQueue')).toBe(true);
+    expect(out.has('RepoTable')).toBe(false);
+    expect(out.has('Logo')).toBe(false);
+    expect(out.size).toBe(1);
+  });
+
+  it('returns an empty set when no binding opts in', () => {
+    expect(requiresExplicitStateSlotsFromBindings({}).size).toBe(0);
+    expect(requiresExplicitStateSlotsFromBindings({ Logo: { id: 'Logo', factory: 1 } }).size).toBe(
+      0,
+    );
+  });
+});
+
+describe('actionSlotsFromBindings', () => {
+  it('extracts the actionSlots array for each binding that declares it', () => {
+    const bindings: Record<string, ComponentBinding> = {
+      ActionBar: {
+        id: 'ActionBar',
+        factory: 1,
+        actionSlots: ['onPrimary', 'onSecondary'],
+      },
+      // Empty array is still meaningful — explicit "no actions allowed".
+      Logo: { id: 'Logo', factory: 2, actionSlots: [] },
+      // No declaration at all → omitted.
+      Wordmark: { id: 'Wordmark', factory: 3 },
+    };
+    const out = actionSlotsFromBindings(bindings);
+    expect(out.ActionBar).toEqual(['onPrimary', 'onSecondary']);
+    expect(out.Logo).toEqual([]);
+    expect('Wordmark' in out).toBe(false);
+  });
+
+  it('returns an empty record when no binding declares actionSlots', () => {
+    expect(actionSlotsFromBindings({})).toEqual({});
+    expect(actionSlotsFromBindings({ Logo: { id: 'Logo', factory: 1 } })).toEqual({});
+  });
+});
+
+describe('manifestContractsFromBindings', () => {
+  it('extracts the manifestContract for bindings that declare one', () => {
+    const bindings: Record<string, ComponentBinding> = {
+      Logo: {
+        id: 'Logo',
+        factory: 1,
+        manifestContract: {
+          allowed_props: ['src', 'alt'],
+          required_props: ['src'],
+          allowed_action_slots: [],
+        },
+      },
+      Plain: { id: 'Plain', factory: 2 },
+    };
+    const out = manifestContractsFromBindings(bindings);
+    expect(out.Logo?.required_props).toEqual(['src']);
+    expect('Plain' in out).toBe(false);
   });
 });

@@ -235,6 +235,74 @@ describe('useVersionHistory — restore + clear', () => {
   });
 });
 
+describe('useVersionHistory — non-serializable values + crypto fallbacks', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+  afterEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
+  it('still snapshots non-serializable values using the deepCopy fallback path', () => {
+    const c = captureState<unknown>();
+    // Cyclic reference — JSON.stringify throws; deepCopy must fall through
+    // to structuredClone (also throws on cycles, but at least exercises
+    // the catch path) and finally to identity.
+    const cyclic: { self?: unknown } = {};
+    cyclic.self = cyclic;
+    render(<Probe storageKey={undefined} initialValue={cyclic} onResult={record(c)} />);
+    act(() => {
+      lastApi(c).commit();
+    });
+    // Defensive: a snapshot was committed (even if shallow).
+    expect(lastApi(c).versions).toHaveLength(1);
+  });
+
+  it('falls back to ver_<...> id when crypto.randomUUID is missing', () => {
+    // happy-dom may install `crypto` as a getter-only property — we can't
+    // re-assign it, but spying on `randomUUID` to return undefined is
+    // enough to exercise the fallback branch in `generateId`.
+    const cryptoObj = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+    if (!cryptoObj || typeof cryptoObj.randomUUID !== 'function') {
+      // Already missing — nothing to override; the fallback is what we
+      // exercise on every `commit()` here.
+      const c = captureState<string>();
+      render(<Probe storageKey={undefined} initialValue="hi" onResult={record(c)} />);
+      act(() => {
+        lastApi(c).commit();
+      });
+      const id = lastApi(c).versions[0]?.id ?? '';
+      expect(id.length).toBeGreaterThan(0);
+      return;
+    }
+    const original = cryptoObj.randomUUID;
+    // Replace with `undefined` so `c?.randomUUID !== undefined` is false
+    // and the fallback path is taken.
+    Object.defineProperty(cryptoObj, 'randomUUID', {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    try {
+      const c = captureState<string>();
+      render(<Probe storageKey={undefined} initialValue="hi" onResult={record(c)} />);
+      act(() => {
+        lastApi(c).commit();
+      });
+      const id = lastApi(c).versions[0]?.id ?? '';
+      expect(id.startsWith('ver_')).toBe(true);
+    } finally {
+      Object.defineProperty(cryptoObj, 'randomUUID', {
+        configurable: true,
+        writable: true,
+        value: original,
+      });
+    }
+  });
+});
+
 describe('useVersionHistory — persistence', () => {
   beforeEach(() => {
     window.localStorage.clear();
