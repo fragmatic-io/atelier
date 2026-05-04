@@ -36,7 +36,7 @@ describe('useManifest', () => {
         <Probe path="/today" />
       </CirRuntime>,
     );
-    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_test_001'));
+    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_test0001'));
   });
 
   it('surfaces errors from the resolver (404 / not found)', async () => {
@@ -50,21 +50,21 @@ describe('useManifest', () => {
   });
 
   it('refresh() refetches and reuses fresh manifests', async () => {
-    const m1 = makeManifest({ manifest_id: 'm_001' });
+    const m1 = makeManifest({ manifest_id: 'm_aaaaa001' });
     const services = buildTestServices({ manifestsByRoute: { '/today': m1 } });
     const { getByTestId } = render(
       <CirRuntime services={services}>
         <Probe path="/today" />
       </CirRuntime>,
     );
-    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_001'));
+    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_aaaaa001'));
 
     // Substitute the manifest under the same key — refresh forces a fetch.
     services.cache.evictMatching(() => true).catch(() => {});
     // Mutate the route fixture map by assigning a new one — simulate via
     // the host wiring; we set up a new manifest and call refresh.
     // Easier: directly write a new entry into the cache via resolver flow.
-    const m2 = makeManifest({ manifest_id: 'm_002' });
+    const m2 = makeManifest({ manifest_id: 'm_aaaaa002' });
     services.cache
       .set(
         { user_id: 'test-user', app_id: 'test-app', route: '/today' },
@@ -95,8 +95,8 @@ describe('useManifest', () => {
   });
 
   it('refetches when path changes', async () => {
-    const ma = makeManifest({ manifest_id: 'm_a' });
-    const mb = makeManifest({ manifest_id: 'm_b' });
+    const ma = makeManifest({ manifest_id: 'm_aaaaaaaa' });
+    const mb = makeManifest({ manifest_id: 'm_bbbbbbbb' });
     const services = buildTestServices({
       manifestsByRoute: { '/a': ma, '/b': mb },
     });
@@ -105,12 +105,12 @@ describe('useManifest', () => {
         <Probe path="/a" />
       </CirRuntime>,
     );
-    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_a'));
+    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_aaaaaaaa'));
     rerender(
       <CirRuntime services={services}>
         <Probe path="/b" />
       </CirRuntime>,
     );
-    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_b'));
+    await waitFor(() => expect(getByTestId('state').textContent).toBe('m_bbbbbbbb'));
   });
 });

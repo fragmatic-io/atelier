@@ -90,9 +90,9 @@ describe('<CirRoute>', () => {
   });
 
   it('refetches when path changes', async () => {
-    const ma = makeManifest({ manifest_id: 'm_a', routes: makeManifest().routes });
+    const ma = makeManifest({ manifest_id: 'm_aaaaaaaa', routes: makeManifest().routes });
     const mb = makeManifest({
-      manifest_id: 'm_b',
+      manifest_id: 'm_bbbbbbbb',
       routes: [
         {
           path: '/b',

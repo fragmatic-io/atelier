@@ -11,16 +11,18 @@ import { archiveCapability, deleteCapability } from './fixtures.js';
 function Fire({
   capabilityId,
   onDone,
+  input = { thread_id: 't1' },
 }: {
   capabilityId: string;
   onDone: (result: unknown) => void;
+  input?: Record<string, unknown>;
 }): React.ReactElement {
   const dispatch = useDispatcher();
   return (
     <button
       data-testid="fire"
       onClick={() => {
-        void dispatch(capabilityId, { thread_id: 't1' }).then(onDone);
+        void dispatch(capabilityId, input).then(onDone);
       }}
     >
       fire
@@ -56,7 +58,11 @@ describe('useDispatcher', () => {
     let result: { ok: boolean; error?: string } | undefined;
     const { getByTestId } = render(
       <CirRuntime services={services} confirm={ALWAYS_DECLINE}>
-        <Fire capabilityId="task.delete" onDone={(r) => (result = r as typeof result)} />
+        <Fire
+          capabilityId="task.delete"
+          input={{ task_id: 't1' }}
+          onDone={(r) => (result = r as typeof result)}
+        />
       </CirRuntime>,
     );
     await act(() => {

@@ -5,7 +5,7 @@ import type { Capability, Manifest } from '@atelier/schemas';
 
 export function makeManifest(overrides: Partial<Manifest> = {}): Manifest {
   return {
-    manifest_id: 'm_test_001',
+    manifest_id: 'm_test0001',
     user_id: 'test-user',
     app_id: 'test-app',
     compiled_from: {
