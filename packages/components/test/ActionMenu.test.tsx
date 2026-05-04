@@ -10,15 +10,15 @@ describe('ActionMenu', () => {
     render(<ActionMenu trigger="•••" items={[{ id: 'a', label: 'Edit', onSelect }]} />);
     const trigger = screen.getByRole('button', { name: '•••' });
     expect(screen.queryByRole('menu')).toBeNull();
-    fireEvent.click(trigger);
+    fireEvent.pointerDown(trigger);
     expect(screen.getByRole('menu')).toBeTruthy();
-    fireEvent.click(trigger);
+    fireEvent.pointerDown(trigger);
     expect(screen.queryByRole('menu')).toBeNull();
   });
   it('fires onSelect and closes the menu', () => {
     const onSelect = vi.fn();
     render(<ActionMenu trigger="t" items={[{ id: 'a', label: 'Edit', onSelect }]} />);
-    fireEvent.click(screen.getByRole('button', { name: 't' }));
+    fireEvent.pointerDown(screen.getByRole('button', { name: 't' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menu')).toBeNull();

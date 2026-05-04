@@ -14,7 +14,7 @@ export interface ComponentStoryFixture {
 export const COMPONENT_STORY_FIXTURES: Readonly<Record<string, ComponentStoryFixture>> =
   Object.freeze({
     Accordion: fixture('Accordion', { items: sampleItems() }),
-    ActionMenu: fixture('ActionMenu', { label: 'Actions', items: sampleActions() }),
+    ActionMenu: fixture('ActionMenu', { trigger: 'Actions', items: sampleActions() }),
     ActivityFeed: fixture('ActivityFeed', { events: sampleFeed() }),
     Alert: fixture('Alert', { title: 'Policy warning', children: 'This route requires review.' }),
     BlockEditor: fixture('BlockEditor', { blocks: sampleBlocks() }),
@@ -239,9 +239,9 @@ function fixture(id: string, props: Record<string, unknown> = {}): ComponentStor
 
 function sampleActions(): Array<Record<string, unknown>> {
   return [
-    { id: 'approve', label: 'Approve' },
-    { id: 'assign', label: 'Assign' },
-    { id: 'escalate', label: 'Escalate' },
+    { id: 'approve', label: 'Approve', onSelect: () => undefined },
+    { id: 'assign', label: 'Assign', onSelect: () => undefined },
+    { id: 'escalate', label: 'Escalate', onSelect: () => undefined },
   ];
 }
 

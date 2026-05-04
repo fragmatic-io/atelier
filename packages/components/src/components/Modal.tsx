@@ -17,8 +17,13 @@
  * transform + Vis-7 `data-elevation` + Vis-6 `data-cir-density`
  * preserved verbatim. New `duration?: 'fast' | 'normal' | 'slow' | number`
  * prop joins `animated`.
+ *
+ * Radix pilot: the public Atelier props and data attributes stay stable,
+ * while dialog focus management, Escape handling, and outside-interaction
+ * semantics are delegated to `@radix-ui/react-dialog`.
  */
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { useRef, type CSSProperties, type ReactNode } from 'react';
 import type { ComponentBinding } from '@atelier/runtime';
 import { cn, elevationClass, layoutVariantClass, type LayoutVariant } from './_variants.js';
 import { useComponentTransition, type TransitionDuration } from './_transition.js';
@@ -80,62 +85,79 @@ export function Modal({
   // transform off so the same code path works under that preference.
   const transformStyle: CSSProperties =
     animated && !reducedMotion
-      ? { transform: phase === 'entered' ? 'scale(1)' : 'scale(0.95)' }
-      : {};
+      ? { transform: `translate(-50%, -50%) ${phase === 'entered' ? 'scale(1)' : 'scale(0.95)'}` }
+      : { transform: 'translate(-50%, -50%)' };
   // The dialog must stay mounted through the exit animation, so we use
   // the phase machine's view of "is anything visible" rather than `open`.
   const showDialog = animated ? phase !== 'exited' : open;
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    if (showDialog && !dlg.open) {
-      if (typeof dlg.showModal === 'function') {
-        try {
-          dlg.showModal();
-        } catch {
-          dlg.setAttribute('open', '');
-        }
-      } else {
-        dlg.setAttribute('open', '');
-      }
-    } else if (!showDialog && dlg.open) {
-      if (typeof dlg.close === 'function') dlg.close();
-      else dlg.removeAttribute('open');
-    }
-  }, [showDialog]);
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (!dlg) return;
-    const handle = (e: Event): void => {
-      e.preventDefault();
-      onClose();
-    };
-    dlg.addEventListener('cancel', handle);
-    return (): void => {
-      dlg.removeEventListener('cancel', handle);
-    };
-  }, [onClose]);
-  const baseStyle: CSSProperties = { width: SIZE_PX[size], maxWidth: '100%' };
+  const baseStyle: CSSProperties = {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    zIndex: 21,
+    width: SIZE_PX[size],
+    maxWidth: 'calc(100vw - 32px)',
+    margin: 0,
+    border: '1px solid var(--atelier-border-default, #d1d5db)',
+    borderRadius: 'var(--atelier-radius-lg, 8px)',
+    padding: 0,
+    background: 'var(--atelier-bg-surface, white)',
+    color: 'var(--atelier-fg-primary, #111827)',
+    boxShadow: 'var(--atelier-shadow-lg, 0 24px 48px rgb(15 23 42 / 18%))',
+  };
   return (
-    <dialog
-      ref={dialogRef}
-      data-cir-component="Modal"
-      data-size={size}
-      data-variant={variant}
-      data-elevation="modal"
-      {...(animated ? { 'data-transition-phase': phase, 'data-animated': 'true' } : {})}
-      aria-labelledby="cir-modal-title"
-      className={cn(layoutVariantClass[variant], elevationClass.modal, className)}
-      style={{ ...baseStyle, ...motionStyle, ...transformStyle }}
-      onClick={(e): void => {
-        if (e.target === dialogRef.current) onClose();
+    <Dialog.Root
+      open={showDialog}
+      onOpenChange={(nextOpen): void => {
+        if (!nextOpen) onClose();
       }}
     >
-      <header data-cir-part="modal-header">
-        <h2 id="cir-modal-title">{title}</h2>
-      </header>
-      <div data-cir-part="modal-body">{children}</div>
-    </dialog>
+      <Dialog.Overlay asChild>
+        <div
+          data-cir-part="modal-backdrop"
+          aria-hidden="true"
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 20,
+            background: 'rgba(15, 23, 42, 0.36)',
+          }}
+        />
+      </Dialog.Overlay>
+      <Dialog.Content asChild aria-describedby={undefined}>
+        <dialog
+          ref={dialogRef}
+          open={showDialog}
+          data-cir-component="Modal"
+          data-size={size}
+          data-variant={variant}
+          data-elevation="modal"
+          {...(animated ? { 'data-transition-phase': phase, 'data-animated': 'true' } : {})}
+          className={cn(layoutVariantClass[variant], elevationClass.modal, className)}
+          style={{ ...baseStyle, ...motionStyle, ...transformStyle }}
+          onCancel={(e): void => {
+            e.preventDefault();
+            onClose();
+          }}
+        >
+          <header
+            data-cir-part="modal-header"
+            style={{
+              borderBottom: '1px solid var(--atelier-border-subtle, #e5e7eb)',
+              padding: '16px 18px',
+            }}
+          >
+            <Dialog.Title asChild>
+              <h2 style={{ margin: 0, fontSize: '18px' }}>{title}</h2>
+            </Dialog.Title>
+          </header>
+          <div data-cir-part="modal-body" style={{ padding: '18px' }}>
+            {children}
+          </div>
+        </dialog>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 }
 Modal.displayName = 'Modal';

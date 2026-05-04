@@ -14,26 +14,25 @@ describe('Modal', () => {
     expect(screen.getByText('Edit')).toBeTruthy();
     expect(screen.getByText('body content')).toBeTruthy();
   });
-  it('toggles dialog open attribute when open prop flips', () => {
+  it('mounts the dialog only while open', () => {
     const { rerender } = render(
       <Modal open={false} title="t" onClose={() => undefined}>
         x
       </Modal>,
     );
-    const dialog = document.querySelector('dialog');
-    expect(dialog?.hasAttribute('open')).toBe(false);
+    expect(document.querySelector('dialog')).toBeNull();
     rerender(
       <Modal open title="t" onClose={() => undefined}>
         x
       </Modal>,
     );
-    expect(dialog?.hasAttribute('open')).toBe(true);
+    expect(document.querySelector('dialog')?.hasAttribute('open')).toBe(true);
     rerender(
       <Modal open={false} title="t" onClose={() => undefined}>
         x
       </Modal>,
     );
-    expect(dialog?.hasAttribute('open')).toBe(false);
+    expect(document.querySelector('dialog')).toBeNull();
   });
   it('reflects size as data attr and width style', () => {
     render(
@@ -64,15 +63,15 @@ describe('Modal', () => {
     dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
-  it('emits onClose when the backdrop (dialog element itself) is clicked', () => {
+  it('emits onClose when the backdrop is clicked', () => {
     const onClose = vi.fn();
-    render(
+    const { container } = render(
       <Modal open title="t" onClose={onClose}>
         x
       </Modal>,
     );
-    const dialog = document.querySelector('dialog')!;
-    fireEvent.click(dialog, { target: dialog });
+    const backdrop = container.querySelector('[data-cir-part="modal-backdrop"]')!;
+    fireEvent.click(backdrop);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
   it('does NOT emit onClose when an inner element is clicked', () => {

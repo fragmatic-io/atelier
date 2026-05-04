@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 import type { Meta, StoryObj } from '@storybook/react';
+import { useState, type ReactElement } from 'react';
 
+import { ActionMenu, Drawer, Modal, type ActionMenuItem } from '../src/index.js';
 import { COMPONENT_STORY_FIXTURES, COMPONENT_STORY_IDS, renderComponentStory } from './fixtures.js';
 
 // Storybook's public `Meta` type carries permissive addon parameter shapes.
@@ -38,7 +40,7 @@ export const AllComponents: Story = {
           {COMPONENT_STORY_IDS.map((id) => {
             const fixture = COMPONENT_STORY_FIXTURES[id];
             return (
-              <article key={id} data-cir-story-card>
+              <article key={id} data-cir-story-card data-cir-story-id={id}>
                 <header data-cir-story-card-header>
                   <h2>{id}</h2>
                   <span>{fixture?.title ?? 'Missing fixture'}</span>
@@ -52,3 +54,93 @@ export const AllComponents: Story = {
     </main>
   ),
 };
+
+export const InteractionPrimitives: Story = {
+  name: 'Interaction primitives',
+  render: () => <InteractionPrimitiveWorkbench />,
+};
+
+function InteractionPrimitiveWorkbench(): ReactElement {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [lastAction, setLastAction] = useState('None');
+
+  const menuItems: ActionMenuItem[] = [
+    { id: 'approve', label: 'Approve', onSelect: () => setLastAction('Approve') },
+    { id: 'assign', label: 'Assign', onSelect: () => setLastAction('Assign') },
+    { id: 'escalate', label: 'Escalate', onSelect: () => setLastAction('Escalate') },
+  ];
+
+  return (
+    <main data-cir-story-root>
+      <section data-cir-story-shell>
+        <header data-cir-story-header>
+          <div>
+            <h1>Interaction primitives</h1>
+            <p>Focused review surface for Radix-backed menu, modal, and drawer behavior.</p>
+          </div>
+        </header>
+        <section data-cir-interaction-workbench>
+          <div data-cir-interaction-controls>
+            <ActionMenu trigger="Actions" items={menuItems} />
+            <button
+              type="button"
+              data-cir-open-modal
+              onClick={() => {
+                setModalOpen(true);
+              }}
+            >
+              Open modal
+            </button>
+            <button
+              type="button"
+              data-cir-open-drawer
+              onClick={() => {
+                setDrawerOpen(true);
+              }}
+            >
+              Open drawer
+            </button>
+          </div>
+          <p data-cir-last-action>Last action: {lastAction}</p>
+        </section>
+        <Modal
+          open={modalOpen}
+          title="Manifest details"
+          onClose={() => {
+            setModalOpen(false);
+          }}
+        >
+          <p>Validated at resolver.</p>
+          <button
+            type="button"
+            data-cir-dialog-close
+            onClick={() => {
+              setModalOpen(false);
+            }}
+          >
+            Close
+          </button>
+        </Modal>
+        <Drawer
+          open={drawerOpen}
+          title="Customer context"
+          onClose={() => {
+            setDrawerOpen(false);
+          }}
+        >
+          <p>Recent activity</p>
+          <button
+            type="button"
+            data-cir-dialog-close
+            onClick={() => {
+              setDrawerOpen(false);
+            }}
+          >
+            Close
+          </button>
+        </Drawer>
+      </section>
+    </main>
+  );
+}
