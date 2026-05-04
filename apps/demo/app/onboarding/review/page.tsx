@@ -37,7 +37,7 @@ import {
 } from '@/lib/intent-store';
 import { requestGrant } from '@/lib/intent-grant';
 import { applyColorMode } from '@/components/Chrome';
-import { SESSION_DRAFT_KEY } from '../describe/page';
+import { SESSION_DRAFT_KEY } from '@/lib/onboarding-session';
 
 interface DraftEnvelope {
   profile: IntentProfile;

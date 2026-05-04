@@ -97,20 +97,20 @@ export class DispatchInputError extends Error {
 /**
  * Synthesize a Zod schema from the descriptor record on `Capability.input`.
  *
- * Capabilities declare inputs as a flat `{ field: '<type-name>' }` record
- * (see `docs/artifacts.md` §Capability and `@atelier/schemas` Capability).
- * The runtime previously trusted the host to honor that contract; we now
- * enforce it on dispatch.
+ * Capabilities may declare inputs as either the original Atelier shorthand
+ * (`{ field: '<type-name>' }`) or a JSON Schema object (`{ type: 'object',
+ * properties, required }`). The runtime validates both shapes at dispatch so
+ * the generated UI cannot accidentally bypass capability input contracts.
  *
- * Recognized type-name strings produce strict checks; anything else collapses
- * to `z.unknown()` so the gate is additive — capabilities using shapes the
- * synthesizer cannot reason about (nested objects, custom JSON Schema) still
- * dispatch, and only the recognized primitive declarations gain the check.
+ * Recognized declarations produce strict checks; anything else collapses to
+ * `z.unknown()` so the gate is additive.
  *
  * Empty input descriptors permit anything (matches existing dispatch tests
  * for `task.complete: input: {}`).
  */
 function buildDispatchInputSchema(input: Capability['input']): z.ZodTypeAny {
+  if (isJsonObjectSchema(input)) return objectSchemaFromJsonSchema(input);
+
   const keys = Object.keys(input);
   if (keys.length === 0) return z.unknown();
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -122,6 +122,7 @@ function buildDispatchInputSchema(input: Capability['input']): z.ZodTypeAny {
 }
 
 function leafSchemaFor(decl: unknown): z.ZodTypeAny {
+  if (isJsonSchemaNode(decl)) return leafSchemaFromJsonSchema(decl);
   if (typeof decl !== 'string') return z.unknown();
   switch (decl) {
     case 'string':
@@ -145,6 +146,65 @@ function leafSchemaFor(decl: unknown): z.ZodTypeAny {
     default:
       return z.unknown();
   }
+}
+
+interface JsonSchemaObject {
+  type: 'object';
+  properties?: Record<string, unknown>;
+  required?: readonly unknown[];
+}
+
+interface JsonSchemaNode {
+  type?: unknown;
+  items?: unknown;
+}
+
+function isJsonObjectSchema(value: unknown): value is JsonSchemaObject {
+  if (!isRecord(value)) return false;
+  return value['type'] === 'object' && isRecord(value['properties']);
+}
+
+function isJsonSchemaNode(value: unknown): value is JsonSchemaNode {
+  if (!isRecord(value)) return false;
+  return typeof value['type'] === 'string';
+}
+
+function objectSchemaFromJsonSchema(schema: JsonSchemaObject): z.ZodTypeAny {
+  const properties = schema.properties ?? {};
+  const required = new Set(
+    (schema.required ?? []).filter((field): field is string => typeof field === 'string'),
+  );
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const [field, decl] of Object.entries(properties)) {
+    const fieldSchema = leafSchemaFor(decl);
+    shape[field] = required.has(field) ? fieldSchema : fieldSchema.optional();
+  }
+  return z.object(shape);
+}
+
+function leafSchemaFromJsonSchema(schema: JsonSchemaNode): z.ZodTypeAny {
+  switch (schema.type) {
+    case 'string':
+      return z.string();
+    case 'number':
+      return z.number();
+    case 'integer':
+      return z.number().int();
+    case 'boolean':
+      return z.boolean();
+    case 'array':
+      return z.array(leafSchemaFor(schema.items));
+    case 'object':
+      return isJsonObjectSchema(schema)
+        ? objectSchemaFromJsonSchema(schema)
+        : z.record(z.unknown());
+    default:
+      return z.unknown();
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**

@@ -16,7 +16,7 @@ import {
   ServerManifestResolver,
   type TokenBudgetCounter,
 } from '../src/server-resolver.js';
-import type { CompilerService, CompileResult } from '../src/types.js';
+import { CompilerOutputError, type CompilerService, type CompileResult } from '../src/types.js';
 import { fixtureCompileInput, fixtureIntent, fixtureManifest } from './_fixtures.js';
 
 function stubCompiler(token_cost = 42): { compiler: CompilerService; calls: { count: number } } {
@@ -85,6 +85,59 @@ describe('ServerManifestResolver', () => {
 
     expect(calls.count).toBe(2);
     expect(r2.source).toBe('fresh_compile');
+  });
+
+  it('rejects and does not store a structurally invalid compiled manifest', async () => {
+    const compiler: CompilerService = {
+      id: 'bad',
+      compile: async (): Promise<CompileResult> => ({
+        manifest: { ...fixtureManifest(), manifest_id: 'bad-id' },
+        token_cost: 1,
+        duration_ms: 1,
+        model: 'bad-model',
+        diff_mode: false,
+      }),
+    };
+    const store = new MemoryManifestStore();
+    const resolver = new ServerManifestResolver({ compiler, store });
+
+    await expect(resolver.resolve(fixtureCompileInput())).rejects.toBeInstanceOf(
+      CompilerOutputError,
+    );
+    expect(await store.list()).toHaveLength(0);
+  });
+
+  it('runs host validation before storing and emits policy evaluations', async () => {
+    const audit = vi.fn<(e: AuditEvent) => void>();
+    const { compiler } = stubCompiler(12);
+    const store = new MemoryManifestStore();
+    const policy_evaluations = [{ policy_id: 'custom_policy', passed: true }];
+    const validate = vi.fn(() => ({ ok: true, policy_evaluations }));
+    const resolver = new ServerManifestResolver({ compiler, store, audit, validate });
+
+    const r = await resolver.resolve(fixtureCompileInput());
+
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(await store.get(r.key)).not.toBeNull();
+    expect(audit.mock.calls[0]?.[0].policy_evaluations).toEqual(policy_evaluations);
+  });
+
+  it('rejects host validation failures before storing', async () => {
+    const audit = vi.fn<(e: AuditEvent) => void>();
+    const { compiler } = stubCompiler(12);
+    const store = new MemoryManifestStore();
+    const resolver = new ServerManifestResolver({
+      compiler,
+      store,
+      audit,
+      validate: () => ({ ok: false, reasons: ['policy failed'] }),
+    });
+
+    await expect(resolver.resolve(fixtureCompileInput())).rejects.toBeInstanceOf(
+      CompilerOutputError,
+    );
+    expect(await store.list()).toHaveLength(0);
+    expect(audit).not.toHaveBeenCalled();
   });
 
   it('throws BudgetExceededError when the user is over their daily cap', async () => {

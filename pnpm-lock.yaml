@@ -404,6 +404,9 @@ importers:
 
   packages/compiler:
     dependencies:
+      '@atelier/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       '@google/genai':
         specifier: ^1.50.1
         version: 1.50.1

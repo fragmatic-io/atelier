@@ -202,6 +202,8 @@ export {
   BudgetExceededError,
   ServerManifestResolver,
   type BudgetExceededCode,
+  type ManifestValidationResult,
+  type ManifestValidator,
   type ResolveResult,
   type ServerAuditEmitter,
   type ServerManifestResolverOptions,

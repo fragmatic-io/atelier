@@ -64,36 +64,6 @@ const DEFAULT_FILTERS: readonly { id: AuditEventType; label: string }[] = [
 /** Cap the in-memory event buffer so a long-running tab doesn't OOM. */
 const MAX_EVENTS = 500;
 
-interface ParsedFrame {
-  event: string;
-  data: string;
-}
-
-/**
- * Pull `event: X` / `data: Y` blocks out of an SSE chunk. Exported for
- * unit tests so we don't have to spin up a real EventSource.
- */
-export function parseSseChunk(buffer: string): { frames: ParsedFrame[]; remainder: string } {
-  const frames: ParsedFrame[] = [];
-  // Frames are double-newline separated.
-  let lastTerminator = 0;
-  let idx = buffer.indexOf('\n\n');
-  while (idx !== -1) {
-    const block = buffer.slice(lastTerminator, idx);
-    let evt = 'message';
-    const dataLines: string[] = [];
-    for (const line of block.split('\n')) {
-      if (line.startsWith('event: ')) evt = line.slice(7);
-      else if (line.startsWith('data: ')) dataLines.push(line.slice(6));
-      // ignore comments (": ") and other prefixes
-    }
-    if (dataLines.length > 0) frames.push({ event: evt, data: dataLines.join('\n') });
-    lastTerminator = idx + 2;
-    idx = buffer.indexOf('\n\n', lastTerminator);
-  }
-  return { frames, remainder: buffer.slice(lastTerminator) };
-}
-
 function colorFor(type: string): string {
   return EVENT_COLOR[type] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
 }

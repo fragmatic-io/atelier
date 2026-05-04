@@ -1,0 +1,24 @@
+{
+  // Build config — `pnpm build` (`tsc -b`) reads this. Emits JS + .d.ts +
+  // sourcemaps for the public surface (src/) into dist/. Tests are excluded
+  // so the published artifact stays minimal. Type-checking + ESLint use the
+  // sibling tsconfig.json which includes both src and test.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "noEmit": false,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
+  },
+  "references": [
+    { "path": "../schemas/tsconfig.build.json" },
+    { "path": "../policies/tsconfig.build.json" }
+  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts", "**/*.spec.ts"]
+}

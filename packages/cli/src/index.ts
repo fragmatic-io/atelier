@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import=tsx/esm
+#!/usr/bin/env node
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 /* eslint-disable no-console */
@@ -22,18 +22,6 @@
  * exposes a `runX()` programmatic entry plus an `xCommand()` CLI front-end.
  */
 
-import { addCommand } from './commands/add.js';
-import { compileCommand } from './commands/compile.js';
-import { componentsSyncCommand } from './commands/components-sync.js';
-import { devCommand } from './commands/dev.js';
-import { importFigma } from './commands/import-figma.js';
-import { importOpenApi } from './commands/import-openapi.js';
-import { initCommand } from './commands/init.js';
-import { inspectCommand } from './commands/inspect.js';
-import { lintCommand } from './commands/lint.js';
-import { marketplaceCommand } from './commands/marketplace-publish.js';
-import { validateCommand } from './commands/validate.js';
-import { vaultCommand } from './commands/vault.js';
 import { parseArgs } from './parse-args.js';
 import { TOP_LEVEL_USAGE } from './usage.js';
 import { readCliVersion } from './version.js';
@@ -51,26 +39,46 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   }
 
   switch (command) {
-    case 'init':
+    case 'init': {
+      const { initCommand } = await import('./commands/init.js');
       return initCommand(positionals, flags);
-    case 'dev':
+    }
+    case 'dev': {
+      const { devCommand } = await import('./commands/dev.js');
       return devCommand(positionals, flags);
-    case 'add':
+    }
+    case 'add': {
+      const { addCommand } = await import('./commands/add.js');
       return addCommand(positionals, flags);
-    case 'components-sync':
+    }
+    case 'components-sync': {
+      const { componentsSyncCommand } = await import('./commands/components-sync.js');
       return componentsSyncCommand(positionals, flags);
-    case 'validate':
+    }
+    case 'validate': {
+      const { validateCommand } = await import('./commands/validate.js');
       return validateCommand(positionals, flags);
-    case 'lint':
+    }
+    case 'lint': {
+      const { lintCommand } = await import('./commands/lint.js');
       return lintCommand(positionals, flags);
-    case 'inspect':
+    }
+    case 'inspect': {
+      const { inspectCommand } = await import('./commands/inspect.js');
       return inspectCommand(positionals, flags);
-    case 'compile':
+    }
+    case 'compile': {
+      const { compileCommand } = await import('./commands/compile.js');
       return compileCommand(positionals, flags);
-    case 'vault':
+    }
+    case 'vault': {
+      const { vaultCommand } = await import('./commands/vault.js');
       return vaultCommand(positionals, flags);
-    case 'marketplace':
+    }
+    case 'marketplace': {
+      const { marketplaceCommand } = await import('./commands/marketplace-publish.js');
       return marketplaceCommand(positionals, flags);
+    }
     case 'import': {
       // `atelier import openapi <spec> ...` — the importer parses its own flags,
       // so we slice off `import` and the target word and hand the rest over
@@ -79,6 +87,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
       const target = positionals[0];
       if (target === 'openapi') {
         try {
+          const { importOpenApi } = await import('./commands/import-openapi.js');
           await importOpenApi(argv.slice(2));
           return 0;
         } catch (err) {
@@ -88,6 +97,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
       }
       if (target === 'figma') {
         try {
+          const { importFigma } = await import('./commands/import-figma.js');
           await importFigma(argv.slice(2));
           return 0;
         } catch (err) {

@@ -37,13 +37,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # P2.1 — build the @atelier/schemas artifact pilot first. Every
-      # downstream step (typecheck, lint, validate-data, tests) resolves
-      # `@atelier/schemas` through its `exports` map, which now points at
-      # `./dist/{index.js,index.d.ts}`. Workspace symlinks consume the built
-      # artifact the same way an external `npm install @atelier/schemas`
-      # consumer would.
-      - name: Build packages (build-artifact pilot, P2.1)
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/docs exec playwright install --with-deps chromium
+
+      # Build every workspace package/app that declares a build script. Core
+      # package exports now resolve through dist artifacts, so this catches
+      # broken package.json export maps and production-only Next.js failures
+      # before typecheck/test run against a half-built workspace.
+      - name: Build packages and apps
         run: pnpm build
 
       - name: License headers
@@ -70,14 +71,13 @@ jobs:
       - name: Capabilities index check
         run: pnpm capabilities:index:check
 
-      - name: Test (with coverage)
-        run: pnpm test --coverage
+      - name: Test
+        run: pnpm test
 
-      # P2.1 — pack @atelier/schemas, install into a scratch dir as a
-      # downstream npm consumer would, and confirm the dist/ + .d.ts pair are
-      # actually usable end-to-end. Gates the merge so a broken package.json
-      # `exports` map can't reach main.
-      - name: Smoke-test @atelier/schemas pack + install (P2.1)
+      # Pack @atelier/schemas, install into a scratch dir as a downstream npm
+      # consumer would, and run workspace dist/bin smokes for the migrated core
+      # packages. Gates the merge so broken package artifacts can't reach main.
+      - name: Smoke-test package artifacts
         run: pnpm smoke-test:pack
 
       - name: Upload coverage artifact
@@ -115,13 +115,45 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/docs exec playwright install --with-deps chromium
+
       - name: Run advertised validate command
         # `pnpm validate` is the script users + agents actually run. A green
-        # CI must mean a green `pnpm validate` on a fresh clone. The first
-        # step of `pnpm validate` is now `pnpm build` (P2.1) — the schemas
-        # pilot publishes a dist/ tree that the rest of the validate chain
-        # consumes.
+        # CI must mean a green `pnpm validate` on a fresh clone. Its first
+        # step is the same recursive artifact build used above.
         run: pnpm validate
 
-      - name: Smoke-test @atelier/schemas pack + install (P2.1)
+      - name: Smoke-test package artifacts
         run: pnpm smoke-test:pack
+
+  demo-e2e:
+    name: Demo Playwright E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/docs exec playwright install --with-deps chromium
+
+      - name: Build package artifacts
+        run: pnpm build
+
+      - name: Verify demo Playwright browser
+        run: pnpm --filter @atelier/demo exec playwright install --with-deps chromium
+
+      - name: Run demo E2E
+        run: pnpm --filter @atelier/demo e2e

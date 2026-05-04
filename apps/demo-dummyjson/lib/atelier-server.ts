@@ -192,6 +192,10 @@ function buildServer(): CirServer {
     compiler,
     store,
     audit: (e) => audit.emit(e),
+    validate: (manifest) => {
+      const result = validateManifestSemantics(manifest);
+      return result.errors.length === 0 ? { ok: true } : { ok: false, reasons: result.errors };
+    },
     buildKey: (input) => {
       let capabilityVersion: string | undefined;
       for (const c of Object.values(input.capabilities)) {

@@ -2,9 +2,11 @@
 // Copyright (c) 2026 The Atelier Authors
 
 /**
- * P2.1 smoke test — pack `@atelier/schemas`, install into a scratch directory,
- * and verify an external consumer can import + typecheck against the published
- * artifact without `tsx` / `ts-node`.
+ * Package smoke test — pack `@atelier/schemas`, install into a scratch
+ * directory, and verify an external consumer can import + typecheck against
+ * the published artifact without `tsx` / `ts-node`. Then run bare-Node smokes
+ * against the migrated workspace dist artifacts (`runtime`, `policies`,
+ * `compiler`, `cli`).
  *
  * The flow exactly mirrors what someone running `npm install @atelier/schemas`
  * out in the wild would do:
@@ -15,11 +17,12 @@
  *   3. Install the tgz with `npm install <path-to-tgz>`. This is the consumer
  *      moment — if our `exports` / `files` are wrong, it shows up here.
  *   4. Inspect the tgz and confirm `dist/` and `src/` are inside.
- *   5. Write a tiny `consumer.ts` that imports + uses `CapabilitySchema` and
- *      `type Capability`. Run `tsc --noEmit` against it. No errors -> the
- *      package's `.d.ts` is consumable.
- *   6. Bonus: `node --input-type=module -e "import('@atelier/schemas')"` to
- *      prove the runtime artifact loads with bare Node (no transpilation).
+ *   5. Write tiny TS + JS consumers that import + use `CapabilitySchema`.
+ *      Typecheck the TS against the published .d.ts, then run JS with Node.
+ *   6. Execute the installed `atelier-schemas` bin with `--help`, then run a
+ *      small `dump` command to prove the published CLI works without tsx.
+ *   7. Import core package exports from the built workspace and execute the
+ *      `atelier` CLI dist entry with bare Node.
  *
  * Usage:
  *   pnpm smoke-test:pack
@@ -87,6 +90,7 @@ function inspectTarball(tgzPath: string): void {
     'package/package.json',
     'package/dist/index.js',
     'package/dist/index.d.ts',
+    'package/dist/cli/index.js',
     'package/src/index.ts',
     'package/README.md',
   ];
@@ -99,8 +103,9 @@ function inspectTarball(tgzPath: string): void {
 }
 
 /**
- * Bootstrap a minimal external-consumer project, install the tgz, write a
- * consumer.ts that uses both runtime + types, and run `tsc --noEmit`.
+ * Bootstrap a minimal external-consumer project, install the tgz, write tiny
+ * consumers that use both runtime + types, then run typecheck/runtime/bin
+ * checks against the installed package.
  *
  * We use npm (not pnpm) here because external consumers are most often on
  * npm and we want to verify the package works on the lowest-common-denominator
@@ -137,23 +142,39 @@ function consumeAndTypecheck(tgzPath: string, scratchDir: string): void {
   };
   writeFileSync(join(scratchDir, 'tsconfig.json'), JSON.stringify(consumerTsconfig, null, 2));
 
-  // Tiny consumer file. Must touch both a runtime export AND a type export to
+  const capabilitySample = `{
+  id: 'demo.example_archive',
+  kind: 'action',
+  version: '1.0.0',
+  input: { thread_id: { type: 'string' } },
+  output: { archived: { type: 'boolean' } },
+  side_effects: ['archive', 'mutates:thread_state'],
+  permissions: ['thread:write'],
+  confirmation: 'inline',
+  rate_limit: '100/min/user',
+  reversible: true,
+  rollback: 'demo.example_unarchive',
+}`;
+
+  // Tiny TS consumer. Must touch both a runtime export AND a type export to
   // exercise both the .js and .d.ts halves of the contract.
-  const consumerSource = `// Smoke consumer — exercises both runtime + type exports.
+  const consumerSource = `// Smoke consumer - exercises both runtime + type exports.
 import { CapabilitySchema, type Capability } from '@atelier/schemas';
 
-const cap: Capability = CapabilitySchema.parse({
-  id: 'demo.example.capability',
-  version: '1.0.0',
-  side_effects: [],
-  permissions: [],
-  io: { input: { type: 'object' }, output: { type: 'object' } },
-});
+const cap: Capability = CapabilitySchema.parse(${capabilitySample});
 
 if (typeof cap.id !== 'string') throw new Error('expected cap.id string');
 console.log('smoke-consumer ok:', cap.id);
 `;
   writeFileSync(join(scratchDir, 'consumer.ts'), consumerSource);
+
+  const runtimeSource = `// Smoke runtime consumer - must run in bare Node.
+import { CapabilitySchema } from '@atelier/schemas';
+
+const cap = CapabilitySchema.parse(${capabilitySample});
+console.log('smoke-runtime ok:', cap.id);
+`;
+  writeFileSync(join(scratchDir, 'consumer.mjs'), runtimeSource);
 
   // npm install the tgz. This is the moment of truth.
   log('install', `npm install file:${tgzPath}`);
@@ -173,6 +194,7 @@ console.log('smoke-consumer ok:', cap.id);
   // Confirm node_modules layout is what we'd expect.
   const installedPkgPath = join(scratchDir, 'node_modules', '@atelier', 'schemas', 'package.json');
   const installedPkg = JSON.parse(readFileSync(installedPkgPath, 'utf8')) as {
+    bin?: Record<string, string>;
     main?: string;
     types?: string;
   };
@@ -183,6 +205,12 @@ console.log('smoke-consumer ok:', cap.id);
     fail(
       'install',
       `installed package.types is ${installedPkg.types!}, expected ./dist/index.d.ts`,
+    );
+  }
+  if (installedPkg.bin?.['atelier-schemas'] !== './dist/cli/index.js') {
+    fail(
+      'install',
+      `installed package bin is ${installedPkg.bin?.['atelier-schemas']}, expected ./dist/cli/index.js`,
     );
   }
 
@@ -208,28 +236,167 @@ console.log('smoke-consumer ok:', cap.id);
   }
   log('typecheck', 'tsc --noEmit clean against published types');
 
-  // Bonus: prove the runtime actually loads under bare Node.
-  log('runtime', `node --input-type=module -e "import('@atelier/schemas')"`);
+  // Prove the runtime consumer runs under bare Node.
+  log('runtime', 'node consumer.mjs');
+  const runtime = spawnSync('node', ['consumer.mjs'], {
+    cwd: scratchDir,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  if (runtime.status !== 0) {
+    fail(
+      'runtime',
+      `node consumer failed (exit ${runtime.status})\nstdout:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`,
+    );
+  }
+  if (!runtime.stdout.includes('smoke-runtime ok: demo.example_archive')) {
+    fail('runtime', `unexpected runtime output:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`);
+  }
+  log('runtime', 'bare-node consumer succeeded');
+
+  const binPath = join(scratchDir, 'node_modules', '.bin', 'atelier-schemas');
+
+  log('bin', 'atelier-schemas --help');
+  const help = spawnSync(binPath, ['--help'], {
+    cwd: scratchDir,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  if (help.status !== 0) {
+    fail(
+      'bin',
+      `--help failed (exit ${help.status})\nstdout:\n${help.stdout}\nstderr:\n${help.stderr}`,
+    );
+  }
+  if (!help.stdout.includes('usage: atelier-schemas')) {
+    fail('bin', `--help did not print usage\nstdout:\n${help.stdout}\nstderr:\n${help.stderr}`);
+  }
+  log('bin', '--help succeeded');
+
+  const dumpDir = join(scratchDir, 'dumped-schemas');
+  log('dump', `atelier-schemas dump --out ${dumpDir}`);
+  const dump = spawnSync(binPath, ['dump', '--out', dumpDir], {
+    cwd: scratchDir,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  if (dump.status !== 0) {
+    fail(
+      'dump',
+      `dump failed (exit ${dump.status})\nstdout:\n${dump.stdout}\nstderr:\n${dump.stderr}`,
+    );
+  }
+  const dumpedCapability = join(dumpDir, 'capability.json');
+  const dumpedRaw = readFileSync(dumpedCapability, 'utf8');
+  const dumpedSchema = JSON.parse(dumpedRaw) as {
+    $id?: string;
+    properties?: Record<string, unknown>;
+    required?: string[];
+  };
+  if (
+    dumpedSchema.$id !== 'https://cir.dev/schemas/capability.json' ||
+    !dumpedSchema.properties?.['kind'] ||
+    !dumpedSchema.required?.includes('confirmation')
+  ) {
+    fail('dump', `capability schema was not dumped as expected:\n${dumpedRaw.slice(0, 500)}`);
+  }
+  log('dump', 'dump command wrote capability.json');
+}
+
+function runWorkspaceArtifactSmoke(): void {
+  log('workspace-runtime', 'node --input-type=module core import smoke');
   const runtime = spawnSync(
     'node',
     [
       '--input-type=module',
       '-e',
-      "const m = await import('@atelier/schemas'); if (!m.CapabilitySchema) { console.error('missing CapabilitySchema'); process.exit(1); }",
+      `
+import { ActionDispatcher, MapActionRegistry } from '@atelier/runtime';
+import { validateManifest } from '@atelier/policies';
+import { MemoryManifestStore, ServerManifestResolver } from '@atelier/compiler';
+
+if (typeof ActionDispatcher !== 'function') throw new Error('ActionDispatcher export missing');
+if (typeof MapActionRegistry !== 'function') throw new Error('MapActionRegistry export missing');
+if (typeof validateManifest !== 'function') throw new Error('validateManifest export missing');
+if (typeof MemoryManifestStore !== 'function') throw new Error('MemoryManifestStore export missing');
+if (typeof ServerManifestResolver !== 'function') throw new Error('ServerManifestResolver export missing');
+console.log('workspace-runtime ok');
+`,
     ],
     {
-      cwd: scratchDir,
+      cwd: ROOT,
       encoding: 'utf8',
       stdio: 'pipe',
     },
   );
   if (runtime.status !== 0) {
     fail(
-      'runtime',
-      `node import failed (exit ${runtime.status})\nstdout:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`,
+      'workspace-runtime',
+      `core import smoke failed (exit ${runtime.status})\nstdout:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`,
     );
   }
-  log('runtime', 'bare-node import succeeded');
+  if (!runtime.stdout.includes('workspace-runtime ok')) {
+    fail('workspace-runtime', `unexpected output:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`);
+  }
+  log('workspace-runtime', 'core dist imports succeeded');
+
+  log('cli-bin', 'node packages/cli/dist/index.js --help');
+  const cliHelp = spawnSync('node', [join(ROOT, 'packages', 'cli', 'dist', 'index.js'), '--help'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  if (cliHelp.status !== 0) {
+    fail(
+      'cli-bin',
+      `atelier --help failed (exit ${cliHelp.status})\nstdout:\n${cliHelp.stdout}\nstderr:\n${cliHelp.stderr}`,
+    );
+  }
+  if (!cliHelp.stdout.includes('usage: atelier <command>')) {
+    fail('cli-bin', `atelier --help did not print top-level usage\nstdout:\n${cliHelp.stdout}`);
+  }
+  log('cli-bin', 'atelier top-level help succeeded under bare Node');
+
+  const cliPath = join(ROOT, 'packages', 'cli', 'dist', 'index.js');
+  const cliHelpChecks: readonly { name: string; args: readonly string[]; expect: string }[] = [
+    {
+      name: 'vault',
+      args: ['vault', '--help'],
+      expect: 'usage: atelier vault',
+    },
+    {
+      name: 'marketplace publish',
+      args: ['marketplace', 'publish', '--help'],
+      expect: 'usage: atelier marketplace publish',
+    },
+    {
+      name: 'marketplace review',
+      args: ['marketplace', 'review', '--help'],
+      expect: 'usage: atelier marketplace review',
+    },
+  ];
+
+  for (const check of cliHelpChecks) {
+    log('cli-bin', `node packages/cli/dist/index.js ${check.args.join(' ')}`);
+    const result = spawnSync('node', [cliPath, ...check.args], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
+    if (result.status !== 0) {
+      fail(
+        'cli-bin',
+        `${check.name} help failed (exit ${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+      );
+    }
+    if (!result.stdout.includes(check.expect)) {
+      fail(
+        'cli-bin',
+        `${check.name} help did not print expected usage "${check.expect}"\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+      );
+    }
+  }
+  log('cli-bin', 'CLI subcommand dist entrypoints succeeded under bare Node');
 }
 
 function main(): void {
@@ -248,8 +415,9 @@ function main(): void {
 
     inspectTarball(tgzPath);
     consumeAndTypecheck(tgzPath, consumerDir);
+    runWorkspaceArtifactSmoke();
 
-    console.log('[smoke-test-pack] ok — @atelier/schemas is consumable from npm');
+    console.log('[smoke-test-pack] ok — package artifacts are consumable');
   } finally {
     if (KEEP) {
       console.log(`[smoke-test-pack] kept scratch dir: ${scratchDir}`);
