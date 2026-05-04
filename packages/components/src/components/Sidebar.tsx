@@ -180,6 +180,8 @@ export const SIDEBAR_COLLAPSED_WIDTH_PX = 48;
 export const SIDEBAR_EXPANDED_WIDTH_PX = 240;
 /** Default keyboard shortcut character (Linear-style). */
 export const SIDEBAR_DEFAULT_SHORTCUT = '[';
+/** Token-backed row gap shared by primary and secondary sidebar lists. */
+export const SIDEBAR_ITEM_GAP = 'var(--atelier-space-xs, 4px)';
 
 /**
  * Detect `prefers-reduced-motion: reduce`. Returns false during SSR and
@@ -481,7 +483,13 @@ export function Sidebar({
       <ul
         id="cir-sidebar-list"
         data-cir-part="sidebar-items"
-        style={{ listStyle: 'none', margin: 0, padding: 0 }}
+        style={{
+          display: 'grid',
+          gap: SIDEBAR_ITEM_GAP,
+          listStyle: 'none',
+          margin: 0,
+          padding: 0,
+        }}
       >
         {items.map((it) => {
           const hasChildren = it.children !== undefined && it.children.length > 0;
@@ -573,7 +581,13 @@ export function Sidebar({
                 <ul
                   id={`cir-sidebar-children-${it.id}`}
                   data-cir-part="sidebar-children"
-                  style={{ listStyle: 'none', margin: 0, padding: 0 }}
+                  style={{
+                    display: 'grid',
+                    gap: SIDEBAR_ITEM_GAP,
+                    listStyle: 'none',
+                    margin: 0,
+                    padding: 0,
+                  }}
                 >
                   {it.children?.map((c) => (
                     <li key={c.id} data-cir-part="sidebar-child">
