@@ -90,7 +90,7 @@ export function ApprovalCommandCenter(): ReactElement {
           ))}
         </aside>
 
-        <main data-cir-command-main>
+        <section data-cir-command-main>
           <div data-cir-command-record>
             <p data-cir-record-id>{selected?.id}</p>
             <h3>{selected?.title}</h3>
@@ -125,7 +125,7 @@ export function ApprovalCommandCenter(): ReactElement {
           </div>
 
           <p data-cir-audit-line>{audit}</p>
-        </main>
+        </section>
       </div>
 
       <CommandPalette

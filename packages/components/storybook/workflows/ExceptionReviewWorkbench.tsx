@@ -50,7 +50,7 @@ export function ExceptionReviewWorkbench(): ReactElement {
           ))}
         </aside>
 
-        <main data-cir-decision-panel>
+        <section data-cir-decision-panel>
           <div data-cir-decision-toolbar>
             <div>
               <p data-cir-record-id>{selected?.id}</p>
@@ -132,7 +132,7 @@ export function ExceptionReviewWorkbench(): ReactElement {
           </div>
 
           <p data-cir-audit-line>{audit}</p>
-        </main>
+        </section>
       </div>
 
       <Modal

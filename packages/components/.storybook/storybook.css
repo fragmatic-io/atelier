@@ -167,7 +167,7 @@
 [data-cir-kicker],
 [data-cir-record-id] {
   margin: 0 0 4px;
-  color: var(--atelier-fg-muted, #6b7280);
+  color: var(--atelier-fg-secondary, #4b5563);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0;
@@ -188,7 +188,7 @@
 [data-cir-workflow-metric] small,
 [data-cir-queue-item] small,
 [data-cir-approval-item] small {
-  color: var(--atelier-fg-muted, #6b7280);
+  color: var(--atelier-fg-secondary, #4b5563);
 }
 
 [data-cir-workbench-grid],
@@ -301,7 +301,7 @@
 [data-cir-profile-strip] dt,
 [data-cir-command-record] dt,
 [data-cir-evidence-grid] dt {
-  color: var(--atelier-fg-muted, #6b7280);
+  color: var(--atelier-fg-secondary, #4b5563);
   font-size: 11px;
 }
 

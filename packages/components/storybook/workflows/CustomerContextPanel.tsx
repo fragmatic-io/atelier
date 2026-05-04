@@ -49,7 +49,7 @@ export function CustomerContextPanel(): ReactElement {
           ))}
         </nav>
 
-        <main data-cir-customer-main>
+        <section data-cir-customer-main>
           <div data-cir-profile-strip>
             <dl>
               <dt>Segment</dt>
@@ -119,7 +119,7 @@ export function CustomerContextPanel(): ReactElement {
               Open risk notes
             </button>
           </footer>
-        </main>
+        </section>
       </div>
 
       <Drawer
