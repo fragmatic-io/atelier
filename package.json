@@ -35,7 +35,7 @@
     "pnpm": ">=10"
   },
   "scripts": {
-    "build": "pnpm --filter @atelier/schemas build",
+    "build": "pnpm build:all",
     "build:all": "pnpm -r --if-present build",
     "smoke-test:pack": "tsx scripts/smoke-test-pack.ts",
     "typecheck": "tsc --build",

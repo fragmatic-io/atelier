@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --import=tsx/esm
+#!/usr/bin/env node
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 /* eslint-disable no-console */
@@ -27,9 +27,8 @@
  *     on a draft import without CI yelling at them mid-keystroke.
  *
  * Implementation notes:
- *  - This file is invoked via shebang (`node --experimental-strip-types`)
- *    in dev. In CI/published form, `pnpm exec atelier-schemas` resolves the
- *    package's bin entry through `tsx`-equivalent strip-types loader.
+ *  - Published packages invoke the built `dist/cli/index.js` artifact via a
+ *    plain Node shebang. The bin must not rely on tsx / ts-node.
  *  - Kept under ~200 lines: argv parsed by hand, no UX libraries.
  */
 
@@ -48,6 +47,8 @@ interface ParsedArgs {
   command: string;
   flags: Record<string, string>;
 }
+
+const USAGE = `usage: atelier-schemas <dump|validate-data> [--out <dir>] [--root <dir>] [--strict]`;
 
 function parseArgs(argv: string[]): ParsedArgs {
   const command = argv[0] ?? '';
@@ -206,6 +207,10 @@ async function validateData(rootDir: string, strict: boolean): Promise<number> {
 
 async function main(): Promise<void> {
   const { command, flags } = parseArgs(process.argv.slice(2));
+  if (command === '--help' || command === '-h' || 'help' in flags) {
+    console.log(USAGE);
+    process.exit(0);
+  }
   switch (command) {
     case 'dump': {
       const out = flags['out'] ?? '.well-known/schemas';
@@ -225,9 +230,7 @@ async function main(): Promise<void> {
       break;
     }
     default: {
-      console.error(
-        `usage: atelier-schemas <dump|validate-data> [--out <dir>] [--root <dir>] [--strict]`,
-      );
+      console.error(USAGE);
       process.exit(1);
     }
   }

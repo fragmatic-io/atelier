@@ -11,7 +11,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsc -b tsconfig.build.json",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run"
   },

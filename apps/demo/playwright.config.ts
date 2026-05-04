@@ -9,8 +9,8 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Run locally: `pnpm --filter @atelier/demo e2e`
  * Browser binary needs `pnpm --filter @atelier/demo exec playwright install chromium`
- * once per machine; we don't run E2E in CI in Phase 4d (would require either
- * caching the browser binary or accepting a ~3min download per CI run).
+ * once per machine. CI installs Chromium and runs this deterministic smoke
+ * with GEMINI_API_KEY cleared so route reality is covered without secrets.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -31,9 +31,14 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev -- -p 3100',
+    command: 'pnpm exec next dev -p 3100',
     url: 'http://127.0.0.1:3100/today',
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000,
+    env: {
+      GEMINI_API_KEY: '',
+      ATELIER_COMPILER_TOOLS: 'off',
+      ATELIER_RECIPE_RAG: 'off',
+    },
   },
 });

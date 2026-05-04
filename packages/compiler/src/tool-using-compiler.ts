@@ -256,6 +256,13 @@ export class ToolUsingCompiler implements CompilerService {
       // No tool calls — the model emitted a final answer.
       const text = turn.text ?? '';
       const manifest = parseFinalManifest(text);
+      const validation = this.#validateFinalManifest(manifest);
+      if (!validation.ok) {
+        throw new CompilerOutputError(
+          'ToolUsingCompiler: final manifest failed tool-environment validation',
+          validation.reasons ?? [],
+        );
+      }
       return {
         manifest,
         token_cost: totalTokens,
@@ -425,6 +432,11 @@ export class ToolUsingCompiler implements CompilerService {
     if (!draft) return { ok: false, reasons: ['validateDraft: draft is required'] };
     if (!this.#env.validate) return { ok: true };
     return this.#env.validate(draft);
+  }
+
+  #validateFinalManifest(manifest: Manifest): ToolValidationResult {
+    if (!this.#env.validate) return { ok: true };
+    return this.#env.validate(manifest);
   }
 
   #inspectExistingManifest(route: string): Manifest | null {

@@ -13,7 +13,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { parseSseChunk } from '../app/admin/audit/page';
+import { parseSseChunk } from '../lib/parse-sse-chunk';
 
 describe('parseSseChunk', () => {
   it('returns no frames and the full buffer as remainder when no terminator is present', () => {

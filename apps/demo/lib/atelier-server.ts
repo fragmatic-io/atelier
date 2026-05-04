@@ -32,9 +32,16 @@ import { SubstringCapabilityResolver } from '@atelier/capability-resolver';
 import { LocalRecipeStore, SubstringRecipeResolver } from '@atelier/recipe-resolver';
 import { join } from 'node:path';
 import type { CompileBudget } from '@atelier/schemas';
-import { SequenceDetector } from '@atelier/policies';
+import {
+  BASELINE_POLICIES,
+  SequenceDetector,
+  UNDO_TOAST_AMBIENT_SATISFIER,
+  composesAccordingTo,
+  validateManifest,
+} from '@atelier/policies';
 import { BehavioralTap, StreamingAuditSink } from '@atelier/runtime';
-import type { Capability, ComponentDefinition } from '@atelier/schemas';
+import { COMPOSITION_RULES } from '@atelier/components/composition-rules';
+import type { Capability, ComponentDefinition, Manifest } from '@atelier/schemas';
 import { DEMO_BRAND_KIT } from './brand-kit';
 import { CAPABILITIES } from './fake-capabilities';
 
@@ -76,6 +83,41 @@ interface CirServer {
 const KEY = '__cir_demo_server';
 type GlobalWithServer = typeof globalThis & { [KEY]?: CirServer };
 const g = globalThis as GlobalWithServer;
+
+function validateManifestSemantics(manifest: Manifest): {
+  ok: boolean;
+  reasons?: readonly string[];
+} {
+  const result = validateManifest(
+    {
+      manifest,
+      capabilities: CAPABILITIES,
+      intent: {
+        user_id: 'demo-user',
+        global_preferences: {},
+        granted_fields: [
+          'thread.list.*',
+          'task.list.*',
+          'thread.id',
+          'thread.sender',
+          'thread.subject',
+          'thread.snippet',
+          'thread.received_at',
+          'thread.requires_decision',
+        ],
+      },
+      rate_limited_capability_ids: new Set(),
+      pii_fields: new Set(['email']),
+      brand_kit: DEMO_BRAND_KIT,
+      ambient_policy_satisfiers: [UNDO_TOAST_AMBIENT_SATISFIER],
+    },
+    {
+      policies: [...BASELINE_POLICIES, composesAccordingTo(COMPOSITION_RULES)],
+    },
+  );
+  const reasons = result.violations.map((v) => v.message);
+  return result.ok ? { ok: true, reasons } : { ok: false, reasons };
+}
 
 function buildServer(): CirServer {
   const audit = new StreamingAuditSink({ bufferSize: 200, echoToConsole: false });
@@ -252,13 +294,12 @@ function buildServer(): CirServer {
             coldModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-pro',
             diffModel: process.env['GEMINI_DIFF_MODEL'] ?? 'gemini-2.5-flash',
           }),
-          // The env binds the tools to this host's data. Aurora's demo
-          // ships zero customs and no per-route policy validator at the
-          // server level, so `validate` is omitted; the agent will see
-          // `validateDraft → { ok: true }` from the default seam.
+          // The env binds the tools to this host's data. Drafts and final
+          // output use the same app policy guard as the resolver cache edge.
           env: {
             capabilities: CAPABILITIES,
             components,
+            validate: validateManifestSemantics,
             ...(recipeResolver !== undefined ? { recipeResolver } : {}),
           },
           onToolCall: (call) => {
@@ -302,6 +343,7 @@ function buildServer(): CirServer {
     compiler,
     store,
     audit: (e) => audit.emit(e),
+    validate: validateManifestSemantics,
   });
 
   // Wave C / Phase C-3 — capability scoping resolver. Default-on

@@ -1,10 +1,14 @@
 {
+  // Type-checking + IDE / ESLint project for the package. Includes both src
+  // and test so editor tooling and `pnpm typecheck -p .` cover everything.
+  // Builds (emit JS + .d.ts to dist/) live in tsconfig.build.json — invoked
+  // via `pnpm build` (`tsc -b`).
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": ".",
-    "noEmit": false,
-    "composite": true
+    "lib": ["ES2023", "DOM"],
+    "noEmit": true,
+    "composite": false,
+    "rootDir": "."
   },
   "include": ["src/**/*", "test/**/*"]
 }

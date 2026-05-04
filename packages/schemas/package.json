@@ -20,7 +20,7 @@
     "CHANGELOG.md"
   ],
   "bin": {
-    "atelier-schemas": "./src/cli/index.ts"
+    "atelier-schemas": "./dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",

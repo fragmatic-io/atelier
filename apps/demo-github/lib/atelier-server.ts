@@ -295,6 +295,7 @@ function buildServer(): CirServer {
     compiler,
     store,
     audit: (e) => audit.emit(e),
+    validate: validateManifestSemantics,
   });
 
   // Components catalog summary — what the compiler is allowed to reference.

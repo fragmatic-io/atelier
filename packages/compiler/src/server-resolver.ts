@@ -11,8 +11,8 @@
  * the store. Wire it from your trigger bus.
  */
 
-import type { AuditEvent, Manifest } from '@atelier/schemas';
-import { type CompileInput, type CompilerService } from './types.js';
+import { ManifestSchema, type AuditEvent, type Manifest } from '@atelier/schemas';
+import { CompilerOutputError, type CompileInput, type CompilerService } from './types.js';
 import {
   type ManifestStore,
   type ManifestStoreKey,
@@ -37,6 +37,17 @@ export interface ResolveResult {
 
 export type ServerAuditEmitter = (event: AuditEvent) => void | Promise<void>;
 
+export interface ManifestValidationResult {
+  ok: boolean;
+  reasons?: readonly string[];
+  policy_evaluations?: AuditEvent['policy_evaluations'];
+}
+
+export type ManifestValidator = (
+  manifest: Manifest,
+  input: CompileInput,
+) => ManifestValidationResult | Promise<ManifestValidationResult>;
+
 export interface ServerManifestResolverOptions {
   compiler: CompilerService;
   store: ManifestStore;
@@ -55,6 +66,12 @@ export interface ServerManifestResolverOptions {
     perUserDailyTokens: number;
     counter: TokenBudgetCounter;
   };
+  /**
+   * Optional host policy validator. The resolver always performs structural
+   * ManifestSchema validation before storing; this hook adds app-specific
+   * policy/composition validation at the central cache boundary.
+   */
+  validate?: ManifestValidator;
 }
 
 export interface TokenBudgetCounter {
@@ -122,6 +139,7 @@ export class ServerManifestResolver {
   readonly #audit: ServerAuditEmitter | undefined;
   readonly #buildKey: (input: CompileInput) => ManifestStoreKey;
   readonly #budget: ServerManifestResolverOptions['budget'];
+  readonly #validate: ManifestValidator | undefined;
 
   constructor(opts: ServerManifestResolverOptions) {
     this.#compiler = opts.compiler;
@@ -129,6 +147,7 @@ export class ServerManifestResolver {
     this.#audit = opts.audit;
     this.#buildKey = opts.buildKey ?? defaultBuildKey;
     this.#budget = opts.budget;
+    this.#validate = opts.validate;
   }
 
   async resolve(input: CompileInput, opts?: { forceRefresh?: boolean }): Promise<ResolveResult> {
@@ -179,9 +198,10 @@ export class ServerManifestResolver {
 
     // Cold path.
     const result = await this.#compiler.compile(input);
+    const validation = await this.#validateCompiledManifest(result.manifest, input);
     const compiledAt = new Date().toISOString();
     const stored: StoredManifest = {
-      manifest: result.manifest,
+      manifest: validation.manifest,
       compiler_id: result.model,
       compiled_at: compiledAt,
       last_used: compiledAt,
@@ -205,8 +225,8 @@ export class ServerManifestResolver {
       after_state_hash: '',
       trigger_chain: input.trigger ? [input.trigger.type] : [],
       token_cost: result.token_cost,
-      policy_evaluations: [],
-      manifest_id: result.manifest.manifest_id,
+      policy_evaluations: validation.policy_evaluations,
+      manifest_id: validation.manifest.manifest_id,
       // Phase 1.5: compile-narrative metadata for `<CompileBadge>`. The
       // model name (`gemini-2.5-pro` vs `fallback-hand-written`) lets the
       // user see which compiler served them; duration tells them how long
@@ -216,13 +236,42 @@ export class ServerManifestResolver {
     });
 
     return {
-      manifest: result.manifest,
+      manifest: validation.manifest,
       source: 'fresh_compile',
       token_cost: result.token_cost,
       duration_ms: result.duration_ms,
       compiler_id: result.model,
       compiled_at: compiledAt,
       key,
+    };
+  }
+
+  async #validateCompiledManifest(
+    manifest: Manifest,
+    input: CompileInput,
+  ): Promise<{ manifest: Manifest; policy_evaluations: AuditEvent['policy_evaluations'] }> {
+    const parsed = ManifestSchema.safeParse(manifest);
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map(
+        (i) => `${i.path.join('.') || '<root>'}: ${i.message}`,
+      );
+      throw new CompilerOutputError('Compiled manifest failed ManifestSchema validation', issues);
+    }
+
+    if (!this.#validate) {
+      return { manifest: parsed.data, policy_evaluations: [] };
+    }
+
+    const result = await this.#validate(parsed.data, input);
+    if (!result.ok) {
+      throw new CompilerOutputError(
+        'Compiled manifest failed host policy validation',
+        result.reasons ?? [],
+      );
+    }
+    return {
+      manifest: parsed.data,
+      policy_evaluations: result.policy_evaluations ?? [],
     };
   }
 

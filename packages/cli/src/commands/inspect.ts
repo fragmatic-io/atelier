@@ -282,13 +282,14 @@ export async function inspectCommand(
     !(typeof process !== 'undefined' && process.stdout && process.stdout.isTTY);
 
   try {
-    const result = await runInspect({
+    const opts: InspectOptions = {
       target,
-      server: flags['server'],
       json: flags['json'] === 'true',
       noColor: ttyAware,
       cwd,
-    });
+    };
+    if (flags['server'] !== undefined) opts.server = flags['server'];
+    const result = await runInspect(opts);
     console.log(result.output);
     return 0;
   } catch (err: unknown) {

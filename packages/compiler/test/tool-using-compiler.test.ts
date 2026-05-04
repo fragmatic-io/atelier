@@ -317,7 +317,9 @@ describe('ToolUsingCompiler', () => {
 
   it('validateDraft uses env.validate when supplied, returning reasons on failure', async () => {
     const draft = fixtureManifest();
-    const validate = vi.fn(() => ({ ok: false, reasons: ['Stack empty'] }));
+    const validate = vi.fn((candidate: Manifest) =>
+      candidate === draft ? { ok: false, reasons: ['Stack empty'] } : { ok: true },
+    );
     const { agent } = scriptedAgent('gemini-agent', [
       { toolCalls: [{ name: 'validateDraft', args: { draft } }], tokenCost: 10, model: 'm' },
       { text: finalManifestText, tokenCost: 10, model: 'm' },
@@ -329,8 +331,19 @@ describe('ToolUsingCompiler', () => {
       onToolCall: (_call, result) => observed.push(result),
     });
     await c.compile(fixtureCompileInput());
-    expect(validate).toHaveBeenCalledTimes(1);
+    expect(validate).toHaveBeenCalledTimes(2);
     expect(observed[0]).toEqual({ ok: false, reasons: ['Stack empty'] });
+  });
+
+  it('validates the final manifest even when the agent skips validateDraft', async () => {
+    const validate = vi.fn(() => ({ ok: false, reasons: ['missing confirmation'] }));
+    const { agent } = scriptedAgent('gemini-agent', [
+      { text: finalManifestText, tokenCost: 10, model: 'm' },
+    ]);
+    const c = new ToolUsingCompiler({ inner: agent, env: { ...defaultEnv(), validate } });
+
+    await expect(c.compile(fixtureCompileInput())).rejects.toBeInstanceOf(CompilerOutputError);
+    expect(validate).toHaveBeenCalledTimes(1);
   });
 
   it('inspectExistingManifest returns null when env supplies no hook; uses hook when supplied', async () => {

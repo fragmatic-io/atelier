@@ -22,8 +22,7 @@ import { useRouter } from 'next/navigation';
 import { Alert, Button, Card, Container, Stack } from '@atelier/components';
 import type { IntentProfile } from '@atelier/schemas';
 import { DEMO_USER_ID } from '@/lib/intent-store';
-
-export const SESSION_DRAFT_KEY = 'cir.demo.intent.draft';
+import { SESSION_DRAFT_KEY } from '@/lib/onboarding-session';
 
 const MAX_LEN = 1500;
 

@@ -19,7 +19,7 @@
  * heading.
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Alert, Button, Card, Container, Stack } from '@atelier/components';
 import { decodeJwt } from '@atelier/vault-client';
@@ -37,7 +37,17 @@ type Phase =
   | { kind: 'missing' }
   | { kind: 'error'; message: string };
 
-export default function GrantCallbackPage(): React.JSX.Element {
+function PendingGrantCard(): React.JSX.Element {
+  return (
+    <Container maxWidth="sm" padding="md">
+      <Card title="Finishing grant...">
+        <p style={{ color: '#6b7280' }}>Persisting your token and loading your profile…</p>
+      </Card>
+    </Container>
+  );
+}
+
+function GrantCallbackClient(): React.JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>({ kind: 'pending' });
@@ -93,13 +103,7 @@ export default function GrantCallbackPage(): React.JSX.Element {
   }, [router, searchParams]);
 
   if (phase.kind === 'pending') {
-    return (
-      <Container maxWidth="sm" padding="md">
-        <Card title="Finishing grant...">
-          <p style={{ color: '#6b7280' }}>Persisting your token and loading your profile…</p>
-        </Card>
-      </Container>
-    );
+    return <PendingGrantCard />;
   }
 
   if (phase.kind === 'denied') {
@@ -168,5 +172,13 @@ export default function GrantCallbackPage(): React.JSX.Element {
         </Stack>
       </Card>
     </Container>
+  );
+}
+
+export default function GrantCallbackPage(): React.JSX.Element {
+  return (
+    <Suspense fallback={<PendingGrantCard />}>
+      <GrantCallbackClient />
+    </Suspense>
   );
 }

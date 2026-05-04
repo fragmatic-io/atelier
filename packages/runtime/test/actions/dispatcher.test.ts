@@ -405,6 +405,84 @@ describe('ActionDispatcher', () => {
     expect(handler).toHaveBeenCalledOnce();
   });
 
+  it('validates JSON Schema-shaped object input before dispatch', async () => {
+    const caps: Record<string, Capability> = {
+      'order.create': {
+        id: 'order.create',
+        kind: 'action',
+        version: '1.0.0',
+        input: {
+          type: 'object',
+          required: ['sku', 'quantity'],
+          properties: {
+            sku: { type: 'string' },
+            quantity: { type: 'integer' },
+            gift: { type: 'boolean' },
+            tags: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        output: {},
+        side_effects: ['create'],
+        permissions: ['order:write'],
+        confirmation: 'none',
+        reversible: false,
+      },
+    };
+    const registry = new MapActionRegistry();
+    const handler = vi.fn(() => Promise.resolve({ id: 'o1' }));
+    registry.register('order.create', handler);
+    const dispatcher = new ActionDispatcher({
+      capabilities: caps,
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+
+    const result = await dispatcher.dispatch(
+      'order.create',
+      { sku: 'sku_1', quantity: 2, tags: ['vip'] },
+      ctx,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it('rejects invalid JSON Schema-shaped object input', async () => {
+    const caps: Record<string, Capability> = {
+      'order.create': {
+        id: 'order.create',
+        kind: 'action',
+        version: '1.0.0',
+        input: {
+          type: 'object',
+          required: ['sku', 'quantity'],
+          properties: {
+            sku: { type: 'string' },
+            quantity: { type: 'integer' },
+          },
+        },
+        output: {},
+        side_effects: ['create'],
+        permissions: ['order:write'],
+        confirmation: 'none',
+        reversible: false,
+      },
+    };
+    const registry = new MapActionRegistry();
+    const handler = vi.fn(() => Promise.resolve({ id: 'o1' }));
+    registry.register('order.create', handler);
+    const dispatcher = new ActionDispatcher({
+      capabilities: caps,
+      registry,
+      confirm: ALWAYS_CONFIRM,
+    });
+
+    await expect(
+      dispatcher.dispatch('order.create', { sku: 'sku_1', quantity: 2.5 }, ctx),
+    ).rejects.toBeInstanceOf(DispatchInputError);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
   it('skips type-checking for capability fields with unrecognized type names', async () => {
     // Capability declares a complex/nested input the synthesizer cannot
     // reason about — additive contract: anything dispatches.
