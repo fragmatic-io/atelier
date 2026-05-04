@@ -21,7 +21,7 @@ export const COMPONENT_STORY_FIXTURES: Readonly<Record<string, ComponentStoryFix
     BlockMenu: fixture('BlockMenu', {
       registry: sampleBlockRegistry(),
       surface: 'doc',
-      open: true,
+      open: false,
       onInsert: () => undefined,
       onClose: () => undefined,
     }),
@@ -41,21 +41,29 @@ export const COMPONENT_STORY_FIXTURES: Readonly<Record<string, ComponentStoryFix
     CodeBlock: fixture('CodeBlock', { code: 'capability.dispatch({ id: "order.refund" })' }),
     CodeEditor: fixture('CodeEditor', { value: 'export const policy = "review_required";' }),
     CodeView: fixture('CodeView', { code: 'manifest.policy.status = "valid";' }),
-    CommandPalette: fixture('CommandPalette', { items: sampleActions(), open: true }),
+    CommandPalette: fixture('CommandPalette', {
+      commands: sampleCommands(),
+      open: false,
+      onClose: () => undefined,
+      bindOpenHotkey: false,
+    }),
     Confetti: fixture('Confetti', { active: true, particleCount: 8, durationMs: 1200 }),
     ConfirmDialog: fixture('ConfirmDialog', {
-      open: true,
+      open: false,
       title: 'Confirm refund',
       description: 'Refund $42.00 to the selected customer?',
+      onConfirm: () => undefined,
+      onCancel: () => undefined,
     }),
     Container: fixture('Container', { children: 'Contained workspace section' }),
     DateInput: fixture('DateInput', { label: 'Review date', value: '2026-05-04' }),
     DetailView: fixture('DetailView', { title: 'Order #1042', fields: sampleFields() }),
     DiffView: fixture('DiffView', { before: 'status: pending', after: 'status: approved' }),
     Drawer: fixture('Drawer', {
-      open: true,
+      open: false,
       title: 'Customer context',
       children: 'Recent activity',
+      onClose: () => undefined,
     }),
     DropZone: fixture('DropZone', { children: 'Drop CSV evidence here', accept: ['text/csv'] }),
     EmptyState: fixture('EmptyState', {
@@ -100,9 +108,10 @@ export const COMPONENT_STORY_FIXTURES: Readonly<Record<string, ComponentStoryFix
     MarketplaceBrowser: fixture('MarketplaceBrowser', {}),
     MetaBadge: fixture('MetaBadge', { label: 'Policy', count: 7, dot: true }),
     Modal: fixture('Modal', {
-      open: true,
+      open: false,
       title: 'Manifest details',
       children: 'Validated at resolver.',
+      onClose: () => undefined,
     }),
     MultiPane: fixture('MultiPane', { panes: samplePanes() }),
     MultiSelect: fixture('MultiSelect', { options: sampleOptions(), value: ['ops'] }),
@@ -233,6 +242,25 @@ function sampleActions(): Array<Record<string, unknown>> {
     { id: 'approve', label: 'Approve' },
     { id: 'assign', label: 'Assign' },
     { id: 'escalate', label: 'Escalate' },
+  ];
+}
+
+function sampleCommands(): Array<Record<string, unknown>> {
+  return [
+    {
+      id: 'assign-owner',
+      label: 'Assign owner',
+      description: 'Route this workflow to the operations owner.',
+      group: 'Workflow',
+      run: () => undefined,
+    },
+    {
+      id: 'open-audit',
+      label: 'Open audit trail',
+      description: 'Review resolver and action-dispatch events.',
+      group: 'Audit',
+      run: () => undefined,
+    },
   ];
 }
 
