@@ -39,6 +39,61 @@ const cap: Capability = CapabilitySchema.parse(json);
 Every schema has a paired inferred type — `CapabilitySchema` -> `Capability`,
 `ManifestSchema` -> `Manifest`, etc.
 
+## Install (external consumers)
+
+```bash
+npm install @atelier/schemas
+# or pnpm add @atelier/schemas / yarn add @atelier/schemas
+```
+
+The package ships pre-built ESM artifacts: `dist/index.js` (runtime) and
+`dist/index.d.ts` (types). No `tsx`, `ts-node`, or workspace-private build
+step is required to consume it. The `src/` directory is also shipped so
+sourcemaps resolve to readable TypeScript and you can read the schema
+definitions directly.
+
+The package is ESM-only (`"type": "module"`). Node ≥ 22.
+
+| Field   | Value                                                                     |
+| ------- | ------------------------------------------------------------------------- |
+| main    | `./dist/index.js`                                                         |
+| types   | `./dist/index.d.ts`                                                       |
+| exports | `{ ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } }` |
+| files   | `dist`, `src`, `README.md`, `CHANGELOG.md`                                |
+
+## Build pipeline (in-monorepo)
+
+`@atelier/schemas` is the **P2.1 build-artifact pilot** for the Atelier
+monorepo. Until the rest of the 14 packages migrate, every other
+`packages/*` still exports `./src/index.ts` directly via pnpm symlinks;
+this one is the only package that produces a `dist/` tree.
+
+```bash
+pnpm --filter @atelier/schemas build         # tsc -b tsconfig.build.json
+pnpm --filter @atelier/schemas build:watch   # tsc -b --watch
+pnpm --filter @atelier/schemas clean         # rm -rf dist .tsbuildinfo
+```
+
+Or from the repo root:
+
+```bash
+pnpm build                                   # alias for the schemas filter
+pnpm smoke-test:pack                         # pack + install + typecheck a tiny consumer
+```
+
+The two tsconfigs split responsibilities cleanly:
+
+- `tsconfig.json` — IDE / ESLint / `pnpm typecheck -p .` view. Includes both
+  `src/` and `test/`. `noEmit: true`.
+- `tsconfig.build.json` — what `pnpm build` invokes. `composite: true`,
+  `noEmit: false`, includes only `src/`, emits JS + .d.ts + sourcemaps to
+  `./dist/`.
+
+Run `pnpm build:watch` alongside `pnpm test:watch` if you're iterating on a
+schema and want consumers (other workspace packages, the demos) to pick up
+the change live — they resolve `@atelier/schemas` through `dist/index.js`,
+not src.
+
 ## CLI
 
 ```bash

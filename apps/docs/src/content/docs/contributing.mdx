@@ -29,6 +29,30 @@ pnpm atelier dev --tail # tail audit events
 
 Most changes touch one package + one demo. Tests and typecheck both watch the workspace.
 
+## Build artifacts (P2.1 pilot)
+
+`@atelier/schemas` is the first package to ship as a pre-built `dist/` tree —
+its `exports` map points at `./dist/index.js` + `./dist/index.d.ts`, so even
+in-monorepo consumers resolve through the built artefact. The other 14
+packages still export `./src/*.ts` directly; they follow once the pilot
+pattern is reviewed.
+
+```bash
+pnpm build                                            # build the pilot
+pnpm --filter @atelier/schemas build:watch            # rebuild on change
+pnpm smoke-test:pack                                  # pack + install + typecheck a scratch consumer
+pnpm build:all                                        # recursive build (every pkg with a build script)
+```
+
+The CI pipeline runs `pnpm build` _before_ `pnpm test` and a separate
+smoke-test step that packs `@atelier/schemas`, installs it from the tgz, and
+typechecks a tiny external consumer. If the public surface or the package's
+`exports` map breaks, that step catches it on the PR.
+
+When working on `packages/schemas` itself, run `pnpm --filter @atelier/schemas
+build:watch` in a separate terminal so other workspace packages and the demos
+pick up your changes via the rebuilt `dist/` tree.
+
 ## What lives where
 
 ```text

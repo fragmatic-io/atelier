@@ -35,7 +35,8 @@ Husky hooks install automatically via the `prepare` script. Don't bypass them wi
 | `pnpm lint:fix`      | ESLint with autofix.                                                         |
 | `pnpm format`        | Prettier write.                                                              |
 | `pnpm format:check`  | Prettier check (used in CI).                                                 |
-| `pnpm build`         | Recursive workspace build (where present).                                   |
+| `pnpm build`         | Build the `@atelier/schemas` artifact pilot (P2.1). Other packages follow.   |
+| `pnpm build:all`     | Recursive workspace build across every package that has a `build` script.    |
 
 GitHub Actions workflows are validated by [actionlint](https://github.com/rhysd/actionlint) in CI; pre-validate locally with `actionlint .github/workflows/*.yml` if editing workflow files.
 

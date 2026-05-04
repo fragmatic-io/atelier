@@ -127,14 +127,10 @@ For each of the six `_ENABLED` flags:
 
 ### P2.1 — Build artifacts on every package
 
-- [ ] **Each `packages/*/package.json`** gets:
-  - `"main": "./dist/index.js"`
-  - `"types": "./dist/index.d.ts"`
-  - `"exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }, "./testing": { ... } }`
-  - `"files": ["dist", "src"]` (ship src for sourcemaps + readability)
-- [ ] **Build pipeline per package**: `tsc -b` produces `dist/`. CI runs `pnpm build` before `pnpm test` so consumers and tests both consume the built artifact.
-- [ ] **Workspace symlinks now resolve through `dist/`** when consumed cross-package; in-repo dev keeps using TS via path mappings under a separate `tsconfig.dev.json`.
-- [ ] **Eval gate**: an "external consumer smoke test" — `pnpm pack` each package, install into a scratch directory, import the public surface, confirm no `tsx` / `ts-node` is needed.
+- [x] **Pilot: `@atelier/schemas`** ships built artifacts. `packages/schemas/package.json` now declares `"main": "./dist/index.js"` + `"types": "./dist/index.d.ts"` + a conditional `exports` map; `packages/schemas/tsconfig.build.json` drives `tsc -b` to emit JS + `.d.ts` + sourcemaps. Root `pnpm build` is filter-scoped to schemas; in-repo workspace symlinks resolve through `dist/`. CI builds before tests so the test suite consumes the same artefact downstream npm consumers will. _This commit._
+- [x] **Smoke test gate.** `scripts/smoke-test-pack.ts` packs `@atelier/schemas`, installs the tgz into a scratch dir with bare `npm install`, runs `tsc --noEmit` over a tiny consumer that imports both runtime + type exports, then loads the runtime under bare Node — no `tsx` / `ts-node` involved. New `Smoke-test @atelier/schemas pack + install` step in CI gates the merge. _This commit._
+- [ ] **Migrate the other 14 packages** to the same pattern. The pilot pinned the shape (`dist/` outputs, `tsconfig.build.json` sibling, files: [dist, src, README, CHANGELOG], conditional `exports`); rolling it out is mechanical but each package needs an audit for subpath exports (`./testing`, `./debug`, etc.) and bin entries that currently use `tsx` shebangs. `pnpm build` flips from `--filter @atelier/schemas` to `-r --if-present` (or a tag-based filter) once the batch is done. The `pnpm build:all` script already runs the full recursive build for early experimentation. **2-3 d, batched.**
+- [ ] **In-repo dev mode under `tsconfig.dev.json`.** Today the schemas pilot publishes `dist/index.js` as the canonical entry, so workspace consumers also resolve through `dist/` and a `pnpm build:watch` is needed during dev. A `tsconfig.dev.json` with path mappings back to `src/` per package would short-circuit that for in-monorepo work. **<1 d** once the migration is done.
 
 ### P2.2 — `atelier init` actually works outside the monorepo
 

@@ -37,6 +37,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # P2.1 — build the @atelier/schemas artifact pilot first. Every
+      # downstream step (typecheck, lint, validate-data, tests) resolves
+      # `@atelier/schemas` through its `exports` map, which now points at
+      # `./dist/{index.js,index.d.ts}`. Workspace symlinks consume the built
+      # artifact the same way an external `npm install @atelier/schemas`
+      # consumer would.
+      - name: Build packages (build-artifact pilot, P2.1)
+        run: pnpm build
+
       - name: License headers
         run: pnpm check:license-headers
 
@@ -63,6 +72,13 @@ jobs:
 
       - name: Test (with coverage)
         run: pnpm test --coverage
+
+      # P2.1 — pack @atelier/schemas, install into a scratch dir as a
+      # downstream npm consumer would, and confirm the dist/ + .d.ts pair are
+      # actually usable end-to-end. Gates the merge so a broken package.json
+      # `exports` map can't reach main.
+      - name: Smoke-test @atelier/schemas pack + install (P2.1)
+        run: pnpm smoke-test:pack
 
       - name: Upload coverage artifact
         if: always()
@@ -101,5 +117,11 @@ jobs:
 
       - name: Run advertised validate command
         # `pnpm validate` is the script users + agents actually run. A green
-        # CI must mean a green `pnpm validate` on a fresh clone.
+        # CI must mean a green `pnpm validate` on a fresh clone. The first
+        # step of `pnpm validate` is now `pnpm build` (P2.1) — the schemas
+        # pilot publishes a dist/ tree that the rest of the validate chain
+        # consumes.
         run: pnpm validate
+
+      - name: Smoke-test @atelier/schemas pack + install (P2.1)
+        run: pnpm smoke-test:pack
