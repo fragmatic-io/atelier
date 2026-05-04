@@ -355,7 +355,48 @@ console.log('workspace-runtime ok');
   if (!cliHelp.stdout.includes('usage: atelier <command>')) {
     fail('cli-bin', `atelier --help did not print top-level usage\nstdout:\n${cliHelp.stdout}`);
   }
-  log('cli-bin', 'atelier dist entrypoint succeeded under bare Node');
+  log('cli-bin', 'atelier top-level help succeeded under bare Node');
+
+  const cliPath = join(ROOT, 'packages', 'cli', 'dist', 'index.js');
+  const cliHelpChecks: readonly { name: string; args: readonly string[]; expect: string }[] = [
+    {
+      name: 'vault',
+      args: ['vault', '--help'],
+      expect: 'usage: atelier vault',
+    },
+    {
+      name: 'marketplace publish',
+      args: ['marketplace', 'publish', '--help'],
+      expect: 'usage: atelier marketplace publish',
+    },
+    {
+      name: 'marketplace review',
+      args: ['marketplace', 'review', '--help'],
+      expect: 'usage: atelier marketplace review',
+    },
+  ];
+
+  for (const check of cliHelpChecks) {
+    log('cli-bin', `node packages/cli/dist/index.js ${check.args.join(' ')}`);
+    const result = spawnSync('node', [cliPath, ...check.args], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
+    if (result.status !== 0) {
+      fail(
+        'cli-bin',
+        `${check.name} help failed (exit ${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+      );
+    }
+    if (!result.stdout.includes(check.expect)) {
+      fail(
+        'cli-bin',
+        `${check.name} help did not print expected usage "${check.expect}"\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+      );
+    }
+  }
+  log('cli-bin', 'CLI subcommand dist entrypoints succeeded under bare Node');
 }
 
 function main(): void {
