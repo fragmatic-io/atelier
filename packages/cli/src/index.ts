@@ -10,6 +10,7 @@
  *   atelier add <component>         Copy a baseline component into ./components/.
  *   atelier components-sync         Regenerate components/registry.json.
  *   atelier validate                Run the validate chain.
+ *   atelier lint skill <path>       Validate a single .skill.md file.
  *   atelier import openapi <spec>   Generate capabilities from an OpenAPI 3 spec.
  *   atelier import figma <tokens>   Generate a BrandKit from a Figma tokens JSON.
  *   atelier inspect <id-or-path>    Pretty-print a manifest.
@@ -29,6 +30,7 @@ import { importFigma } from './commands/import-figma.js';
 import { importOpenApi } from './commands/import-openapi.js';
 import { initCommand } from './commands/init.js';
 import { inspectCommand } from './commands/inspect.js';
+import { lintCommand } from './commands/lint.js';
 import { validateCommand } from './commands/validate.js';
 import { vaultCommand } from './commands/vault.js';
 import { parseArgs } from './parse-args.js';
@@ -58,6 +60,8 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
       return componentsSyncCommand(positionals, flags);
     case 'validate':
       return validateCommand(positionals, flags);
+    case 'lint':
+      return lintCommand(positionals, flags);
     case 'inspect':
       return inspectCommand(positionals, flags);
     case 'compile':

@@ -30,6 +30,7 @@ describe('main()', () => {
     expect(out).toContain('inspect');
     expect(out).toContain('compile');
     expect(out).toContain('vault');
+    expect(out).toContain('lint');
   });
 
   it('prints usage and exits 1 on no args', async () => {

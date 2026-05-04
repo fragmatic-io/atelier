@@ -60,7 +60,11 @@ export {
 // Skill
 // -----------------------------------------------------------------------------
 export { SkillSchema, type Skill } from './skill.js';
-export { parseSkillMarkdown, type ParsedSkill } from './skill-parser.js';
+export { parseSkillMarkdown, SkillParseError, type ParsedSkill } from './skill-parser.js';
+// Re-export `ZodError` so downstream packages (CLIs, runtime hosts) can
+// branch on schema-validation failures without taking a direct
+// dependency on `zod`. Tree-shaken in module bundlers; harmless in tsx.
+export { ZodError } from 'zod';
 
 // -----------------------------------------------------------------------------
 // Component catalog

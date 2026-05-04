@@ -19,6 +19,7 @@ pnpm atelier <command> [options]
 | `atelier add --list`                | List every available baseline component.                                                                  |
 | `atelier components-sync [--check]` | Regenerate `components/registry.json` from the live `@atelier/components` registry.                       |
 | `atelier validate`                  | Run the host project's `pnpm validate` chain.                                                             |
+| `atelier lint skill <path>`         | Validate a single `.skill.md` file. Surfaces YAML line/column on parse failure.                           |
 | `atelier import openapi <spec>`     | Generate `capabilities/` from an OpenAPI 3.x spec (drafts with `_review` envelopes).                      |
 | `atelier import figma <tokens>`     | Generate a `BrandKit` JSON from a W3C Design Tokens / Figma export. Stub — voice / variants stay TODO.    |
 | `atelier inspect <id-or-path>`      | Pretty-print a manifest from a file path or via `<server>/api/cir/manifest/<id>`.                         |
@@ -44,6 +45,55 @@ atelier inspect ./fixtures/manifest.json --json
 
 Output is color-cued via raw ANSI escapes (no `chalk` dep). `--no-color`
 suppresses escapes; the CLI auto-suppresses when stdout is not a TTY.
+
+## `atelier lint skill` — single-file skill validator
+
+Front-runs `parseSkillMarkdown` against one `.skill.md` file and prints
+errors in a developer-actionable format. Exits 0 when the file is clean,
+1 otherwise.
+
+```bash
+# Clean file
+atelier lint skill skills/email-triage.skill.md
+# OK  /repo/skills/email-triage.skill.md
+
+# Malformed YAML
+atelier lint skill skills/broken.skill.md
+# INVALID  /repo/skills/broken.skill.md
+#   yaml   4:34  unexpected end of the stream within a double quoted scalar
+#          | description: "an unterminated scalar
+#          |                                  ^
+
+# Schema-invalid frontmatter
+atelier lint skill skills/incomplete.skill.md
+# INVALID  /repo/skills/incomplete.skill.md
+#   schema /capabilities_used  Required
+#   schema /when_to_use        Required
+```
+
+Use `--json` to emit a stable structured payload. The schema is:
+
+```jsonc
+{
+  "file": "/abs/path",
+  "ok": false,
+  "issues": [
+    {
+      "severity": "error",
+      "kind": "yaml" | "schema" | "io",
+      "message": "...",
+      "line": 4,           // 1-based, null for schema/io
+      "column": 34,        // 1-based, null for schema/io
+      "path": null,        // "/key/path" for schema, null otherwise
+      "snippet": "..."     // offending source line for yaml, null otherwise
+    }
+  ]
+}
+```
+
+The full-tree check still lives in `pnpm validate` /
+`atelier-schemas validate-data`. `lint` is the fast, focused tool you
+reach for after editing one file.
 
 ## `atelier compile` — offline compile
 

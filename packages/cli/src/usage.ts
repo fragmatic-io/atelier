@@ -14,6 +14,7 @@ Commands:
   add <component>         Copy a baseline component into ./components/.
   components-sync         Regenerate components/registry.json from @atelier/components.
   validate                Run the validate chain (typecheck, lint, schema validation).
+  lint skill <path>       Validate a single .skill.md file (YAML + SkillSchema).
   import openapi <spec>   Generate capabilities/ from an OpenAPI 3.x spec.
   import figma <tokens>   Generate a BrandKit JSON from a Figma tokens export.
   inspect <id-or-path>    Pretty-print a manifest (file path or live id).
@@ -59,6 +60,32 @@ export const VALIDATE_USAGE = `usage: atelier validate
 
 Run the full validate chain: license headers, typecheck, lint,
 format check, components:check, schema validation, and tests.`;
+
+export const LINT_USAGE = `usage: atelier lint <target> [args...]
+
+Per-file linters that front-run validation. Today only one target ships:
+
+  skill <path>     Validate a single .skill.md file (YAML + SkillSchema).
+
+Run 'atelier lint <target> --help' for target-specific options.`;
+
+export const LINT_SKILL_USAGE = `usage: atelier lint skill <path> [--json]
+
+Run parseSkillMarkdown against a single .skill.md file and report any
+errors in a developer-actionable format. Exits 0 when the file is clean,
+1 otherwise.
+
+  --json    Emit the structured result as JSON instead of human text.
+            Stable shape: { file, ok, issues: [{ kind, message,
+            line, column, path, snippet }] }.
+
+Error categories:
+
+  yaml      Malformed YAML frontmatter. Reports 1-based line / column
+            and a snippet of the offending line.
+  schema    Frontmatter parsed but failed SkillSchema. Reports the
+            offending JSON path and Zod's message.
+  io        File missing or unreadable.`;
 
 export const INSPECT_USAGE = `usage: atelier inspect <manifest-id-or-path> [--server <url>] [--json] [--no-color]
 
