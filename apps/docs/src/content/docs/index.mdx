@@ -46,17 +46,17 @@ Atelier is the integration of pieces that already exist — MCP-style capabiliti
 
 **Wave M, 2026-05-02.** The framework's promise is simple: give the LLM a rich-enough primitive **catalog** and it will compose any domain UI. Three reference apps. Different domains. **Zero custom React components.**
 
-|         |   |
-| ------- | - |
-| Aurora  | **0** custom bindings |
-| Octant  | **0** custom bindings |
+|          |                       |
+| -------- | --------------------- |
+| Aurora   | **0** custom bindings |
+| Octant   | **0** custom bindings |
 | Marigold | **0** custom bindings |
 
 A demo's custom-binding count is the single best smell test for whether the framework's catalog promise is being kept. The [ETHOS principle #11](/atelier/introduction/ethos/) codifies why; the [demos page](/atelier/demos/) shows what shipped.
 
 > **Naming note.** Two distinct things in this codebase share the word "marketplace":
 >
-> - **The catalog** — the set of baseline primitives shipped by `@atelier/components`. This is the *product*.
+> - **The catalog** — the set of baseline primitives shipped by `@atelier/components`. This is the _product_.
 > - **The vault marketplace** — the distribution channel (`atelier://author/persona@version`, ed25519 signing, TOFU). This is V-6 in Wave 8 and is partially shipped.
 >
 > When we say "marketplace" alone we mean the distribution channel.
@@ -94,15 +94,18 @@ One LLM call on the cold path (≈ 5–20k tokens). Zero LLM calls on the hot pa
     `pnpm atelier init` scaffolds a new Atelier app with vault, capabilities, skills, recipes, and a Next.js host wired to the runtime.
 
     [Installation →](/atelier/getting-started/installation/)
+
   </Card>
   <Card title="Vault marketplace" icon="seti:plan">
     `atelier://author/persona@version` addressing, ed25519 signed bundles, TOFU trust on first use. Ship a recipe, not a custom binding.
 
     [Marketplace overview →](/atelier/marketplace/overview/)
+
   </Card>
   <Card title="See the roadmap" icon="list-format">
     Wave M (baseline-first pivot) shipped 2026-05-02. Compiler tools (C-2) shipped. Capability scoping (C-3 / S-1) is next.
 
     [Roadmap →](/atelier/roadmap/)
+
   </Card>
 </CardGrid>
