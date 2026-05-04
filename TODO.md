@@ -76,7 +76,7 @@ The review's headline issue: `scripts/marketplace-eval.ts` line 40 imports `@ate
 
 ### P0.4 — Repo-owner manual items
 
-- [ ] **Branch protection on `main`** — require CI green, require PR review (1 reviewer), no force-push. _Repo-owner action._
+- [x] **Branch protection on `main`** — applied via `gh api -X PUT .../branches/main/protection` on 2026-05-04. Required status checks: `Validate (Node 22)`, `Validate (Node 24)`, `Validate (fresh clone, unified pnpm validate)`, `commitlint`. `strict: true` (PRs must be up-to-date with main before merge). 1 approving review required, dismiss stale reviews on push. No force-push, no deletion. Required linear history. Required conversation resolution. _This commit._
 - [ ] **Project board / discussions / wiki** — enable once team grows. _Repo-owner action._
 
 ---
