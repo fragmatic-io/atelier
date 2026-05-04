@@ -53,8 +53,8 @@ Cheap to fix, expensive to ignore. **Do these next.**
 
 ### P0.1 — Test-suite stability
 
-- [ ] **Fix 4 pre-existing test failures.** `evals/end-to-end/gemini-smoke.test.ts` (3 cases) and `packages/schemas/test/golden.test.ts` (1 case) fail on a clean tree. Either fix or quarantine + label as `it.skip` with a tracking comment. Without this, every agent has to mentally subtract 4 noise failures from its run, and a real regression hides easily. **<1 d.**
-- [ ] **`use-optimistic-action.test.tsx` TS errors (lines 96/151/152).** `Property 'ok' / 'error' does not exist on type 'never'.` — pre-existing, blocks `pnpm typecheck`. **<2 h.**
+- [x] **Fix 4 pre-existing test failures.** `evals/end-to-end/gemini-smoke.test.ts` (3 cases) and `packages/schemas/test/golden.test.ts` (1 case) fail on a clean tree. Either fix or quarantine + label as `it.skip` with a tracking comment. Without this, every agent has to mentally subtract 4 noise failures from its run, and a real regression hides easily. **<1 d.**
+- [x] **`use-optimistic-action.test.tsx` TS errors (lines 96/151/152).** `Property 'ok' / 'error' does not exist on type 'never'.` — pre-existing, blocks `pnpm typecheck`. **<2 h.**
 
 ### P0.2 — Pre-commit / pre-push hooks
 

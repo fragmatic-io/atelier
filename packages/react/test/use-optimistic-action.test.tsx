@@ -89,11 +89,16 @@ describe('useOptimisticAction', () => {
       />,
     );
 
-    let result: ActionResult | null = null;
+    // Assigned-in-callback narrowing: control-flow analysis can't see the
+    // mutation through the `act(async () => …)` callback boundary, so it
+    // narrows `result` back to `null` (i.e. `never` for property access)
+    // after the closure returns. Hold the value in a tuple so the slot's
+    // declared type is preserved across the awaited callback.
+    const resultRef: { current: ActionResult | null } = { current: null };
     await act(async () => {
-      result = await api.invoke({ id: 't1' });
+      resultRef.current = await api.invoke({ id: 't1' });
     });
-    expect(result?.ok).toBe(true);
+    expect(resultRef.current?.ok).toBe(true);
     expect(calls).toEqual(['apply:t1', 'action:t1']);
     expect(rollback).not.toHaveBeenCalled();
     expect(api.toast).toEqual({ kind: 'success', message: 'Done' });
@@ -143,13 +148,16 @@ describe('useOptimisticAction', () => {
       />,
     );
 
-    let result: ActionResult | null = null;
+    // See the t1 case for why we hold the result in a ref-shaped object —
+    // `let result: ActionResult | null` would narrow to `null` after the
+    // `act(async () => …)` callback boundary.
+    const resultRef: { current: ActionResult | null } = { current: null };
     await act(async () => {
-      result = await api.invoke({ id: 't3' });
+      resultRef.current = await api.invoke({ id: 't3' });
     });
     expect(rollback).toHaveBeenCalledOnce();
-    expect(result?.ok).toBe(false);
-    expect(result?.error).toBe('boom');
+    expect(resultRef.current?.ok).toBe(false);
+    expect(resultRef.current?.error).toBe('boom');
     expect(api.toast?.kind).toBe('error');
     expect(api.toast?.message).toBe('boom');
   });

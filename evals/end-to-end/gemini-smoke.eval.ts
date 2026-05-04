@@ -148,6 +148,11 @@ async function loadGitHubCapabilities(): Promise<Record<string, Capability>> {
   const out: Record<string, Capability> = {};
   for (const entry of entries) {
     if (!entry.endsWith('.json')) continue;
+    // Skip the auto-generated `_index.json` registry manifest (and any other
+    // underscore-prefixed metadata files) — those are not Capability records
+    // and would fail `CapabilitySchema.parse`. See feat S-5 / commit f7017bb
+    // which introduced `_index.json` per capability subdirectory.
+    if (entry.startsWith('_')) continue;
     const raw = await fs.readFile(path.join(CAPABILITIES_DIR, entry), 'utf8');
     const parsed: Capability = CapabilitySchema.parse(JSON.parse(raw));
     out[parsed.id] = parsed;
