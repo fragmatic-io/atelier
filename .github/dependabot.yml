@@ -1,4 +1,20 @@
 version: 2
+
+# Dependabot config notes (2026-05-04 cleanup):
+#
+# - `include: scope` was REMOVED on both ecosystems. With it set,
+#   dependabot emits commit messages like
+#   `chore(deps)(deps-dev): bump foo` — TWO scope parens. The repo's
+#   commitlint config rejects that as a malformed header (scope is a
+#   single identifier per Conventional Commits). Without `include`,
+#   dependabot emits `chore(deps): bump foo` which validates cleanly.
+#
+# - Major-version bumps on github-actions are gated to *patch* +
+#   *minor* only. Dependabot was filing aggressive v4 → v6 / v4 → v7
+#   bumps for `setup-node` / `checkout` / `upload-artifact` even
+#   though v4 is still on the supported track. Major bumps are still
+#   surfaced on npm packages — the constraint is action-specific.
+
 updates:
   - package-ecosystem: npm
     directory: /
@@ -10,7 +26,6 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'
-      include: scope
     labels:
       - dependencies
     groups:
@@ -27,7 +42,13 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: 'chore(ci)'
-      include: scope
     labels:
       - dependencies
       - ci
+    ignore:
+      # Skip major bumps on GitHub Actions — v4 is the supported track
+      # for `setup-node` / `checkout` / `upload-artifact` etc., and
+      # the v5 / v6 / v7 lines have introduced breaking-change PRs that
+      # land stale and bitrot. Patch + minor still flow through.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
