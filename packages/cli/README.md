@@ -18,7 +18,7 @@ pnpm atelier <command> [options]
 | `atelier add <component>`           | Copy a baseline component from `@atelier/components` source into `./components/`.                         |
 | `atelier add --list`                | List every available baseline component.                                                                  |
 | `atelier components-sync [--check]` | Regenerate `components/registry.json` from the live `@atelier/components` registry.                       |
-| `atelier validate`                  | Run the host project's `pnpm validate` chain.                                                             |
+| `atelier validate`                  | Detect the consumer's stack and run typecheck, lint, tests, plus Atelier schema validation.               |
 | `atelier lint skill <path>`         | Validate a single `.skill.md` file. Surfaces YAML line/column on parse failure.                           |
 | `atelier import openapi <spec>`     | Generate `capabilities/` from an OpenAPI 3.x spec (drafts with `_review` envelopes).                      |
 | `atelier import figma <tokens>`     | Generate a `BrandKit` JSON from a W3C Design Tokens / Figma export. Stub — voice / variants stay TODO.    |
@@ -26,6 +26,75 @@ pnpm atelier <command> [options]
 | `atelier compile <intent.json>`     | Offline compile producing a manifest. Mirrors the demo's server wiring.                                   |
 | `atelier --help`                    | Print top-level usage. `atelier <cmd> --help` prints subcommand usage.                                    |
 | `atelier --version`                 | Print the `@atelier/cli` version.                                                                         |
+
+## `atelier validate` — pre-flight checks for the consumer project
+
+Detects the consumer's stack (TypeScript, ESLint, Vitest, package
+manager) and runs the appropriate checks inline, regardless of whether
+the project is a single-package app or a workspace monorepo. Replaces
+the Wave 2 shell-out to `pnpm validate`, which broke for any external
+consumer who installed `@atelier/cli` from npm.
+
+```bash
+atelier validate
+# atelier validate
+# ────────────────────────────────────────
+# PASS  TypeScript      ./                 12 file(s), 0 error(s)
+# PASS  ESLint          ./                 42 file(s), 0 error(s)
+# PASS  Vitest          ./                 ok
+# PASS  Capabilities    ./capabilities/    4 file(s), 0 error(s)
+# PASS  Skills          ./skills/          2 file(s), 0 error(s)
+# PASS  Policies        ./policies/        3 file(s), 0 error(s)
+# SKIP  Brand kit       ./brand-kit.json   skipped (no brand-kit.json)
+# SKIP  Recipes         ./recipes/         skipped (no recipes/ directory)
+# SKIP  Components      ./components/registry.json  skipped (no components/registry.json)
+# ────────────────────────────────────────
+# PASS  All checks passed (6/9)
+```
+
+Skipped checks (no eslint config, no test script, etc.) are labelled
+rather than failing. Use `--strict` in CI to flip that — every check
+must run, or the command fails.
+
+```bash
+# CI mode: skipped checks become failures.
+atelier validate --strict
+
+# Subset: typecheck + lint only.
+atelier validate --only=typecheck,lint
+
+# Subset: just the Atelier schema checks.
+atelier validate --only=schemas
+
+# Machine-readable output (stable shape: { ok, strict, results[] }).
+atelier validate --json
+```
+
+Exit codes:
+
+- `0` — all detected checks passed.
+- `1` — at least one check failed (or skipped under `--strict`).
+- `2` — configuration error (no `package.json` at cwd).
+
+Detection signals:
+
+- **TypeScript** — `tsconfig.json` (or `tsconfig.base.json`).
+- **ESLint** — `eslint.config.{js,mjs,cjs,ts}` or any `.eslintrc.*`.
+- **Vitest** — `vitest.config.*` OR a `test` script that invokes `vitest`.
+- **Tests** — any `test` script in `package.json` (other than the
+  conventional `echo "Error: no test specified"` placeholder).
+- **Package manager** — `pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn,
+  `package-lock.json` → npm. Defaults to `npm` when no lockfile exists.
+- **Monorepo** — `pnpm-workspace.yaml` (pnpm), or `workspaces` in
+  `package.json` (npm/yarn, differentiated by lockfile).
+
+Atelier-specific schema validation is always run when the relevant
+artefacts are present at the project root: `capabilities/*.json` →
+`CapabilitySchema`, `skills/**/*.skill.md` → `SkillSchema`,
+`policies/*.json` → `PolicySchema`, `recipes/*.json` → `ManifestSchema`,
+`brand-kit.json` → `BrandKitSchema`, `components/registry.json` →
+`ComponentRegistrySchema`. Failures show the file + line + reason; the
+`--json` output exposes the full Zod issue path.
 
 ## `atelier inspect` — manifest pretty-printer
 
@@ -170,8 +239,11 @@ and are still useful in CI:
   emit and validate JSON-Schema artifacts.
 - `atelier-evals run` (from `@atelier/evals`) runs the eval suite.
 
-`atelier validate` shells out to `pnpm validate`, which itself calls those
-CLIs as part of the chain. Inside the monorepo, both styles work.
+`atelier validate` runs the Atelier-specific schema checks (capabilities,
+skills, policies, recipes, brand kit, components/registry.json) inline
+using `@atelier/schemas` Zod schemas — same source of truth as
+`atelier-schemas validate-data`. The `tsc` / `eslint` / `vitest` checks
+are spawned against the consumer's locally pinned binaries.
 
 ## Limitations (Wave 2)
 
@@ -179,8 +251,9 @@ CLIs as part of the chain. Inside the monorepo, both styles work.
 - `atelier init` and `atelier components-sync` assume the Atelier monorepo layout.
   Standalone-publish hardening (npm-installable templates, no `pnpm validate`
   expectation) is Wave 3+ scope.
-- `atelier dev` and `atelier validate` are intentionally thin shell-out wrappers; they
-  do not (yet) pre-flight the host project.
+- `atelier dev` is intentionally a thin shell-out wrapper; it does not
+  pre-flight the host project. (`atelier validate` ships a real
+  pre-flight as of Sprint 1.2.)
 
 ## Conventions
 

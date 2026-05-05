@@ -146,7 +146,7 @@ For each of the six `_ENABLED` flags:
 
 Today: it shells out to `pnpm validate` blindly, which only works if the consumer happens to have the same monorepo layout.
 
-- [ ] **Reimplement as a real validator** that runs typecheck + eslint + vitest in the consumer's project (regardless of monorepo). **3-5 d.**
+- [x] **Reimplement as a real validator** that runs typecheck + eslint + vitest in the consumer's project (regardless of monorepo). _Sprint 1.2._ Detects TS / ESLint / Vitest / package manager / workspace flavour via `lib/detect-stack.ts`; per-check runners under `lib/run-validators/` spawn the consumer's locally pinned `tsc` / `eslint` and run `<pm> test` for the test step. Atelier-specific schema validators (`capabilities/`, `skills/`, `policies/`, `recipes/`, `brand-kit.json`, `components/registry.json`) reuse `@atelier/schemas` Zod schemas — no parallel registry. Reports a tabular summary; failures list file + reason. `--strict` flips skipped checks into failures (CI mode); `--json` emits a stable shape; `--only=<set>` runs a subset. Exit codes: `0` pass / `1` fail / `2` no `package.json`. Docs: [`apps/docs/src/content/docs/operations/validation.mdx`](apps/docs/src/content/docs/operations/validation.mdx). Tests under `packages/cli/test/validate.test.ts` exercise the runner against fixtures (`validate-passing/`, `validate-failing/`) plus synthesised TS-only / ESLint-only / monorepo combos.
 
 ### P2.4 — Catalog publishability (Sprint 1.4 closure)
 
@@ -301,7 +301,7 @@ Last band. After P0–P10 settle.
 
 ### Tooling polish (folded into P2 where appropriate)
 
-- [ ] `atelier validate` host pre-flight — see P2.3.
+- [x] `atelier validate` host pre-flight — see P2.3. _Sprint 1.2._
 - [ ] Eval harness wired into `pnpm validate` — P3.1 covers.
 - [ ] Component-variants demo / Storybook — see P4.
 

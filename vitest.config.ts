@@ -217,14 +217,23 @@ export default defineConfig({
         // detection scaffold is wired; rule evaluation lands in Phase 5b/c.
         'packages/policies/src/baseline/respects_brand_kit.ts',
         // @atelier/cli scaffold: inline templates are pure data (no executable
-        // logic worth measuring) and dev/validate/components-sync are
-        // shell-out wrappers that can't be unit-tested without spawning real
+        // logic worth measuring) and dev/components-sync are shell-out
+        // wrappers that can't be unit-tested without spawning real
         // pnpm/next/tsx subprocesses. Re-include in Wave 3+ if we add an
         // integration suite.
+        // Note: `validate.ts` was excluded for the same reason in Wave 2,
+        // but Sprint 1.2 reimplemented it as a real validator with
+        // `lib/run-validators/`; it is unit-tested via fixtures (see
+        // `packages/cli/test/validate.test.ts`). The runner files that
+        // spawn `tsc`/`eslint`/the test script are integration-tested
+        // via fixtures — their spawn helper branches are excluded as
+        // they rely on real tooling presence.
         'packages/cli/src/templates/**',
         'packages/cli/src/commands/dev.ts',
-        'packages/cli/src/commands/validate.ts',
         'packages/cli/src/commands/components-sync.ts',
+        'packages/cli/src/lib/run-validators/typescript.ts',
+        'packages/cli/src/lib/run-validators/eslint.ts',
+        'packages/cli/src/lib/run-validators/vitest.ts',
       ],
     },
   },

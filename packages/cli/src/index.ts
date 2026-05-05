@@ -9,7 +9,7 @@
  *   atelier dev [--tail|--tail-only] Wrapper around `next dev`, optional audit tail.
  *   atelier add <component>         Copy a baseline component into ./components/.
  *   atelier components-sync         Regenerate components/registry.json.
- *   atelier validate                Run the validate chain.
+ *   atelier validate                Detect the consumer's stack and run real checks (typecheck, lint, test, schemas).
  *   atelier lint skill <path>       Validate a single .skill.md file.
  *   atelier import openapi <spec>   Generate capabilities from an OpenAPI 3 spec.
  *   atelier import figma <tokens>   Generate a BrandKit from a Figma tokens JSON.

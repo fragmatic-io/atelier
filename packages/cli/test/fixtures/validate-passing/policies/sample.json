@@ -1,0 +1,6 @@
+{
+  "id": "sample_policy",
+  "description": "A sample policy used by the atelier validate fixtures.",
+  "applies_to": "manifest",
+  "severity": "warn"
+}

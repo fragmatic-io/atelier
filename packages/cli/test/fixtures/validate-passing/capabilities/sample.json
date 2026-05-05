@@ -1,0 +1,13 @@
+{
+  "id": "sample.read",
+  "kind": "data",
+  "version": "0.1.0",
+  "input": {},
+  "output": {
+    "value": "string"
+  },
+  "side_effects": ["reads:sample"],
+  "permissions": ["sample:read"],
+  "confirmation": "none",
+  "reversible": true
+}

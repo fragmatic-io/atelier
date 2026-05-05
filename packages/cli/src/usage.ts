@@ -13,7 +13,7 @@ Commands:
                           --tail / --tail-only stream audit events to stderr.
   add <component>         Copy a baseline component into ./components/.
   components-sync         Regenerate components/registry.json from @atelier/components.
-  validate                Run the validate chain (typecheck, lint, schema validation).
+  validate                Run typecheck, lint, tests, and Atelier schema checks (--strict, --json, --only).
   lint skill <path>       Validate a single .skill.md file (YAML + SkillSchema).
   import openapi <spec>   Generate capabilities/ from an OpenAPI 3.x spec.
   import figma <tokens>   Generate a BrandKit JSON from a Figma tokens export.
@@ -58,10 +58,33 @@ export const COMPONENTS_SYNC_USAGE = `usage: atelier components-sync [--check]
 Regenerate components/registry.json from @atelier/components. With --check,
 exit non-zero if the on-disk file is stale.`;
 
-export const VALIDATE_USAGE = `usage: atelier validate
+export const VALIDATE_USAGE = `usage: atelier validate [--strict] [--json] [--only=<set>]
 
-Run the full validate chain: license headers, typecheck, lint,
-format check, components:check, schema validation, and tests.`;
+Detect the consumer's stack (TypeScript, ESLint, Vitest, package
+manager) and run the appropriate checks inline. Skipped checks (no
+eslint config, etc.) are labelled rather than failing.
+
+Checks, in order:
+  typecheck      'tsc --noEmit' if a tsconfig is present.
+  lint           'eslint .' if an ESLint config is present.
+  test           Consumer's 'test' script via the detected package
+                 manager (pnpm/npm/yarn).
+  capabilities   capabilities/*.json against CapabilitySchema.
+  skills         skills/**/*.skill.md against SkillSchema (YAML +
+                 frontmatter).
+  policies       policies/*.json against PolicySchema.
+  brand kit      brand-kit.json against BrandKitSchema.
+  recipes        recipes/*.json against ManifestSchema.
+  components     components/registry.json against ComponentRegistrySchema.
+
+Flags:
+  --strict       Fail on skipped checks (CI mode).
+  --json         Emit a stable JSON payload instead of the human table.
+  --only=<set>   Comma-separated subset. Tokens: typecheck, lint, test,
+                 schemas (expands to all six Atelier validators), or any
+                 individual check id.
+
+Exit codes: 0 = pass, 1 = check failed, 2 = no package.json at cwd.`;
 
 export const LINT_USAGE = `usage: atelier lint <target> [args...]
 
