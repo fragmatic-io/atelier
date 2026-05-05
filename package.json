@@ -71,6 +71,7 @@
     "validate:data": "node packages/schemas/dist/cli/index.js validate-data",
     "evals": "atelier-evals run",
     "marketplace:eval": "tsx scripts/marketplace-eval.ts",
+    "marketplace-cost-dashboard": "tsx scripts/marketplace-cost-dashboard.ts",
     "validate:fast": "pnpm build && pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm capabilities:index:check && pnpm validate:data && pnpm schemas:check-ajv",
     "validate": "pnpm build && pnpm check:license-headers && pnpm typecheck && pnpm lint && pnpm format:check && pnpm components:check && pnpm capabilities:index:check && pnpm validate:data && pnpm schemas:check-ajv && pnpm test",
     "prepare": "husky"

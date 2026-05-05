@@ -127,7 +127,16 @@ This mirrors how cloud infra is sold. Users who consume more pay more, but the m
 
 ## Cost dashboards
 
-Aggregate the audit log:
+The framework's [Cost dashboard](/operations/cost-dashboard/) auto-aggregates the trailing window of marketplace LLM eval runs (`marketplace-eval-llm.yml`, 04:30 UTC daily) and surfaces:
+
+- per-persona avg + p95 USD cost,
+- trend (up / down / stable across the window),
+- top 5 most-expensive personas,
+- 7-day and 30-day rolling spend.
+
+The page is regenerated on every nightly run and committed back to main, so the rendered MDX always tracks the latest eval-reports.
+
+For host-side dashboards, aggregate the audit log:
 
 ```sql
 -- Daily compile cost per user

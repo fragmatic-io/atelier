@@ -97,6 +97,50 @@ export interface PersonaEvalResult {
    * a Manifest'`.
    */
   error?: string;
+  /**
+   * S2.1 — set only when `EvalOpts.mode === 'real-llm'`. The gate ran
+   * the persona through a real Gemini compile and recorded per-call
+   * cost / token / shape data. Deterministic-mode runs leave this unset
+   * for back-compat. See `LlmEvalCompileResult` for the shape.
+   */
+  llm?: LlmEvalCompileResult;
+}
+
+/**
+ * S2.1 — extra report block a real-LLM compile attaches to its
+ * `PersonaEvalResult`. Carries cost + token + shape data so the cost
+ * dashboard + the workflow's WoW gates have everything they need without
+ * re-running the LLM.
+ *
+ * `manifest_shape_hash` is SHA-256 hex of the canonical-JSON manifest
+ * MINUS the server-stamped `manifest_id` — that field rotates per compile
+ * and would break shape diffing across runs. Two compiles producing the
+ * "same shape" therefore agree on this hash.
+ */
+export interface LlmEvalCompileResult {
+  /** Discriminant — pinned to `'real-llm'` so report consumers can branch. */
+  mode: 'real-llm';
+  /** Identifier of the model that produced the manifest (e.g. `gemini-2.5-flash`). */
+  model: string;
+  /** Token count on the prompt side — summed across every route compiled. */
+  tokens_input: number;
+  /** Token count on the response side — summed across every route compiled. */
+  tokens_output: number;
+  /**
+   * Cost in **USD** computed from `model` + token counts via
+   * `pricing.ts`. Persisted so old reports remain queryable even after
+   * the pricing table rotates.
+   */
+  cost_usd: number;
+  /** Wall-clock duration of the compile call(s) for this persona, in ms. */
+  compile_duration_ms: number;
+  /**
+   * SHA-256 hex of the canonical-JSON compiled manifest with
+   * `manifest_id` stripped (server stamp). Used by the workflow to flag
+   * "shape drift" — a persona whose manifest hash changes from baseline
+   * is reported even when the persona still passes schema + policy.
+   */
+  manifest_shape_hash: string;
 }
 
 /**
@@ -126,6 +170,32 @@ export interface EvalSummary {
   failed: number;
   skipped: number;
   duration_ms: number;
+  /**
+   * S2.1 — total USD cost across every persona compile in this run. Set
+   * only when the runner ran in `real-llm` mode; deterministic-mode runs
+   * omit it for back-compat. Sum of `personas[].llm.cost_usd`.
+   */
+  total_cost_usd?: number;
+  /**
+   * S2.1 — mean USD cost per persona-with-cost-data. Avoids divide-by-
+   * zero by being undefined when no LLM rows exist.
+   */
+  cost_per_persona_avg_usd?: number;
+  /**
+   * S2.1 — 95th-percentile USD cost across the persona set. With small
+   * N (<20) this collapses to "the second-most-expensive" — good enough
+   * to detect a single runaway persona.
+   */
+  cost_per_persona_p95_usd?: number;
+  /** S2.1 — total prompt-side tokens across the run. */
+  total_tokens_input?: number;
+  /** S2.1 — total response-side tokens across the run. */
+  total_tokens_output?: number;
+  /**
+   * S2.1 — pricing table revision used to cost out this report. Pinned
+   * so old reports remain reproducible after a pricing-table rotation.
+   */
+  pricing_revision?: string;
 }
 
 /**
@@ -247,6 +317,36 @@ export interface EvalOpts {
    * compile gate inject their own.
    */
   compile?: CompileFn;
+  /**
+   * S2.1 — selects which compile path the gate exercises.
+   *
+   *   - `'deterministic'` (default, back-compat) — uses the round-trip
+   *     fallback compile that has no LLM dep and produces zero cost rows.
+   *     This is what `marketplace-eval.yml` runs at 04:00 UTC.
+   *   - `'real-llm'` — wires `GeminiCompiler` from `@atelier/compiler` via
+   *     `geminiApiKey`. The runner computes per-persona token counts +
+   *     USD cost (from `pricing.ts`) + a `manifest_shape_hash` per the
+   *     `LlmEvalCompileResult` shape. This is what
+   *     `marketplace-eval-llm.yml` runs at 04:30 UTC.
+   *
+   * `compile` (above) takes precedence when set — useful for tests that
+   * want to inject a fake "real" compile without calling the real API.
+   * Default: `'deterministic'`.
+   */
+  mode?: 'deterministic' | 'real-llm';
+  /**
+   * S2.1 — Gemini API key for `mode: 'real-llm'`. Ignored when
+   * `mode === 'deterministic'`. Hosts wiring real-LLM mode without
+   * Gemini supply their own `compile` instead.
+   */
+  geminiApiKey?: string;
+  /**
+   * S2.1 — model id override for the real-LLM gate. Defaults to
+   * `gemini-2.5-flash` (the cost-conscious tier the gate is sized for).
+   * Hosts probing the cold-compile model substitute `gemini-2.5-pro`
+   * here. Recorded on every persona's `llm.model` field.
+   */
+  llmModel?: string;
 }
 
 /**
@@ -268,6 +368,20 @@ export interface CompileFnResult {
   manifest: Manifest;
   /** Identifier of the compiler model — recorded in `reference_versions.compiler_version`. */
   model: string;
+  /**
+   * S2.1 — optional token-cost telemetry from a real-LLM compile.
+   *
+   * `tokens_input` + `tokens_output` are split because Gemini bills them
+   * at different rates; `duration_ms` is wall-clock for the LLM call
+   * alone (excluding fetch / verify / validate around it). Deterministic
+   * compiles leave all three unset and the runner records zero cost.
+   *
+   * The runner sums these per-persona across every route compile and
+   * emits the totals on `PersonaEvalResult.llm`.
+   */
+  tokens_input?: number;
+  tokens_output?: number;
+  duration_ms?: number;
 }
 
 /** Re-exported so consumers don't need to also depend on `@atelier/policies` for this. */

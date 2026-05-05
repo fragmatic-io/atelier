@@ -51,6 +51,8 @@ interface CliArgs {
   top: number;
   strict: boolean;
   out: string;
+  mode: 'deterministic' | 'real-llm';
+  llmModel: string;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -59,9 +61,21 @@ function parseArgs(argv: string[]): CliArgs {
     top: 10,
     strict: false,
     out: 'eval-results/marketplace.json',
+    mode: 'deterministic',
+    llmModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-flash',
   };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
+    // Support both `--mode=real-llm` and `--mode real-llm` for ergonomics.
+    if (typeof a === 'string' && a.startsWith('--mode=')) {
+      const v = a.slice('--mode='.length);
+      args.mode = parseModeValue(v);
+      continue;
+    }
+    if (typeof a === 'string' && a.startsWith('--top=')) {
+      args.top = Number.parseInt(a.slice('--top='.length), 10);
+      continue;
+    }
     switch (a) {
       case '--vault-url':
         args.vaultUrl = expectValue(argv, i);
@@ -78,6 +92,14 @@ function parseArgs(argv: string[]): CliArgs {
         args.out = expectValue(argv, i);
         i += 1;
         break;
+      case '--mode':
+        args.mode = parseModeValue(expectValue(argv, i));
+        i += 1;
+        break;
+      case '--llm-model':
+        args.llmModel = expectValue(argv, i);
+        i += 1;
+        break;
       case '--help':
       case '-h':
         printHelp();
@@ -90,6 +112,12 @@ function parseArgs(argv: string[]): CliArgs {
     }
   }
   return args;
+}
+
+function parseModeValue(v: string): 'deterministic' | 'real-llm' {
+  if (v === 'deterministic' || v === 'real-llm') return v;
+  console.error(`invalid --mode value: ${v} (expected 'deterministic' or 'real-llm')`);
+  process.exit(2);
 }
 
 function expectValue(argv: string[], i: number): string {
@@ -107,10 +135,15 @@ function printHelp(): void {
       'pnpm marketplace:eval — V-6.e nightly eval gate',
       '',
       'flags:',
-      '  --vault-url <url>   base URL of the marketplace vault',
-      '  --top <n>           cap on personas evaluated (default 10)',
-      '  --strict            treat warn-severity violations as failures',
-      '  --out <path>        report output path (default eval-results/marketplace.json)',
+      '  --vault-url <url>      base URL of the marketplace vault',
+      '  --top <n>              cap on personas evaluated (default 10)',
+      '  --strict               treat warn-severity violations as failures',
+      '  --out <path>           report output path (default eval-results/marketplace.json)',
+      '  --mode <mode>          deterministic (default) | real-llm — S2.1',
+      '  --llm-model <id>       gemini model id when --mode=real-llm (default gemini-2.5-flash)',
+      '',
+      'env:',
+      '  GEMINI_API_KEY         required when --mode=real-llm',
     ].join('\n'),
   );
 }
@@ -225,6 +258,19 @@ async function main(): Promise<void> {
     top: args.top,
   };
   if (args.strict) opts.strict = true;
+  if (args.mode === 'real-llm') {
+    const apiKey = process.env['GEMINI_API_KEY'];
+    if (!apiKey) {
+      console.error(
+        '[marketplace-eval] --mode=real-llm requires GEMINI_API_KEY env var; refusing to boot.',
+      );
+      process.exitCode = 2;
+      return;
+    }
+    opts.mode = 'real-llm';
+    opts.geminiApiKey = apiKey;
+    opts.llmModel = args.llmModel;
+  }
 
   let report: EvalReport;
   try {
@@ -241,10 +287,14 @@ async function main(): Promise<void> {
 
   // Concise summary on stdout — friendly for the action log.
   const s = report.summary;
+  const costLine =
+    s.total_cost_usd !== undefined
+      ? ` | cost ${s.total_cost_usd.toFixed(4)} USD (avg ${(s.cost_per_persona_avg_usd ?? 0).toFixed(4)})`
+      : '';
   console.log(
     `[marketplace-eval] ${String(s.total)} personas — ` +
       `${String(s.passed)} passed, ${String(s.failed)} failed, ${String(s.skipped)} skipped ` +
-      `(${String(s.duration_ms)}ms) → ${args.out}`,
+      `(${String(s.duration_ms)}ms)${costLine} → ${args.out}`,
   );
   if (s.failed > 0) {
     process.exitCode = 1;

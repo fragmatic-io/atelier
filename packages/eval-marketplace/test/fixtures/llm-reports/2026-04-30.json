@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-04-30T04:30:00.000Z",
+  "reference_versions": {
+    "capabilities_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "components_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "compiler_version": "gemini-2.5-flash"
+  },
+  "personas": [
+    {
+      "address": "atelier://acme/persona-a@1.0.0",
+      "status": "passed",
+      "duration_ms": 1100,
+      "routes_compiled": 1,
+      "llm": {
+        "mode": "real-llm",
+        "model": "gemini-2.5-flash",
+        "tokens_input": 4500,
+        "tokens_output": 1400,
+        "cost_usd": 0.0049,
+        "compile_duration_ms": 850,
+        "manifest_shape_hash": "shape-a"
+      }
+    },
+    {
+      "address": "atelier://acme/persona-b@1.0.0",
+      "status": "passed",
+      "duration_ms": 1300,
+      "routes_compiled": 2,
+      "llm": {
+        "mode": "real-llm",
+        "model": "gemini-2.5-flash",
+        "tokens_input": 9000,
+        "tokens_output": 2500,
+        "cost_usd": 0.009,
+        "compile_duration_ms": 1600,
+        "manifest_shape_hash": "shape-b"
+      }
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 2400,
+    "total_cost_usd": 0.0139,
+    "cost_per_persona_avg_usd": 0.00695,
+    "cost_per_persona_p95_usd": 0.009,
+    "total_tokens_input": 13500,
+    "total_tokens_output": 3900,
+    "pricing_revision": "2026-05-03"
+  }
+}

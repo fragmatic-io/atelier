@@ -532,6 +532,9 @@ importers:
 
   packages/eval-marketplace:
     dependencies:
+      '@atelier/compiler':
+        specifier: workspace:^
+        version: link:../compiler
       '@atelier/policies':
         specifier: workspace:^
         version: link:../policies

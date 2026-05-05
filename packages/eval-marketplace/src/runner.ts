@@ -41,11 +41,13 @@ import {
 import { validateManifest, type PolicyContext, type PolicyViolation } from '@atelier/policies';
 
 import { REFERENCE_CAPABILITIES, REFERENCE_COMPONENTS } from './fixtures/index.js';
+import { PRICING_REVISION, costUsdFor } from './pricing.js';
 import type {
   CompileFn,
   EvalOpts,
   EvalReport,
   EvalViolation,
+  LlmEvalCompileResult,
   PersonaEvalResult,
   ReferenceFixtures,
   ReferenceVersions,
@@ -92,6 +94,66 @@ const defaultCompile: CompileFn = ({ recipe, route }) => {
 /** SHA-256 hex of the canonical JSON of `value`. Stable across key order. */
 function digest(value: unknown): string {
   return createHash('sha256').update(canonicalJsonStringify(value), 'utf8').digest('hex');
+}
+
+/**
+ * S2.1 — manifest shape hash. SHA-256 hex of the canonical JSON of the
+ * manifest with `manifest_id` removed. Server-stamped ids rotate per
+ * compile and would falsely flag every run as "shape-changed"; stripping
+ * them gives a stable hash that the workflow's WoW gate can diff.
+ */
+function manifestShapeHash(manifest: Manifest): string {
+  // Avoid mutating the caller's object — clone shallowly + drop the id.
+  const { manifest_id: _ignored, ...rest } = manifest;
+  void _ignored;
+  return digest(rest);
+}
+
+/**
+ * Build a `CompileFn` backed by a real `GeminiCompiler` from
+ * `@atelier/compiler`. Lazy-imported so the deterministic mode keeps a
+ * thin runtime dep graph (no `@google/genai` pull-in unless the host
+ * actually opted in). `geminiApiKey` is required; the model id defaults
+ * to `gemini-2.5-flash` (cost-conscious tier).
+ *
+ * The wrapped impl invokes the real compiler with the recipe's own route
+ * as the seed manifest, captures the response's `token_cost` +
+ * `duration_ms`, and threads them through `CompileFnResult`. Without
+ * `usageMetadata` Gemini bills get reported as 0 cost — which we accept
+ * rather than failing the run; the dashboard surfaces the mismatch.
+ */
+async function buildRealLlmCompile(opts: { apiKey: string; model: string }): Promise<CompileFn> {
+  // Inline import keeps the deterministic gate free of `@google/genai`.
+  const compilerMod = await import('@atelier/compiler');
+  const compiler = new compilerMod.GeminiCompiler({
+    apiKey: opts.apiKey,
+    coldModel: opts.model,
+    diffModel: opts.model,
+  });
+  const fn: CompileFn = async ({ recipe, route, capabilities, components }) => {
+    const result = await compiler.compile({
+      user_id: recipe.user_id,
+      app_id: recipe.app_id,
+      route,
+      capabilities,
+      components,
+    });
+    // `token_cost` from `CompileResult` is the prompt+candidate sum.
+    // We don't get the split back from `GeminiCompiler` today — assume
+    // a 50/50 split as a stand-in. Hosts that want true split metrics
+    // wire their own `compile` impl that consumes Gemini's
+    // `usageMetadata` directly.
+    const total = result.token_cost;
+    const half = Math.floor(total / 2);
+    return {
+      manifest: result.manifest,
+      model: result.model,
+      tokens_input: half,
+      tokens_output: total - half,
+      duration_ms: result.duration_ms,
+    };
+  };
+  return fn;
 }
 
 /** Re-export of the Phase-2-#5 expected SPKI prefix for an Ed25519 public key. */
@@ -196,7 +258,26 @@ export async function runMarketplaceEval(opts: EvalOpts): Promise<EvalReport> {
   const now = opts.now ?? Date.now;
   const top = opts.top ?? DEFAULT_TOP;
   const rank = opts.rank ?? defaultRank;
-  const compile = opts.compile ?? defaultCompile;
+  const mode = opts.mode ?? 'deterministic';
+  const llmModel = opts.llmModel ?? 'gemini-2.5-flash';
+  // Resolve the compile function:
+  //   1. explicit `opts.compile` always wins (test-injection seam).
+  //   2. else when `mode === 'real-llm'`, lazy-build the GeminiCompiler-
+  //      backed impl (requires `geminiApiKey`).
+  //   3. else fall through to the deterministic round-trip compile.
+  let compile: CompileFn;
+  if (opts.compile !== undefined) {
+    compile = opts.compile;
+  } else if (mode === 'real-llm') {
+    if (!opts.geminiApiKey) {
+      throw new Error(
+        "runMarketplaceEval: mode='real-llm' requires `geminiApiKey` (or pass `compile` to inject your own).",
+      );
+    }
+    compile = await buildRealLlmCompile({ apiKey: opts.geminiApiKey, model: llmModel });
+  } else {
+    compile = defaultCompile;
+  }
   const verify = opts.verify === undefined ? defaultVerify : opts.verify;
   const fixtures: ReferenceFixtures = {
     capabilities: opts.fixtures.capabilities,
@@ -223,7 +304,7 @@ export async function runMarketplaceEval(opts: EvalOpts): Promise<EvalReport> {
 
   for (const address of limited) {
     const personaStart = now();
-    const result = await runOne({ address, opts, fixtures, verify, compile });
+    const result = await runOne({ address, opts, fixtures, verify, compile, mode });
     result.persona.duration_ms = now() - personaStart;
     personas.push(result.persona);
     if (observedCompilerModel === undefined && result.model !== undefined) {
@@ -231,9 +312,10 @@ export async function runMarketplaceEval(opts: EvalOpts): Promise<EvalReport> {
     }
   }
 
-  reference_versions.compiler_version = observedCompilerModel ?? 'eval-marketplace-fallback';
+  reference_versions.compiler_version =
+    observedCompilerModel ?? (mode === 'real-llm' ? llmModel : 'eval-marketplace-fallback');
 
-  const summary = {
+  const summary: EvalReport['summary'] = {
     total: personas.length,
     passed: personas.filter((p) => p.status === 'passed').length,
     failed: personas.filter((p) => p.status === 'failed').length,
@@ -241,7 +323,43 @@ export async function runMarketplaceEval(opts: EvalOpts): Promise<EvalReport> {
     duration_ms: now() - startedAt,
   };
 
+  // S2.1 — fold per-persona cost rows into the summary. Only emit the
+  // cost columns when at least one persona produced an `llm` block;
+  // deterministic-mode reports stay back-compat.
+  const llmRows = personas
+    .map((p) => p.llm)
+    .filter((row): row is LlmEvalCompileResult => row !== undefined);
+  if (llmRows.length > 0) {
+    const costs = llmRows.map((r) => r.cost_usd);
+    const totalCost = costs.reduce((acc, c) => acc + c, 0);
+    summary.total_cost_usd = totalCost;
+    summary.cost_per_persona_avg_usd = totalCost / costs.length;
+    summary.cost_per_persona_p95_usd = percentile(costs, 0.95);
+    summary.total_tokens_input = llmRows.reduce((acc, r) => acc + r.tokens_input, 0);
+    summary.total_tokens_output = llmRows.reduce((acc, r) => acc + r.tokens_output, 0);
+    summary.pricing_revision = PRICING_REVISION;
+  }
+
   return { generated_at, reference_versions, personas, summary };
+}
+
+/**
+ * Plain-arithmetic percentile. Uses the linear-interpolation method:
+ * for a sorted array of length n, target index = (n - 1) * p. Returns
+ * the value at that fractional index, interpolating between neighbours.
+ *
+ * Keeps an external dep out of the eval package — the gate is small
+ * enough that hand-rolling beats pulling in a stats library.
+ */
+function percentile(values: readonly number[], p: number): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const idx = (sorted.length - 1) * p;
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo] ?? 0;
+  const frac = idx - lo;
+  return (sorted[lo] ?? 0) * (1 - frac) + (sorted[hi] ?? 0) * frac;
 }
 
 interface RunOneInput {
@@ -250,6 +368,7 @@ interface RunOneInput {
   fixtures: ReferenceFixtures;
   verify: EvalOpts['verify'];
   compile: CompileFn;
+  mode: 'deterministic' | 'real-llm';
 }
 
 interface RunOneOutput {
@@ -263,7 +382,7 @@ interface RunOneOutput {
  * the caller fills in `duration_ms` after the surrounding `now()` call.
  */
 async function runOne(input: RunOneInput): Promise<RunOneOutput> {
-  const { address, opts, fixtures, verify, compile } = input;
+  const { address, opts, fixtures, verify, compile, mode } = input;
   const canonical = formatMarketplaceAddress({
     scheme: 'atelier',
     author: address.author,
@@ -314,6 +433,14 @@ async function runOne(input: RunOneInput): Promise<RunOneOutput> {
   const violations: EvalViolation[] = [];
   let routesCompiled = 0;
   let observedModel: string | undefined;
+  // S2.1 — per-persona LLM telemetry accumulators. Set only when at
+  // least one route compile reports token / duration data; the runner
+  // doesn't manufacture zero-cost rows for deterministic compiles.
+  let llmTokensInput = 0;
+  let llmTokensOutput = 0;
+  let llmDurationMs = 0;
+  let firstCompiledManifest: Manifest | undefined;
+  let observedLlmTelemetry = false;
   for (const route of recipe.routes) {
     if (route.layout === undefined) {
       // Redirect-only routes don't compile to a manifest layout.
@@ -339,6 +466,16 @@ async function runOne(input: RunOneInput): Promise<RunOneOutput> {
     }
     routesCompiled += 1;
     if (observedModel === undefined) observedModel = compiled.model;
+    if (
+      compiled.tokens_input !== undefined ||
+      compiled.tokens_output !== undefined ||
+      compiled.duration_ms !== undefined
+    ) {
+      observedLlmTelemetry = true;
+      llmTokensInput += compiled.tokens_input ?? 0;
+      llmTokensOutput += compiled.tokens_output ?? 0;
+      llmDurationMs += compiled.duration_ms ?? 0;
+    }
 
     // Re-validate the compiled manifest envelope.
     const envelope = ManifestSchema.safeParse(compiled.manifest);
@@ -350,6 +487,13 @@ async function runOne(input: RunOneInput): Promise<RunOneOutput> {
         message: `compiled manifest fails ManifestSchema: ${shortenZodMessage(envelope.error.message)}`,
       });
       continue;
+    }
+
+    // Capture the first successfully-validated compiled manifest for
+    // the shape hash. We hash the parsed (post-Zod) envelope so optional
+    // fields the compiler omitted don't perturb the hash arbitrarily.
+    if (firstCompiledManifest === undefined) {
+      firstCompiledManifest = envelope.data;
     }
 
     // Run the policy stack.
@@ -372,6 +516,28 @@ async function runOne(input: RunOneInput): Promise<RunOneOutput> {
     routes_compiled: routesCompiled,
   };
   if (status === 'failed') persona.violations = violations;
+
+  // S2.1 — emit the `llm` block when:
+  //   - the runner is in real-llm mode AND we observed telemetry from
+  //     at least one compile, OR
+  //   - the test injected a `compile` impl that opted-in by returning
+  //     token/duration fields (test seam — keeps the runner-llm tests
+  //     deterministic without a real Gemini key).
+  // We always need at least one validated manifest for the shape hash;
+  // when none compiled successfully (e.g. every route threw), we skip
+  // the LLM block — there's nothing to hash.
+  if ((mode === 'real-llm' || observedLlmTelemetry) && firstCompiledManifest !== undefined) {
+    const modelId = observedModel ?? 'eval-marketplace-fallback';
+    persona.llm = {
+      mode: 'real-llm',
+      model: modelId,
+      tokens_input: llmTokensInput,
+      tokens_output: llmTokensOutput,
+      cost_usd: costUsdFor(modelId, llmTokensInput, llmTokensOutput),
+      compile_duration_ms: llmDurationMs,
+      manifest_shape_hash: manifestShapeHash(firstCompiledManifest),
+    };
+  }
 
   return observedModel === undefined ? { persona } : { persona, model: observedModel };
 }

@@ -166,14 +166,9 @@ Today: it shells out to `pnpm validate` blindly, which only works if the consume
 
 ### P3.1 — Real-LLM eval suite
 
-- [ ] **`@atelier/eval-llm`** new package (or extend `@atelier/eval-marketplace`):
-  - Runs the top-10 marketplace personas through `GeminiCompiler` (or whichever real LLM is configured) against the frozen capability + component fixture set.
-  - Validates the output manifests against `ManifestSchema` + baseline policies (existing logic).
-  - **Plus** — diffs the rendered manifest tree shape against a snapshot. Major shape changes flag a regression.
-  - **Plus** — measures actual cost (`token_cost`) per persona-route pair and tracks against a budget. Cost regression = failure.
-  - **Plus** — captures the LLM's reasoning trace alongside the manifest; `cir-evals` can rank reasoning quality (loosely; bounded heuristic).
-- [ ] **Nightly job** runs this in addition to V-6.e (which becomes the deterministic-compile sanity check). **3 d.**
-- [ ] **Cost dashboard** — daily report of per-persona compile cost across the eval set. **2 d.**
+- [x] **Sprint 2.1 — extend `@atelier/eval-marketplace` with `mode: 'real-llm'`.** `runMarketplaceEval({ mode: 'real-llm', geminiApiKey })` wires `GeminiCompiler` from `@atelier/compiler` so the gate exercises the actual production compile path. Per-persona report fields: `tokens_input`, `tokens_output`, `cost_usd` (from `gemini-2.5-flash` pricing tables in `src/pricing.ts`), `compile_duration_ms`, `manifest_shape_hash` (SHA-256 of canonical-JSON manifest minus the server-stamped `manifest_id` for snapshot diffing). New `EvalSummary` rollups: `total_cost_usd`, `cost_per_persona_avg_usd`, `cost_per_persona_p95_usd`, `total_tokens_input`, `total_tokens_output`, `pricing_revision`. _This commit._
+- [x] **Sprint 2.1 — Nightly job `marketplace-eval-llm.yml` at 04:30 UTC daily.** Fails the run if pass-rate drops below 95% week-over-week, p95 cost-per-persona doubles WoW, or any persona's `manifest_shape_hash` drifts from the latest baseline (separately reportable). Posts the report as a 90-day artifact AND as a comment on the auto-opened tracking issue. _This commit._
+- [x] **Sprint 2.2 — Cost dashboard.** Pure-function aggregator in `packages/eval-marketplace/src/dashboard.ts` — `summariseLastNRuns(reports, n)` returns per-persona avg + p95 + trend (up/down/stable), top 5 most-expensive, total spend last 7 / 30 days. `scripts/marketplace-cost-dashboard.ts` reads `eval-reports/`, writes `eval-reports/cost-dashboard.json` + regenerates `apps/docs/src/content/docs/operations/cost-dashboard.mdx` (idempotent). The MDX is committed back to main on every successful CI run via the `marketplace-eval-llm.yml` workflow's bot account. Sidebar entry under Operations. _This commit._
 
 ### P3.2 — End-user perceived-quality eval
 

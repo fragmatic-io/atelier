@@ -199,6 +199,7 @@ export default defineConfig({
             { label: 'Publishing', link: '/operations/publishing' },
             { label: 'Observability', link: '/operations/observability' },
             { label: 'Cost control', link: '/operations/cost-control' },
+            { label: 'Cost dashboard', link: '/operations/cost-dashboard' },
             { label: 'Performance', link: '/operations/performance' },
           ],
         },

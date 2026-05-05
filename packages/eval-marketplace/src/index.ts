@@ -38,9 +38,22 @@ export type {
   EvalReport,
   EvalSummary,
   EvalViolation,
+  LlmEvalCompileResult,
   PersonaEvalResult,
   ReferenceFixtures,
   ReferenceVersions,
 } from './types.js';
 
 export { REFERENCE_CAPABILITIES, REFERENCE_COMPONENTS } from './fixtures/index.js';
+
+// S2.1 — pricing tables for the real-LLM cost column.
+export { GEMINI_PRICING, PRICING_REVISION, costUsdFor, pricingFor } from './pricing.js';
+export type { ModelPricing } from './pricing.js';
+
+// S2.2 — cost dashboard aggregator.
+export {
+  summariseLastNRuns,
+  type CostSummary,
+  type CostSummaryPersona,
+  type CostTrend,
+} from './dashboard.js';

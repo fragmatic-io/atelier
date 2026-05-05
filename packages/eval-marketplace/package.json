@@ -25,6 +25,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@atelier/compiler": "workspace:^",
     "@atelier/policies": "workspace:^",
     "@atelier/schemas": "workspace:^",
     "@atelier/vault-server": "workspace:^"
