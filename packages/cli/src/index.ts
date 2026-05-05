@@ -117,13 +117,27 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   }
 }
 
+import { realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+
 // Entry-point guard: only run main() when invoked as a script. Allows test
-// modules to import `main` without triggering side effects.
-const invokedDirectly =
-  typeof process !== 'undefined' &&
-  process.argv[1] !== undefined &&
-  (import.meta.url === `file://${process.argv[1]}` ||
-    import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/')));
+// modules to import `main` without triggering side effects. We compare
+// `import.meta.url` against the realpath of `process.argv[1]` so the guard
+// also fires when the binary is launched via the npm `.bin/atelier` symlink
+// (whose path differs from the resolved module path) — without the realpath
+// hop, `npm install`-ed consumers would silently exit 0 producing no output.
+const invokedDirectly = ((): boolean => {
+  if (typeof process === 'undefined' || process.argv[1] === undefined) return false;
+  const argv1 = process.argv[1];
+  if (import.meta.url === `file://${argv1}`) return true;
+  if (import.meta.url.endsWith(argv1.replace(/\\/g, '/'))) return true;
+  try {
+    const real = realpathSync(argv1);
+    return import.meta.url === pathToFileURL(real).href;
+  } catch {
+    return false;
+  }
+})();
 
 if (invokedDirectly) {
   main().then(

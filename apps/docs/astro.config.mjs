@@ -196,6 +196,7 @@ export default defineConfig({
             { label: 'Deploying', link: '/operations/deploying' },
             { label: 'Releasing', link: '/operations/releasing' },
             { label: 'Env vars', link: '/operations/env-vars' },
+            { label: 'Publishing', link: '/operations/publishing' },
             { label: 'Observability', link: '/operations/observability' },
             { label: 'Cost control', link: '/operations/cost-control' },
             { label: 'Performance', link: '/operations/performance' },

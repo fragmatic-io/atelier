@@ -1,0 +1,87 @@
+---
+title: Operations — Publishing
+description: How the smoke-test pack gate proves every @atelier/* package is consumable by an external npm install.
+---
+
+This page documents the **package smoke-test gate** — the CI step that proves every `@atelier/*` package can be installed and imported by an external npm consumer. It lives in `scripts/smoke-test-pack.ts` and runs on both the split-step `validate` job and the `validate-fresh-clone` job in `.github/workflows/ci.yml`.
+
+## Why this gate exists
+
+In-monorepo, every package resolves through the workspace symlinks pnpm threads through `node_modules/@atelier/*`. That works because:
+
+- `pnpm install` rewrites `workspace:*` deps to local paths.
+- `tsx`, `vitest`, and `next` happily read TypeScript from `src/` directly when configured to.
+
+None of that survives `npm install @atelier/runtime` from outside the monorepo. An external consumer gets the **published tarball** — the `dist/` directory, the `package.json` `exports` map, and whatever `package.json#bin` advertised. A regression in any of those (a missing `dist/index.js`, a broken export, a non-resolving subpath, a bin shebang that doesn't load under bare Node) hits npm before it hits CI.
+
+The smoke-test gate closes that gap by simulating the external consumer **on every PR**:
+
+1. **Pack** every package with `pnpm pack --filter <name>`.
+2. **Inspect** each tarball for a declarative list of required entries (catches `package.json#files` regressions).
+3. **Install** every tarball into one shared scratch directory with `npm install file:<tgz>`. Sharing the directory is load-bearing — `@atelier/react` depends on `@atelier/runtime`, and that dep must resolve through the published artefacts, not the workspace.
+4. **Typecheck** a tiny TS consumer per package against the installed `.d.ts`.
+5. **Run** an `.mjs` consumer under bare Node so the dist artefact has to load.
+6. **Exec** the published bin (when one is declared) with `--help` so the shebang + entry-point guard work outside the monorepo.
+
+A failure points at the exact package and the exact phase: pack / install / typecheck / runtime / bin. No "something is wrong somewhere" CI failures.
+
+## Running locally
+
+```sh
+pnpm smoke-test:pack                                # all 15 packages, sequential
+pnpm smoke-test:pack --parallel                     # pack in parallel; same checks
+pnpm smoke-test:pack --package=@atelier/runtime     # single-package debug
+pnpm smoke-test:pack --keep                         # leave the scratch dir for inspection
+```
+
+The `--keep` flag is the right starting point when a CI failure looks weird: the scratch directory is a complete reproducible-from-zero npm install with all 15 tarballs and the consumer files, so you can `cd` in, inspect `node_modules/@atelier/...`, and try the offending command by hand.
+
+## What each spec asserts
+
+Specs live in `scripts/smoke-test-specs.ts` and are deliberately verbose — one entry per package — so the "what does an external consumer get" question has exactly one source of truth. Each spec declares:
+
+- `packageName` — full name (e.g. `@atelier/runtime`).
+- `requiredEntries` — tarball entries that **must** be present (catches `files` regressions).
+- `consumerCheck.importLines` — the imports a downstream user might write.
+- `consumerCheck.sample` — a body that touches at least one runtime export and at least one type, so both the `.js` and `.d.ts` halves are exercised.
+- `binCheck` — when the package publishes a bin, the args + expected output substring.
+- `needsReact` — whether the consumer needs JSX-aware tsconfig + react/react-dom installed.
+- `extraDeps` — additional npm deps to install for transitive needs (e.g. `@testing-library/react` for `@atelier/react/testing`).
+
+## Performance budget
+
+The full sequential run takes **~25 seconds locally** (M-class macOS, warm pnpm cache). CI runs sequentially by default; the `--parallel` flag exists for hosts where pack + install can overlap meaningfully (the install step still runs as one `npm install` call against all 15 tarballs to let npm resolve cross-package `file:` deps in one pass).
+
+If wall-clock time grows past **90 s under `--parallel`**, treat that as op-debt: the dev loop suffers and developers will skip the gate locally. The most likely cause is a new package adding heavy peer deps that bloat `npm install`.
+
+## Adding a new package
+
+When a new `@atelier/*` package becomes publishable, add a new spec to `SMOKE_SPECS`:
+
+1. Pick the `requiredEntries` to mirror what `package.json#files` advertises.
+2. Pick `importLines` that exercise both runtime and type exports.
+3. If the package has a bin, add a `binCheck` against `--help` (or whatever no-op help-style invocation the bin supports).
+4. If the bin's help path exits non-zero by design (some hand-rolled parsers do this), set `binCheck.allowNonZero = true`.
+5. Run `pnpm smoke-test:pack --package=@atelier/<new-name>` to validate.
+
+The spec list count must match the published-package count in `packages/`. CI will fail loudly if a package was added to the workspace but not to the spec list.
+
+## When this gate fails
+
+Read the per-package summary table at the bottom of the run. Each row reports:
+
+```
+  @atelier/<name>  PASS|FAIL  <phase>  <duration>
+```
+
+The phase tells you what to look at:
+
+| Phase       | Likely culprit                                                               |
+| ----------- | ---------------------------------------------------------------------------- |
+| `pack`      | Tarball is missing a required entry. Check `package.json#files` + the build. |
+| `install`   | npm install rejected the tarball (often a cross-package version mismatch).   |
+| `typecheck` | Published `.d.ts` doesn't satisfy the consumer's import. Check exports map.  |
+| `runtime`   | Dist artefact loaded but threw. Check the import resolves under bare Node.   |
+| `bin`       | Shebang or entry-point guard fails when invoked via `node_modules/.bin/<x>`. |
+
+A `bin` failure that succeeds when invoked as `node ./node_modules/<pkg>/dist/index.js` but fails through `./node_modules/.bin/<bin>` typically means the entry-point guard compares `import.meta.url` against `process.argv[1]` directly — which differs when the bin is launched via the npm symlink. The fix is to also compare against `realpathSync(argv1)`.

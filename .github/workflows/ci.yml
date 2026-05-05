@@ -86,10 +86,13 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Pack @atelier/schemas, install into a scratch dir as a downstream npm
-      # consumer would, and run workspace dist/bin smokes for the migrated core
-      # packages. Gates the merge so broken package artifacts can't reach main.
-      - name: Smoke-test package artifacts
+      # Pack every published @atelier/* package, install all 15 tarballs into
+      # a shared scratch dir as a downstream npm consumer would, then verify
+      # imports + tsc --noEmit + runtime + bin checks per spec. Gates the
+      # merge so broken package artifacts (export map, missing dist file,
+      # bin entry-point) can't reach main. See scripts/smoke-test-specs.ts
+      # for the per-package surface; runner is scripts/smoke-test-pack.ts.
+      - name: Smoke-test pack — all 15 packages
         run: pnpm smoke-test:pack
 
       - name: Upload coverage artifact
@@ -136,7 +139,7 @@ jobs:
         # step is the same recursive artifact build used above.
         run: pnpm validate
 
-      - name: Smoke-test package artifacts
+      - name: Smoke-test pack — all 15 packages
         run: pnpm smoke-test:pack
 
   demo-e2e:

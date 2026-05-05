@@ -2,132 +2,181 @@
 // Copyright (c) 2026 The Atelier Authors
 
 /**
- * Package smoke test — pack `@atelier/schemas`, install into a scratch
- * directory, and verify an external consumer can import + typecheck against
- * the published artifact without `tsx` / `ts-node`. Then run bare-Node smokes
- * against the migrated workspace dist artifacts (`runtime`, `policies`,
- * `compiler`, `cli`).
+ * Pack smoke test — packs every published `@atelier/*` workspace package,
+ * installs all 15 tarballs into a SHARED scratch dir (so cross-package deps
+ * like `@atelier/react` → `@atelier/runtime` resolve through the published
+ * artifacts, not workspace symlinks), and verifies an external consumer can
  *
- * The flow exactly mirrors what someone running `npm install @atelier/schemas`
- * out in the wild would do:
+ *   - `npm install` each tarball
+ *   - `import` the documented exports
+ *   - `tsc --noEmit` against the published `.d.ts`
+ *   - run the built JS under bare Node
+ *   - exec the bin (when the package publishes one)
  *
- *   1. `pnpm pack` the schemas package -> `atelier-schemas-<version>.tgz`.
- *   2. Create a scratch directory with a minimal `package.json` + `tsconfig.json`.
- *      The scratch package has only `npm` available (no pnpm workspace, no tsx).
- *   3. Install the tgz with `npm install <path-to-tgz>`. This is the consumer
- *      moment — if our `exports` / `files` are wrong, it shows up here.
- *   4. Inspect the tgz and confirm `dist/` and `src/` are inside.
- *   5. Write tiny TS + JS consumers that import + use `CapabilitySchema`.
- *      Typecheck the TS against the published .d.ts, then run JS with Node.
- *   6. Execute the installed `atelier-schemas` bin with `--help`, then run a
- *      small `dump` command to prove the published CLI works without tsx.
- *   7. Import core package exports from the built workspace and execute the
- *      `atelier` CLI dist entry with bare Node.
+ * The flow exactly mirrors what someone running `npm install @atelier/...`
+ * out in the wild would do. Specs live in `scripts/smoke-test-specs.ts`.
  *
  * Usage:
- *   pnpm smoke-test:pack
- *   tsx scripts/smoke-test-pack.ts                   # equivalent
- *   tsx scripts/smoke-test-pack.ts --keep            # leave scratch dir for inspection
+ *   pnpm smoke-test:pack                                # all 15 packages, sequential
+ *   pnpm smoke-test:pack --parallel                     # pack + checks in parallel
+ *   pnpm smoke-test:pack --package=@atelier/runtime     # smoke just one
+ *   pnpm smoke-test:pack --keep                         # leave scratch dir for debugging
  *
- * Wired into CI as a step that runs after `pnpm build` and gates the merge.
+ * Wired into CI as the `Smoke-test pack — all 15 packages` step. Gates merge.
  */
 
 /* eslint-disable no-console */
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { resolve, join } from 'node:path';
+import { join, resolve } from 'node:path';
+
+import { SMOKE_SPECS, type SmokeSpec } from './smoke-test-specs.js';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const PACKAGE_DIR = join(ROOT, 'packages', 'schemas');
 
-const KEEP = process.argv.includes('--keep');
+// -----------------------------------------------------------------------------
+// CLI flag parsing — minimal, hand-rolled.
+// -----------------------------------------------------------------------------
 
-function log(step: string, msg: string): void {
-  console.log(`[smoke-test-pack] ${step}: ${msg}`);
+interface ParsedFlags {
+  keep: boolean;
+  parallel: boolean;
+  packageFilter: string | null;
 }
 
-function fail(step: string, msg: string): never {
-  console.error(`[smoke-test-pack] FAIL ${step}: ${msg}`);
-  process.exit(1);
-}
-
-/**
- * Pack the schemas package. Pack into a fresh tmp directory so we don't leak
- * tarballs into the repo or `/tmp`.
- */
-function packSchemas(destDir: string): string {
-  log('pack', `pnpm pack --pack-destination ${destDir}`);
-  const out = execFileSync('pnpm', ['pack', '--pack-destination', destDir], {
-    cwd: PACKAGE_DIR,
-    encoding: 'utf8',
-  });
-  // pnpm pack prints the tarball path on the last non-empty line.
-  const lines = out
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
-  const last = lines[lines.length - 1];
-  if (!last) fail('pack', `pnpm pack produced no output:\n${out}`);
-  // Walk the destDir for the produced .tgz (more robust than parsing stdout).
-  const entries = readdirSync(destDir).filter((f) => f.endsWith('.tgz'));
-  if (entries.length === 0) fail('pack', `no .tgz produced in ${destDir}`);
-  if (entries.length > 1) fail('pack', `multiple .tgz produced: ${entries.join(', ')}`);
-  return join(destDir, entries[0]!);
-}
-
-/**
- * Inspect tarball contents — must contain dist/index.js, dist/index.d.ts,
- * src/index.ts, package.json, README.md.
- */
-function inspectTarball(tgzPath: string): void {
-  log('inspect', `tar -tzf ${tgzPath}`);
-  const out = execFileSync('tar', ['-tzf', tgzPath], { encoding: 'utf8' });
-  const entries = out.split('\n').filter(Boolean);
-
-  const required = [
-    'package/package.json',
-    'package/dist/index.js',
-    'package/dist/index.d.ts',
-    'package/dist/cli/index.js',
-    'package/src/index.ts',
-    'package/README.md',
-  ];
-  for (const r of required) {
-    if (!entries.some((e) => e === r)) {
-      fail('inspect', `tarball is missing required entry: ${r}\nentries:\n${entries.join('\n')}`);
+function parseFlags(argv: readonly string[]): ParsedFlags {
+  let keep = false;
+  let parallel = false;
+  let packageFilter: string | null = null;
+  for (const arg of argv) {
+    if (arg === '--keep') keep = true;
+    else if (arg === '--parallel') parallel = true;
+    else if (arg.startsWith('--package=')) packageFilter = arg.slice('--package='.length);
+    else if (arg === '--help' || arg === '-h') {
+      console.log(
+        [
+          'Usage: tsx scripts/smoke-test-pack.ts [flags]',
+          '',
+          '  --keep                Leave the scratch dir for inspection',
+          '  --parallel            Pack + per-spec checks in parallel (faster)',
+          '  --package=<name>      Smoke just one spec (full @atelier/<name>)',
+          '  --help                This message',
+        ].join('\n'),
+      );
+      process.exit(0);
+    } else {
+      console.error(`[smoke-test-pack] unknown flag: ${arg}`);
+      process.exit(2);
     }
   }
-  log('inspect', `tarball contains ${entries.length} entries; all required entries present`);
+  return { keep, parallel, packageFilter };
 }
 
-/**
- * Bootstrap a minimal external-consumer project, install the tgz, write tiny
- * consumers that use both runtime + types, then run typecheck/runtime/bin
- * checks against the installed package.
- *
- * We use npm (not pnpm) here because external consumers are most often on
- * npm and we want to verify the package works on the lowest-common-denominator
- * registry client.
- */
-function consumeAndTypecheck(tgzPath: string, scratchDir: string): void {
-  // package.json — minimal ESM consumer.
-  const consumerPkg = {
-    name: 'atelier-schemas-smoke-consumer',
+const FLAGS = parseFlags(process.argv.slice(2));
+
+// -----------------------------------------------------------------------------
+// Logging helpers.
+// -----------------------------------------------------------------------------
+
+function log(scope: string, msg: string): void {
+  console.log(`[smoke-test-pack] ${scope}: ${msg}`);
+}
+
+function logFail(scope: string, msg: string): void {
+  console.error(`[smoke-test-pack] FAIL ${scope}: ${msg}`);
+}
+
+// -----------------------------------------------------------------------------
+// Per-spec result.
+// -----------------------------------------------------------------------------
+
+type Phase = 'pack' | 'inspect' | 'install' | 'typecheck' | 'runtime' | 'bin';
+
+interface SpecResult {
+  packageName: string;
+  ok: boolean;
+  phase: Phase | null;
+  durationMs: number;
+  error?: string;
+}
+
+// -----------------------------------------------------------------------------
+// Phase: pack a single package into a destination directory.
+// -----------------------------------------------------------------------------
+
+function sanitizeName(name: string): string {
+  return name.replace(/[^a-z0-9]+/gi, '_');
+}
+
+function packPackage(spec: SmokeSpec, packDir: string): string {
+  const specPackDir = join(packDir, sanitizeName(spec.packageName));
+  mkdirSync(specPackDir, { recursive: true });
+  execFileSync('pnpm', ['--filter', spec.filterArg, 'pack', '--pack-destination', specPackDir], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  const tgzs = readdirSync(specPackDir).filter((f) => f.endsWith('.tgz'));
+  if (tgzs.length === 0) {
+    throw new Error(`pnpm pack produced no .tgz in ${specPackDir}`);
+  }
+  if (tgzs.length > 1) {
+    throw new Error(`pnpm pack produced multiple .tgz in ${specPackDir}: ${tgzs.join(', ')}`);
+  }
+  return join(specPackDir, tgzs[0]!);
+}
+
+// -----------------------------------------------------------------------------
+// Phase: inspect the tarball for the package's required entries.
+// -----------------------------------------------------------------------------
+
+function inspectTarball(spec: SmokeSpec, tgzPath: string): void {
+  const out = execFileSync('tar', ['-tzf', tgzPath], { encoding: 'utf8' });
+  const entries = new Set(out.split('\n').filter(Boolean));
+  for (const required of spec.requiredEntries) {
+    if (!entries.has(required)) {
+      throw new Error(
+        `tarball ${tgzPath} missing required entry: ${required} (${entries.size} entries total)`,
+      );
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Phase: bootstrap the SHARED scratch consumer dir (one node_modules tree,
+// one tsconfig.json, one package.json — all 15 tarballs install here so
+// cross-package imports resolve through the published artifacts).
+// -----------------------------------------------------------------------------
+
+function bootstrapConsumer(consumerDir: string, specs: readonly SmokeSpec[]): void {
+  const needsReact = specs.some((s) => s.needsReact);
+  const extraDeps: Record<string, string> = {};
+  for (const s of specs) {
+    if (s.extraDeps) Object.assign(extraDeps, s.extraDeps);
+  }
+  const dependencies: Record<string, string> = { ...extraDeps };
+  const devDependencies: Record<string, string> = {};
+  if (needsReact) {
+    dependencies['react'] = '^19.0.0';
+    dependencies['react-dom'] = '^19.0.0';
+    devDependencies['@types/react'] = '^19.0.0';
+    devDependencies['@types/react-dom'] = '^19.0.0';
+  }
+  const consumerPkg: Record<string, unknown> = {
+    name: 'atelier-pack-smoke-consumer',
     version: '0.0.0',
     private: true,
     type: 'module',
-    dependencies: {
-      // Filled in by `npm install file:<tgz>` below.
-    },
+    dependencies,
   };
-  writeFileSync(join(scratchDir, 'package.json'), JSON.stringify(consumerPkg, null, 2));
+  if (Object.keys(devDependencies).length > 0) {
+    consumerPkg['devDependencies'] = devDependencies;
+  }
+  writeFileSync(join(consumerDir, 'package.json'), JSON.stringify(consumerPkg, null, 2));
 
-  // tsconfig — strict, modern, mirrors what a downstream Next.js / Vite app
-  // would use. Bundler resolution because that's the realistic case (Next 15,
-  // Vite 5, Astro 4 all use it).
-  const consumerTsconfig = {
+  const tsconfig: Record<string, unknown> = {
     compilerOptions: {
       target: 'ES2022',
       module: 'ESNext',
@@ -137,91 +186,121 @@ function consumeAndTypecheck(tgzPath: string, scratchDir: string): void {
       skipLibCheck: true,
       noEmit: true,
       verbatimModuleSyntax: true,
+      ...(needsReact ? { jsx: 'react-jsx' } : {}),
     },
-    include: ['consumer.ts'],
+    include: ['consumer-*.ts'],
   };
-  writeFileSync(join(scratchDir, 'tsconfig.json'), JSON.stringify(consumerTsconfig, null, 2));
+  writeFileSync(join(consumerDir, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2));
 
-  const capabilitySample = `{
-  id: 'demo.example_archive',
-  kind: 'action',
-  version: '1.0.0',
-  input: { thread_id: { type: 'string' } },
-  output: { archived: { type: 'boolean' } },
-  side_effects: ['archive', 'mutates:thread_state'],
-  permissions: ['thread:write'],
-  confirmation: 'inline',
-  rate_limit: '100/min/user',
-  reversible: true,
-  rollback: 'demo.example_unarchive',
-}`;
+  // Initial install — pulls react/react-dom + any extra deps before tarballs.
+  if (needsReact || Object.keys(extraDeps).length > 0) {
+    const init = spawnSync('npm', ['install', '--no-audit', '--no-fund'], {
+      cwd: consumerDir,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
+    if (init.status !== 0) {
+      throw new Error(
+        `npm install (initial deps) failed (exit ${init.status})\nstdout:\n${init.stdout}\nstderr:\n${init.stderr}`,
+      );
+    }
+  }
+}
 
-  // Tiny TS consumer. Must touch both a runtime export AND a type export to
-  // exercise both the .js and .d.ts halves of the contract.
-  const consumerSource = `// Smoke consumer - exercises both runtime + type exports.
-import { CapabilitySchema, type Capability } from '@atelier/schemas';
+// -----------------------------------------------------------------------------
+// Phase: write per-spec consumer .ts and .mjs files.
+// -----------------------------------------------------------------------------
 
-const cap: Capability = CapabilitySchema.parse(${capabilitySample});
+function writeConsumerFiles(spec: SmokeSpec, consumerDir: string): { ts: string; mjs: string } {
+  const safe = sanitizeName(spec.packageName);
+  const importBlock = spec.consumerCheck.importLines.join('\n');
+  const tsName = `consumer-${safe}.ts`;
+  const tsBody = `// Smoke consumer for ${spec.packageName} — exercises the published surface.
+${importBlock}
 
-if (typeof cap.id !== 'string') throw new Error('expected cap.id string');
-console.log('smoke-consumer ok:', cap.id);
+${spec.consumerCheck.sample}
 `;
-  writeFileSync(join(scratchDir, 'consumer.ts'), consumerSource);
+  writeFileSync(join(consumerDir, tsName), tsBody);
 
-  const runtimeSource = `// Smoke runtime consumer - must run in bare Node.
-import { CapabilitySchema } from '@atelier/schemas';
+  // Runtime consumer: strip type-only imports and TS annotations so the body
+  // runs under bare Node ESM.
+  const mjsImports = spec.consumerCheck.importLines
+    .map((line) => stripTypeOnlyImport(line))
+    .filter((line): line is string => Boolean(line))
+    .join('\n');
+  const mjsName = `consumer-${safe}.mjs`;
+  const mjsBody = `// Smoke runtime consumer for ${spec.packageName} — bare Node.
+${mjsImports}
 
-const cap = CapabilitySchema.parse(${capabilitySample});
-console.log('smoke-runtime ok:', cap.id);
+${stripTsAnnotations(spec.consumerCheck.sample)}
 `;
-  writeFileSync(join(scratchDir, 'consumer.mjs'), runtimeSource);
+  writeFileSync(join(consumerDir, mjsName), mjsBody);
+  return { ts: tsName, mjs: mjsName };
+}
 
-  // npm install the tgz. This is the moment of truth.
-  log('install', `npm install file:${tgzPath}`);
-  const install = spawnSync('npm', ['install', '--no-audit', '--no-fund', `file:${tgzPath}`], {
-    cwd: scratchDir,
+/**
+ * Drop `import type { ... }` lines (return null), and remove `type X` tokens
+ * from named-import lists, leaving value imports intact.
+ */
+function stripTypeOnlyImport(line: string): string | null {
+  if (/^\s*import\s+type\b/.test(line)) return null;
+  const out = line.replace(/\{([^}]*)\}/, (_match, inner: string) => {
+    const cleaned = inner
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !/^type\s/.test(s))
+      .join(', ');
+    return cleaned.length > 0 ? `{ ${cleaned} }` : '{}';
+  });
+  if (/import\s+\{\s*\}\s+from/.test(out)) return null;
+  return out;
+}
+
+/**
+ * Pragmatic regex pass to strip TS-only annotations from spec-sample bodies.
+ * Specs deliberately stick to patterns this can handle:
+ *
+ *   - `const X: Type = ...`            → `const X = ...`
+ *   - `const X: Type | null = ...`     → `const X = ...`
+ *
+ * Function-signature types and generics with commas are intentionally avoided
+ * in the sample bodies; if a future spec needs those, run the body through a
+ * real stripper (e.g. `tsx` writing a separate `.cjs` artefact).
+ */
+function stripTsAnnotations(source: string): string {
+  return source.replace(
+    /\b(const|let|var)\s+(\w+)\s*:\s*[^=\n]+?=\s*/g,
+    (_m, kw: string, name: string) => `${kw} ${name} = `,
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Phase: install one tarball into the shared consumer.
+// -----------------------------------------------------------------------------
+
+function installAllTarballs(tgzPaths: readonly string[], consumerDir: string): void {
+  if (tgzPaths.length === 0) return;
+  const args = ['install', '--no-audit', '--no-fund', ...tgzPaths.map((p) => `file:${p}`)];
+  const result = spawnSync('npm', args, {
+    cwd: consumerDir,
     encoding: 'utf8',
     stdio: 'pipe',
   });
-  if (install.status !== 0) {
-    fail(
-      'install',
-      `npm install failed (exit ${install.status})\nstdout:\n${install.stdout}\nstderr:\n${install.stderr}`,
+  if (result.status !== 0) {
+    throw new Error(
+      `npm install (${tgzPaths.length} tarballs) failed (exit ${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
     );
   }
-  log('install', 'npm install succeeded');
+}
 
-  // Confirm node_modules layout is what we'd expect.
-  const installedPkgPath = join(scratchDir, 'node_modules', '@atelier', 'schemas', 'package.json');
-  const installedPkg = JSON.parse(readFileSync(installedPkgPath, 'utf8')) as {
-    bin?: Record<string, string>;
-    main?: string;
-    types?: string;
-  };
-  if (installedPkg.main !== './dist/index.js') {
-    fail('install', `installed package.main is ${installedPkg.main!}, expected ./dist/index.js`);
-  }
-  if (installedPkg.types !== './dist/index.d.ts') {
-    fail(
-      'install',
-      `installed package.types is ${installedPkg.types!}, expected ./dist/index.d.ts`,
-    );
-  }
-  if (installedPkg.bin?.['atelier-schemas'] !== './dist/cli/index.js') {
-    fail(
-      'install',
-      `installed package bin is ${installedPkg.bin?.['atelier-schemas']}, expected ./dist/cli/index.js`,
-    );
-  }
+// -----------------------------------------------------------------------------
+// Phase: typecheck the shared consumer.
+// -----------------------------------------------------------------------------
 
-  // Run tsc --noEmit. Use the consumer's own tsc — but the scratch dir has none.
-  // Easier: invoke the repo's TypeScript via `pnpm exec tsc` with the scratch
-  // tsconfig. That's still a valid external-consumer simulation because we're
-  // exercising the published .d.ts; tsc itself is the same binary either way.
-  log('typecheck', `tsc --noEmit -p ${scratchDir}/tsconfig.json`);
+function typecheckConsumer(consumerDir: string): void {
   const tsc = spawnSync(
     'pnpm',
-    ['exec', 'tsc', '--noEmit', '-p', join(scratchDir, 'tsconfig.json')],
+    ['exec', 'tsc', '--noEmit', '-p', join(consumerDir, 'tsconfig.json')],
     {
       cwd: ROOT,
       encoding: 'utf8',
@@ -229,255 +308,313 @@ console.log('smoke-runtime ok:', cap.id);
     },
   );
   if (tsc.status !== 0) {
-    fail(
-      'typecheck',
-      `tsc reported errors against the published .d.ts (exit ${tsc.status})\nstdout:\n${tsc.stdout}\nstderr:\n${tsc.stderr}`,
+    throw new Error(
+      `tsc reported errors (exit ${tsc.status})\nstdout:\n${tsc.stdout}\nstderr:\n${tsc.stderr}`,
     );
   }
-  log('typecheck', 'tsc --noEmit clean against published types');
-
-  // Prove the runtime consumer runs under bare Node.
-  log('runtime', 'node consumer.mjs');
-  const runtime = spawnSync('node', ['consumer.mjs'], {
-    cwd: scratchDir,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  });
-  if (runtime.status !== 0) {
-    fail(
-      'runtime',
-      `node consumer failed (exit ${runtime.status})\nstdout:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`,
-    );
-  }
-  if (!runtime.stdout.includes('smoke-runtime ok: demo.example_archive')) {
-    fail('runtime', `unexpected runtime output:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`);
-  }
-  log('runtime', 'bare-node consumer succeeded');
-
-  const binPath = join(scratchDir, 'node_modules', '.bin', 'atelier-schemas');
-
-  log('bin', 'atelier-schemas --help');
-  const help = spawnSync(binPath, ['--help'], {
-    cwd: scratchDir,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  });
-  if (help.status !== 0) {
-    fail(
-      'bin',
-      `--help failed (exit ${help.status})\nstdout:\n${help.stdout}\nstderr:\n${help.stderr}`,
-    );
-  }
-  if (!help.stdout.includes('usage: atelier-schemas')) {
-    fail('bin', `--help did not print usage\nstdout:\n${help.stdout}\nstderr:\n${help.stderr}`);
-  }
-  log('bin', '--help succeeded');
-
-  const dumpDir = join(scratchDir, 'dumped-schemas');
-  log('dump', `atelier-schemas dump --out ${dumpDir}`);
-  const dump = spawnSync(binPath, ['dump', '--out', dumpDir], {
-    cwd: scratchDir,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  });
-  if (dump.status !== 0) {
-    fail(
-      'dump',
-      `dump failed (exit ${dump.status})\nstdout:\n${dump.stdout}\nstderr:\n${dump.stderr}`,
-    );
-  }
-  const dumpedCapability = join(dumpDir, 'capability.json');
-  const dumpedRaw = readFileSync(dumpedCapability, 'utf8');
-  const dumpedSchema = JSON.parse(dumpedRaw) as {
-    $id?: string;
-    properties?: Record<string, unknown>;
-    required?: string[];
-  };
-  if (
-    dumpedSchema.$id !== 'https://cir.dev/schemas/capability.json' ||
-    !dumpedSchema.properties?.['kind'] ||
-    !dumpedSchema.required?.includes('confirmation')
-  ) {
-    fail('dump', `capability schema was not dumped as expected:\n${dumpedRaw.slice(0, 500)}`);
-  }
-  log('dump', 'dump command wrote capability.json');
 }
 
-function runWorkspaceArtifactSmoke(): void {
-  log('workspace-runtime', 'node --input-type=module core import smoke');
-  const runtime = spawnSync(
-    'node',
-    [
-      '--input-type=module',
-      '-e',
-      `
-import { ActionDispatcher, MapActionRegistry } from '@atelier/runtime';
-import { validateManifest } from '@atelier/policies';
-import { MemoryManifestStore, ServerManifestResolver } from '@atelier/compiler';
-import { ALL_COMPONENTS, Button, COMPONENT_BINDINGS, resolveDensity } from '@atelier/components';
-import { ALL_COMPONENTS as REGISTRY_COMPONENTS } from '@atelier/components/registry';
-import { COMPOSITION_RULES } from '@atelier/components/composition-rules';
-import { DENSITY_AWARE_COMPONENTS } from '@atelier/components/_variants';
-import { CirRuntime } from '@atelier/react';
-import { buildTestServices } from '@atelier/react/testing';
-import { CompileBadge } from '@atelier/react/debug';
-import { defineEval } from '@atelier/evals';
-import { InMemoryKeyboardRegistry } from '@atelier/keyboard';
-import { MockDataResolver } from '@atelier/data-resolvers';
-import { SubstringCapabilityResolver } from '@atelier/capability-resolver';
-import { SubstringRecipeResolver } from '@atelier/recipe-resolver';
-import { runMarketplaceEval } from '@atelier/eval-marketplace';
+// -----------------------------------------------------------------------------
+// Phase: per-spec runtime + bin.
+// -----------------------------------------------------------------------------
 
-if (typeof ActionDispatcher !== 'function') throw new Error('ActionDispatcher export missing');
-if (typeof MapActionRegistry !== 'function') throw new Error('MapActionRegistry export missing');
-if (typeof validateManifest !== 'function') throw new Error('validateManifest export missing');
-if (typeof MemoryManifestStore !== 'function') throw new Error('MemoryManifestStore export missing');
-if (typeof ServerManifestResolver !== 'function') throw new Error('ServerManifestResolver export missing');
-if (Button === undefined) throw new Error('Button export missing');
-if (typeof ALL_COMPONENTS.get !== 'function') throw new Error('ALL_COMPONENTS export missing');
-if (!COMPONENT_BINDINGS.Button) throw new Error('COMPONENT_BINDINGS export missing');
-if (typeof REGISTRY_COMPONENTS.get !== 'function') throw new Error('registry subpath export missing');
-if (!COMPOSITION_RULES) throw new Error('composition-rules subpath export missing');
-if (!(DENSITY_AWARE_COMPONENTS instanceof Set)) throw new Error('_variants subpath export missing');
-if (typeof resolveDensity !== 'function') throw new Error('density-resolver export missing');
-if (typeof CirRuntime !== 'function') throw new Error('CirRuntime export missing');
-if (typeof buildTestServices !== 'function') throw new Error('react testing export missing');
-if (typeof CompileBadge !== 'function') throw new Error('react debug export missing');
-if (typeof defineEval !== 'function') throw new Error('evals export missing');
-if (typeof InMemoryKeyboardRegistry !== 'function') throw new Error('keyboard export missing');
-if (typeof MockDataResolver !== 'function') throw new Error('data-resolvers export missing');
-if (typeof SubstringCapabilityResolver !== 'function') throw new Error('capability-resolver export missing');
-if (typeof SubstringRecipeResolver !== 'function') throw new Error('recipe-resolver export missing');
-if (typeof runMarketplaceEval !== 'function') throw new Error('eval-marketplace export missing');
-console.log('workspace-runtime ok');
-`,
-    ],
-    {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: 'pipe',
-    },
-  );
-  if (runtime.status !== 0) {
-    fail(
-      'workspace-runtime',
-      `core import smoke failed (exit ${runtime.status})\nstdout:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`,
-    );
-  }
-  if (!runtime.stdout.includes('workspace-runtime ok')) {
-    fail('workspace-runtime', `unexpected output:\n${runtime.stdout}\nstderr:\n${runtime.stderr}`);
-  }
-  log('workspace-runtime', 'core dist imports succeeded');
-
-  log('cli-bin', 'node packages/cli/dist/index.js --help');
-  const cliHelp = spawnSync('node', [join(ROOT, 'packages', 'cli', 'dist', 'index.js'), '--help'], {
-    cwd: ROOT,
+function runtimeCheck(consumerDir: string, mjsName: string): void {
+  const result = spawnSync('node', [mjsName], {
+    cwd: consumerDir,
     encoding: 'utf8',
     stdio: 'pipe',
   });
-  if (cliHelp.status !== 0) {
-    fail(
-      'cli-bin',
-      `atelier --help failed (exit ${cliHelp.status})\nstdout:\n${cliHelp.stdout}\nstderr:\n${cliHelp.stderr}`,
+  if (result.status !== 0) {
+    throw new Error(
+      `node ${mjsName} failed (exit ${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
     );
   }
-  if (!cliHelp.stdout.includes('usage: atelier <command>')) {
-    fail('cli-bin', `atelier --help did not print top-level usage\nstdout:\n${cliHelp.stdout}`);
-  }
-  log('cli-bin', 'atelier top-level help succeeded under bare Node');
-
-  const cliPath = join(ROOT, 'packages', 'cli', 'dist', 'index.js');
-  const cliHelpChecks: readonly { name: string; args: readonly string[]; expect: string }[] = [
-    {
-      name: 'vault',
-      args: ['vault', '--help'],
-      expect: 'usage: atelier vault',
-    },
-    {
-      name: 'marketplace publish',
-      args: ['marketplace', 'publish', '--help'],
-      expect: 'usage: atelier marketplace publish',
-    },
-    {
-      name: 'marketplace review',
-      args: ['marketplace', 'review', '--help'],
-      expect: 'usage: atelier marketplace review',
-    },
-  ];
-
-  for (const check of cliHelpChecks) {
-    log('cli-bin', `node packages/cli/dist/index.js ${check.args.join(' ')}`);
-    const result = spawnSync('node', [cliPath, ...check.args], {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: 'pipe',
-    });
-    if (result.status !== 0) {
-      fail(
-        'cli-bin',
-        `${check.name} help failed (exit ${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
-      );
-    }
-    if (!result.stdout.includes(check.expect)) {
-      fail(
-        'cli-bin',
-        `${check.name} help did not print expected usage "${check.expect}"\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
-      );
-    }
-  }
-  log('cli-bin', 'CLI subcommand dist entrypoints succeeded under bare Node');
-
-  log('evals-bin', 'node packages/evals/dist/cli/index.js run --pattern __no_evals__/**/*.eval.ts');
-  const evals = spawnSync(
-    'node',
-    [
-      '--import=tsx/esm',
-      join(ROOT, 'packages', 'evals', 'dist', 'cli', 'index.js'),
-      'run',
-      '--pattern',
-      '__no_evals__/**/*.eval.ts',
-    ],
-    {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: 'pipe',
-    },
-  );
-  if (evals.status !== 0) {
-    fail(
-      'evals-bin',
-      `atelier-evals smoke failed (exit ${evals.status})\nstdout:\n${evals.stdout}\nstderr:\n${evals.stderr}`,
+  if (!result.stdout.includes('smoke ok:')) {
+    throw new Error(
+      `runtime did not print 'smoke ok:'\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
     );
   }
-  log('evals-bin', 'atelier-evals dist entrypoint succeeded under bare Node + tsx loader');
 }
 
-function main(): void {
-  // Scratch directory for the whole smoke test.
-  const scratchDir = mkdtempSync(join(tmpdir(), 'atelier-schemas-smoke-'));
+function binCheck(spec: SmokeSpec, consumerDir: string): void {
+  if (!spec.binCheck) return;
+  const binPath = join(consumerDir, 'node_modules', '.bin', spec.binCheck.binName);
+  const result = spawnSync(binPath, [...spec.binCheck.args], {
+    cwd: consumerDir,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  // Allow non-zero exit when the bin specifically declared `allowNonZero` —
+  // some help paths (e.g. `atelier-evals --help` printing usage on the no-op
+  // command) intentionally exit non-zero. The substring check still has to
+  // pass against the combined stdout+stderr in that case.
+  const haystack = `${result.stdout}\n${result.stderr}`;
+  if (!spec.binCheck.allowNonZero && result.status !== 0) {
+    throw new Error(
+      `bin ${spec.binCheck.binName} ${spec.binCheck.args.join(' ')} failed (exit ${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+    );
+  }
+  if (!haystack.includes(spec.binCheck.expectStdout)) {
+    throw new Error(
+      `bin ${spec.binCheck.binName} output did not contain expected substring "${spec.binCheck.expectStdout}"\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline state.
+//
+// Each spec progresses pack → inspect → install → typecheck → runtime → bin.
+// We keep a single `Map<packageName, SpecResult>` and stamp it with the first
+// failing phase so the summary reports precise per-package state.
+// -----------------------------------------------------------------------------
+
+interface PackedSpec {
+  spec: SmokeSpec;
+  tgzPath: string;
+  /** Empty strings when this spec is pack-only (filtered out of checks). */
+  consumerFiles: { ts: string; mjs: string };
+}
+
+// -----------------------------------------------------------------------------
+// Main flow.
+// -----------------------------------------------------------------------------
+
+async function main(): Promise<void> {
+  const startedAt = Date.now();
+
+  // Always pack + install ALL specs so cross-package deps resolve. `specs`
+  // governs WHICH package gets a consumer file written + its checks run.
+  // Dependency packages still get installed (so `import { CirRuntime }` from
+  // `@atelier/react` finds `@atelier/runtime` etc.).
+  const allSpecs: readonly SmokeSpec[] = SMOKE_SPECS;
+  let checkedSpecs: readonly SmokeSpec[] = SMOKE_SPECS;
+  if (FLAGS.packageFilter) {
+    checkedSpecs = SMOKE_SPECS.filter((s) => s.packageName === FLAGS.packageFilter);
+    if (checkedSpecs.length === 0) {
+      const known = SMOKE_SPECS.map((s) => s.packageName).join(', ');
+      console.error(
+        `[smoke-test-pack] --package=${FLAGS.packageFilter} matched no spec. Known: ${known}`,
+      );
+      process.exit(2);
+    }
+  }
+  const checkedNames = new Set(checkedSpecs.map((s) => s.packageName));
+
+  log(
+    'config',
+    `${allSpecs.length} pack(s), ${checkedSpecs.length} checked | parallel=${FLAGS.parallel} | keep=${FLAGS.keep}${
+      FLAGS.packageFilter ? ` | filter=${FLAGS.packageFilter}` : ''
+    }`,
+  );
+
+  const scratchDir = mkdtempSync(join(tmpdir(), 'atelier-pack-smoke-'));
   log('scratch', scratchDir);
 
+  const packDir = join(scratchDir, 'pack');
+  const consumerDir = join(scratchDir, 'consumer');
+  mkdirSync(packDir, { recursive: true });
+  mkdirSync(consumerDir, { recursive: true });
+
+  // Per-spec result table. Stamped on the first failing phase.
+  const results = new Map<string, SpecResult>();
+  const startTimes = new Map<string, number>();
+  for (const s of allSpecs) {
+    startTimes.set(s.packageName, Date.now());
+  }
+
+  function fail(spec: SmokeSpec, phase: Phase, error: string): void {
+    if (results.has(spec.packageName)) return;
+    results.set(spec.packageName, {
+      packageName: spec.packageName,
+      ok: false,
+      phase,
+      durationMs: Date.now() - (startTimes.get(spec.packageName) ?? Date.now()),
+      error,
+    });
+  }
+
+  function pass(spec: SmokeSpec): void {
+    if (results.has(spec.packageName)) return;
+    results.set(spec.packageName, {
+      packageName: spec.packageName,
+      ok: true,
+      phase: null,
+      durationMs: Date.now() - (startTimes.get(spec.packageName) ?? Date.now()),
+    });
+  }
+
   try {
-    const packDir = join(scratchDir, 'pack');
-    mkdirSync(packDir, { recursive: true });
-    const consumerDir = join(scratchDir, 'consumer');
-    mkdirSync(consumerDir, { recursive: true });
+    // Phase A: pack + inspect for ALL specs. Consumer files are only written
+    // for `checkedSpecs` so the typecheck / runtime / bin phases stay scoped
+    // when --package filter is set.
+    log('phase', `pack + inspect (${FLAGS.parallel ? 'parallel' : 'sequential'})`);
+    const packed: PackedSpec[] = [];
+    // eslint-disable-next-line @typescript-eslint/require-await
+    const packAndOptionallyWrite = async (s: SmokeSpec): Promise<PackedSpec> => {
+      const tgzPath = packPackage(s, packDir);
+      inspectTarball(s, tgzPath);
+      const consumerFiles = checkedNames.has(s.packageName)
+        ? writeConsumerFiles(s, consumerDir)
+        : { ts: '', mjs: '' };
+      return { spec: s, tgzPath, consumerFiles };
+    };
+    if (FLAGS.parallel) {
+      const settled = await Promise.allSettled(allSpecs.map((s) => packAndOptionallyWrite(s)));
+      for (let i = 0; i < settled.length; i += 1) {
+        const r = settled[i]!;
+        const s = allSpecs[i]!;
+        if (r.status === 'fulfilled') {
+          packed.push(r.value);
+        } else {
+          const msg = r.reason instanceof Error ? r.reason.message : String(r.reason);
+          logFail(s.packageName, `pack/inspect: ${msg}`);
+          fail(s, 'pack', msg);
+        }
+      }
+    } else {
+      for (const s of allSpecs) {
+        try {
+          packed.push(await packAndOptionallyWrite(s));
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          logFail(s.packageName, `pack/inspect: ${msg}`);
+          fail(s, 'pack', msg);
+        }
+      }
+    }
 
-    const tgzPath = packSchemas(packDir);
-    log('pack', `produced ${tgzPath}`);
+    // Phase B: bootstrap shared consumer scaffolding. Use `allSpecs` so
+    // peer/extra deps for any installed package are present even when the
+    // checked-set is filtered.
+    log('phase', 'bootstrap shared consumer');
+    bootstrapConsumer(consumerDir, allSpecs);
 
-    inspectTarball(tgzPath);
-    consumeAndTypecheck(tgzPath, consumerDir);
-    runWorkspaceArtifactSmoke();
+    // Phase C: install all tarballs in a single npm-install call. Passing
+    // every tarball at once lets npm resolve cross-package `workspace:*` deps
+    // through `file:`-protocol siblings without hitting the public registry.
+    // Sequential per-spec installs would require topological ordering and
+    // each call still needs every previously-installed sibling resolvable —
+    // a single install fixes that.
+    log('phase', 'install tarballs');
+    let installOk = true;
+    let installError: string | null = null;
+    try {
+      installAllTarballs(
+        packed.map((p) => p.tgzPath),
+        consumerDir,
+      );
+    } catch (err) {
+      installOk = false;
+      installError = err instanceof Error ? err.message : String(err);
+      logFail('install', installError);
+    }
+    const installed: PackedSpec[] = installOk ? packed : [];
+    if (!installOk) {
+      // Stamp every spec we tried to install with the install error so the
+      // summary reports it precisely.
+      for (const p of packed) {
+        if (!results.has(p.spec.packageName)) {
+          fail(p.spec, 'install', installError ?? 'install failed');
+        }
+      }
+    }
 
-    console.log('[smoke-test-pack] ok — package artifacts are consumable');
+    // Phase D: shared typecheck — picks up every consumer-*.ts.
+    log('phase', 'tsc --noEmit (shared)');
+    let typecheckOk = true;
+    let typecheckError: string | null = null;
+    try {
+      typecheckConsumer(consumerDir);
+    } catch (err) {
+      typecheckOk = false;
+      typecheckError = err instanceof Error ? err.message : String(err);
+      logFail('typecheck', typecheckError);
+    }
+
+    // Phase E: per-spec runtime + bin (only for checked specs). These are
+    // independent processes; safe to run in parallel.
+    log('phase', `runtime + bin (${FLAGS.parallel ? 'parallel' : 'sequential'})`);
+
+    // eslint-disable-next-line @typescript-eslint/require-await
+    async function runChecks(p: PackedSpec): Promise<void> {
+      if (!checkedNames.has(p.spec.packageName)) {
+        // Pack-only — record as PASS so the summary shows it was packed +
+        // installed, just not deeply consumer-checked (filter mode).
+        if (!results.has(p.spec.packageName)) pass(p.spec);
+        return;
+      }
+      // If install already failed, skip — already stamped.
+      if (results.has(p.spec.packageName)) return;
+      if (!typecheckOk) {
+        fail(p.spec, 'typecheck', typecheckError ?? 'typecheck failed');
+        return;
+      }
+      try {
+        runtimeCheck(consumerDir, p.consumerFiles.mjs);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logFail(p.spec.packageName, `runtime: ${msg}`);
+        fail(p.spec, 'runtime', msg);
+        return;
+      }
+      try {
+        binCheck(p.spec, consumerDir);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logFail(p.spec.packageName, `bin: ${msg}`);
+        fail(p.spec, 'bin', msg);
+        return;
+      }
+      pass(p.spec);
+      log(
+        p.spec.packageName,
+        `ok (${Date.now() - (startTimes.get(p.spec.packageName) ?? Date.now())}ms)`,
+      );
+    }
+
+    if (FLAGS.parallel) {
+      await Promise.all(installed.map(runChecks));
+    } else {
+      for (const p of installed) await runChecks(p);
+    }
   } finally {
-    if (KEEP) {
+    if (FLAGS.keep) {
       console.log(`[smoke-test-pack] kept scratch dir: ${scratchDir}`);
     } else {
       rmSync(scratchDir, { recursive: true, force: true });
     }
   }
+
+  // Summary.
+  const totalMs = Date.now() - startedAt;
+  console.log('');
+  console.log(`[smoke-test-pack] summary (${(totalMs / 1000).toFixed(1)}s wall):`);
+  const ordered: SpecResult[] = [];
+  for (const s of allSpecs) {
+    const r = results.get(s.packageName);
+    if (r) ordered.push(r);
+  }
+  let nameWidth = 0;
+  for (const r of ordered) nameWidth = Math.max(nameWidth, r.packageName.length);
+  for (const r of ordered) {
+    const status = r.ok ? 'PASS' : 'FAIL';
+    const phase = r.ok ? '-' : (r.phase ?? '-');
+    const duration = `${r.durationMs}ms`;
+    console.log(
+      `  ${r.packageName.padEnd(nameWidth)}  ${status.padEnd(4)}  ${phase.padEnd(10)}  ${duration}`,
+    );
+  }
+  const failed = ordered.filter((r) => !r.ok);
+  if (failed.length > 0) {
+    console.log('');
+    console.error(`[smoke-test-pack] ${failed.length}/${ordered.length} package(s) failed.`);
+    process.exit(1);
+  }
+  console.log(`[smoke-test-pack] ok — ${ordered.length} package(s) consumable.`);
 }
 
-main();
+main().catch((err: unknown) => {
+  console.error('[smoke-test-pack] uncaught error:', err);
+  process.exit(1);
+});
