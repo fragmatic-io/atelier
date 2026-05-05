@@ -13,7 +13,7 @@
  * dependency on React just to import a type.
  */
 
-import type { Capability } from '@atelier/schemas';
+import type { Capability, StructuredFilter } from '@atelier/schemas';
 
 /**
  * The verbatim manifest data binding the resolver receives.
@@ -30,7 +30,13 @@ import type { Capability } from '@atelier/schemas';
  */
 export interface DataBinding {
   source: string;
-  filter?: string;
+  /**
+   * Sprint 2.4 / P3 — accepts either a CEL-like string (preferred) or
+   * a `StructuredFilter` object. String-only resolvers route through
+   * `formatFilterAsString` (from `@atelier/runtime`) before passing
+   * the value to their query builder.
+   */
+  filter?: string | StructuredFilter;
   sort?: string;
   group_by?: string;
   /**

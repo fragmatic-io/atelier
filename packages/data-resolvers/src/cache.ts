@@ -18,6 +18,7 @@
  * No third-party SWR library is pulled in; everything here is plain JS.
  */
 
+import { coerceFilterToString } from './filter-parser.js';
 import type { DataBinding, DataResolver } from './types.js';
 
 /** Configuration for {@link withCache}. */
@@ -48,7 +49,7 @@ interface Entry {
 
 /** Default cache key: a stable serialisation of the binding shape. */
 function defaultKeyOf(binding: DataBinding): string {
-  const filter = binding.filter ?? '';
+  const filter = coerceFilterToString(binding.filter) ?? '';
   const sort = binding.sort ?? '';
   const groupBy = binding.group_by ?? '';
   return `${binding.source}|${filter}|${sort}|${groupBy}`;

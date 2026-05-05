@@ -43,6 +43,8 @@ export {
   parseFilter,
   tryParseFilter,
   astToString,
+  coerceFilterToString,
+  structuredFilterToString,
   toQueryString,
   toWhereClause,
   toPredicate,

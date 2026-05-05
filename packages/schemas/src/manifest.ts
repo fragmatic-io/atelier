@@ -54,11 +54,67 @@ export const RouteRefreshSchema = z.object({
 export type RouteRefresh = z.infer<typeof RouteRefreshSchema>;
 
 /**
+ * Operator vocabulary for `StructuredFilter` comparisons. Mirrors the
+ * surface the LLM tends to emit when given the freedom to choose
+ * (`{ field, op, value }` objects) and the surface that round-trips
+ * cleanly to a CEL-like expression string via `formatFilterAsString` in
+ * `@atelier/runtime/data/filter-utils`.
+ *
+ * Keep additions deliberate — every new op needs both a CEL emitter and
+ * a JS predicate in the runtime helper, plus matching guidance in the
+ * compiler prompt.
+ */
+export type StructuredFilterOp =
+  | 'eq'
+  | 'ne'
+  | 'gt'
+  | 'lt'
+  | 'gte'
+  | 'lte'
+  | 'contains'
+  | 'in'
+  | 'nin';
+
+/**
+ * Structured filter object for `ComponentDataBinding.filter`.
+ *
+ * Sprint 2.4 / P3 — widening the LLM compile contract. The compiler
+ * prompt encourages CEL-like strings ("`status == 'pending'`") for
+ * simple comparisons, but real LLM output often emits an equivalent
+ * structured object (`{ field: 'status', op: 'eq', value: 'pending' }`).
+ * Both forms now validate; consumers convert via `formatFilterAsString`
+ * (CEL string) or `applyFilter` (in-memory predicate).
+ *
+ * `and` / `or` allow conjunctions/disjunctions without escaping into a
+ * raw expression string — `{ and: [{...}, {...}] }`.
+ */
+export interface StructuredFilter {
+  field: string;
+  op: StructuredFilterOp;
+  /**
+   * Comparison value. `unknown` because the LLM may emit any JSON
+   * literal here (string, number, boolean, array for `in` / `nin`,
+   * object for nested capability references). Optional in the wire
+   * shape because Zod's `z.unknown()` infers it that way; consumers
+   * should treat `undefined` as "compare against undefined" or skip.
+   */
+  value?: unknown;
+  and?: StructuredFilter[] | undefined;
+  or?: StructuredFilter[] | undefined;
+}
+
+/**
  * Data binding for a single component instance.
  *
  * `source` is the capability ID (or a logical data source name); `filter`,
  * `sort`, `group_by` are query-language strings the runtime evaluates against
  * the bound data source.
+ *
+ * `filter` accepts either a CEL-like expression string (preferred for
+ * simple comparisons — `status == 'pending'`) or a structured
+ * `StructuredFilter` object. See `StructuredFilter` and the
+ * `formatFilterAsString` / `applyFilter` helpers in
+ * `@atelier/runtime/data/filter-utils` for the round-trip contract.
  *
  * `empty_state`, `loading_state`, `error_state` (Wave 7a / P-8) — slots that
  * declare which `LayoutNode` to render when the bound data source is empty,
@@ -70,7 +126,7 @@ export type RouteRefresh = z.infer<typeof RouteRefreshSchema>;
  */
 export interface ComponentDataBinding {
   source: string;
-  filter?: string | undefined;
+  filter?: string | StructuredFilter | undefined;
   sort?: string | undefined;
   group_by?: string | undefined;
   empty_state?: LayoutNode | undefined;
@@ -121,10 +177,41 @@ export interface LayoutNode {
   row_binding?: string | undefined;
 }
 
+/**
+ * Structured filter validator. Self-recursive via `z.lazy()` because
+ * `and` / `or` nest the same shape. The `StructuredFilterOpSchema` enum
+ * is held public so downstream tools (auto-fixers, doc generators) can
+ * introspect the supported op vocabulary without re-deriving it.
+ */
+export const StructuredFilterOpSchema = z.enum([
+  'eq',
+  'ne',
+  'gt',
+  'lt',
+  'gte',
+  'lte',
+  'contains',
+  'in',
+  'nin',
+]);
+
+export const StructuredFilterSchema: z.ZodType<StructuredFilter> = z.lazy(() =>
+  z.object({
+    field: z.string().min(1),
+    op: StructuredFilterOpSchema,
+    value: z.unknown(),
+    and: z.array(StructuredFilterSchema).optional(),
+    or: z.array(StructuredFilterSchema).optional(),
+  }),
+);
+
 export const ComponentDataBindingSchema: z.ZodType<ComponentDataBinding> = z.lazy(() =>
   z.object({
     source: z.string().min(1),
-    filter: z.string().optional(),
+    // Sprint 2.4 / P3 — widened to accept either a CEL-like expression
+    // string or a structured `{ field, op, value, and?, or? }` object.
+    // See `StructuredFilter` for the rationale.
+    filter: z.union([z.string(), StructuredFilterSchema]).optional(),
     sort: z.string().optional(),
     group_by: z.string().optional(),
     empty_state: LayoutNodeSchema.optional(),

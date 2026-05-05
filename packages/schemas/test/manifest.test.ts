@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 import { describe, expect, it } from 'vitest';
-import { ManifestSchema, ThreadManifestSchema, TurnDeltaSchema } from '../src/manifest.js';
+import {
+  ComponentDataBindingSchema,
+  ManifestSchema,
+  StructuredFilterSchema,
+  ThreadManifestSchema,
+  TurnDeltaSchema,
+} from '../src/manifest.js';
 
 describe('ManifestSchema', () => {
   it('parses the full docs/artifacts.md §Render manifest example', () => {
@@ -179,6 +185,104 @@ describe('ManifestSchema', () => {
     expect(layout?.data?.empty_state?.component).toBe('EmptyState');
     expect(layout?.data?.loading_state?.component).toBe('Skeleton');
     expect(layout?.data?.error_state?.component).toBe('Alert');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Sprint 2.4 / P3 — `filter` accepts both string and `StructuredFilter`.
+  // ---------------------------------------------------------------------------
+
+  it('accepts a data binding whose filter is a CEL-like string', () => {
+    const parsed = ComponentDataBindingSchema.parse({
+      source: 'thread.list',
+      filter: "status == 'pending'",
+    });
+    expect(parsed.filter).toBe("status == 'pending'");
+  });
+
+  it('accepts a data binding whose filter is a structured object', () => {
+    const parsed = ComponentDataBindingSchema.parse({
+      source: 'thread.list',
+      filter: { field: 'status', op: 'eq', value: 'pending' },
+    });
+    expect(parsed.filter).toEqual({ field: 'status', op: 'eq', value: 'pending' });
+  });
+
+  it('round-trips a structured filter with nested and / or branches', () => {
+    const parsed = StructuredFilterSchema.parse({
+      field: 'status',
+      op: 'eq',
+      value: 'pending',
+      and: [{ field: 'priority', op: 'gte', value: 3 }],
+      or: [{ field: 'starred', op: 'eq', value: true }],
+    });
+    expect(parsed.and).toHaveLength(1);
+    expect(parsed.or).toHaveLength(1);
+    expect(parsed.and?.[0]?.op).toBe('gte');
+  });
+
+  it('rejects a structured filter with an unknown op', () => {
+    const result = StructuredFilterSchema.safeParse({
+      field: 'status',
+      op: 'matches',
+      value: 'pending',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a structured filter missing field / op', () => {
+    expect(StructuredFilterSchema.safeParse({ op: 'eq', value: 'x' }).success).toBe(false);
+    expect(StructuredFilterSchema.safeParse({ field: 'status', value: 'x' }).success).toBe(false);
+  });
+
+  it('rejects a binding whose filter is the wrong type', () => {
+    // Numbers don't satisfy `string | StructuredFilter`.
+    const result = ComponentDataBindingSchema.safeParse({ source: 'thread.list', filter: 42 });
+    expect(result.success).toBe(false);
+  });
+
+  it('parses a full manifest with a structured filter at a nested layout node', () => {
+    const m = {
+      manifest_id: 'm_p3sf00001',
+      user_id: 'vid',
+      app_id: 'app',
+      compiled_from: {
+        capability_version: '1.0.0',
+        skill_versions: {},
+        component_catalog_version: '1.0.0',
+        intent_profile_version: 1,
+        compiler_model: 'gemini-2.5-pro',
+        compiled_at: '2026-04-29T12:00:00Z',
+      },
+      invalidates_on: [],
+      routes: [
+        {
+          path: '/approvals',
+          layout: {
+            component: 'Stack',
+            children: [
+              {
+                component: 'Queue',
+                data: {
+                  source: 'approval.list',
+                  // The exact LLM-emitted shape that motivated S2.4 P3.
+                  filter: { field: 'status', op: 'eq', value: 'pending' },
+                  sort: 'due asc',
+                },
+                actions: ['approval.approve'],
+              },
+            ],
+          },
+        },
+      ],
+      policies_satisfied: [],
+    };
+    const parsed = ManifestSchema.parse(m);
+    const filter = parsed.routes[0]?.layout?.children?.[0]?.data?.filter;
+    expect(typeof filter).toBe('object');
+    if (typeof filter === 'object' && filter !== null) {
+      expect(filter.op).toBe('eq');
+      expect(filter.field).toBe('status');
+    }
   });
 
   it('rejects a data binding whose loading_state is not a LayoutNode', () => {

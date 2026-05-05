@@ -222,6 +222,9 @@ export function buildPromptContext(input: CompileInput): BuiltPromptContext {
         '    Markdown(subtitle prose),\n' +
         '    <data-bound rich binding> {\n' +
         '      data: { source, filter?, sort?, empty_state, loading_state, error_state }\n' +
+        '      // filter is a string ("status == \'pending\'") OR a\n' +
+        '      // structured { field, op, value } object — prefer the\n' +
+        '      // string form for simple comparisons.\n' +
         '      actions: [...]\n' +
         '    },\n' +
         '    UndoToast (if any reversible action is in actions)\n' +

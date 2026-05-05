@@ -102,7 +102,52 @@
                     "minLength": 1
                   },
                   "filter": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "field": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "op": {
+                            "type": "string",
+                            "enum": [
+                              "eq",
+                              "ne",
+                              "gt",
+                              "lt",
+                              "gte",
+                              "lte",
+                              "contains",
+                              "in",
+                              "nin"
+                            ]
+                          },
+                          "value": {},
+                          "and": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/properties/routes/items/properties/layout/properties/data/properties/filter/anyOf/1"
+                            }
+                          },
+                          "or": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/properties/routes/items/properties/layout/properties/data/properties/filter/anyOf/1"
+                            }
+                          }
+                        },
+                        "required": [
+                          "field",
+                          "op"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   },
                   "sort": {
                     "type": "string"

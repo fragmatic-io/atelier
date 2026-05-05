@@ -26,6 +26,11 @@
         "scope": "ops",
         "rule": "Render customers as a list of 6 rows with a 3-tab right pane (Overview, Risk, Timeline).",
         "version": 1
+      },
+      {
+        "scope": "ops",
+        "rule": "Bind the customer list to `customer.list` with no `filter` or `sort` — the capability already returns the active accounts in the right order. If you must filter, prefer a CEL-like string (`\"health == 'at_risk'\"`) over a structured filter object.",
+        "version": 1
       }
     ],
     "vocabulary": {

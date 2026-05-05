@@ -16,7 +16,7 @@
  * adapter.
  */
 
-import { toPredicate, tryParseFilter } from './filter-parser.js';
+import { coerceFilterToString, toPredicate, tryParseFilter } from './filter-parser.js';
 import type { DataBinding } from './types.js';
 
 export type FixtureValue =
@@ -112,8 +112,9 @@ export class MockDataResolver {
     if (!apply || !Array.isArray(value)) return value;
 
     let records: unknown[] = value;
-    if (binding.filter) {
-      const ast = tryParseFilter(binding.filter);
+    const filterStr = coerceFilterToString(binding.filter);
+    if (filterStr) {
+      const ast = tryParseFilter(filterStr);
       if (ast) records = records.filter(toPredicate(ast));
     }
     if (binding.sort) records = applySort(records, binding.sort);

@@ -194,7 +194,11 @@ export class HttpDataResolver implements DataResolver {
 
   private urlFor(binding: DataBinding): string {
     const params = new URLSearchParams();
-    if (binding.filter) params.set('filter', binding.filter);
+    // Sprint 2.4 / P3 — `binding.filter` is `string | StructuredFilter`.
+    // `formatFilterAsString` from `@atelier/runtime` coerces both forms
+    // to a single CEL-like expression string.
+    const filterStr = binding.filter ? formatFilterAsString(binding.filter) : undefined;
+    if (filterStr) params.set('filter', filterStr);
     if (binding.sort) params.set('sort', binding.sort);
     return `${this.base}/${binding.source}?${params}`;
   }

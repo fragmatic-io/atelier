@@ -22,7 +22,7 @@
  * production schemas can plug in their own builders.
  */
 
-import { astToString, tryParseFilter } from './filter-parser.js';
+import { astToString, coerceFilterToString, tryParseFilter } from './filter-parser.js';
 import type { CapabilityLookup, DataBinding } from './types.js';
 import { lookupCapability } from './types.js';
 
@@ -100,9 +100,10 @@ export class GraphQLDataResolver {
 
     const args: string[] = [];
     const variables: Record<string, unknown> = {};
-    if (binding.filter) {
-      const ast = tryParseFilter(binding.filter);
-      variables['filter'] = ast ? astToString(ast) : binding.filter;
+    const filterStr = coerceFilterToString(binding.filter);
+    if (filterStr) {
+      const ast = tryParseFilter(filterStr);
+      variables['filter'] = ast ? astToString(ast) : filterStr;
       args.push('filter: $filter');
     }
     if (binding.sort) {

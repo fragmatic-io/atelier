@@ -117,9 +117,20 @@ function buildDummyJsonResolver(): RestDataResolver {
   });
 }
 
-/** Tiny ad-hoc `<key> = <literal>` extractor. Keeps the resolver self-contained. */
-function extractEqValue(filter: string | undefined, key: string): string | null {
-  if (!filter) return null;
+/**
+ * Tiny ad-hoc `<key> = <literal>` extractor. Keeps the resolver
+ * self-contained. Sprint 2.4 / P3 — accepts both string filter forms
+ * and the new `StructuredFilter` shape; structured filters short-circuit
+ * to the eq-comparison value when `field` matches `key`.
+ */
+function extractEqValue(filter: DataBinding['filter'], key: string): string | null {
+  if (filter === undefined) return null;
+  if (typeof filter === 'object') {
+    if (filter.field === key && filter.op === 'eq' && typeof filter.value !== 'object') {
+      return filter.value === null || filter.value === undefined ? null : String(filter.value);
+    }
+    return null;
+  }
   const re = new RegExp(`${key}\\s*=\\s*"?([\\w-]+)"?`, 'u');
   const m = re.exec(filter);
   return m && m[1] ? m[1] : null;

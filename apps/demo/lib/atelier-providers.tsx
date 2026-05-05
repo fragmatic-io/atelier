@@ -92,7 +92,13 @@ async function postAction(capabilityId: string, input: unknown): Promise<unknown
  */
 const proxyDataResolver = async (binding: DataBinding): Promise<unknown> => {
   const params = new URLSearchParams();
-  if (binding.filter) params.set('filter', binding.filter);
+  if (binding.filter !== undefined) {
+    // Sprint 2.4 / P3 — `filter` may be a string OR a structured
+    // object. Coerce structured to a CEL-like string for the proxy.
+    const filterStr =
+      typeof binding.filter === 'string' ? binding.filter : JSON.stringify(binding.filter);
+    params.set('filter', filterStr);
+  }
   if (binding.sort) params.set('sort', binding.sort);
   if (binding.group_by) params.set('group_by', binding.group_by);
   const qs = params.toString();

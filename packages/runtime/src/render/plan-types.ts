@@ -16,6 +16,7 @@
  * without re-reading the manifest.
  */
 
+import type { StructuredFilter } from '@atelier/schemas';
 import type { ComponentBinding } from '../registry/component-registry.js';
 
 export interface RenderPlan {
@@ -44,7 +45,12 @@ export interface RenderNode {
    */
   data?: {
     source: string;
-    filter?: string;
+    /**
+     * Sprint 2.4 / P3 — `filter` accepts either a CEL-like string or a
+     * `StructuredFilter` object. Adapters that only handle strings can
+     * call `formatFilterAsString()` from `@atelier/runtime` to coerce.
+     */
+    filter?: string | StructuredFilter;
     sort?: string;
     group_by?: string;
     empty_state?: RenderNode;

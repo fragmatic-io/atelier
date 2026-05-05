@@ -147,6 +147,33 @@ See [Operations → Performance](/operations/performance/#caching-tiers).
 
 `ManifestComponentContract` (the canonical schema landed alongside the marketplace pivot) defines per-component prop schemas. The validator confirms that every node's props match its declared component's contract — no `?? []` defaults at the renderer layer.
 
+### Data binding `filter` shape
+
+`ComponentDataBinding.filter` accepts either form:
+
+- **CEL-like string** — `"status == 'pending'"`, `"due_within = 7d AND status != done"`. Preferred for simple comparisons.
+- **Structured object** — `{ field, op, value, and?, or? }` with `op` ∈ `eq | ne | gt | lt | gte | lte | contains | in | nin`. Use when AND/OR clauses make a string awkward, or when the LLM emits this form naturally.
+
+Both forms validate. Resolvers that only speak strings (REST query params, GraphQL variables) coerce structured filters via `formatFilterAsString` from `@atelier/runtime`. In-memory consumers (the mock resolver, ambient previews) can apply either form directly via `applyFilter`.
+
+```json
+// CEL-like — preferred for simple cases.
+{ "data": { "source": "task.list", "filter": "due_within = 7d AND status != done" } }
+
+// Structured — equivalent semantics, friendlier when nesting and/or branches.
+{
+  "data": {
+    "source": "task.list",
+    "filter": {
+      "field": "due_within",
+      "op": "lte",
+      "value": "7d",
+      "and": [{ "field": "status", "op": "ne", "value": "done" }]
+    }
+  }
+}
+```
+
 ## Diff mode
 
 For most recompiles, the compiler doesn't regenerate from scratch. It runs in **diff mode** — given the prior manifest and the trigger, produce only the changes. This saves 70-90% of tokens; see [Token economics](/operations/cost-control/#token-economics).

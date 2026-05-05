@@ -26,6 +26,11 @@
         "scope": "ops",
         "rule": "Render approvals as a queue list on the left and a focused record detail on the right.",
         "version": 1
+      },
+      {
+        "scope": "ops",
+        "rule": "Bind the approvals list to `approval.list`. Keep the data binding simple — no `filter` or `sort` is required; the capability returns the full pending queue ordered by due date.",
+        "version": 1
       }
     ],
     "vocabulary": {

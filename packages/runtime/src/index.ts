@@ -175,6 +175,16 @@ export { buildRenderPlan, RouteNotFoundError, RouteNotRenderableError } from './
 export type { RenderNode, RenderPlan } from './render/plan-types.js';
 
 // -----------------------------------------------------------------------------
+// Data — filter helpers (Sprint 2.4 / P3)
+// -----------------------------------------------------------------------------
+export {
+  applyFilter,
+  formatFilterAsString,
+  isStructuredFilter,
+  type FilterValue,
+} from './data/filter-utils.js';
+
+// -----------------------------------------------------------------------------
 // Motion (Wave 7 / P-7)
 // -----------------------------------------------------------------------------
 export {

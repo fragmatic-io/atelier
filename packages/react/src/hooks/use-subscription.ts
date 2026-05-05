@@ -53,11 +53,17 @@ export interface UseSubscriptionOptions {
  * Stable key for binding equality. Re-subscribes only when one of the
  * fields the resolver actually consumes changes (avoids tearing down the
  * stream on every parent re-render).
+ *
+ * `filter` may be a string (CEL-like) or a `StructuredFilter` object
+ * (Sprint 2.4 / P3). Stringify objects via `JSON.stringify` so the key
+ * is stable across re-renders that produce structurally-equal but
+ * referentially-distinct binding objects.
  */
 function bindingKey(binding: DataBinding): string {
-  return [binding.source, binding.filter ?? '', binding.sort ?? '', binding.group_by ?? ''].join(
-    '|',
-  );
+  const filter = binding.filter;
+  const filterKey =
+    filter === undefined ? '' : typeof filter === 'string' ? filter : JSON.stringify(filter);
+  return [binding.source, filterKey, binding.sort ?? '', binding.group_by ?? ''].join('|');
 }
 
 export function useSubscription<T = unknown>(

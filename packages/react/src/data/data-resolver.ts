@@ -19,15 +19,22 @@
  */
 
 import { createContext } from 'react';
+import type { StructuredFilter } from '@atelier/schemas';
 
 /**
  * Verbatim copy of the runtime's data binding shape (see plan-types.ts).
  * Duplicated here to avoid importing types-only from a deeper module path
  * across packages.
+ *
+ * Sprint 2.4 / P3 — `filter` accepts either the CEL-like string form
+ * (`status == 'pending'`) or a `StructuredFilter` object (the form the
+ * LLM tends to emit naturally). Resolvers that only know how to handle
+ * strings can route through `formatFilterAsString` from
+ * `@atelier/runtime` to coerce.
  */
 export interface DataBinding {
   source: string;
-  filter?: string;
+  filter?: string | StructuredFilter;
   sort?: string;
   group_by?: string;
 }

@@ -31,6 +31,8 @@
  *     untouched so consumers can wire their own date math.
  */
 
+import type { StructuredFilter, StructuredFilterOp } from '@atelier/schemas';
+
 // -----------------------------------------------------------------------------
 // AST shapes
 // -----------------------------------------------------------------------------
@@ -307,6 +309,85 @@ export function parseFilter(src: string): FilterAst {
 }
 
 /**
+ * Sprint 2.4 / P3 — coerce a `StructuredFilter` into a CEL-like
+ * expression string so the existing string-based parsers + emitters
+ * (`tryParseFilter`, `astToString`, `toQueryString`, `toWhereClause`)
+ * work uniformly across both filter forms.
+ *
+ * Mirrors `formatFilterAsString` in `@atelier/runtime/src/data/filter-utils.ts`
+ * — kept inline here so `@atelier/data-resolvers` does not take a
+ * dependency on `@atelier/runtime`. The two implementations share a
+ * round-trip test in the runtime suite.
+ */
+export function structuredFilterToString(filter: StructuredFilter): string {
+  const head = renderStructuredComparison(filter);
+  const ands = (filter.and ?? []).map(structuredFilterToString);
+  const ors = (filter.or ?? []).map(structuredFilterToString);
+  let combined = head;
+  if (ands.length > 0) combined = `(${[combined, ...ands].join(' AND ')})`;
+  if (ors.length > 0) combined = `(${[combined, ...ors].join(' OR ')})`;
+  return combined;
+}
+
+function renderStructuredComparison(node: StructuredFilter): string {
+  const op = STRUCTURED_OP_TO_CEL[node.op] ?? node.op;
+  const value = renderStructuredValue(node.op, node.value);
+  return `${node.field} ${op} ${value}`;
+}
+
+const STRUCTURED_OP_TO_CEL: Readonly<Record<StructuredFilterOp, string>> = Object.freeze({
+  eq: '=',
+  ne: '!=',
+  gt: '>',
+  lt: '<',
+  gte: '>=',
+  lte: '<=',
+  // `contains` / `in` / `nin` collapse to equality semantics for the CEL
+  // grammar; consumers wanting full membership semantics drive an
+  // in-memory predicate via `applyFilter` from `@atelier/runtime`.
+  contains: '=',
+  in: '=',
+  nin: '!=',
+});
+
+function renderStructuredValue(op: StructuredFilterOp, value: unknown): string {
+  if ((op === 'in' || op === 'nin') && Array.isArray(value)) {
+    return formatStructuredLiteral(value[0]);
+  }
+  return formatStructuredLiteral(value);
+}
+
+function formatStructuredLiteral(value: unknown): string {
+  if (value === null || value === undefined) return 'null';
+  if (typeof value === 'string') {
+    if (/^[A-Za-z_][A-Za-z0-9_.:T+-]*$/u.test(value)) return value;
+    return `'${value.replace(/'/gu, "\\'")}'`;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return String(value);
+  }
+  if (value instanceof Date) return value.toISOString();
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Coerce either filter form into a string for a string-only consumer.
+ * `undefined` flows through as `undefined`; strings pass through;
+ * structured filters render via `structuredFilterToString`.
+ */
+export function coerceFilterToString(
+  filter: string | StructuredFilter | undefined,
+): string | undefined {
+  if (filter === undefined) return undefined;
+  if (typeof filter === 'string') return filter;
+  return structuredFilterToString(filter);
+}
+
+/**
  * Best-effort parse — returns `null` instead of throwing when the source
  * cannot be parsed. Useful for resolvers that need to degrade to "pass the
  * raw filter through as a query-string parameter" rather than fail loudly.
@@ -349,14 +430,15 @@ export function astToString(ast: FilterAst): string {
  * the same input themselves.
  */
 export function toQueryString(binding: {
-  filter?: string;
+  filter?: string | StructuredFilter;
   sort?: string;
   group_by?: string;
 }): URLSearchParams {
   const params = new URLSearchParams();
-  if (binding.filter) {
-    const ast = tryParseFilter(binding.filter);
-    params.set('filter', ast ? astToString(ast) : binding.filter);
+  const filterStr = coerceFilterToString(binding.filter);
+  if (filterStr) {
+    const ast = tryParseFilter(filterStr);
+    params.set('filter', ast ? astToString(ast) : filterStr);
   }
   if (binding.sort) params.set('sort', binding.sort);
   if (binding.group_by) params.set('group_by', binding.group_by);

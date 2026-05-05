@@ -30,6 +30,12 @@ A single JSON object matching the Manifest schema. The schema is supplied to you
 The layout is a tree of LayoutNodes:
   { component: "<ComponentId>", props?: {...}, data?: { source, filter?, sort?, group_by? }, actions?: ["<capability id>"], children?: [...] }
 
+The \`filter\` field on a data binding accepts EITHER:
+  (a) a CEL-like expression string — e.g. \`"status == 'pending'"\`, \`"due_within = 7d AND status != done"\`. **Prefer this form for simple comparisons** — it round-trips through every resolver adapter and stays readable on the wire.
+  (b) a structured object — \`{ field, op, value, and?, or? }\` with \`op\` ∈ \`eq | ne | gt | lt | gte | lte | contains | in | nin\`. Use this when the comparison is non-trivial (e.g. multi-clause AND/OR) and a string would obscure intent.
+
+Pick ONE form per binding; do not mix. Both forms validate but the runtime renders structured objects to a string before passing them to most resolvers, so simple cases are cheaper as strings.
+
 ## Hard rules
 
 1. Use ONLY the components listed in the supplied component catalog. Any component name not in the catalog will cause the runtime to render a fallback. Do not invent components.
@@ -76,4 +82,4 @@ Capabilities may declare a categorical \`salience_level\` (\`'high' | 'normal' |
 
 Output ONLY the manifest JSON object. No prose, no explanations, no markdown fencing. Validation against the supplied response schema is mandatory. If you cannot satisfy a hard rule, return a manifest with a single Alert in the layout explaining what's missing — never bypass a rule.`;
 
-export const COMPILER_SYSTEM_PROMPT_VERSION = '1.3.0';
+export const COMPILER_SYSTEM_PROMPT_VERSION = '1.4.0';

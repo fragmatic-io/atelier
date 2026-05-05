@@ -26,6 +26,11 @@
         "scope": "ops",
         "rule": "Render exceptions as a 5-row queue with a focused exception record on the right and an audit log strip beneath.",
         "version": 1
+      },
+      {
+        "scope": "ops",
+        "rule": "Bind the exception list to `exception.list` with no `filter` or `sort` — the capability already returns unresolved exceptions in severity order. If a filter is genuinely needed, use a CEL-like string (`\"status == 'open'\"`) rather than a structured object.",
+        "version": 1
       }
     ],
     "vocabulary": {

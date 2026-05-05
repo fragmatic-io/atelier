@@ -133,8 +133,12 @@ function renderLayoutTree(
   if (node.data?.source) {
     decorations.push(`data: ${node.data.source}`);
   }
-  if (node.data?.filter) {
-    decorations.push(`filter: ${node.data.filter}`);
+  if (node.data?.filter !== undefined) {
+    // Sprint 2.4 / P3 — `filter` may be a string OR a `StructuredFilter`
+    // object. Format objects as JSON for human-readable inspection.
+    const filterStr =
+      typeof node.data.filter === 'string' ? node.data.filter : JSON.stringify(node.data.filter);
+    decorations.push(`filter: ${filterStr}`);
   }
   if (node.data?.sort) {
     decorations.push(`sort: ${node.data.sort}`);
