@@ -16,7 +16,12 @@
  * adapter.
  */
 
-import { coerceFilterToString, toPredicate, tryParseFilter } from './filter-parser.js';
+import {
+  coerceFilterToString,
+  coerceSortToString,
+  toPredicate,
+  tryParseFilter,
+} from './filter-parser.js';
 import type { DataBinding } from './types.js';
 
 export type FixtureValue =
@@ -117,7 +122,9 @@ export class MockDataResolver {
       const ast = tryParseFilter(filterStr);
       if (ast) records = records.filter(toPredicate(ast));
     }
-    if (binding.sort) records = applySort(records, binding.sort);
+    // 2026-05-06 — `binding.sort` widened to `string | StructuredSort`.
+    // Coerce to string here so the local applySort grammar handles it.
+    if (binding.sort) records = applySort(records, coerceSortToString(binding.sort));
     if (binding.group_by) return applyGroup(records, binding.group_by);
     return records;
   };

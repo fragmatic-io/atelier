@@ -63,7 +63,11 @@ function bindingKey(binding: DataBinding): string {
   const filter = binding.filter;
   const filterKey =
     filter === undefined ? '' : typeof filter === 'string' ? filter : JSON.stringify(filter);
-  return [binding.source, filterKey, binding.sort ?? '', binding.group_by ?? ''].join('|');
+  // 2026-05-06 — `binding.sort` widened to `string | StructuredSort`.
+  // Stringify objects via JSON so the key is stable across re-renders.
+  const sort = binding.sort;
+  const sortKey = sort === undefined ? '' : typeof sort === 'string' ? sort : JSON.stringify(sort);
+  return [binding.source, filterKey, sortKey, binding.group_by ?? ''].join('|');
 }
 
 export function useSubscription<T = unknown>(

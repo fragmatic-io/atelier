@@ -31,9 +31,35 @@ import {
 /**
  * Provenance block: which artifact versions produced this manifest.
  * Logged for debuggability and revert.
+ *
+ * `capability_version` accepts EITHER:
+ *  - a single `SemverString` — the catalog snapshot version that named all
+ *    capabilities at compile time (the original "snapshot" semantics), OR
+ *  - a `Record<CapabilityId, SemverString>` — per-capability version map.
+ *    This is what the LLM compiler tends to emit organically, because each
+ *    capability has its own version and there isn't usually a single
+ *    catalog snapshot version.
+ *
+ * Both shapes flow through cache-keying via `formatCapabilityVersion()` in
+ * `@atelier/runtime/data/manifest-utils`, which serialises a record into
+ * a stable canonical-JSON string (sorted by capability id) so cache keys
+ * stay deterministic regardless of which shape the compiler produced.
+ *
+ * 2026-05-06 (post-Sprint-2 schema/LLM gap closure): also exposes the
+ * record form natively as `capability_versions` (plural). New compilers
+ * MAY emit either field — readers should prefer `capability_versions` if
+ * present, fall back to `capability_version`. The plural form is
+ * semantically primary; the singular is kept for back-compat with manifests
+ * compiled before this date and for the "single catalog snapshot" use case.
  */
 export const CompiledFromSchema = z.object({
-  capability_version: SemverString,
+  capability_version: z.union([SemverString, z.record(CapabilityId, SemverString)]),
+  /**
+   * Optional per-capability version map. Preferred over the legacy
+   * `capability_version` field when both are present. Compilers that emit
+   * one capability id → semver per active capability should populate this.
+   */
+  capability_versions: z.record(CapabilityId, SemverString).optional(),
   skill_versions: z.record(SkillId, SemverString),
   component_catalog_version: SemverString,
   intent_profile_version: z.number().int().nonnegative(),
@@ -104,6 +130,56 @@ export interface StructuredFilter {
 }
 
 /**
+ * Direction enum for `StructuredSortKey`. Mirrors the SQL / RFC9457 surface
+ * the LLM already understands; keep additions deliberate.
+ */
+export type SortDirection = 'asc' | 'desc';
+
+/**
+ * Single sort key inside a `StructuredSort`.
+ *
+ * 2026-05-06 — captured during the post-Sprint-2 schema/LLM gap closure:
+ * the LLM organically emits `[{ field: 'created_at', direction: 'desc' }, ...]`
+ * for multi-field ordering, even when prompted toward simpler shapes,
+ * because that's what the underlying data API takes. Both forms now
+ * validate; consumers convert via `formatSortAsString` (CEL-ish string)
+ * or `applySort` (in-memory comparator) in
+ * `@atelier/runtime/data/filter-utils`.
+ */
+export interface StructuredSortKey {
+  field: string;
+  direction?: SortDirection | undefined;
+}
+
+/**
+ * Structured sort surface for `ComponentDataBinding.sort`.
+ *
+ * The compiler prompt encourages CEL-like strings ("`-created_at, +id`")
+ * for simple ordering, but the LLM tends to emit an array of structured
+ * keys for multi-field sorts. Both validate; the runtime
+ * `formatSortAsString()` round-trips the structured form to a stable
+ * string for cache keys.
+ */
+export type StructuredSort = StructuredSortKey[];
+
+/**
+ * Zod schema for a single `StructuredSortKey`.
+ */
+export const StructuredSortKeySchema = z.object({
+  field: z.string().min(1),
+  direction: z.enum(['asc', 'desc']).optional(),
+});
+
+/**
+ * Zod schema for `StructuredSort` — a non-empty array of `StructuredSortKey`s.
+ * Empty array is rejected because an empty sort is semantically a no-op
+ * and almost always indicates LLM confusion.
+ */
+export const StructuredSortSchema: z.ZodType<StructuredSort> = z
+  .array(StructuredSortKeySchema)
+  .min(1);
+
+/**
  * Data binding for a single component instance.
  *
  * `source` is the capability ID (or a logical data source name); `filter`,
@@ -127,7 +203,14 @@ export interface StructuredFilter {
 export interface ComponentDataBinding {
   source: string;
   filter?: string | StructuredFilter | undefined;
-  sort?: string | undefined;
+  /**
+   * 2026-05-06 widened — accepts either a CEL-ish ordering string
+   * (`"-created_at, +id"`) or a `StructuredSort` array
+   * (`[{ field: 'created_at', direction: 'desc' }, ...]`). The LLM
+   * tends to emit the structured form for multi-field sorts. The
+   * runtime `formatSortAsString` / `applySort` helpers handle both.
+   */
+  sort?: string | StructuredSort | undefined;
   group_by?: string | undefined;
   empty_state?: LayoutNode | undefined;
   loading_state?: LayoutNode | undefined;
@@ -212,7 +295,10 @@ export const ComponentDataBindingSchema: z.ZodType<ComponentDataBinding> = z.laz
     // string or a structured `{ field, op, value, and?, or? }` object.
     // See `StructuredFilter` for the rationale.
     filter: z.union([z.string(), StructuredFilterSchema]).optional(),
-    sort: z.string().optional(),
+    // 2026-05-06 — widened to accept either a string (CEL-ish ordering
+    // expression) or a structured `StructuredSort` array. Same rationale
+    // as the `filter` widening; see `StructuredSort`.
+    sort: z.union([z.string(), StructuredSortSchema]).optional(),
     group_by: z.string().optional(),
     empty_state: LayoutNodeSchema.optional(),
     loading_state: LayoutNodeSchema.optional(),

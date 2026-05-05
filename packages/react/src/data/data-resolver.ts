@@ -19,7 +19,7 @@
  */
 
 import { createContext } from 'react';
-import type { StructuredFilter } from '@atelier/schemas';
+import type { StructuredFilter, StructuredSort } from '@atelier/schemas';
 
 /**
  * Verbatim copy of the runtime's data binding shape (see plan-types.ts).
@@ -35,7 +35,12 @@ import type { StructuredFilter } from '@atelier/schemas';
 export interface DataBinding {
   source: string;
   filter?: string | StructuredFilter;
-  sort?: string;
+  // 2026-05-06 — widened to mirror `ComponentDataBindingSchema.sort` in
+  // `@atelier/schemas`. The string form follows `"-created_at, +id"`;
+  // the structured form is what the LLM emits naturally for multi-field
+  // ordering. See `formatSortAsString` / `applySort` in
+  // `@atelier/runtime/data/filter-utils` for the round-trip helpers.
+  sort?: string | StructuredSort;
   group_by?: string;
 }
 

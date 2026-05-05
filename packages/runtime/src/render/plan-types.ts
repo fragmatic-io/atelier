@@ -16,7 +16,7 @@
  * without re-reading the manifest.
  */
 
-import type { StructuredFilter } from '@atelier/schemas';
+import type { StructuredFilter, StructuredSort } from '@atelier/schemas';
 import type { ComponentBinding } from '../registry/component-registry.js';
 
 export interface RenderPlan {
@@ -51,7 +51,14 @@ export interface RenderNode {
      * call `formatFilterAsString()` from `@atelier/runtime` to coerce.
      */
     filter?: string | StructuredFilter;
-    sort?: string;
+    /**
+     * 2026-05-06 — widened to mirror `ComponentDataBindingSchema.sort`.
+     * Accepts a CEL-ish string (`"-created_at, +id"`) or a
+     * `StructuredSort` array (`[{ field, direction }, ...]`). Adapters
+     * that only handle strings can call `formatSortAsString()` from
+     * `@atelier/runtime` to coerce.
+     */
+    sort?: string | StructuredSort;
     group_by?: string;
     empty_state?: RenderNode;
     loading_state?: RenderNode;

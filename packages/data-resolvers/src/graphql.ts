@@ -106,7 +106,12 @@ export class GraphQLDataResolver {
       variables['filter'] = ast ? astToString(ast) : filterStr;
       args.push('filter: $filter');
     }
-    if (binding.sort) {
+    if (binding.sort !== undefined) {
+      // 2026-05-06 — `binding.sort` is `string | StructuredSort`. Pass the
+      // structured form through to GraphQL when present (most schemas
+      // accept `[{ field, direction }]` as a list arg); otherwise pass the
+      // string verbatim. The variable type isn't fixed here — we trust the
+      // GraphQL endpoint's schema to validate.
       variables['sort'] = binding.sort;
       args.push('sort: $sort');
     }

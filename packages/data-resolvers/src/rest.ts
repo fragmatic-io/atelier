@@ -17,7 +17,7 @@
  * error on the component's `error` prop.
  */
 
-import { coerceFilterToString, toQueryString } from './filter-parser.js';
+import { coerceFilterToString, coerceSortToString, toQueryString } from './filter-parser.js';
 import type { DataBinding } from './types.js';
 
 /** A function that injects request headers — typically used to pull a token. */
@@ -74,7 +74,7 @@ export function buildRestUrl(binding: DataBinding, options: RestResolverOptions)
     base = tmpl
       .replace(/\$\{source\}/gu, binding.source)
       .replace(/\$\{filter\}/gu, encodeURIComponent(coerceFilterToString(binding.filter) ?? ''))
-      .replace(/\$\{sort\}/gu, encodeURIComponent(binding.sort ?? ''))
+      .replace(/\$\{sort\}/gu, encodeURIComponent(coerceSortToString(binding.sort)))
       .replace(/\$\{group_by\}/gu, encodeURIComponent(binding.group_by ?? ''));
   } else if (options.baseUrl) {
     const trimmed = options.baseUrl.replace(/\/$/u, '');

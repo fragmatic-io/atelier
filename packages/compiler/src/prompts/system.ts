@@ -36,6 +36,14 @@ The \`filter\` field on a data binding accepts EITHER:
 
 Pick ONE form per binding; do not mix. Both forms validate but the runtime renders structured objects to a string before passing them to most resolvers, so simple cases are cheaper as strings.
 
+The \`sort\` field on a data binding accepts EITHER:
+  (a) a CEL-ish ordering string — e.g. \`"-created_at, +id"\`, \`"+priority"\`. Leading \`-\` = descending, leading \`+\` (or no prefix) = ascending. Comma separates multiple keys. **Prefer this form for single-field sorts.**
+  (b) a structured array — \`[{ field, direction? }, ...]\` with \`direction\` ∈ \`asc | desc\` (defaults to \`asc\` if omitted). Use this for multi-key ordering or when the field name itself contains commas / dashes.
+
+The \`compiled_from.capability_version\` field accepts EITHER:
+  (a) a single semver string — the catalog snapshot version (legacy "snapshot" semantics).
+  (b) a record \`{ <capability_id>: <semver>, ... }\` — per-capability version map. **This is preferred** when the active capabilities don't share a single catalog version. The provenance record \`compiled_from.capability_versions\` (plural, optional) accepts the same record shape and is preferred over the legacy singular when both are present.
+
 ## Hard rules
 
 1. Use ONLY the components listed in the supplied component catalog. Any component name not in the catalog will cause the runtime to render a fallback. Do not invent components.

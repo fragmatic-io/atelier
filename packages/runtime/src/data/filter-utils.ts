@@ -32,7 +32,12 @@
  * future grammar extension rather than a quietly diverging emitter.
  */
 
-import type { StructuredFilter, StructuredFilterOp } from '@atelier/schemas';
+import type {
+  StructuredFilter,
+  StructuredFilterOp,
+  StructuredSort,
+  StructuredSortKey,
+} from '@atelier/schemas';
 
 export type FilterValue = string | StructuredFilter;
 
@@ -311,4 +316,160 @@ function parseLiteralValue(raw: string): unknown {
     return raw.slice(1, -1).replace(/\\'/gu, "'");
   }
   return raw;
+}
+
+// =============================================================================
+// Sort helpers (2026-05-06 — schema/LLM gap closure for `binding.sort`)
+// =============================================================================
+//
+// `ComponentDataBinding.sort` was widened from `string` to
+// `string | StructuredSort` (`StructuredSort` = `StructuredSortKey[]`). The
+// string form follows the convention `"-created_at, +id"` (leading sign +
+// field; comma separator). The structured form is what the LLM emits
+// naturally for multi-field sorts.
+//
+// These helpers mirror the filter triplet (type guard, format, apply) so
+// downstream consumers keep working with the simpler string surface.
+
+export type SortValue = string | StructuredSort;
+
+/** Type guard for `StructuredSort`. */
+export function isStructuredSort(sort: unknown): sort is StructuredSort {
+  if (!Array.isArray(sort) || sort.length === 0) return false;
+  return sort.every((entry) => {
+    if (entry === null || typeof entry !== 'object') return false;
+    const o = entry as Record<string, unknown>;
+    if (typeof o['field'] !== 'string' || o['field'].length === 0) return false;
+    if (o['direction'] !== undefined && o['direction'] !== 'asc' && o['direction'] !== 'desc') {
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
+ * Best-effort string rendering of a sort value.
+ *
+ * String form passes through verbatim. Structured form renders as a
+ * comma-separated list of `±field` tokens — `desc` becomes `-`, `asc`
+ * (default) becomes `+`. The format round-trips cleanly through
+ * `parseSortString` below; consumers that want a stable cache key get a
+ * deterministic shape regardless of which form was authored.
+ */
+export function formatSortAsString(sort: SortValue): string {
+  if (typeof sort === 'string') return sort;
+  return sort.map((key) => `${key.direction === 'desc' ? '-' : '+'}${key.field}`).join(', ');
+}
+
+/**
+ * Parse a sort string back into the structured form. Best-effort: tokens
+ * without a leading sign default to `asc`. Used by `applySort` so the
+ * comparator works against either input shape.
+ */
+export function parseSortString(raw: string): StructuredSort {
+  const tokens = raw
+    .split(',')
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+  return tokens.map<StructuredSortKey>((tok) => {
+    if (tok.startsWith('-')) return { field: tok.slice(1).trim(), direction: 'desc' };
+    if (tok.startsWith('+')) return { field: tok.slice(1).trim(), direction: 'asc' };
+    return { field: tok, direction: 'asc' };
+  });
+}
+
+/**
+ * Pure in-memory comparator. Returns a new array — does NOT mutate.
+ *
+ * Comparison is value-by-value: `<`, `>` for primitives; nulls / undefined
+ * sort last regardless of direction. Stability across sort keys: when key
+ * `i` ties, falls through to key `i+1`. This is what manifests authored
+ * with multi-field sort intend.
+ */
+export function applySort<T>(items: readonly T[], sort: SortValue | undefined): T[] {
+  if (sort === undefined) return [...items];
+  const keys = typeof sort === 'string' ? parseSortString(sort) : sort;
+  if (keys.length === 0) return [...items];
+  const out = [...items];
+  out.sort((a, b) => {
+    for (const key of keys) {
+      const direction = key.direction === 'desc' ? -1 : 1;
+      const av = (a as Record<string, unknown>)[key.field];
+      const bv = (b as Record<string, unknown>)[key.field];
+      // null / undefined sort last in either direction.
+      const aNullish = av === null || av === undefined;
+      const bNullish = bv === null || bv === undefined;
+      if (aNullish && !bNullish) return 1;
+      if (!aNullish && bNullish) return -1;
+      if (aNullish && bNullish) continue;
+      if (av === bv) continue;
+      // Comparable primitives. Anything else falls back to JSON-stringify.
+      if (typeof av === 'number' && typeof bv === 'number') {
+        return (av - bv) * direction;
+      }
+      if (
+        (typeof av === 'string' || typeof av === 'boolean') &&
+        (typeof bv === 'string' || typeof bv === 'boolean')
+      ) {
+        const as = String(av);
+        const bs = String(bv);
+        return as < bs ? -1 * direction : as > bs ? 1 * direction : 0;
+      }
+      const as = JSON.stringify(av);
+      const bs = JSON.stringify(bv);
+      return as < bs ? -1 * direction : as > bs ? 1 * direction : 0;
+    }
+    return 0;
+  });
+  return out;
+}
+
+/**
+ * Coerce a `string | StructuredSort | undefined` to a string for
+ * consumers that only handle the legacy form (REST query strings,
+ * GraphQL variables, cache keys). `undefined` returns `''`.
+ */
+export function coerceSortToString(sort: SortValue | undefined): string {
+  if (sort === undefined) return '';
+  return formatSortAsString(sort);
+}
+
+// =============================================================================
+// CompiledFrom helpers (2026-05-06 — schema/LLM gap closure for
+// `compiled_from.capability_version`)
+// =============================================================================
+//
+// `capability_version` was widened from `SemverString` to
+// `SemverString | Record<CapabilityId, SemverString>`. The record form is
+// semantically primary (each capability has its own version) and is what
+// the LLM emits organically. The string form remains for the "single
+// catalog snapshot" interpretation.
+//
+// `formatCapabilityVersion` produces a stable canonical-JSON string from
+// either form so cache keys stay deterministic.
+
+export type CapabilityVersion = string | Record<string, string>;
+
+/**
+ * Stable canonical-JSON rendering of a capability_version field for
+ * cache keys. Strings pass through; records are sorted by capability id
+ * and emitted as `id1@v1,id2@v2,...`. Empty record returns `''`.
+ *
+ * The record-shape rendering is intentionally compact (not JSON-quoted)
+ * because cache keys go into URL query strings and Redis keys; quoted
+ * JSON would require additional escaping per consumer. The form is
+ * stable as long as `Object.keys()` / `Object.entries()` order is
+ * insertion-order (which it is in modern V8).
+ */
+export function formatCapabilityVersion(version: CapabilityVersion): string {
+  if (typeof version === 'string') return version;
+  const entries = Object.entries(version).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  if (entries.length === 0) return '';
+  return entries.map(([id, v]) => `${id}@${v}`).join(',');
+}
+
+/** Type guard for the record shape. */
+export function isCapabilityVersionRecord(version: unknown): version is Record<string, string> {
+  if (version === null || typeof version !== 'object') return false;
+  return Object.values(version as Record<string, unknown>).every((v) => typeof v === 'string');
 }

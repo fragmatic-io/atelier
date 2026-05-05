@@ -175,13 +175,24 @@ export { buildRenderPlan, RouteNotFoundError, RouteNotRenderableError } from './
 export type { RenderNode, RenderPlan } from './render/plan-types.js';
 
 // -----------------------------------------------------------------------------
-// Data — filter helpers (Sprint 2.4 / P3)
+// Data — filter / sort / capability-version helpers (Sprint 2.4 / P3 + 2026-05-06
+// schema/LLM gap closure — `binding.sort` and `compiled_from.capability_version`
+// widening)
 // -----------------------------------------------------------------------------
 export {
   applyFilter,
+  applySort,
+  coerceSortToString,
+  formatCapabilityVersion,
   formatFilterAsString,
+  formatSortAsString,
+  isCapabilityVersionRecord,
   isStructuredFilter,
+  isStructuredSort,
+  parseSortString,
+  type CapabilityVersion,
   type FilterValue,
+  type SortValue,
 } from './data/filter-utils.js';
 
 // -----------------------------------------------------------------------------

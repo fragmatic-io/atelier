@@ -99,7 +99,11 @@ const proxyDataResolver = async (binding: DataBinding): Promise<unknown> => {
       typeof binding.filter === 'string' ? binding.filter : JSON.stringify(binding.filter);
     params.set('filter', filterStr);
   }
-  if (binding.sort) params.set('sort', binding.sort);
+  if (binding.sort !== undefined) {
+    // 2026-05-06 — `binding.sort` widened to `string | StructuredSort`.
+    const sortStr = typeof binding.sort === 'string' ? binding.sort : JSON.stringify(binding.sort);
+    params.set('sort', sortStr);
+  }
   if (binding.group_by) params.set('group_by', binding.group_by);
   const qs = params.toString();
   const url = `/api/data/${binding.source}${qs ? `?${qs}` : ''}`;

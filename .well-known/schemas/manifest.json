@@ -23,20 +23,42 @@
       "type": "object",
       "properties": {
         "capability_version": {
-          "type": "string",
-          "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[\\w.-]+)?(?:\\+[\\w.-]+)?$"
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[\\w.-]+)?(?:\\+[\\w.-]+)?$"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/properties/compiled_from/properties/capability_version/anyOf/0"
+              },
+              "propertyNames": {
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+              }
+            }
+          ]
+        },
+        "capability_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/properties/compiled_from/properties/capability_version/anyOf/0"
+          },
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+          }
         },
         "skill_versions": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/properties/compiled_from/properties/capability_version"
+            "$ref": "#/properties/compiled_from/properties/capability_version/anyOf/0"
           },
           "propertyNames": {
             "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
           }
         },
         "component_catalog_version": {
-          "$ref": "#/properties/compiled_from/properties/capability_version"
+          "$ref": "#/properties/compiled_from/properties/capability_version/anyOf/0"
         },
         "intent_profile_version": {
           "type": "integer",
@@ -150,7 +172,35 @@
                     ]
                   },
                   "sort": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "field": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "direction": {
+                              "type": "string",
+                              "enum": [
+                                "asc",
+                                "desc"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "field"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "minItems": 1
+                      }
+                    ]
                   },
                   "group_by": {
                     "type": "string"

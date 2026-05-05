@@ -31,7 +31,7 @@
  *     untouched so consumers can wire their own date math.
  */
 
-import type { StructuredFilter, StructuredFilterOp } from '@atelier/schemas';
+import type { StructuredFilter, StructuredFilterOp, StructuredSort } from '@atelier/schemas';
 
 // -----------------------------------------------------------------------------
 // AST shapes
@@ -388,6 +388,25 @@ export function coerceFilterToString(
 }
 
 /**
+ * Coerce either sort form into a string for string-only consumers
+ * (REST query strings, GraphQL variables, the local mock applySort
+ * grammar). `undefined` flows through as `''`; strings pass through;
+ * structured sorts render as `±field, ±field, ...` where `-` = desc and
+ * `+` = asc (default if direction is unspecified).
+ *
+ * 2026-05-06 — added during the schema/LLM gap closure for `binding.sort`.
+ * Mirrors `coerceFilterToString` shape; the runtime version lives in
+ * `@atelier/runtime`'s `data/filter-utils` and is the canonical impl.
+ * This duplicate exists so the data-resolvers package stays free of a
+ * runtime workspace dep.
+ */
+export function coerceSortToString(sort: string | StructuredSort | undefined): string {
+  if (sort === undefined) return '';
+  if (typeof sort === 'string') return sort;
+  return sort.map((key) => `${key.direction === 'desc' ? '-' : '+'}${key.field}`).join(', ');
+}
+
+/**
  * Best-effort parse — returns `null` instead of throwing when the source
  * cannot be parsed. Useful for resolvers that need to degrade to "pass the
  * raw filter through as a query-string parameter" rather than fail loudly.
@@ -440,7 +459,9 @@ export function toQueryString(binding: {
     const ast = tryParseFilter(filterStr);
     params.set('filter', ast ? astToString(ast) : filterStr);
   }
-  if (binding.sort) params.set('sort', binding.sort);
+  // 2026-05-06 — coerce structured sort to string for URLSearchParams.
+  const sortStr = coerceSortToString(binding.sort);
+  if (sortStr.length > 0) params.set('sort', sortStr);
   if (binding.group_by) params.set('group_by', binding.group_by);
   return params;
 }
