@@ -61,7 +61,12 @@ jobs:
         # @atelier/compiler, etc., from dist/index.js — without this step the
         # workspace symlinks resolve to a non-existent path and bin shims
         # fail to wire (atelier-schemas / atelier-evals / atelier).
-        run: pnpm build
+        #
+        # Filter to `./packages/*` only — `pnpm build` (== `pnpm -r --if-present
+        # build`) would also try to build apps/docs, which requires the
+        # rehype-mermaid Playwright chromium that this workflow doesn't
+        # install (and shouldn't, for a 25-min eval gate).
+        run: pnpm -r --filter "./packages/*" --if-present build
 
       - name: Verify GEMINI_API_KEY is configured
         run: |
