@@ -55,6 +55,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages (dist/ artifacts)
+        # Every @atelier/* package now ships from dist/ (Sprint 1.4 lockstep
+        # release flip). The eval runner imports @atelier/eval-marketplace,
+        # @atelier/compiler, etc., from dist/index.js — without this step the
+        # workspace symlinks resolve to a non-existent path and bin shims
+        # fail to wire (atelier-schemas / atelier-evals / atelier).
+        run: pnpm build
+
       - name: Verify GEMINI_API_KEY is configured
         run: |
           if [ -z "$GEMINI_API_KEY" ]; then
