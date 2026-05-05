@@ -28,6 +28,15 @@
 
 export { runMarketplaceEval, httpBundleFetcher, DEFAULT_FIXTURES } from './runner.js';
 
+export {
+  loadLocalFixtures,
+  LOCAL_FIXTURES_AUTHOR,
+  LOCAL_FIXTURES_VERSION,
+  type LocalFixturesOptions,
+  type LocalFixturesSource,
+  type LocalFixtureEntry,
+} from './local-fixtures.js';
+
 export type {
   ApprovedPersonaList,
   BundleFetcher,

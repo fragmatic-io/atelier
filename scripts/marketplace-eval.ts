@@ -11,12 +11,19 @@
  * artifact + opens an issue when the gate fails.
  *
  * Argv:
- *   --vault-url <url>    base URL of the marketplace vault. When omitted,
- *                        the gate runs in STUB mode against an empty list
- *                        — useful for local sanity-checking without a
- *                        secret. Defaults to `MARKETPLACE_VAULT_URL` env
- *                        var if set; falls back to the documented
- *                        placeholder `https://vault.example.invalid`.
+ *   --vault-url <url>    base URL of the marketplace vault. Mutually
+ *                        exclusive with `--local-fixtures`. Defaults to
+ *                        `MARKETPLACE_VAULT_URL` env var if set; when
+ *                        neither flag nor env var is supplied, the CLI
+ *                        falls back to local-fixtures mode against the
+ *                        in-tree `recipes/` directory.
+ *   --local-fixtures <d> read recipes from local directory `d` instead
+ *                        of fetching them over HTTP. Each `*.json` /
+ *                        `*.recipe.json` file becomes a persona at
+ *                        `atelier://local/<filename>@1.0.0`. Signature
+ *                        verification is skipped (local files are
+ *                        unsigned) and `signature_verified: false` is
+ *                        recorded per persona.
  *   --top <n>            cap on personas evaluated. Default 10.
  *   --strict             treat warn-severity violations as failures.
  *   --out <path>         where to write the JSON report. Default
@@ -24,6 +31,8 @@
  *
  * The "approved persona" source: V-6.d hasn't shipped, so the CLI lists
  * personas via a pluggable strategy:
+ *   - if `--local-fixtures <dir>` is set (or its env equivalent), walk
+ *     the directory directly — no wire hop, no signature.
  *   - if `--vault-url` is reachable, GET `<vaultUrl>/marketplace/personas`
  *     (a list endpoint the vault server is expected to expose under
  *     V-6.d). Until that endpoint exists, the call returns 404 and the
@@ -40,14 +49,19 @@ import { dirname, resolve } from 'node:path';
 import {
   DEFAULT_FIXTURES,
   httpBundleFetcher,
+  loadLocalFixtures,
   runMarketplaceEval,
   type ApprovedPersonaList,
+  type BundleFetcher,
   type EvalReport,
 } from '@atelier/eval-marketplace';
 import { parseMarketplaceAddress, type MarketplaceAddress } from '@atelier/schemas';
 
 interface CliArgs {
-  vaultUrl: string;
+  /** Vault URL — set only when `localFixtures` is undefined. */
+  vaultUrl: string | undefined;
+  /** Local-fixtures directory — set only when `vaultUrl` is undefined. */
+  localFixtures: string | undefined;
   top: number;
   strict: boolean;
   out: string;
@@ -56,14 +70,25 @@ interface CliArgs {
 }
 
 function parseArgs(argv: string[]): CliArgs {
+  // Source order of precedence (highest first): explicit `--vault-url` /
+  // `--local-fixtures` flag → matching env var → no source. The args
+  // object below records the env-var defaults; CLI flag handlers
+  // overwrite them. `validateSource` (below) enforces mutual exclusion.
   const args: CliArgs = {
-    vaultUrl: process.env['MARKETPLACE_VAULT_URL'] ?? 'https://vault.example.invalid',
+    vaultUrl: process.env['MARKETPLACE_VAULT_URL'],
+    localFixtures: process.env['MARKETPLACE_LOCAL_FIXTURES'],
     top: 10,
     strict: false,
     out: 'eval-results/marketplace.json',
     mode: 'deterministic',
     llmModel: process.env['GEMINI_COLD_MODEL'] ?? 'gemini-2.5-flash',
   };
+  // Track whether the source flag was explicitly set on argv (vs. via
+  // env var). Argv-set wins over env, and an explicit argv flag also
+  // unsets the OTHER source — passing `--local-fixtures` clears any
+  // `MARKETPLACE_VAULT_URL` env default.
+  let vaultExplicit = false;
+  let localExplicit = false;
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     // Support both `--mode=real-llm` and `--mode real-llm` for ergonomics.
@@ -76,9 +101,20 @@ function parseArgs(argv: string[]): CliArgs {
       args.top = Number.parseInt(a.slice('--top='.length), 10);
       continue;
     }
+    if (typeof a === 'string' && a.startsWith('--local-fixtures=')) {
+      args.localFixtures = a.slice('--local-fixtures='.length);
+      localExplicit = true;
+      continue;
+    }
     switch (a) {
       case '--vault-url':
         args.vaultUrl = expectValue(argv, i);
+        vaultExplicit = true;
+        i += 1;
+        break;
+      case '--local-fixtures':
+        args.localFixtures = expectValue(argv, i);
+        localExplicit = true;
         i += 1;
         break;
       case '--top':
@@ -111,6 +147,19 @@ function parseArgs(argv: string[]): CliArgs {
         process.exit(2);
     }
   }
+  // Mutual exclusion: an explicit argv flag wins and clears the OTHER
+  // source so a stale env var doesn't surprise the operator.
+  if (localExplicit) args.vaultUrl = undefined;
+  if (vaultExplicit) args.localFixtures = undefined;
+  // If both still set (both via env var), refuse to boot — operator
+  // needs to disambiguate.
+  if (args.vaultUrl !== undefined && args.localFixtures !== undefined) {
+    console.error(
+      '[marketplace-eval] both MARKETPLACE_VAULT_URL and MARKETPLACE_LOCAL_FIXTURES are set; ' +
+        'pass --vault-url <url> or --local-fixtures <dir> explicitly to disambiguate.',
+    );
+    process.exit(2);
+  }
   return args;
 }
 
@@ -134,8 +183,11 @@ function printHelp(): void {
     [
       'pnpm marketplace:eval — V-6.e nightly eval gate',
       '',
-      'flags:',
-      '  --vault-url <url>      base URL of the marketplace vault',
+      'persona source (mutually exclusive — pick one):',
+      '  --vault-url <url>      base URL of a hosted marketplace vault',
+      '  --local-fixtures <dir> directory of *.json recipe files (no signing)',
+      '',
+      'other flags:',
       '  --top <n>              cap on personas evaluated (default 10)',
       '  --strict               treat warn-severity violations as failures',
       '  --out <path>           report output path (default eval-results/marketplace.json)',
@@ -143,7 +195,10 @@ function printHelp(): void {
       '  --llm-model <id>       gemini model id when --mode=real-llm (default gemini-2.5-flash)',
       '',
       'env:',
-      '  GEMINI_API_KEY         required when --mode=real-llm',
+      '  MARKETPLACE_VAULT_URL          alternate to --vault-url',
+      '  MARKETPLACE_LOCAL_FIXTURES     alternate to --local-fixtures',
+      '  MARKETPLACE_EVAL_FIXTURE       JSON file with persona address list (smoke path)',
+      '  GEMINI_API_KEY                 required when --mode=real-llm',
     ].join('\n'),
   );
 }
@@ -248,8 +303,41 @@ function httpApproved(vaultUrl: string): ApprovedPersonaList {
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
 
-  const approved = loadFixtureApproved() ?? httpApproved(args.vaultUrl);
-  const fetcher = httpBundleFetcher({ vaultUrl: args.vaultUrl });
+  // Resolve the persona source. Local-fixtures wins when set; otherwise
+  // fall back to the env-fixture / vault-HTTP path.
+  let approved: ApprovedPersonaList;
+  let fetcher: BundleFetcher;
+  let localFixtures: { directory: string } | undefined;
+  if (args.localFixtures !== undefined) {
+    let source: ReturnType<typeof loadLocalFixtures>;
+    try {
+      source = loadLocalFixtures({ directory: args.localFixtures });
+    } catch (err) {
+      console.error(`[marketplace-eval] ${(err as Error).message}`);
+      process.exitCode = 2;
+      return;
+    }
+    approved = source.approved;
+    fetcher = source.fetcher;
+    localFixtures = { directory: args.localFixtures };
+    const malformedCount = source.entries.filter((e) => e.error !== undefined).length;
+    console.log(
+      `[marketplace-eval] local-fixtures: ${String(source.entries.length)} recipe(s) ` +
+        `from ${args.localFixtures}` +
+        (malformedCount > 0 ? ` (${String(malformedCount)} malformed)` : ''),
+    );
+  } else {
+    if (args.vaultUrl === undefined) {
+      console.error(
+        '[marketplace-eval] no persona source: pass --vault-url <url> OR --local-fixtures <dir> ' +
+          '(or set MARKETPLACE_VAULT_URL / MARKETPLACE_LOCAL_FIXTURES).',
+      );
+      process.exitCode = 2;
+      return;
+    }
+    approved = loadFixtureApproved() ?? httpApproved(args.vaultUrl);
+    fetcher = httpBundleFetcher({ vaultUrl: args.vaultUrl });
+  }
 
   const opts: Parameters<typeof runMarketplaceEval>[0] = {
     approved,
@@ -257,6 +345,7 @@ async function main(): Promise<void> {
     fixtures: DEFAULT_FIXTURES,
     top: args.top,
   };
+  if (localFixtures !== undefined) opts.localFixtures = localFixtures;
   if (args.strict) opts.strict = true;
   if (args.mode === 'real-llm') {
     const apiKey = process.env['GEMINI_API_KEY'];

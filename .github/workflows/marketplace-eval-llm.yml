@@ -90,13 +90,29 @@ jobs:
           echo "report_path=${REPORT_PATH}" >> "$GITHUB_OUTPUT"
 
       - name: Run marketplace eval (real LLM)
+        # Persona source defaults to local-fixtures against the in-tree
+        # `recipes/` directory — closes the 0-personas gap from the first
+        # nightly real-LLM run while no hosted vault corpus exists yet.
+        # Set the `MARKETPLACE_VAULT_URL` repo secret to override and
+        # point the gate at a hosted vault when one ships.
         run: |
-          pnpm marketplace:eval \
-            --vault-url "${MARKETPLACE_VAULT_URL:-https://vault.example.invalid}" \
-            --top 10 \
-            --mode real-llm \
-            --llm-model "${GEMINI_COLD_MODEL}" \
-            --out "${{ steps.paths.outputs.report_path }}"
+          if [ -n "${MARKETPLACE_VAULT_URL:-}" ]; then
+            echo "Using hosted vault at $MARKETPLACE_VAULT_URL"
+            pnpm marketplace:eval \
+              --vault-url "$MARKETPLACE_VAULT_URL" \
+              --top 10 \
+              --mode real-llm \
+              --llm-model "${GEMINI_COLD_MODEL}" \
+              --out "${{ steps.paths.outputs.report_path }}"
+          else
+            echo "Using in-tree local-fixtures (recipes/) — no hosted vault configured"
+            pnpm marketplace:eval \
+              --local-fixtures recipes \
+              --top 10 \
+              --mode real-llm \
+              --llm-model "${GEMINI_COLD_MODEL}" \
+              --out "${{ steps.paths.outputs.report_path }}"
+          fi
         env:
           MARKETPLACE_VAULT_URL: ${{ secrets.MARKETPLACE_VAULT_URL }}
 

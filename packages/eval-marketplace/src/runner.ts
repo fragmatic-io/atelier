@@ -278,7 +278,15 @@ export async function runMarketplaceEval(opts: EvalOpts): Promise<EvalReport> {
   } else {
     compile = defaultCompile;
   }
-  const verify = opts.verify === undefined ? defaultVerify : opts.verify;
+  // Local-fixtures mode forces `verify: null` (files are unsigned) AND
+  // stamps `signature_verified: false` on every persona — even when the
+  // caller explicitly passed a verifier, because the source is
+  // unverifiable by definition. An explicit `verify: null` from the
+  // caller has the same effect on the verification step BUT does not
+  // set the signature_verified flag, so a test harness using `null` to
+  // skip verify on a vault-shaped fixture isn't accidentally relabelled.
+  const localFixturesMode = opts.localFixtures !== undefined;
+  const verify = localFixturesMode ? null : opts.verify === undefined ? defaultVerify : opts.verify;
   const fixtures: ReferenceFixtures = {
     capabilities: opts.fixtures.capabilities,
     components: opts.fixtures.components,
@@ -306,6 +314,12 @@ export async function runMarketplaceEval(opts: EvalOpts): Promise<EvalReport> {
     const personaStart = now();
     const result = await runOne({ address, opts, fixtures, verify, compile, mode });
     result.persona.duration_ms = now() - personaStart;
+    if (localFixturesMode) {
+      // Local-fixtures recipes are unsigned. Stamp every persona — the
+      // `skipped` ones too — so the report is unambiguous about which
+      // path actually ran the V-1 verifier.
+      result.persona.signature_verified = false;
+    }
     personas.push(result.persona);
     if (observedCompilerModel === undefined && result.model !== undefined) {
       observedCompilerModel = result.model;

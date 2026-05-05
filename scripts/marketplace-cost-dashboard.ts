@@ -203,6 +203,31 @@ function renderMdx(summary: CostSummary): string {
   );
   lines.push('window so cost regressions are visible at a glance.');
   lines.push('');
+  lines.push('## Persona source');
+  lines.push('');
+  lines.push(
+    'The gate reads personas from one of two sources, picked by `marketplace-eval-llm.yml`:',
+  );
+  lines.push('');
+  lines.push('- **Local fixtures (default)** — `pnpm marketplace:eval --local-fixtures recipes`');
+  lines.push('  walks the in-tree `recipes/` directory, parses each `*.json` / `*.recipe.json`');
+  lines.push('  file as a recipe, and synthesises a canonical `atelier://local/<file>@1.0.0`');
+  lines.push('  address per persona. Signature verification is skipped (local files are unsigned)');
+  lines.push('  and `signature_verified: false` is recorded on every persona slot. Use this when');
+  lines.push('  no hosted vault corpus exists yet — the default the workflow runs.');
+  lines.push(
+    '- **Hosted vault** — `pnpm marketplace:eval --vault-url <url>` fetches signed bundles',
+  );
+  lines.push('  over HTTP from a vault server. Verifies the ed25519 signature and records');
+  lines.push('  `signature_verified: true` per persona. Set the `MARKETPLACE_VAULT_URL` repo');
+  lines.push('  secret to flip the workflow into this mode.');
+  lines.push('');
+  lines.push('The compile + validation pipeline (schema parse, route compile, policy stack,');
+  lines.push(
+    'shape hash) is identical across both sources — the only observable difference is the',
+  );
+  lines.push('`signature_verified` flag and the synthesised vs. fetched address.');
+  lines.push('');
 
   if (summary.runs_seen === 0) {
     lines.push('## No data yet');

@@ -104,6 +104,17 @@ export interface PersonaEvalResult {
    * for back-compat. See `LlmEvalCompileResult` for the shape.
    */
   llm?: LlmEvalCompileResult;
+  /**
+   * Whether the gate verified the bundle's ed25519 signature for this
+   * persona. `true` on the vault-fetch path (the default
+   * `defaultVerify`); `false` in `--local-fixtures` mode where files
+   * are unsigned (recording the explicit `false` so consumers don't
+   * have to infer it from the absence of a signed-bundle envelope).
+   *
+   * Optional for back-compat: existing `EvalReport` consumers that
+   * predate this field still parse fine.
+   */
+  signature_verified?: boolean;
 }
 
 /**
@@ -347,6 +358,20 @@ export interface EvalOpts {
    * here. Recorded on every persona's `llm.model` field.
    */
   llmModel?: string;
+  /**
+   * When set, signals the runner is operating against a local
+   * directory of recipe files rather than a hosted vault. The runner
+   * itself is agnostic to where `approved` / `fetcher` came from —
+   * setting this flag only changes one observable: signature
+   * verification is skipped (local files are unsigned), and every
+   * persona's `signature_verified` field is recorded as `false`.
+   *
+   * The CLI shim translates `--local-fixtures <dir>` into this flag
+   * AND wires the matching `loadLocalFixtures` source. Programmatic
+   * consumers can do the same via `loadLocalFixtures` from
+   * `@atelier/eval-marketplace`.
+   */
+  localFixtures?: { directory: string };
 }
 
 /**

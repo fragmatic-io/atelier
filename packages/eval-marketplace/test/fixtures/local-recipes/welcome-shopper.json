@@ -1,0 +1,32 @@
+{
+  "manifest_id": "m_welcomeshopper1",
+  "user_id": "welcome-shopper",
+  "app_id": "demo.welcome.cir",
+  "compiled_from": {
+    "capability_version": "0.1.0",
+    "skill_versions": {},
+    "component_catalog_version": "0.1.0",
+    "intent_profile_version": 0,
+    "compiler_model": "recipe-author",
+    "compiled_at": "2026-05-01T00:00:00Z"
+  },
+  "ttl": null,
+  "invalidates_on": [],
+  "routes": [
+    {
+      "path": "/",
+      "title": "Welcome",
+      "layout": {
+        "component": "Stack",
+        "props": { "direction": "vertical", "gap": "md" },
+        "children": [
+          {
+            "component": "Markdown",
+            "props": { "content": "# Welcome to the local-fixtures test corpus" }
+          }
+        ]
+      }
+    }
+  ],
+  "policies_satisfied": ["empty_loading_error_handled"]
+}
