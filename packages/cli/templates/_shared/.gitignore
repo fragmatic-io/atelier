@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+build
+coverage
+.env
+.env.local
+.cir-vault.json
+.DS_Store
+*.tsbuildinfo

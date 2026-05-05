@@ -9,23 +9,68 @@ pnpm atelier <command> [options]
 
 ## Commands
 
-| Command                             | What it does                                                                                              |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `atelier init [dir]`                | Scaffold a new Atelier app in `[dir]` (defaults to `.`). Writes `package.json`, `app/`, stub directories. |
-| `atelier dev`                       | Start the dev server. Thin wrapper around `next dev`.                                                     |
-| `atelier dev --tail`                | Spawn `next dev` AND tail audit events from `/api/cir/audit/stream` to stderr.                            |
-| `atelier dev --tail-only`           | Skip the spawn, just tail the audit stream.                                                               |
-| `atelier add <component>`           | Copy a baseline component from `@atelier/components` source into `./components/`.                         |
-| `atelier add --list`                | List every available baseline component.                                                                  |
-| `atelier components-sync [--check]` | Regenerate `components/registry.json` from the live `@atelier/components` registry.                       |
-| `atelier validate`                  | Detect the consumer's stack and run typecheck, lint, tests, plus Atelier schema validation.               |
-| `atelier lint skill <path>`         | Validate a single `.skill.md` file. Surfaces YAML line/column on parse failure.                           |
-| `atelier import openapi <spec>`     | Generate `capabilities/` from an OpenAPI 3.x spec (drafts with `_review` envelopes).                      |
-| `atelier import figma <tokens>`     | Generate a `BrandKit` JSON from a W3C Design Tokens / Figma export. Stub — voice / variants stay TODO.    |
-| `atelier inspect <id-or-path>`      | Pretty-print a manifest from a file path or via `<server>/api/cir/manifest/<id>`.                         |
-| `atelier compile <intent.json>`     | Offline compile producing a manifest. Mirrors the demo's server wiring.                                   |
-| `atelier --help`                    | Print top-level usage. `atelier <cmd> --help` prints subcommand usage.                                    |
-| `atelier --version`                 | Print the `@atelier/cli` version.                                                                         |
+| Command                             | What it does                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `atelier init <name>`               | Scaffold a new Atelier app. Standalone by default, monorepo-aware when run inside this repo.           |
+| `atelier dev`                       | Start the dev server. Thin wrapper around `next dev`.                                                  |
+| `atelier dev --tail`                | Spawn `next dev` AND tail audit events from `/api/cir/audit/stream` to stderr.                         |
+| `atelier dev --tail-only`           | Skip the spawn, just tail the audit stream.                                                            |
+| `atelier add <component>`           | Copy a baseline component from `@atelier/components` source into `./components/`.                      |
+| `atelier add --list`                | List every available baseline component.                                                               |
+| `atelier components-sync [--check]` | Regenerate `components/registry.json` from the live `@atelier/components` registry.                    |
+| `atelier validate`                  | Detect the consumer's stack and run typecheck, lint, tests, plus Atelier schema validation.            |
+| `atelier lint skill <path>`         | Validate a single `.skill.md` file. Surfaces YAML line/column on parse failure.                        |
+| `atelier import openapi <spec>`     | Generate `capabilities/` from an OpenAPI 3.x spec (drafts with `_review` envelopes).                   |
+| `atelier import figma <tokens>`     | Generate a `BrandKit` JSON from a W3C Design Tokens / Figma export. Stub — voice / variants stay TODO. |
+| `atelier inspect <id-or-path>`      | Pretty-print a manifest from a file path or via `<server>/api/cir/manifest/<id>`.                      |
+| `atelier compile <intent.json>`     | Offline compile producing a manifest. Mirrors the demo's server wiring.                                |
+| `atelier --help`                    | Print top-level usage. `atelier <cmd> --help` prints subcommand usage.                                 |
+| `atelier --version`                 | Print the `@atelier/cli` version.                                                                      |
+
+## `atelier init` — standalone scaffold (Sprint 1.1)
+
+Two modes, auto-detected by `cwd`:
+
+- **standalone** (the default outside the Atelier monorepo). Copies a host
+  template plus a starter kit (`recipes/`, `policies/`, `capabilities/`,
+  `skills/`, `brand-kit.json`, `.env.local.example`) into the target
+  directory. `@atelier/*` deps point at npm versions, NOT `workspace:*`.
+- **monorepo** (auto-selected when invoked inside this repo). Preserves
+  the legacy single-file Next.js scaffold the demo grew up on.
+
+```bash
+# Fresh standalone Next.js 15 app (default host)
+npx -y @atelier/cli init my-app
+cd my-app && pnpm dev   # boots vault + next dev
+
+# Vite + React 19
+npx -y @atelier/cli init my-app --host=vite
+
+# Skip the post-scaffold install (handy for CI)
+npx -y @atelier/cli init my-app --no-install
+
+# Pick a specific package manager (default pnpm)
+npx -y @atelier/cli init my-app --package-manager=npm
+
+# Force a mode (overrides auto-detection)
+atelier init my-app --mode=standalone
+```
+
+Templates live under `packages/cli/templates/<host>/` as `*.template`
+files; the `_shared/` tree carries the recipe / policy / capability /
+skill / brand-kit / env starters that every host gets. The
+`{{appName}}` and `{{description}}` placeholders are substituted at
+scaffold time. Files that aren't `*.template` are copied verbatim, which
+is how the JSON / Markdown starters keep their literal `{{...}}` out of
+the substitution loop.
+
+The scaffolded `package.json` lists every `@atelier/*` dep at `^0.5.0`
+(the current published version), so `pnpm install` works against the
+public npm registry. The
+`scripts/smoke-test-init.ts` CI gate packs each `@atelier/*` package
+locally, rewrites the scaffold to point at the tarballs via
+`pnpm.overrides`, runs `pnpm install`, and then `tsc --noEmit` — proving
+the typecheck path before any external publish.
 
 ## `atelier validate` — pre-flight checks for the consumer project
 
@@ -245,12 +290,11 @@ using `@atelier/schemas` Zod schemas — same source of truth as
 `atelier-schemas validate-data`. The `tsc` / `eslint` / `vitest` checks
 are spawned against the consumer's locally pinned binaries.
 
-## Limitations (Wave 2)
+## Limitations
 
-- `atelier init` hardcodes Next.js 15. Vite support lands in Wave 3+.
-- `atelier init` and `atelier components-sync` assume the Atelier monorepo layout.
-  Standalone-publish hardening (npm-installable templates, no `pnpm validate`
-  expectation) is Wave 3+ scope.
+- `atelier init` standalone mode landed in Sprint 1.1 for Next.js 15 and
+  Vite + React 19. `atelier components-sync` still assumes the monorepo
+  layout — Sprint 1.3 scope.
 - `atelier dev` is intentionally a thin shell-out wrapper; it does not
   pre-flight the host project. (`atelier validate` ships a real
   pre-flight as of Sprint 1.2.)

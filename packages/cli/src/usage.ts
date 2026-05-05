@@ -29,11 +29,32 @@ Options:
 
 Run 'atelier <command> --help' for command-specific options.`;
 
-export const INIT_USAGE = `usage: atelier init [dir]
+export const INIT_USAGE = `usage: atelier init [dir] [--host=next15|vite] [--mode=standalone|monorepo]
+                                [--package-manager=pnpm|npm|yarn] [--no-install]
+                                [--description "..."]
 
-Scaffold a new Atelier app. [dir] defaults to '.'. Writes package.json,
-app/page.tsx, app/layout.tsx, tsconfig.json, next.config.mjs, README.md,
-and stub directories for capabilities/, skills/, components/.`;
+Scaffold a new Atelier app. [dir] defaults to '.'.
+
+Modes (auto-detected unless --mode is passed):
+  standalone   Default outside the Atelier monorepo. Copies a host template
+               (Next.js 15 App Router or Vite + React 19) plus a starter kit
+               of recipes/, policies/, capabilities/, skills/, brand-kit.json,
+               .env.local.example into the target directory. @atelier/* deps
+               point at npm versions, NOT workspace:*.
+  monorepo     Auto-selected when the cwd is inside this repo. Preserves the
+               legacy single-file Next.js scaffold the demo grew up on.
+
+Standalone-mode flags:
+  --host <h>            'next15' (default) or 'vite'.
+  --package-manager <p> 'pnpm' (default), 'npm', or 'yarn'. Used for the
+                        post-scaffold install.
+  --no-install          Skip the post-scaffold install step. Useful in CI.
+  --description "..."   Short project description; lands in package.json
+                        and README.
+
+Both modes:
+  --mode <m>            Force 'standalone' or 'monorepo' (overrides detection).
+  --help                Show this message.`;
 
 export const DEV_USAGE = `usage: atelier dev [--tail | --tail-only] [--audit-url <url>] [--no-color] [-- next-args...]
 

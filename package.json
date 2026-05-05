@@ -38,6 +38,8 @@
     "build": "pnpm build:all",
     "build:all": "pnpm -r --if-present build",
     "smoke-test:pack": "tsx scripts/smoke-test-pack.ts",
+    "smoke-test:init": "tsx scripts/smoke-test-init.ts",
+    "smoke-test:init:structure": "tsx scripts/smoke-test-init.ts --skip-install",
     "publish:dry-run": "pnpm -r --filter \"./packages/*\" publish --dry-run --no-git-checks",
     "release": "tsx scripts/release.ts",
     "release:dry": "tsx scripts/release.ts patch",

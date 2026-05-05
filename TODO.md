@@ -140,8 +140,8 @@ For each of the six `_ENABLED` flags:
 
 ### P2.2 — `atelier init` actually works outside the monorepo
 
-- [ ] **Standalone-publish hardening.** `atelier init` today assumes the monorepo layout. Rework so it scaffolds a fresh Next.js (or Vite) app with `@atelier/runtime` + `@atelier/react` + `@atelier/components` from npm, no monorepo dependency. **1 wk.**
-- [ ] **Vite support.** Currently hardcoded to Next.js 15. **3 d.**
+- [x] **Standalone-publish hardening (Sprint 1.1).** `atelier init <name>` now detects monorepo vs standalone mode. Standalone is the default outside this repo: it copies a host template (`next15` default, `vite` opt-in) plus a `_shared` starter kit (recipes / policies / capabilities / skills / brand-kit.json / .env.local.example) into the target dir. `@atelier/*` deps are pinned to `^0.1.0` (npm-style), NOT `workspace:*`. Templates live under `packages/cli/templates/<host>/` as `*.template` files with `{{appName}}` / `{{description}}` substitution; the `files` array on the package ships them. New `scripts/smoke-test-init.ts` packs every `@atelier/*` package via `pnpm pack`, rewrites the scaffold to point at the local tarballs via `pnpm.overrides`, runs `pnpm install`, then `tsc --noEmit` — proving the typecheck path on both hosts before any external publish. CI job extended in `.github/workflows/ci.yml`. _This commit._
+- [x] **Vite support (Sprint 1.1).** Pick via `--host=vite`. _This commit._
 
 ### P2.3 — `atelier validate` does real work
 

@@ -1,0 +1,19 @@
+{
+  "id": "starter.items.create",
+  "kind": "action",
+  "version": "0.1.0",
+  "input": {
+    "title": "string",
+    "body": "string"
+  },
+  "output": {
+    "id": "string",
+    "created_at": "datetime"
+  },
+  "side_effects": ["mutates:starter_items", "post"],
+  "permissions": ["starter:write"],
+  "confirmation": "modal",
+  "rate_limit": "20/min/user",
+  "reversible": true,
+  "rollback": "starter.items.delete"
+}

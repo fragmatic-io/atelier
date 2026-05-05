@@ -1,0 +1,52 @@
+# {{appName}}
+
+{{description}}
+
+A new Atelier app scaffolded by `atelier init` (Sprint 1.1 standalone mode).
+
+## Getting started
+
+```bash
+pnpm install         # already done if you used `--install`
+pnpm dev             # boots `atelier vault dev` (port 4001) + `next dev` (port 3000)
+```
+
+Open <http://localhost:3000>.
+
+For local development, first copy the env example:
+
+```bash
+cp .env.local.example .env.local
+# Optional: drop a Gemini key in if you have one
+```
+
+Without a Gemini key, the deterministic `GenericFallbackCompiler` ships
+hand-written manifests so the page still renders.
+
+## Layout
+
+- `app/` — Next.js 15 App Router routes.
+  - `app/api/cir/manifest/[...slug]/` — the manifest API the runtime fetches.
+  - `app/api/triggers/publish/` — POST a trigger payload to broadcast it via SSE.
+- `lib/atelier-server.ts` — the canonical server-side wiring (compiler +
+  cache + audit + resolvers). Customise this to swap in your own data
+  resolvers or capability set.
+- `recipes/` — JSON recipes the LLM compiler uses as exemplars.
+- `policies/` — JSON policy artifacts. Layered on top of the baseline policies.
+- `capabilities/` — capability JSON artifacts. Where you declare what the
+  agent is allowed to read / mutate.
+- `skills/` — markdown skill bundles that nudge the compiler's prose.
+- `brand-kit.json` — design tokens, voice, accessibility minimums.
+
+## Next steps
+
+- Read the docs: <https://atelier.fragmatic.io/getting-started/>
+- Author a capability: <https://atelier.fragmatic.io/concepts/capability/>
+- Author a recipe: <https://atelier.fragmatic.io/getting-started/your-first-recipe/>
+
+## Validate
+
+```bash
+pnpm typecheck
+pnpm atelier validate
+```

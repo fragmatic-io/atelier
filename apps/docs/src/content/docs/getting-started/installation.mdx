@@ -16,7 +16,37 @@ This page is the true zero-to-running walkthrough. If you have never seen Atelie
 
 That's it. No Docker. No Postgres. No Redis. Atelier's defaults are all in-memory or local-disk.
 
-## The walkthrough
+## Quick start — standalone (Sprint 1.1)
+
+The fastest path is `npx -y @atelier/cli init`. This scaffolds a fresh
+Next.js 15 (or Vite + React 19) project that depends on
+`@atelier/runtime`, `@atelier/react`, `@atelier/components`, and
+`@atelier/compiler` from npm — no monorepo dependency.
+
+```bash
+# Next.js 15 (default host)
+npx -y @atelier/cli init my-app
+
+# OR Vite + React 19
+npx -y @atelier/cli init my-app --host=vite
+
+cd my-app
+pnpm dev          # boots `atelier vault dev` (4001) + the dev server (3000)
+# open http://localhost:3000
+```
+
+The scaffold ships with one starter recipe, one starter policy, two
+starter capabilities, one starter skill, plus a `brand-kit.json` and an
+`.env.local.example`. Drop your Gemini key in `.env.local` and the real
+compiler runs; without it, the deterministic
+`GenericFallbackCompiler` ships hand-written manifests so the page still
+renders.
+
+If you want to dig into the framework itself — explore the demos, run
+the eval suite, watch the compiler render Aurora — clone the repo
+instead. The walkthrough below is that path.
+
+## The walkthrough — explore the monorepo
 
 <Steps>
 

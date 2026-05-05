@@ -95,6 +95,14 @@ jobs:
       - name: Smoke-test pack — all 15 packages
         run: pnpm smoke-test:pack
 
+      # Sprint 1.1 — `atelier init` standalone smoke. Scaffolds a fresh
+      # Next.js 15 + Vite app, packs every @atelier/* package, installs
+      # them via pnpm.overrides into the scaffold, then runs `tsc
+      # --noEmit`. Gates that `npx -y @atelier/cli init my-app` produces
+      # a working scaffold whose advertised dep set actually typechecks.
+      - name: Smoke-test atelier init standalone
+        run: pnpm smoke-test:init
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -141,6 +149,9 @@ jobs:
 
       - name: Smoke-test pack — all 15 packages
         run: pnpm smoke-test:pack
+
+      - name: Smoke-test atelier init standalone
+        run: pnpm smoke-test:init
 
   demo-e2e:
     name: Demo Playwright E2E

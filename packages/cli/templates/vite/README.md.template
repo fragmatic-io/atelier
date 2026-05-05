@@ -1,0 +1,50 @@
+# {{appName}}
+
+{{description}}
+
+A new Atelier app, scaffolded by `atelier init --host=vite` (Sprint 1.1).
+
+## Getting started
+
+```bash
+pnpm install         # already done if you used `--install`
+pnpm dev             # boots `atelier vault dev` (4001) + `vite` (3000)
+```
+
+Open <http://localhost:3000>.
+
+For local development, copy the env example:
+
+```bash
+cp .env.local.example .env.local
+# Optional: drop a Gemini key in if you have one
+```
+
+Without a Gemini key, the deterministic `GenericFallbackCompiler` ships
+hand-written manifests so the page still renders.
+
+## Layout
+
+- `src/main.tsx` — Vite + React 19 entry.
+- `src/app.tsx` — top-level component; swap in `<CirRoute>` from
+  `@atelier/react` when you're ready to compose.
+- `src/atelier-server.ts` — the canonical server-side wiring (compiler +
+  cache + audit). Wire it into a sibling Express server (recommended for
+  prod) or Vite middleware (dev shortcut).
+- `recipes/` — JSON recipes the LLM compiler uses as exemplars.
+- `policies/` — JSON policy artifacts.
+- `capabilities/` — capability JSON artifacts.
+- `skills/` — markdown skill bundles.
+- `brand-kit.json` — design tokens, voice, accessibility minimums.
+- `vite.config.ts` — bundler config; React plugin + ES2022 target.
+
+## Next steps
+
+- Read the docs: <https://atelier.fragmatic.io/getting-started/>
+
+## Validate
+
+```bash
+pnpm typecheck
+pnpm atelier validate
+```
