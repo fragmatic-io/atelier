@@ -31,6 +31,27 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+    ignore:
+      # Major-version bumps on heavy framework deps need coordinated
+      # migrations across packages + demos. PRs #22/#23/#24/#25 (closed
+      # 2026-05-05) were all aggressive majors that landed CI-red. Skip
+      # the auto-PRs; we'll do these as planned migrations.
+      - dependency-name: 'astro'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@astrojs/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'next'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'zod'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'vitest'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
