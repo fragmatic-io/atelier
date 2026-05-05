@@ -471,6 +471,15 @@ importers:
         specifier: ^1.0.0
         version: 1.29.2
     devDependencies:
+      '@atelier/compiler':
+        specifier: workspace:^
+        version: link:../compiler
+      '@atelier/policies':
+        specifier: workspace:^
+        version: link:../policies
+      '@atelier/react':
+        specifier: workspace:^
+        version: link:../react
       '@axe-core/playwright':
         specifier: ^4.11.3
         version: 4.11.3(playwright-core@1.59.1)

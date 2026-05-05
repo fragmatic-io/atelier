@@ -202,6 +202,7 @@ export default defineConfig({
             { label: 'Cost control', link: '/operations/cost-control' },
             { label: 'Cost dashboard', link: '/operations/cost-dashboard' },
             { label: 'Performance', link: '/operations/performance' },
+            { label: 'Visual regression', link: '/operations/visual-regression' },
           ],
         },
         { label: 'Roadmap', link: '/roadmap' },

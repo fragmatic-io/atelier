@@ -1,0 +1,81 @@
+---
+title: Visual regression
+description: Two visual gates — the base catalog snapshot and the compiled-workflow LLM gate — and when each fires.
+---
+
+Atelier ships two visual-regression gates. They have different costs, different signal, and different blast radii — knowing which one fires when keeps the gate honest.
+
+## Base catalog gate
+
+**Job name:** `Component Storybook Visual Gate` (in `.github/workflows/ci.yml`).
+**Surface:** 83 baseline primitives × 3 brand variants (`neutral`, `commerce`, `console`).
+**Runner:** Storybook + Playwright. Real React rendering, hand-authored stories.
+**Cost:** zero LLM tokens. Always runs on every PR.
+**What it catches:** behavioural / accessibility / hand-authored layout regressions in the catalog.
+
+This is the cheap, always-on gate. A failure here means a primitive's hand-written story regressed — probably in `packages/components/src/components/<Component>.tsx` or its story.
+
+```sh
+pnpm components:storybook:visual
+```
+
+## Compiled-workflow gate
+
+**Job name:** `Compiled Workflow Visual Gate` (in `.github/workflows/compiled-workflows-visual.yml`).
+**Surface:** 3 operational workflow composites — `ApprovalCommandCenter`, `CustomerContextPanel`, `ExceptionReviewWorkbench`.
+**Runner:** real Gemini compile → static HTML render → Playwright screenshot diff.
+**Cost:** real Gemini tokens (≈10–60s per workflow on Gemini 2.5 Pro).
+**Gating:** runs only when `secrets.GEMINI_API_KEY` is set. Without the secret the gate is a no-op (`test.skip()`).
+**Schedule:** daily at 09:00 UTC + on push to `main` + on PRs from non-forks. Manually invokable via `workflow_dispatch`.
+**What it catches:** the gap between "manifest validates and policies pass" and "the resulting UI actually renders well". A schema gate cannot tell you the LLM produced an empty 2-column grid where you expected a queue + detail pane.
+
+```sh
+GEMINI_API_KEY=<key> pnpm components:storybook:visual:compiled
+```
+
+### Persona fixtures
+
+Each workflow has a JSON persona fixture under `packages/components/storybook/workflows/persona-fixtures/`:
+
+- `approval-command-center.persona.json`
+- `customer-context-panel.persona.json`
+- `exception-review-workbench.persona.json`
+
+A persona is a complete `IntentProfile` + capability set + component allow-list + brand-kit reference. The fixtures are deliberately prescriptive (`"queue_rows_visible": 8`, `"shape": "two-pane"`, etc.) — pinned content keeps stylistic LLM drift bounded across runs.
+
+Drift you can't avoid with prompt-engineering shows up as a 5% pixel diff (the `toHaveScreenshot` threshold in `playwright.compiled-workflows.config.ts`).
+
+### Updating baselines
+
+Baselines live at `packages/components/storybook/__compiled-workflow-baselines/<workflow>-1280x720.baseline.png` and are checked in to git.
+
+Regenerate them when you intentionally change a workflow's expected shape — typically because the production compile path changed, or you bumped a persona fixture's `version`.
+
+```sh
+GEMINI_API_KEY=<key> pnpm components:storybook:visual:update-baselines
+```
+
+Commit the new PNGs alongside whatever code change motivated the regen.
+
+### Diff artifacts on CI failure
+
+When the gate fails, GitHub Actions uploads a `compiled-workflows-visual-diffs` artifact containing the actual screenshot, the baseline, and a side-by-side diff PNG. Download it from the failed run's summary page to inspect what changed.
+
+## Which gate fires when
+
+| Trigger                     | Base catalog gate    | Compiled-workflow gate     |
+| --------------------------- | -------------------- | -------------------------- |
+| PR from a maintainer branch | runs (no key needed) | runs (uses repo secret)    |
+| PR from a fork              | runs                 | skipped (no secret access) |
+| Push to `main`              | runs                 | runs                       |
+| Daily schedule              | does not run         | runs at 09:00 UTC          |
+| Manual `workflow_dispatch`  | n/a                  | available                  |
+
+## Why the split
+
+The two gates measure different things and would obscure each other if folded together. Combining them would either:
+
+- pay LLM tokens for every primitive snapshot (waste), or
+- skip the LLM entirely and lose the "manifest renders well" signal.
+
+Keeping them separate also matches the cost / criticality split: the base catalog regression should block any PR; an LLM compile drift is more useful as a daily heads-up than a PR blocker (Gemini latency varies; a single transient slow compile shouldn't keep a feature merge waiting).

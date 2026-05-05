@@ -40,6 +40,8 @@
     "storybook:build": "storybook build --quiet --output-dir storybook-static",
     "storybook:dev": "storybook dev",
     "storybook:visual": "playwright test --config storybook/playwright.config.ts",
+    "storybook:visual:compiled": "playwright test --config storybook/playwright.compiled-workflows.config.ts",
+    "storybook:visual:compiled:update-baselines": "playwright test --config storybook/playwright.compiled-workflows.config.ts --update-snapshots",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run"
   },
@@ -69,6 +71,9 @@
     }
   },
   "devDependencies": {
+    "@atelier/compiler": "workspace:^",
+    "@atelier/policies": "workspace:^",
+    "@atelier/react": "workspace:^",
     "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.59.1",
     "@storybook/addon-a11y": "^10.3.6",

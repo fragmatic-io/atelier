@@ -1,0 +1,91 @@
+name: Compiled Workflow Visual Gate
+
+# Sprint 2.3 — visual regression on compiled workflow composites.
+#
+# The base storybook visual gate (`Component Storybook Visual Gate` in
+# `ci.yml`) covers 83 baseline primitives × 3 brand variants. This gate is
+# stronger: it runs each operational composite through a real Gemini
+# compile, renders the resulting Manifest to HTML, screenshots at fixed
+# 1280×720, and diffs against a checked-in baseline at 5% pixel threshold.
+#
+# Why a separate workflow:
+#   - Conditional on `secrets.GEMINI_API_KEY` (skipped on PRs from forks
+#     and personal repos that don't carry the secret).
+#   - Spends real Gemini tokens on every run — running it on every PR
+#     would be wasteful and noisy. Schedule + main-only push covers the
+#     "did the LLM compile drift?" question without paying per-PR.
+#   - Failure mode is "screenshot diffs", which produces large artifacts;
+#     keeping it off the hot CI path reduces upload bandwidth.
+#
+# Required-status-check name: `Compiled Workflow Visual Gate`. Adding this
+# to branch protection's required checks list is a separate repo-owner
+# step (see TODO.md P0.4).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+  schedule:
+    # Daily at 09:00 UTC. Catches stylistic drift in the LLM compiler
+    # without waiting for a code-change push.
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compiled-workflows-visual:
+    name: Compiled Workflow Visual Gate
+    # 15-min timeout per Sprint 2.3 spec — covers a real Gemini compile
+    # for each of 3 workflows (≈10–60s each) plus render + screenshot +
+    # diff overhead.
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    # Skip cleanly when the secret isn't available (forks / personal
+    # repos). The job runs but each Playwright test self-skips via
+    # `test.skip(!apiKey, ...)` in `compiled-workflows.playwright.ts`.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @atelier/components exec playwright install --with-deps chromium
+
+      - name: Build package artifacts
+        run: pnpm build
+
+      - name: Run compiled-workflow visual gate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: pnpm components:storybook:visual:compiled
+
+      - name: Upload diff artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-workflows-visual-diffs
+          path: |
+            packages/components/test-results/
+            packages/components/storybook/__compiled-workflow-baselines/
+          retention-days: 14
+          if-no-files-found: ignore

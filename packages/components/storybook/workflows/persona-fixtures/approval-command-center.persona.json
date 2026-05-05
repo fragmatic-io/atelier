@@ -1,0 +1,104 @@
+{
+  "$schema": "../persona-fixture.schema.json",
+  "name": "approval-command-center",
+  "route": "/approvals",
+  "title": "Approval command center — policy-aware approvals",
+  "intent": {
+    "user_id": "persona-approval-center",
+    "profile_version": 1,
+    "updated_at": "2026-05-03T00:00:00.000Z",
+    "global_preferences": {
+      "density": "compact",
+      "color_mode": "light",
+      "motion_preference": "subtle",
+      "automation_trust": "cautious",
+      "modal_tolerance": "medium"
+    },
+    "lenses": { "ops": "approval_command_center" },
+    "rules": [
+      {
+        "scope": "*",
+        "rule": "Always confirm reversible approvals; never auto-execute restricted_fields actions.",
+        "version": 1,
+        "locked": true
+      },
+      {
+        "scope": "ops",
+        "rule": "Render approvals as a queue list on the left and a focused record detail on the right.",
+        "version": 1
+      }
+    ],
+    "vocabulary": {
+      "approval": "request to dispatch a capability that requires policy gating",
+      "policy_owner": "the on-call reviewer for a given policy class"
+    }
+  },
+  "capabilities": {
+    "approval.list": {
+      "id": "approval.list",
+      "kind": "data",
+      "version": "1.0.0",
+      "input": {},
+      "output": {
+        "id": "string",
+        "title": "string",
+        "requester": "string",
+        "policy": "string",
+        "impact": "string",
+        "status": "string",
+        "due": "string"
+      },
+      "side_effects": [],
+      "permissions": ["approval:read"],
+      "confirmation": "none",
+      "reversible": true
+    },
+    "approval.approve": {
+      "id": "approval.approve",
+      "kind": "action",
+      "version": "1.0.0",
+      "input": { "approval_id": "string" },
+      "output": { "approved_at": "string" },
+      "side_effects": ["mutates:approval_state", "audit"],
+      "permissions": ["approval:write"],
+      "confirmation": "modal",
+      "reversible": true,
+      "rollback": "approval.unapprove"
+    },
+    "approval.reassign": {
+      "id": "approval.reassign",
+      "kind": "action",
+      "version": "1.0.0",
+      "input": { "approval_id": "string", "owner": "string" },
+      "output": { "reassigned_at": "string" },
+      "side_effects": ["mutates:approval_assignment", "audit"],
+      "permissions": ["approval:write"],
+      "confirmation": "none",
+      "reversible": true,
+      "rollback": "approval.reassign"
+    }
+  },
+  "components": [
+    "Container",
+    "Stack",
+    "NavBar",
+    "Queue",
+    "DetailView",
+    "Button",
+    "ButtonGroup",
+    "CommandPalette",
+    "Modal",
+    "Alert",
+    "EmptyState",
+    "Skeleton"
+  ],
+  "layout_constraints": {
+    "shape": "two-pane (left: approvals queue, right: focused detail with actions)",
+    "queue_rows_visible": 8,
+    "show_command_palette_trigger": true,
+    "primary_action": "approval.approve",
+    "confirm_for_primary_action": true
+  },
+  "brand_kit_id": "atelier.design.neutral",
+  "few_shot_summary": "ApprovalCommandCenter renders a 1280x720 two-pane operational surface: a Queue of approvals on the left, a DetailView with primary Approve + Reassign actions on the right, plus a CommandPalette opened from the chrome and a confirmation Modal overlay for reversible approvals."
+}

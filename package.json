@@ -59,6 +59,8 @@
     "components:storybook:dev": "pnpm --filter @atelier/components storybook:dev",
     "components:storybook:build": "pnpm --filter @atelier/components storybook:build",
     "components:storybook:visual": "pnpm --filter @atelier/components storybook:visual",
+    "components:storybook:visual:compiled": "pnpm --filter @atelier/components storybook:visual:compiled",
+    "components:storybook:visual:update-baselines": "pnpm --filter @atelier/components storybook:visual:compiled:update-baselines",
     "capabilities:index": "tsx --tsconfig packages/schemas/tsconfig.json scripts/generate-capability-index.ts",
     "capabilities:index:check": "tsx --tsconfig packages/schemas/tsconfig.json scripts/generate-capability-index.ts --check",
     "capabilities:validate-changed": "tsx --tsconfig packages/schemas/tsconfig.json scripts/validate-capabilities-incremental.ts",
