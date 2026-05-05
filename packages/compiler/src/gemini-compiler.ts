@@ -137,7 +137,30 @@ export class GeminiCompiler implements CompilerService {
         // fresh server-side id and overwrite whatever the LLM emitted —
         // saves one round-trip and makes the validation deterministic.
         if (parsed && typeof parsed === 'object' && parsed !== null) {
-          (parsed as { manifest_id?: string }).manifest_id = generateManifestId();
+          const obj = parsed as Record<string, unknown>;
+          obj['manifest_id'] = generateManifestId();
+          // 2026-05-06 — `compiled_from` is provenance the COMPILER stamps,
+          // not output the LLM should generate. Real-LLM dispatch runs
+          // (post-Sprint-2) consistently showed Gemini either omitting the
+          // block entirely or filling it with hallucinated values. Build
+          // it deterministically from the input context. Preserves any
+          // LLM-supplied compiler_model / compiled_at if present (rare).
+          const llmCompiledFrom = (obj['compiled_from'] ?? {}) as Record<string, unknown>;
+          obj['compiled_from'] = {
+            capability_version: buildCapabilityVersionRecord(scopedInput),
+            capability_versions: buildCapabilityVersionRecord(scopedInput),
+            skill_versions: buildSkillVersionRecord(scopedInput),
+            component_catalog_version: scopedInput.componentCatalogVersion ?? '0.0.0',
+            intent_profile_version: scopedInput.intent?.profile_version ?? 0,
+            compiler_model:
+              typeof llmCompiledFrom['compiler_model'] === 'string'
+                ? llmCompiledFrom['compiler_model']
+                : model,
+            compiled_at:
+              typeof llmCompiledFrom['compiled_at'] === 'string'
+                ? llmCompiledFrom['compiled_at']
+                : new Date().toISOString(),
+          };
         }
         manifest = ManifestSchema.parse(parsed);
       } catch (err) {
@@ -197,6 +220,45 @@ function generateManifestId(): string {
     .toString(36)
     .padStart(4, '0');
   return `m_${ts}${rnd}`;
+}
+
+/**
+ * Build the per-capability version record from a CompileInput's
+ * capability registry. Returns `{}` when the registry is empty (the LLM
+ * eval gate accepts an empty record; consumers that need a string fall
+ * back to the catalog version when present).
+ *
+ * 2026-05-06 — added during the post-Sprint-2 schema/LLM gap closure.
+ * The LLM consistently omits or hallucinates `compiled_from` provenance,
+ * so the compiler stamps it deterministically from the input.
+ */
+function buildCapabilityVersionRecord(input: {
+  capabilities: Record<string, { version?: string }>;
+}): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [id, cap] of Object.entries(input.capabilities)) {
+    if (typeof cap.version === 'string' && cap.version.length > 0) {
+      out[id] = cap.version;
+    }
+  }
+  return out;
+}
+
+/**
+ * Build the per-skill version record from a CompileInput's skill
+ * registry. Returns `{}` when no skills are present.
+ */
+function buildSkillVersionRecord(input: {
+  skills?: Record<string, { version?: string }> | undefined;
+}): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!input.skills) return out;
+  for (const [id, skill] of Object.entries(input.skills)) {
+    if (typeof skill.version === 'string' && skill.version.length > 0) {
+      out[id] = skill.version;
+    }
+  }
+  return out;
 }
 
 function formatValidationError(err: unknown): string {

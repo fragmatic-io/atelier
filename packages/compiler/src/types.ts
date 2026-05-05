@@ -44,6 +44,13 @@ export interface CompileInput {
    * Includes composition rules implicitly through the `can_contain` field.
    */
   components: ComponentDefinition[];
+  /**
+   * Optional component-catalog version. Stamped onto the compiled manifest's
+   * `compiled_from.component_catalog_version` provenance field. Defaults to
+   * `'0.0.0'` when omitted (back-compat with hosts that don't track a
+   * catalog version).
+   */
+  componentCatalogVersion?: string;
   /** Scoped intent slice for this user. Optional but typical. */
   intent?: IntentProfile;
   /**

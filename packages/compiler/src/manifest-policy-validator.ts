@@ -136,9 +136,20 @@ export function createBaselineManifestValidator(
       },
     );
 
+    // 2026-05-06 — only error- and warn-severity violations gate the LLM
+    // retry loop. `info` advisories (e.g. "DetailView has no
+    // empty_state; the resolver will supply a default") are not
+    // regressions — they describe runtime fallback behaviour the policy
+    // walker observes but does not require the manifest to author. The
+    // demo-github server already applied this filter inline; lifting it
+    // into the baseline factory means the storybook compile-via-llm
+    // path and any other host get the same semantics for free.
+    const gatingReasons = result.violations
+      .filter((v) => v.severity !== 'info')
+      .map((v) => v.message);
     return {
-      ok: result.ok,
-      reasons: result.violations.map((violation) => violation.message),
+      ok: gatingReasons.length === 0,
+      reasons: gatingReasons,
       policy_evaluations: evaluationsFor(policies, result.violations),
     };
   };
