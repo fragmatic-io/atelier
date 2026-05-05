@@ -66,7 +66,12 @@ jobs:
         # build`) would also try to build apps/docs, which requires the
         # rehype-mermaid Playwright chromium that this workflow doesn't
         # install (and shouldn't, for a 25-min eval gate).
-        run: pnpm -r --filter "./packages/*" --if-present build
+        # `--workspace-concurrency=1` enforces topological-order sequential
+        # builds so @atelier/react doesn't typecheck against @atelier/components
+        # /dist/ before that dist/ is emitted (parallel race seen on
+        # workflow-dispatch run 25374851734 — react TS2307 on
+        # `@atelier/components/_variants` and `/density-resolver`).
+        run: pnpm -r --filter "./packages/*" --if-present --workspace-concurrency=1 build
 
       - name: Verify GEMINI_API_KEY is configured
         run: |

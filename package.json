@@ -36,7 +36,7 @@
   },
   "scripts": {
     "build": "pnpm build:all",
-    "build:all": "pnpm -r --if-present build",
+    "build:all": "pnpm -r --if-present --workspace-concurrency=1 build",
     "smoke-test:pack": "tsx scripts/smoke-test-pack.ts",
     "smoke-test:init": "tsx scripts/smoke-test-init.ts",
     "smoke-test:init:structure": "tsx scripts/smoke-test-init.ts --skip-install",
