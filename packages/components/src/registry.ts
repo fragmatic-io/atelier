@@ -63,6 +63,7 @@ import { LogoBinding } from './components/Logo.js';
 import { MapBinding } from './components/Map.js';
 import { MarkdownBinding } from './components/Markdown.js';
 import { MarketplaceBrowserBinding } from './components/MarketplaceBrowser.js';
+import { MarketplaceScorecardPanelBinding } from './components/MarketplaceScorecardPanel.js';
 import { MetaBadgeBinding } from './components/MetaBadge.js';
 import { ModalBinding } from './components/Modal.js';
 import { MultiPaneBinding } from './components/MultiPane.js';
@@ -161,6 +162,12 @@ export const COMPONENT_BINDINGS: Readonly<Record<string, ComponentBinding>> = Ob
   // recipes published to the vault marketplace. Host-driven via a
   // `MarketplaceClient` (typically `@atelier/vault-client`).
   MarketplaceBrowser: MarketplaceBrowserBinding,
+  // Sprint 2.4 (P3.2) — `<MarketplaceScorecardPanel>` renders a per-recipe
+  // compile-quality scorecard (5 binary checks + cost breakdown + last-eval
+  // timestamp + reference versions). Embedded inline by `<MarketplaceBrowser>`
+  // when a card pill is expanded; also reusable on standalone recipe-detail
+  // pages by hosts that source a `CompileQualityScorecard` independently.
+  MarketplaceScorecardPanel: MarketplaceScorecardPanelBinding,
   MetaBadge: MetaBadgeBinding,
   Modal: ModalBinding,
   MultiPane: MultiPaneBinding,

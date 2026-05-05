@@ -64,6 +64,13 @@ import type { ComponentBinding } from '@atelier/runtime';
 import { cn } from './_variants.js';
 import { EmptyState } from './EmptyState.js';
 import { Skeleton } from './Skeleton.js';
+import {
+  MarketplaceScorecardPanel,
+  summariseScorecardLocal,
+  type CompileQualityCheck,
+  type CompileQualityScorecard,
+  type ScorecardSummary,
+} from './MarketplaceScorecardPanel.js';
 
 /**
  * Structural mirror of `@atelier/schemas`'s `MarketplaceAddress`. Kept
@@ -142,6 +149,20 @@ export interface MarketplaceClient {
    * `<MarketplaceBrowser>` treats undefined/missing as "no state info".
    */
   reviewState?(address: MarketplaceAddress): Promise<MarketplaceReviewState | undefined>;
+  /**
+   * Sprint 2.4 — optional. Look up the compile-quality scorecard for an
+   * address. Hosts wire this from the V-6.e deterministic gate, the
+   * S2.1 real-LLM gate, or any host-side aggregator that produces the
+   * `CompileQualityScorecard` shape. Mirrors `reviewState` as a
+   * graceful-degradation seam: undefined/missing → no pill rendered.
+   *
+   * The browser fetches scorecards lazily — once per visible listing on
+   * mount, with the result memoised by `address.raw`. Hosts that want
+   * to short-circuit the fetch (e.g. when a parent already has the
+   * scorecard in memory) can pre-fill an in-memory cache via
+   * `MockMarketplaceClient`'s `scorecards` field.
+   */
+  scorecard?(address: MarketplaceAddress): Promise<CompileQualityScorecard | undefined>;
 }
 
 /**
@@ -182,12 +203,24 @@ export const MARKETPLACE_BROWSER_REGION_LABEL = 'Atelier marketplace';
  * array of listings and applies the filter / search predicate locally.
  * Useful for docs-site previews + unit tests; production hosts wire the
  * real `@atelier/vault-client`.
+ *
+ * Sprint 2.4 — accepts an optional `scorecards` map keyed on the
+ * canonical `address.raw` URI. The mock's `scorecard()` method looks
+ * the address up directly and returns `undefined` for unknown
+ * addresses, which mirrors the contract the browser expects from a
+ * real client (graceful degradation: no pill rendered when the host
+ * has nothing to surface).
  */
 export class MockMarketplaceClient implements MarketplaceClient {
   private readonly listings: readonly MarketplaceListing[];
+  private readonly scorecardsByRaw: Readonly<Record<string, CompileQualityScorecard>>;
 
-  constructor(listings: readonly MarketplaceListing[]) {
+  constructor(
+    listings: readonly MarketplaceListing[],
+    options?: { scorecards?: Record<string, CompileQualityScorecard> },
+  ) {
     this.listings = listings;
+    this.scorecardsByRaw = options?.scorecards ?? {};
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -223,6 +256,11 @@ export class MockMarketplaceClient implements MarketplaceClient {
   async get(address: MarketplaceAddress): Promise<MarketplaceListing | null> {
     const found = this.listings.find((l) => l.address.raw === address.raw);
     return found ?? null;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async scorecard(address: MarketplaceAddress): Promise<CompileQualityScorecard | undefined> {
+    return this.scorecardsByRaw[address.raw];
   }
 }
 
@@ -262,6 +300,62 @@ function reviewStatePillClass(state: MarketplaceReviewState): string {
   }
 }
 
+/**
+ * Tailwind class for the scorecard pill on a listing card. Three
+ * statuses, three tones — same palette as the review-state pill so the
+ * two pills sitting side-by-side don't clash.
+ */
+function scorecardPillClass(status: ScorecardSummary['status']): string {
+  switch (status) {
+    case 'green':
+      return 'bg-green-50 text-green-900';
+    case 'amber':
+      return 'bg-yellow-50 text-yellow-900';
+    case 'red':
+      return 'bg-red-50 text-red-900';
+  }
+}
+
+/** Glyph rendered inside the inline pill. Pure unicode dots. */
+function scorecardPillGlyph(status: ScorecardSummary['status']): string {
+  switch (status) {
+    case 'green':
+      return '🟢';
+    case 'amber':
+      return '🟡';
+    case 'red':
+      return '🔴';
+  }
+}
+
+/**
+ * Format the tooltip body listing the failed checks. Returns a
+ * single-line string suitable for the native `title` attribute.
+ */
+function scorecardTooltip(summary: ScorecardSummary): string {
+  if (summary.status === 'green') {
+    return 'Compile-quality scorecard: all checks passing';
+  }
+  const labels = summary.failedChecks.map((c) => CHECK_LABELS_INLINE[c]);
+  if (summary.status === 'amber') {
+    return `Compile-quality scorecard — warnings: ${labels.join(', ')}`;
+  }
+  return `Compile-quality scorecard — failures: ${labels.join(', ')}`;
+}
+
+/**
+ * Inline labels for the per-card tooltip. Shorter than the panel labels —
+ * the tooltip fits on one line. Keep parallel to `MarketplaceScorecardPanel`'s
+ * `CHECK_LABELS` map; the panel renders the verbose form.
+ */
+const CHECK_LABELS_INLINE: Record<CompileQualityCheck, string> = {
+  compile: 'compile',
+  schema: 'schema',
+  policy: 'policy',
+  snapshot: 'snapshot',
+  cost: 'cost',
+};
+
 export function MarketplaceBrowser({
   client,
   initialQuery,
@@ -291,6 +385,22 @@ export function MarketplaceBrowser({
 
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [previewListing, setPreviewListing] = useState<MarketplaceListing | null>(null);
+
+  // Sprint 2.4 — scorecards keyed on `address.raw`. Lazy-fetched once per
+  // visible listing when the host wires `client.scorecard?(address)`.
+  // The expanded panel is a separate concern from the preview drawer:
+  // clicking the pill opens the panel, clicking the card body still
+  // opens the preview drawer.
+  //
+  // The map is mirrored into a ref so the fetch effect can read "do we
+  // already have this address?" without taking a dep on the state and
+  // re-firing every time we merge a new entry.
+  const [scorecards, setScorecards] = useState<Readonly<Record<string, CompileQualityScorecard>>>(
+    {},
+  );
+  const scorecardsRef = useRef<Readonly<Record<string, CompileQualityScorecard>>>({});
+  scorecardsRef.current = scorecards;
+  const [scorecardOpenFor, setScorecardOpenFor] = useState<string | null>(null);
 
   // Debounce the search input → committedSearch.
   useEffect(() => {
@@ -356,6 +466,46 @@ export function MarketplaceBrowser({
       cancelled = true;
     };
   }, [client, query]);
+
+  // Sprint 2.4 — scorecard fetch effect. Fires once per listings batch.
+  // Skipped entirely when the host hasn't wired `client.scorecard`. Per-
+  // address results are merged into the `scorecards` map; missing
+  // addresses simply don't get a pill (graceful degradation).
+  //
+  // The "do we already have this scorecard?" check reads from
+  // `scorecardsRef.current` (a mirror of the state) so the effect's
+  // deps stay `[client, listings]` and we don't re-fire every time we
+  // merge a new entry.
+  useEffect(() => {
+    if (typeof client.scorecard !== 'function') return;
+    if (listings.length === 0) return;
+    const fetchFn = client.scorecard.bind(client);
+    let cancelled = false;
+    void (async (): Promise<void> => {
+      const next: Record<string, CompileQualityScorecard> = {};
+      for (const listing of listings) {
+        const raw = listing.address.raw;
+        // Skip addresses we already have a scorecard for — avoids
+        // re-fetching when a filter change keeps the same persona on
+        // screen but changes the listing slice.
+        if (scorecardsRef.current[raw] !== undefined) continue;
+        try {
+          const sc = await fetchFn(listing.address);
+          if (cancelled) return;
+          if (sc !== undefined) next[raw] = sc;
+        } catch {
+          // Ignore — graceful-degradation contract.
+        }
+      }
+      if (cancelled) return;
+      if (Object.keys(next).length > 0) {
+        setScorecards((prev) => ({ ...prev, ...next }));
+      }
+    })();
+    return (): void => {
+      cancelled = true;
+    };
+  }, [client, listings]);
 
   // -- Card selection ------------------------------------------------------
   const openPreview = useCallback((listing: MarketplaceListing): void => {
@@ -462,6 +612,9 @@ export function MarketplaceBrowser({
           >
             {listings.map((listing, idx) => {
               const highlighted = idx === highlight;
+              const scorecard = scorecards[listing.address.raw];
+              const summary = scorecard !== undefined ? summariseScorecardLocal(scorecard) : null;
+              const isScorecardOpen = scorecardOpenFor === listing.address.raw;
               return (
                 <li
                   key={keyFor(listing)}
@@ -469,97 +622,131 @@ export function MarketplaceBrowser({
                   data-cir-part="marketplace-card"
                   data-cir-address={listing.address.raw}
                   data-highlighted={highlighted ? 'true' : 'false'}
+                  className={cn('flex flex-col')}
                 >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHighlight(idx);
-                      openPreview(listing);
-                    }}
-                    onMouseEnter={() => {
-                      setHighlight(idx);
-                    }}
-                    className={cn('flex flex-col gap-2 text-left w-full p-3 rounded-md')}
-                    data-cir-part="marketplace-card-button"
+                  <div
+                    data-cir-part="marketplace-card-row"
+                    className={cn('flex items-start gap-2')}
                   >
-                    <div
-                      data-cir-part="marketplace-card-header"
-                      className={cn('flex items-baseline gap-2 flex-wrap')}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHighlight(idx);
+                        openPreview(listing);
+                      }}
+                      onMouseEnter={() => {
+                        setHighlight(idx);
+                      }}
+                      className={cn('flex flex-col gap-2 text-left flex-1 min-w-0 p-3 rounded-md')}
+                      data-cir-part="marketplace-card-button"
                     >
-                      <span
-                        data-cir-part="marketplace-card-persona"
-                        className={cn('text-base font-semibold')}
+                      <div
+                        data-cir-part="marketplace-card-header"
+                        className={cn('flex items-baseline gap-2 flex-wrap')}
                       >
-                        {listing.address.persona}
-                      </span>
-                      <span
-                        data-cir-part="marketplace-card-version"
-                        className={cn('text-xs px-1.5 py-0.5 rounded-full bg-gray-100')}
+                        <span
+                          data-cir-part="marketplace-card-persona"
+                          className={cn('text-base font-semibold')}
+                        >
+                          {listing.address.persona}
+                        </span>
+                        <span
+                          data-cir-part="marketplace-card-version"
+                          className={cn('text-xs px-1.5 py-0.5 rounded-full bg-gray-100')}
+                        >
+                          v{listing.address.version}
+                        </span>
+                        {listing.reviewState !== undefined && listing.reviewState !== 'approved' ? (
+                          <span
+                            data-cir-part="marketplace-card-review-state"
+                            data-review-state={listing.reviewState}
+                            className={cn(
+                              'text-xs px-1.5 py-0.5 rounded-full',
+                              reviewStatePillClass(listing.reviewState),
+                            )}
+                          >
+                            {listing.reviewState}
+                          </span>
+                        ) : null}
+                        {listing.authorDisplayName !== undefined ? (
+                          <span
+                            data-cir-part="marketplace-card-author"
+                            className={cn('text-xs text-gray-600')}
+                          >
+                            by {listing.authorDisplayName}
+                          </span>
+                        ) : (
+                          <span
+                            data-cir-part="marketplace-card-author"
+                            className={cn('text-xs text-gray-600')}
+                          >
+                            by {listing.address.author}
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        data-cir-part="marketplace-card-description"
+                        className={cn('text-sm text-gray-700')}
                       >
-                        v{listing.address.version}
-                      </span>
-                      {listing.reviewState !== undefined && listing.reviewState !== 'approved' ? (
-                        <span
-                          data-cir-part="marketplace-card-review-state"
-                          data-review-state={listing.reviewState}
-                          className={cn(
-                            'text-xs px-1.5 py-0.5 rounded-full',
-                            reviewStatePillClass(listing.reviewState),
-                          )}
-                        >
-                          {listing.reviewState}
-                        </span>
-                      ) : null}
-                      {listing.authorDisplayName !== undefined ? (
-                        <span
-                          data-cir-part="marketplace-card-author"
-                          className={cn('text-xs text-gray-600')}
-                        >
-                          by {listing.authorDisplayName}
-                        </span>
-                      ) : (
-                        <span
-                          data-cir-part="marketplace-card-author"
-                          className={cn('text-xs text-gray-600')}
-                        >
-                          by {listing.address.author}
-                        </span>
-                      )}
-                    </div>
-                    <p
-                      data-cir-part="marketplace-card-description"
-                      className={cn('text-sm text-gray-700')}
-                    >
-                      {clampDescription(listing.description)}
-                    </p>
+                        {clampDescription(listing.description)}
+                      </p>
+                      <div
+                        data-cir-part="marketplace-card-chips"
+                        className={cn('flex gap-2 flex-wrap')}
+                      >
+                        {listing.domain !== undefined ? (
+                          <span
+                            data-cir-part="marketplace-card-chip"
+                            data-chip-kind="domain"
+                            className={cn(
+                              'text-xs px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-900',
+                            )}
+                          >
+                            {listing.domain}
+                          </span>
+                        ) : null}
+                        {listing.brandKitId !== undefined ? (
+                          <span
+                            data-cir-part="marketplace-card-chip"
+                            data-chip-kind="brand-kit"
+                            className={cn(
+                              'text-xs px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-900',
+                            )}
+                          >
+                            {listing.brandKitId}
+                          </span>
+                        ) : null}
+                      </div>
+                    </button>
+                    {summary !== null ? (
+                      <button
+                        type="button"
+                        data-cir-part="marketplace-card-scorecard-pill"
+                        data-scorecard-status={summary.status}
+                        aria-label={`Compile-quality scorecard: ${summary.status}`}
+                        aria-expanded={isScorecardOpen ? 'true' : 'false'}
+                        title={scorecardTooltip(summary)}
+                        onClick={() => {
+                          setScorecardOpenFor(isScorecardOpen ? null : listing.address.raw);
+                        }}
+                        className={cn(
+                          'shrink-0 mt-3 mr-2 text-xs px-1.5 py-0.5 rounded-full',
+                          scorecardPillClass(summary.status),
+                        )}
+                      >
+                        <span aria-hidden="true">{scorecardPillGlyph(summary.status)}</span>
+                      </button>
+                    ) : null}
+                  </div>
+                  {isScorecardOpen && scorecard !== undefined ? (
                     <div
-                      data-cir-part="marketplace-card-chips"
-                      className={cn('flex gap-2 flex-wrap')}
+                      data-cir-part="marketplace-card-scorecard-panel"
+                      data-cir-address={listing.address.raw}
+                      className={cn('mx-3 mb-3')}
                     >
-                      {listing.domain !== undefined ? (
-                        <span
-                          data-cir-part="marketplace-card-chip"
-                          data-chip-kind="domain"
-                          className={cn(
-                            'text-xs px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-900',
-                          )}
-                        >
-                          {listing.domain}
-                        </span>
-                      ) : null}
-                      {listing.brandKitId !== undefined ? (
-                        <span
-                          data-cir-part="marketplace-card-chip"
-                          data-chip-kind="brand-kit"
-                          className={cn(
-                            'text-xs px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-900',
-                          )}
-                        >
-                          {listing.brandKitId}
-                        </span>
-                      ) : null}
+                      <MarketplaceScorecardPanel scorecard={scorecard} />
                     </div>
-                  </button>
+                  ) : null}
                 </li>
               );
             })}

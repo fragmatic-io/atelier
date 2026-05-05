@@ -286,6 +286,27 @@ export {
   type ReviewState,
 } from './marketplace-review.js';
 
+// -----------------------------------------------------------------------------
+// Compile-quality scorecard — Sprint 2.4 / P3.2
+// Per-recipe pass/fail breakdown the marketplace browse UI surfaces as a
+// 🟢/🟡/🔴 pill on every listing card. Source-agnostic: hosts wire it from
+// the V-6.e deterministic gate, the S2.1 real-LLM gate, or both.
+// -----------------------------------------------------------------------------
+export {
+  CompileQualityCheckSchema,
+  CompileQualityNoteSchema,
+  CompileQualityNoteSeveritySchema,
+  CompileQualityReferenceVersionsSchema,
+  CompileQualityScorecardSchema,
+  summariseScorecard,
+  type CompileQualityCheck,
+  type CompileQualityNote,
+  type CompileQualityNoteSeverity,
+  type CompileQualityReferenceVersions,
+  type CompileQualityScorecard,
+  type CompileQualityScorecardSummary,
+} from './compile-quality-scorecard.js';
+
 // View definitions — Wave 11 / Cnt-10
 export {
   ViewDefinitionSchema,

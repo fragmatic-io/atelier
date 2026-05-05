@@ -106,6 +106,29 @@ export const COMPONENT_STORY_FIXTURES: Readonly<Record<string, ComponentStoryFix
       children: '### Runbook\n\n- Validate manifest\n- Dispatch action',
     }),
     MarketplaceBrowser: fixture('MarketplaceBrowser', {}),
+    MarketplaceScorecardPanel: fixture('MarketplaceScorecardPanel', {
+      scorecard: {
+        address: {
+          scheme: 'atelier',
+          author: 'acme',
+          persona: 'founder-inbox',
+          version: '1.0.0',
+          raw: 'atelier://acme/founder-inbox@1.0.0',
+        },
+        generated_at: '2026-05-04T04:00:00Z',
+        reference_versions: {
+          capabilities_hash: 'a'.repeat(16),
+          components_hash: 'b'.repeat(16),
+          compiler_version: 'fallback-generic',
+        },
+        compile_passed: true,
+        schema_passed: true,
+        policy_passed: true,
+        snapshot_stable: true,
+        cost_within_budget: true,
+        notes: [],
+      },
+    }),
     MetaBadge: fixture('MetaBadge', { label: 'Policy', count: 7, dot: true }),
     Modal: fixture('Modal', {
       open: false,

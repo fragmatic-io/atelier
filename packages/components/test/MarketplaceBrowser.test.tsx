@@ -15,6 +15,34 @@ import {
   type MarketplaceListing,
   type MarketplaceListQuery,
 } from '../src/components/MarketplaceBrowser.js';
+import type { CompileQualityScorecard } from '../src/components/MarketplaceScorecardPanel.js';
+
+function scorecard(
+  raw: string,
+  overrides: Partial<CompileQualityScorecard> = {},
+): CompileQualityScorecard {
+  // Parse `atelier://author/persona@version` into address parts.
+  const m = /^atelier:\/\/([^/]+)\/([^@]+)@(.+)$/u.exec(raw);
+  const author = m?.[1] ?? 'acme';
+  const persona = m?.[2] ?? 'p';
+  const version = m?.[3] ?? '1.0.0';
+  return {
+    address: { scheme: 'atelier', author, persona, version, raw },
+    generated_at: '2026-05-04T04:00:00Z',
+    reference_versions: {
+      capabilities_hash: 'a'.repeat(64),
+      components_hash: 'b'.repeat(64),
+      compiler_version: 'fallback-generic',
+    },
+    compile_passed: true,
+    schema_passed: true,
+    policy_passed: true,
+    snapshot_stable: true,
+    cost_within_budget: true,
+    notes: [],
+    ...overrides,
+  };
+}
 
 function addr(author: string, persona: string, version: string): MarketplaceAddress {
   return {
@@ -339,6 +367,17 @@ describe('MarketplaceBrowser', () => {
       const missing = await client.get(addr('nope', 'nope', '0.0.0'));
       expect(missing).toBeNull();
     });
+
+    it('scorecard() returns the keyed scorecard, or undefined for unknown', async () => {
+      const sc = scorecard('atelier://acme/founder-inbox@1.0.0');
+      const client = new MockMarketplaceClient(SAMPLE, {
+        scorecards: { 'atelier://acme/founder-inbox@1.0.0': sc },
+      });
+      const found = await client.scorecard(addr('acme', 'founder-inbox', '1.0.0'));
+      expect(found).toEqual(sc);
+      const missing = await client.scorecard(addr('aurora', 'designer-canvas', '0.4.1'));
+      expect(missing).toBeUndefined();
+    });
   });
 
   describe('review-state pill (V-6.d)', () => {
@@ -365,6 +404,236 @@ describe('MarketplaceBrowser', () => {
       const { container, findByRole } = render(<MarketplaceBrowser client={client} />);
       await findByRole('list');
       expect(container.querySelector('[data-cir-part="marketplace-card-review-state"]')).toBeNull();
+    });
+  });
+
+  describe('compile-quality scorecard pill (Sprint 2.4)', () => {
+    const sample: MarketplaceListing[] = [
+      listing('acme', 'green-recipe', '1.0.0'),
+      listing('aurora', 'amber-recipe', '1.0.0'),
+      listing('marigold', 'red-recipe', '1.0.0'),
+      listing('octant', 'no-scorecard-recipe', '1.0.0'),
+    ];
+
+    function clientWithScorecards(): MockMarketplaceClient {
+      return new MockMarketplaceClient(sample, {
+        scorecards: {
+          'atelier://acme/green-recipe@1.0.0': scorecard('atelier://acme/green-recipe@1.0.0'),
+          'atelier://aurora/amber-recipe@1.0.0': scorecard('atelier://aurora/amber-recipe@1.0.0', {
+            snapshot_stable: false,
+            cost_within_budget: false,
+            cost_usd: 0.0042,
+            cost_p95_usd: 0.0061,
+            compile_duration_ms: 1234,
+            notes: [
+              {
+                check: 'snapshot',
+                severity: 'warning',
+                message: 'manifest_shape_hash drifted vs. baseline.',
+              },
+              {
+                check: 'cost',
+                severity: 'warning',
+                message: 'p95 $0.0061 exceeds budget $0.005.',
+              },
+            ],
+          }),
+          'atelier://marigold/red-recipe@1.0.0': scorecard('atelier://marigold/red-recipe@1.0.0', {
+            compile_passed: false,
+            schema_passed: false,
+            notes: [
+              {
+                check: 'compile',
+                severity: 'error',
+                message: 'GeminiCompiler returned empty manifest.',
+              },
+              {
+                check: 'schema',
+                severity: 'error',
+                message: 'ManifestSchema parse failed: missing routes[0].',
+              },
+            ],
+          }),
+          // octant intentionally absent — graceful-degradation path.
+        },
+      });
+    }
+
+    it('renders a pill in the right colour for each summarised status', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        const pills = container.querySelectorAll(
+          '[data-cir-part="marketplace-card-scorecard-pill"]',
+        );
+        // Three of the four listings have scorecards; the fourth (octant)
+        // has none and gets no pill.
+        expect(pills.length).toBe(3);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      const statuses = Array.from(cards).map((card) => {
+        const pill = card.querySelector('[data-cir-part="marketplace-card-scorecard-pill"]');
+        return pill?.getAttribute('data-scorecard-status') ?? null;
+      });
+      expect(statuses).toEqual(['green', 'amber', 'red', null]);
+    });
+
+    it('the tooltip lists the failed checks for an amber pill', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        expect(
+          container.querySelectorAll('[data-cir-part="marketplace-card-scorecard-pill"]').length,
+        ).toBe(3);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      const amberPill = cards[1]!.querySelector(
+        '[data-cir-part="marketplace-card-scorecard-pill"]',
+      ) as HTMLButtonElement;
+      const title = amberPill.getAttribute('title') ?? '';
+      expect(title).toContain('snapshot');
+      expect(title).toContain('cost');
+      // Hard-failure word should not surface for an amber.
+      expect(title).toContain('warnings');
+    });
+
+    it('the tooltip lists the failed checks for a red pill', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        expect(
+          container.querySelectorAll('[data-cir-part="marketplace-card-scorecard-pill"]').length,
+        ).toBe(3);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      const redPill = cards[2]!.querySelector(
+        '[data-cir-part="marketplace-card-scorecard-pill"]',
+      ) as HTMLButtonElement;
+      const title = redPill.getAttribute('title') ?? '';
+      expect(title).toContain('compile');
+      expect(title).toContain('schema');
+      expect(title).toContain('failures');
+    });
+
+    it('clicking the pill expands the scorecard panel with all 5 check rows', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        expect(
+          container.querySelectorAll('[data-cir-part="marketplace-card-scorecard-pill"]').length,
+        ).toBe(3);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      const amberPill = cards[1]!.querySelector(
+        '[data-cir-part="marketplace-card-scorecard-pill"]',
+      ) as HTMLButtonElement;
+      // Pre-click: no expanded panel.
+      expect(
+        cards[1]!.querySelector('[data-cir-part="marketplace-card-scorecard-panel"]'),
+      ).toBeNull();
+      fireEvent.click(amberPill);
+      await waitFor(() => {
+        expect(
+          cards[1]!.querySelector('[data-cir-part="marketplace-card-scorecard-panel"]'),
+        ).toBeTruthy();
+      });
+      // The panel exposes one row per check (5 total).
+      const rows = cards[1]!.querySelectorAll('[data-cir-part="scorecard-check-row"]');
+      expect(rows.length).toBe(5);
+      const checkOrder = Array.from(rows).map((r) => r.getAttribute('data-check'));
+      expect(checkOrder).toEqual(['compile', 'schema', 'policy', 'snapshot', 'cost']);
+      // The two failing rows (snapshot + cost) carry data-check-passed=false.
+      const passedFlags = Array.from(rows).map((r) => r.getAttribute('data-check-passed'));
+      expect(passedFlags).toEqual(['true', 'true', 'true', 'false', 'false']);
+    });
+
+    it('the expanded panel shows the cost line when cost_usd is present', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        expect(
+          container.querySelectorAll('[data-cir-part="marketplace-card-scorecard-pill"]').length,
+        ).toBe(3);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      const amberPill = cards[1]!.querySelector(
+        '[data-cir-part="marketplace-card-scorecard-pill"]',
+      ) as HTMLButtonElement;
+      fireEvent.click(amberPill);
+      await waitFor(() => {
+        const cost = cards[1]!.querySelector('[data-cir-part="scorecard-cost"]');
+        expect(cost?.textContent ?? '').toMatch(/Compile cost:.*p95.*ms/u);
+      });
+    });
+
+    it('the expanded panel hides the cost line when cost_usd is undefined (deterministic source)', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        expect(
+          container.querySelectorAll('[data-cir-part="marketplace-card-scorecard-pill"]').length,
+        ).toBe(3);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      // The green card has no cost data — clicking expands the panel but no
+      // cost line should render.
+      const greenPill = cards[0]!.querySelector(
+        '[data-cir-part="marketplace-card-scorecard-pill"]',
+      ) as HTMLButtonElement;
+      fireEvent.click(greenPill);
+      await waitFor(() => {
+        expect(
+          cards[0]!.querySelector('[data-cir-part="marketplace-card-scorecard-panel"]'),
+        ).toBeTruthy();
+      });
+      expect(cards[0]!.querySelector('[data-cir-part="scorecard-cost"]')).toBeNull();
+    });
+
+    it('renders no pill when the host did not wire client.scorecard', async () => {
+      // A client WITHOUT a scorecard method (the V-6.c baseline shape).
+      const minimal: MarketplaceClient = {
+        list: () => Promise.resolve(sample.slice()),
+        get: () => Promise.resolve(null),
+      };
+      const { container, findAllByRole } = render(<MarketplaceBrowser client={minimal} />);
+      await findAllByRole('listitem');
+      expect(
+        container.querySelector('[data-cir-part="marketplace-card-scorecard-pill"]'),
+      ).toBeNull();
+    });
+
+    it('renders no pill for a listing whose address has no scorecard (graceful degradation)', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+        expect(cards.length).toBe(sample.length);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      // octant is at index 3 — its scorecard slot is empty in the mock.
+      const noPill = cards[3]!.querySelector('[data-cir-part="marketplace-card-scorecard-pill"]');
+      expect(noPill).toBeNull();
+    });
+
+    it('clicking a card body opens the preview drawer; clicking the pill does NOT', async () => {
+      const client = clientWithScorecards();
+      const { container } = render(<MarketplaceBrowser client={client} />);
+      await waitFor(() => {
+        expect(
+          container.querySelectorAll('[data-cir-part="marketplace-card-scorecard-pill"]').length,
+        ).toBe(3);
+      });
+      const cards = container.querySelectorAll('[data-cir-part="marketplace-card"]');
+      const greenPill = cards[0]!.querySelector(
+        '[data-cir-part="marketplace-card-scorecard-pill"]',
+      ) as HTMLButtonElement;
+      fireEvent.click(greenPill);
+      // No preview drawer should have opened — only the inline panel did.
+      expect(container.querySelector('[role="dialog"]')).toBeNull();
+      // And the inline panel IS open.
+      expect(
+        cards[0]!.querySelector('[data-cir-part="marketplace-card-scorecard-panel"]'),
+      ).toBeTruthy();
     });
   });
 

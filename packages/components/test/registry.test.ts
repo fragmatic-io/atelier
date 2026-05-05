@@ -55,6 +55,7 @@ const EXPECTED = [
   'Map',
   'Markdown',
   'MarketplaceBrowser',
+  'MarketplaceScorecardPanel',
   'MetaBadge',
   'Modal',
   'MultiPane',
@@ -98,7 +99,7 @@ const EXPECTED = [
 ] as const;
 
 describe('COMPONENT_BINDINGS', () => {
-  it('contains exactly the 83 baseline components', () => {
+  it('contains exactly the 84 baseline components', () => {
     expect(Object.keys(COMPONENT_BINDINGS).sort()).toEqual([...EXPECTED]);
   });
 
@@ -117,7 +118,7 @@ describe('ALL_COMPONENTS registry', () => {
     }
   });
 
-  it('list() reports all 83 ids', () => {
+  it('list() reports all 84 ids', () => {
     expect(ALL_COMPONENTS.list().slice().sort()).toEqual([...EXPECTED]);
   });
 
@@ -241,6 +242,9 @@ describe('COMPOSITION_RULES', () => {
       // Wave 8 / V-6.c — vault-marketplace browse UI; content driven by
       // host-supplied `MarketplaceClient` (no manifest children).
       'MarketplaceBrowser',
+      // Sprint 2.4 (P3.2) — compile-quality scorecard panel; content
+      // driven by host-supplied `CompileQualityScorecard` prop.
+      'MarketplaceScorecardPanel',
       // Wave 11 / Int-5 — onboarding microinteractions. All three are leaves.
       'TourStep',
       'TourProgress',

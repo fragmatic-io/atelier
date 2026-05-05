@@ -140,6 +140,9 @@
   "MarketplaceBrowser": {
     "can_contain": "leaf"
   },
+  "MarketplaceScorecardPanel": {
+    "can_contain": "leaf"
+  },
   "MetaBadge": {
     "can_contain": "leaf"
   },

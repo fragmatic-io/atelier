@@ -58,6 +58,7 @@ import { logoTextRender } from './components/Logo.js';
 import { mapTextRender } from './components/Map.js';
 import { markdownTextRender } from './components/Markdown.js';
 import { marketplaceBrowserTextRender } from './components/MarketplaceBrowser.js';
+import { marketplaceScorecardPanelTextRender } from './components/MarketplaceScorecardPanel.js';
 import { metaBadgeTextRender } from './components/MetaBadge.js';
 import { modalTextRender } from './components/Modal.js';
 import { multiPaneTextRender } from './components/MultiPane.js';
@@ -149,6 +150,8 @@ export const TEXT_RENDERERS: Readonly<Record<string, TextRenderer>> = Object.fre
   Markdown: markdownTextRender as TextRenderer,
   // Wave 8 / V-6.c — vault-marketplace browse UI.
   MarketplaceBrowser: marketplaceBrowserTextRender as TextRenderer,
+  // Sprint 2.4 (P3.2) — compile-quality scorecard panel.
+  MarketplaceScorecardPanel: marketplaceScorecardPanelTextRender as TextRenderer,
   MetaBadge: metaBadgeTextRender as TextRenderer,
   Modal: modalTextRender as TextRenderer,
   MultiPane: multiPaneTextRender as TextRenderer,

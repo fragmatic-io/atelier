@@ -175,13 +175,13 @@ Today: it shells out to `pnpm validate` blindly, which only works if the consume
 The hard problem the review is pointing at: even when manifests validate, do they LOOK good? Bridges the gap between "schema-passes" and "user-quality".
 
 - [ ] **Rendered-output snapshot diffs** — for each top-10 persona, render the route's manifest with `@atelier/components` to a static HTML + screenshot. Visual diff against baseline (Playwright + a screenshot library). Flag visual regressions, not just schema regressions. **1 wk.**
-- [ ] **Recipe-quality scorecards** — `cir-evals` produces a per-recipe scorecard (compile-passed Y/N, schema-passed Y/N, policies-passed Y/N, snapshot-stable Y/N, cost-budget-respected Y/N). Surface in the marketplace browse UI. **3 d.**
+- [x] **Recipe-quality scorecards (Sprint 2.4)** — `CompileQualityScorecard` schema + `summariseScorecard()` helper land in `@atelier/schemas` (5 binary checks: compile / schema / policy / snapshot / cost). `<MarketplaceBrowser>` surfaces a 🟢/🟡/🔴 pill on every card driven by `MarketplaceClient.scorecard?(address)` (graceful degradation: no scorecard → no pill). Click expands `<MarketplaceScorecardPanel>` (also exported standalone, catalog 83 → **84**) showing every check, cost breakdown when present, last-eval timestamp, reference-versions block. Hosts wire the seam against the V-6.e deterministic gate, the S2.1 real-LLM gate, or any host-side aggregator producing the same shape. Docs page: `/marketplace/browse/`. _This commit (Sprint 2.4)._
 
 ---
 
 ## P4 — Visual regression matrix
 
-**The catalog has 83 baseline primitives. There is no visual gallery and no visual-diff CI.** Every prior catalog promotion was tested for behaviour but not for pixel-level rendering.
+**The catalog has 84 baseline primitives. There is no visual gallery and no visual-diff CI.** Every prior catalog promotion was tested for behaviour but not for pixel-level rendering.
 
 - [ ] **`apps/components-gallery`** — a Storybook-style or custom MDX gallery enumerating every component × every variant × every state (default / hover / focus / disabled / empty / loading / error). Static-rendered to `dist/`. **3-5 d.**
 - [ ] **Playwright visual-diff CI** — screenshots each gallery cell, diffs against baseline; PR fails on regression beyond a threshold. **2 d on top.**
@@ -231,7 +231,7 @@ The plumbing items that didn't fit in C-1..C-5.
 
 ## P9 — Wave 11 polish remaining
 
-The long tail of UI primitives. **Deprioritised** under the new ordering — adding more catalog while the existing 83 primitives lack visual regression coverage is the kind of expansion the review is warning against. Resume after P0–P6 close.
+The long tail of UI primitives. **Deprioritised** under the new ordering — adding more catalog while the existing 84 primitives lack visual regression coverage is the kind of expansion the review is warning against. Resume after P0–P6 close.
 
 ### Vis (visual depth)
 

@@ -404,6 +404,15 @@
     "responsive_targets": ["web"],
     "text_render": true
   },
+  "MarketplaceScorecardPanel": {
+    "actions_supported": [],
+    "data_sources": [],
+    "design_tokens": "@atelier/components/baseline@0.5.0",
+    "examples": [],
+    "props_schema": "MarketplaceScorecardPanelProps",
+    "responsive_targets": ["web"],
+    "text_render": true
+  },
   "MetaBadge": {
     "actions_supported": [],
     "data_sources": [],

@@ -1,0 +1,265 @@
+---
+title: Browse the marketplace
+description: '<MarketplaceBrowser> + compile-quality scorecards — Sprint 2.4.'
+---
+
+The marketplace browse surface lets users **find a recipe**, **see whether it works**, and **install it**. V-6.c shipped the baseline `<MarketplaceBrowser>`. V-6.d added review-state pills. **Sprint 2.4** (this page) adds **compile-quality scorecards** — a 🟢/🟡/🔴 dot on every card that answers "does this thing currently pass the eval gate?"
+
+This page documents the rendered surface and shows what hosts wire to drive it.
+
+## What you see
+
+When `<MarketplaceBrowser>` mounts against a `MarketplaceClient` with both `reviewState` and `scorecard` opted in, each card lists:
+
+- **Persona name** (large) — from `address.persona`.
+- **Version pill** — from `address.version`.
+- **Review-state pill** — from `listing.reviewState`, when not `approved` (V-6.d).
+- **Compile-quality scorecard pill** — 🟢/🟡/🔴 dot keyed off `summariseScorecard()` (Sprint 2.4).
+- **Author display name + description + domain / brand-kit chips** — V-6.c baseline.
+
+The scorecard pill carries a native `title` tooltip listing the failed checks, and clicking it expands a `<MarketplaceScorecardPanel>` row beneath the card showing every check, the cost breakdown (when present), the last-eval timestamp, and the reference versions block.
+
+## The scorecard shape
+
+```ts
+import {
+  CompileQualityScorecardSchema,
+  summariseScorecard,
+  type CompileQualityScorecard,
+} from '@atelier/schemas';
+```
+
+Five binary checks, in canonical order:
+
+| Check      | Passes when…                                                   | Hard / soft |
+| ---------- | -------------------------------------------------------------- | ----------- |
+| `compile`  | The compiler returned a manifest (no fallback / no error)      | hard        |
+| `schema`   | The manifest validates against `ManifestSchema`                | hard        |
+| `policy`   | No error-severity baseline policy violations fired             | hard        |
+| `snapshot` | `manifest_shape_hash` matches the previously-recorded baseline | soft        |
+| `cost`     | p95 compile cost ≤ the persona's declared compile budget       | soft        |
+
+Hard failures are red; soft failures only are amber; everything passes is green.
+
+`summariseScorecard()` is exported alongside the schema:
+
+```ts
+const summary = summariseScorecard(scorecard);
+//   summary.status        : 'green' | 'amber' | 'red'
+//   summary.failedChecks  : ('compile' | 'schema' | 'policy' | 'snapshot' | 'cost')[]
+```
+
+## Wiring the live component
+
+The browse page is shape-driven. The host hands a `MarketplaceClient` with three optional methods (`reviewState?`, `scorecard?`, both gracefully omittable) and the browser does the rest.
+
+```tsx
+import {
+  MarketplaceBrowser,
+  MockMarketplaceClient,
+  type MarketplaceListing,
+} from '@atelier/components';
+import type { CompileQualityScorecard } from '@atelier/components';
+
+// V-6.e fixture personas + the scorecards the nightly gate produces.
+const listings: MarketplaceListing[] = [
+  {
+    address: {
+      scheme: 'atelier',
+      author: 'acme',
+      persona: 'founder-inbox',
+      version: '1.0.0',
+      raw: 'atelier://acme/founder-inbox@1.0.0',
+    },
+    description: 'Inbox lens for founders.',
+    domain: 'productivity',
+    brandKitId: 'acme-default',
+    publishedAt: '2026-05-01T12:00:00Z',
+    authorDisplayName: 'Acme',
+    reviewState: 'approved',
+  },
+  {
+    address: {
+      scheme: 'atelier',
+      author: 'aurora',
+      persona: 'designer-canvas',
+      version: '0.4.1',
+      raw: 'atelier://aurora/designer-canvas@0.4.1',
+    },
+    description: 'Canvas-shaped design lens.',
+    domain: 'design',
+    brandKitId: 'aurora-light',
+    publishedAt: '2026-04-29T08:00:00Z',
+    authorDisplayName: 'Aurora',
+    reviewState: 'approved',
+  },
+  {
+    address: {
+      scheme: 'atelier',
+      author: 'marigold',
+      persona: 'reviewer',
+      version: '2.0.0',
+      raw: 'atelier://marigold/reviewer@2.0.0',
+    },
+    description: 'Pull-request review lens with diff focus.',
+    domain: 'engineering',
+    publishedAt: '2026-04-22T16:00:00Z',
+    authorDisplayName: 'Marigold',
+    reviewState: 'pending',
+  },
+];
+
+const scorecards: Record<string, CompileQualityScorecard> = {
+  // 🟢 — every check passes.
+  'atelier://acme/founder-inbox@1.0.0': {
+    address: listings[0].address,
+    generated_at: '2026-05-04T04:00:00Z',
+    reference_versions: {
+      capabilities_hash: 'a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718',
+      components_hash: 'b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827',
+      compiler_version: 'fallback-generic',
+    },
+    compile_passed: true,
+    schema_passed: true,
+    policy_passed: true,
+    snapshot_stable: true,
+    cost_within_budget: true,
+    notes: [],
+  },
+  // 🟡 — snapshot drifted + cost ticked over budget; compile/schema/policy pass.
+  'atelier://aurora/designer-canvas@0.4.1': {
+    address: listings[1].address,
+    generated_at: '2026-05-04T04:00:00Z',
+    reference_versions: {
+      capabilities_hash: 'a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718',
+      components_hash: 'b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827',
+      compiler_version: 'gemini-1.5-pro',
+    },
+    compile_passed: true,
+    schema_passed: true,
+    policy_passed: true,
+    snapshot_stable: false,
+    cost_within_budget: false,
+    cost_usd: 0.0042,
+    cost_p95_usd: 0.0061,
+    compile_duration_ms: 1234,
+    notes: [
+      {
+        check: 'snapshot',
+        severity: 'warning',
+        message: 'manifest_shape_hash drifted vs. baseline (canvas section reordered).',
+      },
+      {
+        check: 'cost',
+        severity: 'warning',
+        message: 'p95 $0.0061 exceeds budget $0.005.',
+      },
+    ],
+  },
+  // 🔴 — compile + schema both regressed.
+  'atelier://marigold/reviewer@2.0.0': {
+    address: listings[2].address,
+    generated_at: '2026-05-04T04:00:00Z',
+    reference_versions: {
+      capabilities_hash: 'a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718',
+      components_hash: 'b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827',
+      compiler_version: 'gemini-1.5-pro',
+    },
+    compile_passed: false,
+    schema_passed: false,
+    policy_passed: true,
+    snapshot_stable: true,
+    cost_within_budget: true,
+    notes: [
+      {
+        check: 'compile',
+        severity: 'error',
+        message: 'GeminiCompiler returned an empty manifest.',
+      },
+      {
+        check: 'schema',
+        severity: 'error',
+        message: 'ManifestSchema parse failed: routes[0].layout missing.',
+      },
+    ],
+  },
+};
+
+export function BrowsePage() {
+  const client = new MockMarketplaceClient(listings, { scorecards });
+  return (
+    <MarketplaceBrowser
+      client={client}
+      selectCapability="marketplace.install"
+      onSelect={(listing) => {
+        console.log('User picked', listing.address.raw);
+      }}
+    />
+  );
+}
+```
+
+## What the rendered page looks like
+
+Against the snapshot above, the browse page renders three cards:
+
+1. **`founder-inbox` v1.0.0** by Acme — `productivity` / `acme-default` chips — 🟢 pill (all checks passing).
+2. **`designer-canvas` v0.4.1** by Aurora — `design` / `aurora-light` chips — 🟡 pill (snapshot drifted, cost over budget). Tooltip: `Compile-quality scorecard — warnings: snapshot, cost`.
+3. **`reviewer` v2.0.0** by Marigold — `engineering` chip + `pending` review-state pill — 🔴 pill (compile + schema regressed). Tooltip: `Compile-quality scorecard — failures: compile, schema`.
+
+Click any pill and the inline `<MarketplaceScorecardPanel>` opens beneath that card, showing:
+
+```
+✓ Compile
+✓ Schema
+✓ Policy
+✗ Snapshot stable
+   manifest_shape_hash drifted vs. baseline (canvas section reordered).
+✗ Cost within budget
+   p95 $0.0061 exceeds budget $0.005.
+
+Compile cost: $0.0042 (p95: $0.0061) · 1234 ms
+Last eval: 2026-05-04 04:00 UTC (12 hours ago)
+
+capabilities_hash  a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718
+components_hash    b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827b1c2d3e4f5061827
+compiler_version   gemini-1.5-pro
+```
+
+## Where the scorecards come from
+
+The browser does NOT compute scorecards itself — it reads them from the client. Three host-side sources produce the same shape:
+
+1. **V-6.e nightly deterministic gate** ([`@atelier/eval-marketplace`](/atelier/marketplace/eval-gate/)). No LLM, no token cost; the optional `cost_usd` / `cost_p95_usd` / `compile_duration_ms` fields are absent.
+2. **Sprint 2.1 real-LLM eval suite** (sibling agent's `@atelier/eval-llm`). Carries the cost numbers and the duration measured against the real model.
+3. **Hybrid aggregation** — host-side merge: take the deterministic pass/fail booleans, fold in the real-LLM cost numbers. The summariser still works.
+
+A real `MarketplaceClient` exposes `scorecard(address)` as a thin shim over whichever store the host populates from the eval pipeline. The mock used here keeps an in-memory map keyed on `address.raw`; production hosts back it with whatever they back the rest of the marketplace index with.
+
+## Graceful degradation
+
+Both the review-state pill and the scorecard pill render iff the host wired them. Concretely:
+
+- `client.reviewState?` not implemented → no review-state pill on any card.
+- `client.scorecard?` not implemented → no scorecard pill on any card.
+- A specific listing has no scorecard (i.e. `client.scorecard(address)` resolves to `undefined`) → that one card gets no scorecard pill; siblings render normally.
+
+This matches the V-6.c "host-driven, opt-in" contract — the browser surfaces what the host hands it, never more.
+
+## Standalone scorecard panel
+
+The `<MarketplaceScorecardPanel>` is exported separately so hosts can drop it into a recipe-detail page without pulling in the browse list:
+
+```tsx
+import { MarketplaceScorecardPanel } from '@atelier/components';
+
+<MarketplaceScorecardPanel scorecard={scorecards['atelier://acme/founder-inbox@1.0.0']} />;
+```
+
+Composition rule: `leaf`. Content is prop-driven; manifest authors do not embed children inside it.
+
+## Next
+
+- [Marketplace eval gate](/atelier/marketplace/eval-gate/) — V-6.e deterministic pipeline that produces scorecards in CI.
+- [Consuming](/atelier/marketplace/consuming/) — fetch / verify / install flow the recipe-card "Use this recipe" CTA triggers.
+- [Publishing](/atelier/marketplace/publishing/) — author-side surface that produces the bundles browsed here.

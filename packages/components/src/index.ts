@@ -170,6 +170,11 @@ export type { MetaBadgeProps, MetaBadgeVariant } from './components/MetaBadge.js
 // `selectCapability` via the host dispatcher when the user picks a recipe.
 // `MockMarketplaceClient` is exported alongside for docs-site previews +
 // host smoke tests.
+//
+// Sprint 2.4 (P3.2) — each card now also surfaces a 🟢/🟡/🔴
+// compile-quality scorecard pill driven by an optional
+// `client.scorecard?(address)` seam. Click expands the inline
+// `<MarketplaceScorecardPanel>` (also exported standalone — see below).
 export {
   MarketplaceBrowser,
   MarketplaceBrowserBinding,
@@ -186,6 +191,30 @@ export type {
   MarketplaceListQuery,
   MarketplaceAddress,
 } from './components/MarketplaceBrowser.js';
+
+// Sprint 2.4 (P3.2) — `<MarketplaceScorecardPanel>` renders a per-recipe
+// compile-quality scorecard (5 binary checks + cost breakdown +
+// last-eval timestamp + reference versions). Embedded inline by
+// `<MarketplaceBrowser>` when a card pill is expanded; also exported
+// standalone so hosts can drop it into recipe-detail pages without
+// pulling in the browse list.
+export {
+  MarketplaceScorecardPanel,
+  MarketplaceScorecardPanelBinding,
+  marketplaceScorecardPanelTextRender,
+  summariseScorecardLocal,
+  formatLastEval,
+  formatRelativeTime,
+} from './components/MarketplaceScorecardPanel.js';
+export type {
+  MarketplaceScorecardPanelProps,
+  CompileQualityScorecard,
+  CompileQualityCheck,
+  CompileQualityNote,
+  CompileQualityNoteSeverity,
+  ScorecardSummary,
+  ScorecardPanelMarketplaceAddress,
+} from './components/MarketplaceScorecardPanel.js';
 
 export { DetailView, DetailViewBinding } from './components/DetailView.js';
 export type { DetailViewProps, DetailField } from './components/DetailView.js';

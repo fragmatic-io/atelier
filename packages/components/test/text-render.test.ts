@@ -91,6 +91,30 @@ describe('TEXT_RENDERERS', () => {
           get: () => Promise.resolve(null),
         },
       },
+      // Sprint 2.4 (P3.2) — compile-quality scorecard panel.
+      MarketplaceScorecardPanel: {
+        scorecard: {
+          address: {
+            scheme: 'atelier',
+            author: 'acme',
+            persona: 'founder-inbox',
+            version: '1.0.0',
+            raw: 'atelier://acme/founder-inbox@1.0.0',
+          },
+          generated_at: '2026-05-04T04:00:00Z',
+          reference_versions: {
+            capabilities_hash: 'abc',
+            components_hash: 'def',
+            compiler_version: 'fallback-generic',
+          },
+          compile_passed: true,
+          schema_passed: true,
+          policy_passed: true,
+          snapshot_stable: true,
+          cost_within_budget: true,
+          notes: [],
+        },
+      },
       MetaBadge: { count: 5, label: 'unread' },
       Modal: { open: true, title: 'Edit', onClose: () => undefined },
       MultiPane: {
