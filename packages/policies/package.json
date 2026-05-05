@@ -1,7 +1,7 @@
 {
   "name": "@atelier/policies",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.5.0",
+  "private": false,
   "description": "Atelier policy engine — pure-function validators run by the compiler against generated manifests, plus the BehavioralPatternDetector contract for the runtime",
   "license": "MIT",
   "type": "module",
@@ -25,7 +25,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@atelier/schemas": "workspace:*"
+    "@atelier/schemas": "workspace:^"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
@@ -33,6 +33,6 @@
     "vitest": "^2.1.8"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

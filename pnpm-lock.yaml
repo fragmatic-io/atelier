@@ -370,10 +370,10 @@ importers:
   packages/capability-resolver:
     dependencies:
       '@atelier/compiler':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../compiler
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
     devDependencies:
       typescript:
@@ -386,19 +386,19 @@ importers:
   packages/cli:
     dependencies:
       '@atelier/compiler':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../compiler
       '@atelier/components':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../components
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
       '@atelier/vault-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vault-client
       '@atelier/vault-server':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vault-server
     devDependencies:
       tsx:
@@ -414,10 +414,10 @@ importers:
   packages/compiler:
     dependencies:
       '@atelier/policies':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../policies
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
       '@google/genai':
         specifier: ^1.50.1
@@ -429,13 +429,13 @@ importers:
   packages/components:
     dependencies:
       '@atelier/keyboard':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../keyboard
       '@atelier/runtime':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../runtime
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
@@ -517,7 +517,7 @@ importers:
   packages/data-resolvers:
     dependencies:
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
     devDependencies:
       tsx:
@@ -533,13 +533,13 @@ importers:
   packages/eval-marketplace:
     dependencies:
       '@atelier/policies':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../policies
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
       '@atelier/vault-server':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vault-server
     devDependencies:
       tsx:
@@ -555,7 +555,7 @@ importers:
   packages/evals:
     dependencies:
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
       fast-glob:
         specifier: ^3.3.2
@@ -589,7 +589,7 @@ importers:
   packages/policies:
     dependencies:
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
     devDependencies:
       tsx:
@@ -605,16 +605,16 @@ importers:
   packages/react:
     dependencies:
       '@atelier/components':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../components
       '@atelier/policies':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../policies
       '@atelier/runtime':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../runtime
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
     devDependencies:
       '@testing-library/react':
@@ -648,7 +648,7 @@ importers:
   packages/recipe-resolver:
     dependencies:
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
     devDependencies:
       typescript:
@@ -661,10 +661,10 @@ importers:
   packages/runtime:
     dependencies:
       '@atelier/policies':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../policies
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
       idb-keyval:
         specifier: ^6.2.1
@@ -720,7 +720,7 @@ importers:
   packages/vault-client:
     dependencies:
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
     devDependencies:
       tsx:
@@ -736,7 +736,7 @@ importers:
   packages/vault-server:
     dependencies:
       '@atelier/schemas':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../schemas
     devDependencies:
       tsx:

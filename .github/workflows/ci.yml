@@ -48,6 +48,17 @@ jobs:
       - name: Build packages and apps
         run: pnpm build
 
+      # Sprint 1.4 — coordinated SemVer + dry-run gate. `pnpm publish --dry-run`
+      # for every public workspace package on every PR catches:
+      #   - missing dist/ outputs (build-artifact regression)
+      #   - malformed package.json `files` / `exports` / `main` / `types`
+      #   - private-flag drift (a package accidentally flipped private)
+      #   - lockstep version drift across @atelier/* packages
+      # We run this immediately after build (before typecheck/test) so a
+      # publishability regression fails fast.
+      - name: Publish dry-run gate
+        run: pnpm publish:dry-run
+
       - name: License headers
         run: pnpm check:license-headers
 

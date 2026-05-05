@@ -1,7 +1,7 @@
 {
   "name": "@atelier/schemas",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.5.0",
+  "private": false,
   "description": "Atelier foundational schemas — Zod schemas + generated JSON Schemas for capabilities, skills, components, intent, manifests, triggers, policies, audit",
   "license": "MIT",
   "type": "module",
@@ -43,6 +43,6 @@
     "vitest": "^2.1.8"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

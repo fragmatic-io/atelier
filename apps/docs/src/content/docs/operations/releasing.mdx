@@ -1,0 +1,110 @@
+---
+title: Operations — Releasing
+description: How an Atelier release happens — coordinated SemVer, the release script, the CI dry-run gate, and the rules for shipping a new version.
+---
+
+This page is the operator's reference for cutting a release of the
+`@atelier/*` workspace packages. The deeper authoritative copy lives in
+[`docs/release-policy.md`](https://github.com/fragmatic-io/atelier/blob/main/docs/release-policy.md);
+this page is the practical "I'm about to release" walkthrough.
+
+## The lockstep rule
+
+All 15 framework packages move together. `@atelier/runtime@0.6.0` is
+always paired with `@atelier/react@0.6.0` and the same minor / patch on
+every other package. The release script enforces this — it refuses to
+proceed if any package is out of sync.
+
+| What                      | Lockstep?    |
+| ------------------------- | ------------ |
+| Public framework packages | Yes          |
+| `apps/demo`, `apps/docs`  | No (private) |
+
+## How to release
+
+```bash
+# Rehearsal — runs the entire pipeline but doesn't push to npm.
+pnpm release patch
+
+# Real release.
+pnpm release patch --real
+```
+
+Bump kinds: `patch`, `minor`, `major`, or an explicit `x.y.z`.
+
+Defaults:
+
+- **Dry-run**. The version-bump commit + tag are created locally, but no
+  package is pushed to the registry. To back out: `git reset --hard HEAD~1
+&& git tag -d v<X.Y.Z>`.
+- **Validate gate runs**. Pass `--skip-validate` for an emergency hotfix
+  (the script will warn loudly).
+- **Smoke gate runs**. Pass `--skip-smoke` to skip the pack-and-install
+  smoke test.
+
+## What the script does
+
+1. Asserts the working tree is clean.
+2. Asserts every package is at the same version (lockstep invariant).
+3. `pnpm validate` (typecheck + lint + format-check + tests).
+4. `pnpm smoke-test:pack` (packs the workspace, installs into a scratch
+   dir as a downstream consumer would, runs `tsc --noEmit` + `node` smoke
+   against the published artifact).
+5. Bumps every public package's `version` to `<next>`.
+6. Refreshes `pnpm-lock.yaml`.
+7. Commits `chore(release): vX.Y.Z`.
+8. Tags `vX.Y.Z`.
+9. Publishes (dry-run by default; `--real` actually pushes to npm).
+10. Pushes branch + tag if `--real`.
+
+## The CI dry-run gate
+
+Every PR runs `pnpm publish:dry-run` (which expands to
+`pnpm -r --filter "./packages/*" publish --dry-run --no-git-checks`) as
+its first build-check. The gate catches:
+
+- Missing `dist/` outputs (build regression).
+- Files declared in `package.json` `files` array that don't exist.
+- Malformed `exports` map (subpath types / runtime mismatched).
+- Lockstep version drift across `@atelier/*` packages.
+- Private-flag drift (a package accidentally flipped private or public).
+
+If you see this fail on a PR, the dry-run log lists the bad entry.
+Fix the package.json, run `pnpm publish:dry-run` locally to confirm
+green, then push again.
+
+## Per-package CHANGELOG
+
+Every public package ships a `CHANGELOG.md`. Lockstep means each release
+adds the same `## X.Y.Z` heading to every file, but the body is
+package-scoped. Edit the entries as part of the release PR; the release
+script does not auto-generate them.
+
+## Migration notes
+
+When a release contains a breaking change, the release notes (in the
+relevant package's `CHANGELOG.md` and the GitHub Release entry) include
+a migration paragraph. Until `1.0.0`, **every minor bump may contain
+breaking changes** — read the changelog before upgrading.
+
+## When to bump major / minor / patch
+
+| Change                                                                     | Bump kind                         |
+| -------------------------------------------------------------------------- | --------------------------------- |
+| New capability schema field (additive, optional)                           | minor                             |
+| Breaking field rename, removed export, signature change                    | minor (pre-1.0); major (post-1.0) |
+| Bug fix only — same wire format, same exported names                       | patch                             |
+| `@atelier/components` adds a new component (additive)                      | minor                             |
+| `@atelier/components` removes a deprecated component (after 90-day window) | minor (pre-1.0); major (post-1.0) |
+| Internal refactor with no external surface change                          | patch                             |
+
+The 90-day deprecation window for components remains in force regardless
+of SemVer position — see [`AGENTS.md`](https://github.com/fragmatic-io/atelier/blob/main/AGENTS.md)
+hard rule 3.
+
+## Authoritative reference
+
+Full policy detail (rationale, public-vs-internal table, coordination with
+sibling tooling) lives in
+[`docs/release-policy.md`](https://github.com/fragmatic-io/atelier/blob/main/docs/release-policy.md).
+This page intentionally stays operator-shaped.

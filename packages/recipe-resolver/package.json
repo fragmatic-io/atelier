@@ -1,7 +1,7 @@
 {
   "name": "@atelier/recipe-resolver",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.5.0",
+  "private": false,
   "description": "Atelier recipe retrieval — substring + embedding resolvers + LocalRecipeStore that plug into the C-5 findRecipe compiler tool",
   "license": "MIT",
   "type": "module",
@@ -25,10 +25,10 @@
     "test": "vitest run"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "dependencies": {
-    "@atelier/schemas": "workspace:*"
+    "@atelier/schemas": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

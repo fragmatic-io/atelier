@@ -148,9 +148,13 @@ Today: it shells out to `pnpm validate` blindly, which only works if the consume
 
 - [ ] **Reimplement as a real validator** that runs typecheck + eslint + vitest in the consumer's project (regardless of monorepo). **3-5 d.**
 
-### P2.4 — Catalog publishability
+### P2.4 — Catalog publishability (Sprint 1.4 closure)
 
-- [ ] **`pnpm publish:dry-run`** verifies all 15 packages can be packed without errors. CI step. **<1 d.**
+- [x] **`pnpm publish:dry-run`** verifies all 15 packages can be packed without errors. CI step. New step in `.github/workflows/ci.yml` runs `pnpm -r --filter "./packages/*" publish --dry-run --no-git-checks` immediately after build, gating the merge. _This commit (Sprint 1.4)._
+- [x] **All 15 `@atelier/*` packages flipped public** at `0.5.0` in lockstep. Internal deps now `workspace:^` (substituted to `^0.5.0` at pack time). Coordinated SemVer policy lives in `docs/release-policy.md`. _This commit (Sprint 1.4)._
+- [x] **`pnpm release [patch|minor|major|x.y.z]`** — one-command release driver: `pnpm validate` + `pnpm smoke-test:pack` + lockstep version bump + commit + tag + publish (dry-run by default, `--real` for actual npm push). `scripts/release.ts`. _This commit (Sprint 1.4)._
+- [x] **Per-package `CHANGELOG.md`** seeded with the `0.5.0` entry summarising what each package contains today. _This commit (Sprint 1.4)._
+- [x] **Operator docs.** New `apps/docs/src/content/docs/operations/releasing.mdx` + sidebar entry; `CONTRIBUTING.md` extended with a "Release process" section. _This commit (Sprint 1.4)._
 - [ ] **README per package** — short package-scoped READMEs explaining the export surface (today they live in src code comments). **2-3 d.**
 
 ---

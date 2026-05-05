@@ -1,7 +1,7 @@
 {
   "name": "@atelier/compiler",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.5.0",
+  "private": false,
   "description": "Atelier compiler service — turns capabilities + skills + components + intent + trigger into a manifest",
   "license": "MIT",
   "type": "module",
@@ -24,11 +24,11 @@
     "typecheck": "tsc --noEmit"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "dependencies": {
-    "@atelier/policies": "workspace:*",
-    "@atelier/schemas": "workspace:*",
+    "@atelier/policies": "workspace:^",
+    "@atelier/schemas": "workspace:^",
     "@google/genai": "^1.50.1",
     "redis": "^5.12.1"
   }

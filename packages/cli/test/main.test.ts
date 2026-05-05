@@ -45,7 +45,7 @@ describe('main()', () => {
     const expected = readCliVersion();
     const printed = logSpy.mock.calls.map((c) => String(c[0])).join('\n');
     expect(printed).toContain(expected);
-    expect(expected).toBe('0.1.0');
+    expect(expected).toBe('0.5.0');
   });
 
   it('errors on unknown command', async () => {

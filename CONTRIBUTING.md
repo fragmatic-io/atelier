@@ -105,6 +105,29 @@ The procedures live in [`AGENTS.md`](AGENTS.md):
 
 Don't write UI for a new capability. UI is generated. If you find yourself reaching for hand-written components, re-read principle 1.
 
+## Release process
+
+All 15 `@atelier/*` framework packages move in **lockstep** SemVer — every
+public package shares the same `X.Y.Z`. The release script enforces this
+invariant.
+
+```bash
+# Rehearse a release (dry-run; no registry push).
+pnpm release patch
+
+# Real release.
+pnpm release patch --real
+```
+
+The full policy (when to bump major / minor / patch, public-vs-internal
+breakdown, coordination with the dry-run CI gate) lives in
+[`docs/release-policy.md`](docs/release-policy.md). The user-facing
+walkthrough lives at
+[Operations → Releasing](apps/docs/src/content/docs/operations/releasing.mdx).
+
+Every PR runs `pnpm publish:dry-run` in CI to catch broken `package.json`
+`files` / `exports` / `main` / `types` before they reach npm.
+
 ## License
 
 Atelier is licensed under the [MIT License](LICENSE). By submitting a contribution, you agree that your contribution is licensed under the same terms. The [`NOTICE`](NOTICE) file records the project's attribution; preserve it in derivative works.
