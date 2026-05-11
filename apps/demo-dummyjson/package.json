@@ -22,7 +22,7 @@
     "@atelier/schemas": "workspace:*",
     "@atelier/vault-client": "workspace:*",
     "next": "^15.1.0",
-    "react": "^19.0.0",
+    "react": "^19.2.6",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
