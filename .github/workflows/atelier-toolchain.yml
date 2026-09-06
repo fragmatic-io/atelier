@@ -3,6 +3,9 @@ on:
   push:
     branches: [feat/v2-reconstruction-artifact-agents]
     paths: ['.github/workflows/atelier-toolchain.yml']
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/atelier-toolchain.yml', 'platform/toolchain/**']
 permissions:
   contents: read
 jobs:
@@ -18,7 +21,7 @@ jobs:
         run: |
           mkdir toolchain && cd toolchain
           printf '{"name":"atelier-verification-toolchain","version":"1.0.0","private":true,"type":"module"}\n' > package.json
-          npm install --save-exact --ignore-scripts --no-audit --no-fund react@19.2.8 react-dom@19.2.8 @types/react@19.2.0 @types/react-dom@19.2.0 typescript@5.7.3 esbuild@0.28.2 ajv@8.17.1 ajv-formats@3.0.1 postcss@8.5.6 playwright-core@1.55.0
+          npm install --save-exact --ignore-scripts --no-audit --no-fund react@19.2.8 react-dom@19.2.8 @types/react@19.2.0 @types/react-dom@19.2.0 typescript@5.8.3 esbuild@0.28.2 ajv@8.17.1 ajv-formats@3.0.1 postcss@8.5.6
           node --input-type=module -e "import {build} from 'esbuild'; import React from 'react'; await build({stdin:{contents:'export const ok = true'},write:false}); console.log('React',React.version,'esbuild passed')"
           tar -czf ../atelier-toolchain-linux-x64.tar.gz package.json package-lock.json node_modules
           cd ..
