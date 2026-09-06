@@ -1,0 +1,58 @@
+name: Atelier V2.3 acceptance
+on:
+  push:
+    branches: [feat/atelier-v2.3-release]
+    paths: ['platform/**', '.github/workflows/atelier-v23-acceptance.yml']
+  pull_request:
+    paths: ['platform/**', '.github/workflows/atelier-v23-acceptance.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atelier-v23-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compiler-toolchain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.16.0'
+      - name: Install pinned genuine React/compiler packages
+        run: |
+          mkdir toolchain && cd toolchain
+          printf '{"name":"atelier-v23-toolchain","version":"1.0.0","private":true,"type":"module"}\n' > package.json
+          npm install --save-exact --ignore-scripts --no-audit --no-fund react@19.2.8 react-dom@19.2.8 @types/react@19.2.0 @types/react-dom@19.2.0 typescript@5.8.3 esbuild@0.28.2 ajv@8.17.1 ajv-formats@3.0.1 postcss@8.5.6
+          node --input-type=module -e "import React from 'react'; import {build} from 'esbuild'; await build({stdin:{contents:'export const result = 42'},write:false}); if(React.version!=='19.2.8') process.exit(1); console.log('Pinned compiler toolchain operational');"
+          tar -czf ../atelier-v23-toolchain.tar.gz package.json package-lock.json node_modules
+          cd .. && sha256sum atelier-v23-toolchain.tar.gz > atelier-v23-toolchain.tar.gz.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: atelier-v23-toolchain
+          path: |
+            atelier-v23-toolchain.tar.gz
+            atelier-v23-toolchain.tar.gz.sha256
+          retention-days: 7
+          if-no-files-found: error
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.16.0'
+      - name: Require complete source
+        run: |
+          test -f platform/package.json
+          test -f platform/packages/conversation/src/service.mjs
+          test -f platform/packages/source-forge/src/compiler.mjs
+          test -f platform/docs/v2.3/REQUIREMENTS.json
+      - name: Install and verify
+        working-directory: platform
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node scripts/acceptance.mjs
