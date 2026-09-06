@@ -1,0 +1,17 @@
+{
+  "name": "@atelier-v2/agents",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "description": "Typed specialist build-agent DAG and model adapter contracts.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@atelier-v2/contracts": "workspace:*"
+  }
+}

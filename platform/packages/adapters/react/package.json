@@ -1,0 +1,20 @@
+{
+  "name": "@atelier-v2/react",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "description": "Optional React provider and additive slot adapter.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@atelier-v2/dom": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@atelier-v2/workflow",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "description": "Privacy-controlled semantic workflow recorder and opportunity miner.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@atelier-v2/contracts": "workspace:*"
+  }
+}

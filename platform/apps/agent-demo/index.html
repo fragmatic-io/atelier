@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Northstar · Host application with Atelier</title>
+    <link rel="stylesheet" href="/lab.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wordmark"><span>n</span> northstar</div>
+      <div class="row">
+        <span class="tag">Local host integration</span
+        ><span class="micro muted">No live model · actual tools</span>
+      </div>
+    </header>
+    <main class="workspace">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">CUSTOMER WORKSPACE / NORTHSTAR RETAIL</span>
+          <h1>Keep the conversation close to the work.</h1>
+          <p class="muted">
+            An additive assistant in an existing application. Original records and permissions
+            remain authoritative.
+          </p>
+        </div>
+        <div class="row">
+          <span id="counter" class="tag"></span
+          ><button class="button" id="refresh">Refresh host record</button>
+        </div>
+      </div>
+      <div id="chat"></div>
+      <p class="micro muted mt20">
+        This example refuses production mode. Replace the fixed local identity and deterministic
+        fixture with your application's authenticated session and configured provider.
+      </p>
+    </main>
+    <script type="module" src="/host.mjs"></script>
+  </body>
+</html>
