@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "release": "2.3.0-rc.1",
+  "statusDefinitions": {
+    "implemented": "Code and an executable test or gate exist; final environment-specific evidence may still be pending.",
+    "verified": "The checked-in automated evidence path exercises the behavior without a skipped or fabricated result.",
+    "externally_blocked": "The executable gate exists but requires credentials, infrastructure, or independent authority unavailable to this repository."
+  },
+  "requirements": [
+    {
+      "id": "V23-CON-01",
+      "behavior": "A clean npm install resolves the declared compiler, React, schema, and MCP runtime without undeclared global modules.",
+      "classification": "integration",
+      "implementation": ["package.json", "package-lock.json"],
+      "tests": ["scripts/smoke-package.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-CON-02",
+      "behavior": "One canonical acceptance command discovers nested tests and fails on missing, failed, timed-out, or empty required gates.",
+      "classification": "integration",
+      "implementation": [
+        "scripts/acceptance.mjs",
+        "scripts/acceptance/process.mjs",
+        "scripts/acceptance/requirements.mjs"
+      ],
+      "tests": ["tests/acceptance/requirements.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-SEC-01",
+      "behavior": "Tenant and project authorization is applied independently to HTTP reads, writes, jobs, artifacts, tokens, and provider records.",
+      "classification": "integration",
+      "implementation": [
+        "packages/control-plane/src/access.mjs",
+        "packages/control-plane/src/server.mjs"
+      ],
+      "tests": ["tests/v21/isolation.test.mjs", "tests/v21/auth-http.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-SEC-02",
+      "behavior": "Private conversation ownership is enforced in addition to membership and transcripts are encrypted at rest.",
+      "classification": "unit",
+      "implementation": ["packages/conversation/src/service.mjs"],
+      "tests": ["tests/v23/conversation.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-SEC-03",
+      "behavior": "Tool calls remain limited to reviewed capabilities with exact confirmation, leases, replay fencing, and outcome-uncertain handling.",
+      "classification": "unit",
+      "implementation": ["packages/conversation/src/service.mjs"],
+      "tests": ["tests/v23/conversation.test.mjs", "tests/v21/runner.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-SEC-04",
+      "behavior": "Provider and runner output is size-bounded, schema-validated, budgeted, cancellable, and never silently replaced by a fixture.",
+      "classification": "integration",
+      "implementation": [
+        "packages/providers/src/api.mjs",
+        "packages/providers/src/cli.mjs",
+        "packages/control-plane/src/gateway.mjs"
+      ],
+      "tests": ["tests/v21/providers.test.mjs", "tests/v21/runner.test.mjs"],
+      "status": "verified",
+      "limitations": ["Live provider authentication is tracked separately in V23-OPS-03."]
+    },
+    {
+      "id": "V23-CMP-01",
+      "behavior": "Project-native React source is typechecked and bundled by exact declared dependencies with integrity-bound output.",
+      "classification": "integration",
+      "implementation": [
+        "packages/source-forge/src/compiler.mjs",
+        "packages/source-forge/src/isolation.mjs"
+      ],
+      "tests": ["tests/forge/source-compiler.test.mjs", "tests/forge-compiler.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-CMP-02",
+      "behavior": "Every supplied source kit runs actual Chromium tasks across ready, loading, empty, error, responsive, theme, and RTL cases.",
+      "classification": "browser",
+      "implementation": ["packages/source-forge/src/certifier.mjs", "scripts/certify-examples.mjs"],
+      "tests": ["scripts/certify-source.py", "tests/forge/certify-runner.test.mjs"],
+      "status": "verified",
+      "limitations": ["Canonical acceptance regenerates evidence for all nine supplied kits."]
+    },
+    {
+      "id": "V23-CMP-03",
+      "behavior": "Approval, signature, current project-version checks, and revocation are distinct mandatory component lifecycle gates.",
+      "classification": "unit",
+      "implementation": ["packages/source-forge/src/registry.mjs"],
+      "tests": ["tests/v23/conversation.test.mjs", "tests/v23/http-components.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-CMP-04",
+      "behavior": "Production certification refuses local subprocess mode and provides a network-disabled least-privilege container invocation.",
+      "classification": "operations",
+      "implementation": ["packages/source-forge/src/certifier.mjs", "ops/certifier.Dockerfile"],
+      "tests": ["tests/forge/certifier-isolation.test.mjs", "scripts/container-acceptance.mjs"],
+      "status": "verified",
+      "limitations": ["A deployment registry must still scan the exact promoted digest."]
+    },
+    {
+      "id": "V23-APP-01",
+      "behavior": "Normal Chromium navigation completes Studio login, cookie and CSRF handling, component preview, host chat, confirmation, write, reload, and mobile layout.",
+      "classification": "browser",
+      "implementation": [
+        "apps/studio/web/lab.mjs",
+        "apps/agent-demo/server.mjs",
+        "packages/conversation/src/chat.mjs"
+      ],
+      "tests": ["scripts/browser-integration.py"],
+      "status": "verified",
+      "limitations": [
+        "Uses an explicitly labelled controlled model fixture; live models are tracked separately."
+      ]
+    },
+    {
+      "id": "V23-APP-02",
+      "behavior": "Conversation cancellation, retry, attachments, feedback, artifact revision, pinning, and purge have durable scoped service behavior.",
+      "classification": "unit",
+      "implementation": [
+        "packages/conversation/src/service.mjs",
+        "packages/conversation/src/client.mjs"
+      ],
+      "tests": ["tests/v23/conversation.test.mjs", "tests/v23/data-client.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-APP-03",
+      "behavior": "Published artifact access rechecks current component signature, project version, recipient authorization, and revocation.",
+      "classification": "unit",
+      "implementation": [
+        "packages/conversation/src/service.mjs",
+        "packages/source-forge/src/registry.mjs"
+      ],
+      "tests": ["tests/v23/conversation.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-MCP-01",
+      "behavior": "Coding agents receive read-only project-scoped MCP search, model, component, source, and versioned skill resources.",
+      "classification": "integration",
+      "implementation": [
+        "packages/mcp/src/server.mjs",
+        "packages/mcp/src/project-client.mjs",
+        "packages/mcp/src/skills.mjs",
+        "scripts/mcp.mjs"
+      ],
+      "tests": ["tests/mcp/protocol.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-MCP-02",
+      "behavior": "MCP uses the current pinned protocol, exposes published components only, and observes token revocation on the next request.",
+      "classification": "integration",
+      "implementation": ["packages/mcp/src/config.mjs", "packages/mcp/src/server.mjs"],
+      "tests": ["tests/mcp/protocol.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-LRN-01",
+      "behavior": "Project models retain source provenance, capability confidence, design genome, API contracts, and stable version identities.",
+      "classification": "unit",
+      "implementation": [
+        "packages/project-model/src/index.mjs",
+        "packages/design-genome/src/index.mjs"
+      ],
+      "tests": ["tests/contracts-scanner.test.mjs", "tests/v21/pipeline.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-LRN-02",
+      "behavior": "Opt-in semantic telemetry records bounded shapes and mines workflow opportunities without capturing payload values.",
+      "classification": "unit",
+      "implementation": [
+        "packages/conversation/src/observe.mjs",
+        "packages/workflow/src/index.mjs"
+      ],
+      "tests": ["tests/v23/data-client.test.mjs", "tests/workflow-studio.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-LRN-03",
+      "behavior": "Project and policy version changes invalidate incompatible artifacts while reusable published artifacts avoid another design call.",
+      "classification": "unit",
+      "implementation": [
+        "packages/control-plane/src/services.mjs",
+        "packages/source-forge/src/registry.mjs"
+      ],
+      "tests": ["tests/v21/durability.test.mjs", "tests/v23/conversation.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-OPS-01",
+      "behavior": "The supported deployment is documented and enforced as single-host SQLite WAL with graceful API and worker shutdown.",
+      "classification": "operations",
+      "implementation": [
+        "docs/OPERATIONS.md",
+        "ops/Dockerfile",
+        "packages/control-plane/src/server.mjs"
+      ],
+      "tests": ["tests/v21/durability.test.mjs"],
+      "status": "verified",
+      "limitations": ["No multi-host high-availability claim is made."]
+    },
+    {
+      "id": "V23-OPS-02",
+      "behavior": "Migration checksums, backup restoration, signing-key rotation and compromised-key revocation have executable drills.",
+      "classification": "operations",
+      "implementation": [
+        "migrations/001-control-plane.sql",
+        "migrations/002-review-ledger.sql",
+        "migrations/003-experience-agents.sql",
+        "packages/control-plane/src/db.mjs"
+      ],
+      "tests": ["tests/v21/durability.test.mjs", "tests/v23/conversation.test.mjs"],
+      "status": "verified",
+      "limitations": []
+    },
+    {
+      "id": "V23-OPS-03",
+      "behavior": "Scoped live API and CLI provider accounts complete bounded generation jobs without fixture substitution.",
+      "classification": "live",
+      "implementation": [
+        "packages/providers/src/api.mjs",
+        "packages/providers/src/cli.mjs",
+        "scripts/live-provider-acceptance.mjs",
+        "scripts/cli-provider-acceptance.mjs"
+      ],
+      "tests": ["scripts/live-provider-acceptance.mjs", "scripts/cli-provider-acceptance.mjs"],
+      "status": "externally_blocked",
+      "limitations": [
+        "Authenticated Claude Opus 4.8/high and Codex CLI adapter calls passed locally. No scoped API key was supplied, so the required API half remains blocked and no fallback was used."
+      ]
+    },
+    {
+      "id": "V23-OPS-04",
+      "behavior": "The production Linux certifier and service images install locked runtimes, build, execute, and run actual network-disabled browser certification at recorded image IDs.",
+      "classification": "operations",
+      "implementation": ["ops/Dockerfile", "ops/certifier.Dockerfile"],
+      "tests": ["scripts/container-acceptance.mjs"],
+      "status": "verified",
+      "limitations": [
+        "Local immutable image IDs are evidence for this build only; the deployment registry must scan and attest the promoted digests."
+      ]
+    },
+    {
+      "id": "V23-OPS-05",
+      "behavior": "An independent security reviewer completes penetration, dependency, and multi-tenant threat-model review against the final commit.",
+      "classification": "live",
+      "implementation": ["SECURITY.md", "docs/THREAT_MODEL.md"],
+      "tests": ["scripts/independent-security-gate.mjs"],
+      "status": "externally_blocked",
+      "limitations": [
+        "Independent reviewer identity and signed report are external authority and cannot be self-attested by the implementation agent."
+      ]
+    },
+    {
+      "id": "V23-DOC-01",
+      "behavior": "README, architecture, integration, MCP, provider, security, operations, testing, and release documents describe only current implemented commands and limits.",
+      "classification": "documentation",
+      "implementation": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/INTEGRATION.md",
+        "docs/MCP.md",
+        "docs/OPERATIONS.md",
+        "SECURITY.md",
+        "CHANGELOG.md"
+      ],
+      "tests": ["tests/acceptance/requirements.test.mjs"],
+      "status": "implemented",
+      "limitations": [
+        "Documentation validation checks paths and commands; human editorial review remains advisable."
+      ]
+    }
+  ]
+}
