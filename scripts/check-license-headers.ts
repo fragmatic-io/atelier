@@ -21,6 +21,9 @@ const ROOT = resolve(import.meta.dirname, '..');
 
 const INCLUDE = [
   'packages/*/src/**/*.{ts,tsx,mts,cts,js,mjs,cjs}',
+  'platform/packages/*/src/**/*.{ts,tsx,mts,cts,js,mjs,cjs}',
+  'platform/apps/**/*.{ts,tsx,mts,cts,js,mjs,cjs}',
+  'platform/scripts/**/*.{ts,mts,cts,js,mjs,cjs}',
   'scripts/**/*.{ts,mts,cts,js,mjs,cjs}',
   'eslint.config.js',
   'vitest.config.ts',

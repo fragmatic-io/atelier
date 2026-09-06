@@ -1,0 +1,8 @@
+# Review with your installed proxy and domain. Normal HTTPS port 443 assumed.
+atelier.example.com {
+    encode gzip
+    reverse_proxy 127.0.0.1:4310 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+}

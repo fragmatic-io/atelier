@@ -1,0 +1,30 @@
+[Unit]
+Description=Atelier isolated build worker
+After=network-online.target atelier-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=atelier
+Group=atelier
+WorkingDirectory=/opt/atelier
+EnvironmentFile=/etc/atelier/platform.env
+ExecStart=/usr/bin/node /opt/atelier/scripts/worker.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=40
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/atelier
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryMax=2G
+TasksMax=128
+CPUQuota=150%
+
+[Install]
+WantedBy=multi-user.target

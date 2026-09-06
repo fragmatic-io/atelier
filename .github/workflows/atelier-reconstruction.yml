@@ -2,7 +2,12 @@ name: Verify reconstructed Atelier platform
 on:
   push:
     branches: [feat/v2-reconstruction-artifact-agents]
-    paths: ['platform/**', 'docs/v2-reconstruction/transport/**', '.github/workflows/atelier-reconstruction.yml']
+    paths:
+      [
+        'platform/**',
+        'docs/v2-reconstruction/transport/**',
+        '.github/workflows/atelier-reconstruction.yml',
+      ]
   workflow_dispatch:
 permissions:
   contents: write

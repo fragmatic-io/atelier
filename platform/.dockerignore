@@ -1,0 +1,11 @@
+.git
+node_modules
+.atelier-data
+.atelier-host-data
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.key
+.env
+*.tgz
+evidence

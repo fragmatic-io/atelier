@@ -1,0 +1,17 @@
+{
+  "server": "https://atelier.example.com",
+  "token": "REPLACE_WITH_THIS_PROJECTS_RUNNER_TOKEN",
+  "providers": ["codex-cli", "claude-cli"],
+  "accounts": {
+    "codex-cli": {
+      "home": "/home/atelier-project-runner",
+      "executable": "/usr/local/bin/codex"
+    },
+    "claude-cli": {
+      "home": "/home/atelier-project-runner",
+      "executable": "/usr/local/bin/claude",
+      "model": "claude-opus-4-8",
+      "effort": "high"
+    }
+  }
+}

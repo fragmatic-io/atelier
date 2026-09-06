@@ -23,5 +23,12 @@ apps/*/.next
 # Astro build cache (apps/marketing)
 apps/*/.astro
 
+# Reconstructed platform generated output and vendored third-party compiler
+platform/evidence/current
+platform/PACKAGE-MANIFEST.json
+platform/SBOM.cdx.json
+platform/CHECKPOINT-FILES.json
+platform/vendor
+
 # Agent worktree checkouts
 .claude/worktrees

@@ -27,6 +27,9 @@ export default tseslint.config(
       'pnpm-lock.yaml',
       '.husky/_/**',
       'docs/**',
+      // platform/ is an independently packaged JavaScript application with
+      // its own executable acceptance suite and browser/runtime globals.
+      'platform/**',
       'capabilities/**',
       'skills/**',
       'recipes/**',
