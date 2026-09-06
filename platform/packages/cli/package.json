@@ -1,0 +1,28 @@
+{
+  "name": "@atelier-v2/cli",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "description": "Atelier V2 command-line workflow.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@atelier-v2/scanner": "workspace:*",
+    "@atelier-v2/project-model": "workspace:*",
+    "@atelier-v2/component-forge": "workspace:*",
+    "@atelier-v2/experience-compiler": "workspace:*",
+    "@atelier-v2/evaluator": "workspace:*",
+    "@atelier-v2/runtime": "workspace:*",
+    "@atelier-v2/workflow": "workspace:*",
+    "@atelier-v2/studio": "workspace:*"
+  },
+  "bin": {
+    "atelier": "./bin/atelier.mjs"
+  }
+}
