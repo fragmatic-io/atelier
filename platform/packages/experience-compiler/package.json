@@ -1,0 +1,18 @@
+{
+  "name": "@atelier-v2/experience-compiler",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "description": "Task-to-plan-to-screen-bundle additive experience compiler.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@atelier-v2/contracts": "workspace:*",
+    "@atelier-v2/component-forge": "workspace:*"
+  }
+}

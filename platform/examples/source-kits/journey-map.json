@@ -1,0 +1,33 @@
+{
+  "id": "journey-map",
+  "name": "Journey map",
+  "description": "Explore a spatial journey and the evidence at each step.",
+  "target": "react",
+  "grounding": "static",
+  "source": "import React,{useState} from 'react';\nexport default function Journey({state='ready'}){const [step,setStep]=useState(0);if(state!=='ready')return <section className=\"state\" data-state={state} role={state==='error'?'alert':'status'}><h2>{state==='loading'?'Loading context…':state==='empty'?'Nothing to show yet':'This view needs attention'}</h2><p>{state==='error'?'Refresh the authorized data source and try again.':'The workspace remains available.'}</p></section>;\nconst labels=['Discover','Evaluate','Activate','Grow'];const details=['A useful first impression','Make the choice clear','Help the first action succeed','Build a durable habit'];return <div className=\"shell\"><span className=\"eyebrow\">Experience strategy</span><h1>Connect the moments that matter.</h1><p>Navigate a reference journey without losing the wider context.</p><nav className=\"steps\" aria-label=\"Journey steps\">{labels.map((name,i)=><button key={name} id={'step-'+i} className={i===step?'btn':'btn ghost'} onClick={()=>setStep(i)} aria-current={i===step?'step':undefined}>{i+1}. {name}</button>)}</nav><section className=\"panel spacer\"><span className=\"eyebrow\">Current focus</span><h2 id=\"result\">{details[step]}</h2><p>Identify the question, the evidence and the next safe action for this moment.</p><div className=\"grid\"><div><h3>User question</h3><p>What should I do next?</p></div><div><h3>Product responsibility</h3><p>Reduce uncertainty without hiding tradeoffs.</p></div></div></section></div>;}",
+  "css": " .shell{padding:clamp(20px,4vw,40px);max-width:1100px;margin:auto}.eyebrow{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--primary);font-weight:750}h1{font-size:clamp(25px,4vw,38px);line-height:1.18;letter-spacing:-.04em;margin:12px 0}h2{font-size:18px;line-height:1.3}p{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:18px;margin-top:28px}.panel{border:1px solid var(--border);border-radius:14px;padding:22px;background:var(--surface)}.soft{background:var(--soft)}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.btn{background:var(--primary);border:1px solid var(--primary);border-radius:9px;color:white;padding:10px 15px}.ghost{background:var(--surface);color:var(--text);border-color:var(--border)}.tag{display:inline-block;padding:4px 9px;border:1px solid var(--border);border-radius:99px;font-size:11px}.big{font-size:42px;letter-spacing:-.045em;font-weight:700}.muted{color:var(--muted);font-size:13px}.state{padding:36px}.spacer{margin-top:22px}input,select,textarea{border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);padding:9px;max-width:100%}textarea{width:100%}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--border);padding:12px 8px;text-align:left}progress{width:100%;height:12px}.steps{display:flex;gap:12px;flex-wrap:wrap}.steps button{flex:1;min-width:100px}svg{width:100%;height:auto}.list{list-style:none;padding:0}.list li{border-bottom:1px solid var(--border);padding:12px 0}@media(max-width:520px){.shell{padding:18px}.grid{gap:12px;margin-top:20px}.panel{padding:16px}.big{font-size:34px}}",
+  "modules": {},
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "actions": [],
+  "sampleData": {},
+  "tasks": [
+    {
+      "name": "Explore a spatial journey and the evidence at each step.",
+      "steps": [
+        {
+          "op": "click",
+          "selector": "#step-2",
+          "value": ""
+        }
+      ],
+      "expect": {
+        "selector": "#result",
+        "text": "first action"
+      }
+    }
+  ]
+}

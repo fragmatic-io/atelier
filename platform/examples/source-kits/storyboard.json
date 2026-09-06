@@ -1,0 +1,33 @@
+{
+  "id": "storyboard",
+  "name": "Storyboard",
+  "description": "Edit a creative sequence rather than using a standard dashboard.",
+  "target": "react",
+  "grounding": "static",
+  "source": "import React,{useState} from 'react';\nexport default function Storyboard({state='ready'}){const [selected,setSelected]=useState(0);const [note,setNote]=useState('Open on a quiet street.');if(state!=='ready')return <section className=\"state\" data-state={state} role={state==='error'?'alert':'status'}><h2>{state==='loading'?'Loading context…':state==='empty'?'Nothing to show yet':'This view needs attention'}</h2><p>{state==='error'?'Refresh the authorized data source and try again.':'The workspace remains available.'}</p></section>;\nconst frames=['Establish','Discover','Resolve'];return <div className=\"shell\"><span className=\"eyebrow\">Creative workspace</span><h1>Give the story a shape before the render.</h1><p>Explore a local three-beat sequence and edit its direction.</p><div className=\"grid\">{frames.map((label,i)=><button id={'frame-'+i} key={label} className=\"panel\" onClick={()=>setSelected(i)} aria-pressed={selected===i}><svg viewBox=\"0 0 250 140\" role=\"img\" aria-label={label+' reference composition'}><rect width=\"250\" height=\"140\" rx=\"12\" fill=\"var(--soft)\"/><circle cx={60+i*45} cy=\"55\" r=\"24\" fill=\"var(--primary)\"/><path d=\"M0 125 L85 80 L150 125 L210 70 L250 125\" fill=\"var(--border)\"/></svg><h2>{label}</h2></button>)}</div><section className=\"panel spacer\"><h2 id=\"result\">{frames[selected]}: direction</h2><label>Scene notes<textarea aria-label=\"Scene notes\" rows={3} value={note} onChange={e=>setNote(e.currentTarget.value)}/></label><p className=\"muted\">Draft notes stay local to this preview.</p></section></div>;}",
+  "css": " .shell{padding:clamp(20px,4vw,40px);max-width:1100px;margin:auto}.eyebrow{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--primary);font-weight:750}h1{font-size:clamp(25px,4vw,38px);line-height:1.18;letter-spacing:-.04em;margin:12px 0}h2{font-size:18px;line-height:1.3}p{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:18px;margin-top:28px}.panel{border:1px solid var(--border);border-radius:14px;padding:22px;background:var(--surface)}.soft{background:var(--soft)}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.btn{background:var(--primary);border:1px solid var(--primary);border-radius:9px;color:white;padding:10px 15px}.ghost{background:var(--surface);color:var(--text);border-color:var(--border)}.tag{display:inline-block;padding:4px 9px;border:1px solid var(--border);border-radius:99px;font-size:11px}.big{font-size:42px;letter-spacing:-.045em;font-weight:700}.muted{color:var(--muted);font-size:13px}.state{padding:36px}.spacer{margin-top:22px}input,select,textarea{border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);padding:9px;max-width:100%}textarea{width:100%}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--border);padding:12px 8px;text-align:left}progress{width:100%;height:12px}.steps{display:flex;gap:12px;flex-wrap:wrap}.steps button{flex:1;min-width:100px}svg{width:100%;height:auto}.list{list-style:none;padding:0}.list li{border-bottom:1px solid var(--border);padding:12px 0}@media(max-width:520px){.shell{padding:18px}.grid{gap:12px;margin-top:20px}.panel{padding:16px}.big{font-size:34px}}",
+  "modules": {},
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "actions": [],
+  "sampleData": {},
+  "tasks": [
+    {
+      "name": "Edit a creative sequence rather than using a standard dashboard.",
+      "steps": [
+        {
+          "op": "click",
+          "selector": "#frame-2",
+          "value": ""
+        }
+      ],
+      "expect": {
+        "selector": "#result",
+        "text": "Resolve: direction"
+      }
+    }
+  ]
+}
