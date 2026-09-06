@@ -1,0 +1,124 @@
+[
+  {
+    "type": "route.opened",
+    "at": "2026-08-01T10:00:00Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/customers",
+    "entity": { "type": "Customer", "id": "c_101" }
+  },
+  {
+    "type": "filter.applied",
+    "at": "2026-08-01T10:00:10Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/customers",
+    "metadata": { "filterName": "risk" }
+  },
+  {
+    "type": "route.opened",
+    "at": "2026-08-01T10:00:20Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/customers/c_101",
+    "entity": { "type": "Customer", "id": "c_101" }
+  },
+  {
+    "type": "identifier.copied",
+    "at": "2026-08-01T10:00:30Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/customers/c_101"
+  },
+  {
+    "type": "route.opened",
+    "at": "2026-08-01T10:00:40Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/incidents"
+  },
+  {
+    "type": "filter.applied",
+    "at": "2026-08-01T10:00:50Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/incidents",
+    "metadata": { "filterName": "customer" }
+  },
+  {
+    "type": "route.opened",
+    "at": "2026-08-01T10:01:00Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/customers/c_101"
+  },
+  {
+    "type": "intervention.completed",
+    "at": "2026-08-01T10:01:20Z",
+    "sessionId": "s1",
+    "role": "support_manager",
+    "route": "/customers/c_101",
+    "capabilityId": "intervention.create"
+  },
+
+  {
+    "type": "route.opened",
+    "at": "2026-08-02T10:00:00Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/customers",
+    "entity": { "type": "Customer", "id": "c_202" }
+  },
+  {
+    "type": "filter.applied",
+    "at": "2026-08-02T10:00:10Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/customers",
+    "metadata": { "filterName": "risk" }
+  },
+  {
+    "type": "route.opened",
+    "at": "2026-08-02T10:00:20Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/customers/c_202",
+    "entity": { "type": "Customer", "id": "c_202" }
+  },
+  {
+    "type": "identifier.copied",
+    "at": "2026-08-02T10:00:30Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/customers/c_202"
+  },
+  {
+    "type": "route.opened",
+    "at": "2026-08-02T10:00:40Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/incidents"
+  },
+  {
+    "type": "filter.applied",
+    "at": "2026-08-02T10:00:50Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/incidents",
+    "metadata": { "filterName": "customer" }
+  },
+  {
+    "type": "route.opened",
+    "at": "2026-08-02T10:01:00Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/customers/c_202"
+  },
+  {
+    "type": "workflow.abandoned",
+    "at": "2026-08-02T10:01:20Z",
+    "sessionId": "s2",
+    "role": "support_manager",
+    "route": "/customers/c_202"
+  }
+]

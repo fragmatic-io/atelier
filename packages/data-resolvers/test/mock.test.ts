@@ -5,6 +5,32 @@ import { describe, expect, it } from 'vitest';
 import { MockDataResolver } from '../src/mock.js';
 
 describe('MockDataResolver', () => {
+  it('accepts the shared structured sort contract', () => {
+    const resolver = new MockDataResolver({
+      fixtures: {
+        customers: [
+          { id: 'older-b', created_at: '2026-01-01' },
+          { id: 'newer', created_at: '2026-02-01' },
+          { id: 'older-a', created_at: '2026-01-01' },
+        ],
+      },
+    });
+
+    expect(
+      resolver.resolve({
+        source: 'customers',
+        sort: [
+          { field: 'created_at', direction: 'desc' },
+          { field: 'id', direction: 'asc' },
+        ],
+      }),
+    ).toEqual([
+      { id: 'newer', created_at: '2026-02-01' },
+      { id: 'older-a', created_at: '2026-01-01' },
+      { id: 'older-b', created_at: '2026-01-01' },
+    ]);
+  });
+
   it('returns the fixture value for a known capability id', () => {
     const resolver = new MockDataResolver({
       fixtures: { list: [{ id: 1 }, { id: 2 }] },

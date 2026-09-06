@@ -1,0 +1,17 @@
+{
+  "name": "@atelier-v2/project-model",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "description": "Provenance-bearing application knowledge graph and index.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@atelier-v2/contracts": "workspace:*"
+  }
+}

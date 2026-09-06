@@ -1,0 +1,113 @@
+{
+  "name": "@atelier/platform",
+  "version": "2.3.0-rc.1",
+  "private": true,
+  "type": "module",
+  "description": "Multi-tenant, multi-project additive interface studio and scoped host runtime",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./types/host.d.ts",
+      "default": "./packages/host-sdk/src/index.mjs"
+    },
+    "./host": {
+      "types": "./types/host.d.ts",
+      "default": "./packages/host-sdk/src/index.mjs"
+    },
+    "./react": {
+      "types": "./types/react.d.ts",
+      "default": "./packages/adapters/react/src/index.js"
+    },
+    "./surface": {
+      "types": "./types/surface.d.ts",
+      "default": "./packages/surface/src/browser.mjs"
+    },
+    "./host-client": {
+      "types": "./types/host-client.d.ts",
+      "default": "./packages/surface/src/host-client.mjs"
+    },
+    "./providers": {
+      "types": "./types/providers.d.ts",
+      "default": "./packages/providers/src/index.mjs"
+    },
+    "./mcp": {
+      "types": "./types/mcp.d.ts",
+      "default": "./packages/mcp/src/server.mjs"
+    },
+    "./surface.css": "./apps/studio/web/surface.css"
+  },
+  "bin": {
+    "atelier": "./scripts/cli.mjs"
+  },
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "demo": "node scripts/start.mjs --demo",
+    "worker": "node scripts/worker.mjs",
+    "test": "npm run test:unit",
+    "test:unit": "node --test --test-concurrency=4 tests/*.test.mjs tests/*/*.test.mjs",
+    "verify": "node scripts/reconstruction-verify.mjs --package",
+    "verify:host": "node scripts/verify-host.mjs",
+    "admin": "node scripts/admin.mjs",
+    "runner": "node scripts/runner.mjs",
+    "host-demo": "node apps/host-demo/server.mjs",
+    "test:package": "node scripts/smoke-package.mjs",
+    "sbom": "node scripts/sbom.mjs",
+    "test:reconstruction": "node --test --test-concurrency=1 tests/*.test.mjs tests/*/*.test.mjs",
+    "verify:reconstruction": "node scripts/reconstruction-verify.mjs",
+    "acceptance": "node scripts/acceptance.mjs",
+    "acceptance:cli": "node scripts/cli-provider-acceptance.mjs",
+    "test:forge": "node --test tests/forge-compiler.test.mjs tests/forge/*.test.mjs",
+    "test:browser": "python3 scripts/browser-integration.py",
+    "mcp": "node scripts/mcp.mjs",
+    "certify:examples": "node scripts/certify-examples.mjs",
+    "demo:agent": "node apps/agent-demo/server.mjs",
+    "seed:experiences": "node scripts/seed-experiences.mjs",
+    "export:source": "node scripts/export-source.mjs"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "esbuild": "0.28.2",
+    "postcss": "8.5.28",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "5.8.3",
+    "yaml": "2.9.0",
+    "zod": "4.5.4"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "package.json",
+    "packages",
+    "scripts",
+    "types",
+    "apps",
+    "fixtures",
+    "migrations",
+    "ops",
+    "docs",
+    "tests",
+    "PACKAGE-MANIFEST.json",
+    "SBOM.cdx.json",
+    "CHANGELOG.md"
+  ],
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0"
+  }
+}

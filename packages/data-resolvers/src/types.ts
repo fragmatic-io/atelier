@@ -13,7 +13,7 @@
  * dependency on React just to import a type.
  */
 
-import type { Capability, StructuredFilter } from '@atelier/schemas';
+import type { Capability, StructuredFilter, StructuredSort } from '@atelier/schemas';
 
 /**
  * The verbatim manifest data binding the resolver receives.
@@ -37,7 +37,12 @@ export interface DataBinding {
    * the value to their query builder.
    */
   filter?: string | StructuredFilter;
-  sort?: string;
+  /**
+   * Accepts the canonical string form or the structured multi-field form
+   * emitted by the compiler. Keep this identical to `@atelier/react`'s
+   * `DataBinding` so resolver functions are assignable across packages.
+   */
+  sort?: string | StructuredSort;
   group_by?: string;
   /**
    * Wave 10 / S-2 — opaque server-issued cursor identifying where the next

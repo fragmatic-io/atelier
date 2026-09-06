@@ -52,21 +52,41 @@ function lookupFixture(
   return fixtures[id];
 }
 
+interface SortField {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+function parseSortFields(sort: string): SortField[] | null {
+  const fields: SortField[] = [];
+  for (const token of sort.split(',')) {
+    const trimmed = token.trim();
+    const match = /^([+-]?)(\S+?)(?:\s+(asc|desc))?$/iu.exec(trimmed);
+    if (!match) return null;
+    const sign = match[1];
+    const field = match[2];
+    if (!field) return null;
+    fields.push({
+      field,
+      direction: sign === '-' || match[3]?.toLowerCase() === 'desc' ? 'desc' : 'asc',
+    });
+  }
+  return fields.length > 0 ? fields : null;
+}
+
 function applySort(records: unknown[], sort: string): unknown[] {
-  // Supports `field asc` / `field desc` / `field`.
-  const trimmed = sort.trim();
-  const match = /^(\S+)(?:\s+(asc|desc))?$/iu.exec(trimmed);
-  if (!match) return records;
-  const field = match[1]!;
-  const direction = (match[2] ?? 'asc').toLowerCase();
-  const dir = direction === 'desc' ? -1 : 1;
+  const fields = parseSortFields(sort);
+  if (!fields) return records;
   return [...records].sort((a, b) => {
-    const av = readField(a, field) as number | string | undefined;
-    const bv = readField(b, field) as number | string | undefined;
-    if (av === bv) return 0;
-    if (av === undefined) return 1;
-    if (bv === undefined) return -1;
-    return (av < bv ? -1 : 1) * dir;
+    for (const { field, direction } of fields) {
+      const av = readField(a, field) as number | string | undefined;
+      const bv = readField(b, field) as number | string | undefined;
+      if (av === bv) continue;
+      if (av === undefined) return 1;
+      if (bv === undefined) return -1;
+      return (av < bv ? -1 : 1) * (direction === 'desc' ? -1 : 1);
+    }
+    return 0;
   });
 }
 

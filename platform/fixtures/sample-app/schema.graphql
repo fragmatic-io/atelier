@@ -1,0 +1,16 @@
+# Multiline fields and directives intentionally exercise the scanner.
+type Customer {
+  id: ID!
+  name: String!
+  email: String
+  status: String!
+  riskScore: Int!
+}
+
+type Query {
+  customer(id: ID!, includeHistory: Boolean = false): Customer! @auth(scope: "customer.read")
+}
+
+type Mutation {
+  setCustomerPriority(customerId: ID!, priority: Int!): Customer! @auth(scope: "customer.intervene")
+}

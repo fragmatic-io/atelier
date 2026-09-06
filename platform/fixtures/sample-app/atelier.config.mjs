@@ -1,0 +1,56 @@
+export default {
+  projectId: 'support-console',
+  scanner: { typescript: true },
+  defaultSlot: 'customer.detail.right-rail',
+  generated: { directory: './src/atelier-generated' },
+  runtime: { allowedAdaptationLevel: 2, fallback: 'host_ui' },
+  telemetry: { mode: 'semantic', captureValues: false, eventsFile: 'atelier.events.json' },
+  permissions: ['customer.read', 'customer.intervene', 'customer.archive'],
+  slots: [
+    {
+      id: 'customer.detail.right-rail',
+      mode: 'inline',
+      contextSchema: {
+        type: 'object',
+        properties: {
+          entity: { type: 'object' },
+          role: { type: 'string' },
+          permissions: { type: 'array' },
+        },
+        required: ['entity', 'role'],
+        additionalProperties: true,
+      },
+      allowedCapabilityGroups: ['customer.', 'intervention.'],
+      allowWriteActions: true,
+      allowedPiiFields: [],
+      maxAdaptationLevel: 2,
+      fallback: 'host_ui',
+      constraints: { minWidth: 280, maxWidth: 460, responsive: 'drawer-below-900' },
+    },
+    {
+      id: 'operations.exception-workbench',
+      mode: 'route',
+      contextSchema: { type: 'object', additionalProperties: true },
+      allowedCapabilityGroups: ['customer.', 'intervention.', 'graphql.query.customer'],
+      allowWriteActions: true,
+      allowedPiiFields: [],
+      maxAdaptationLevel: 3,
+      fallback: 'host_ui',
+    },
+  ],
+  capabilityOverrides: {
+    'customer.archive': {
+      risk: 'destructive',
+      confirmation: 'modal',
+      reversible: false,
+      requiredPermissions: ['customer.archive'],
+    },
+    'intervention.create': {
+      risk: 'sensitive',
+      confirmation: 'modal',
+      reversible: false,
+      requiredPermissions: ['customer.intervene'],
+      mustFollow: ['customer.get'],
+    },
+  },
+};

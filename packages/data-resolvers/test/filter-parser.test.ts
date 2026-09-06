@@ -139,6 +139,16 @@ describe('filter-parser', () => {
     expect(toQueryString({}).size).toBe(0);
   });
 
+  it('toQueryString normalizes structured multi-field sorts', () => {
+    const params = toQueryString({
+      sort: [
+        { field: 'created_at', direction: 'desc' },
+        { field: 'id', direction: 'asc' },
+      ],
+    });
+    expect(params.get('sort')).toBe('-created_at, +id');
+  });
+
   it('toWhereClause emits SQL-shaped output with quoted strings', () => {
     const ast = parseFilter('status = "done" AND count >= 5');
     const sql = toWhereClause(ast);

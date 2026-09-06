@@ -1,0 +1,20 @@
+[
+  {
+    "capabilityId": "customer.get",
+    "durationMs": 82,
+    "status": 200,
+    "responseFields": ["id", "name", "status", "riskScore", "plan"]
+  },
+  {
+    "capabilityId": "customer.get",
+    "durationMs": 109,
+    "status": 200,
+    "responseFields": ["id", "name", "email", "status", "riskScore", "plan", "openIncidents"]
+  },
+  {
+    "capabilityId": "intervention.create",
+    "durationMs": 185,
+    "status": 201,
+    "responseFields": ["id", "customerId", "kind", "reason", "createdAt"]
+  }
+]

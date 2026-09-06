@@ -72,6 +72,10 @@ function paint(noColor: boolean, color: ColorName, text: string): string {
   return `${COLORS[color]}${text}${COLORS.reset}`;
 }
 
+function formatInspectable(value: string | Record<string, string> | readonly unknown[]): string {
+  return typeof value === 'string' ? value : JSON.stringify(value);
+}
+
 /** Strip ANSI escape sequences. Exported for tests. */
 export function stripAnsi(s: string): string {
   // eslint-disable-next-line no-control-regex
@@ -141,7 +145,7 @@ function renderLayoutTree(
     decorations.push(`filter: ${filterStr}`);
   }
   if (node.data?.sort) {
-    decorations.push(`sort: ${node.data.sort}`);
+    decorations.push(`sort: ${formatInspectable(node.data.sort)}`);
   }
   if (node.data?.group_by) {
     decorations.push(`group_by: ${node.data.group_by}`);
@@ -178,7 +182,7 @@ export function renderManifest(manifest: Manifest, noColor: boolean): string {
   const cf = manifest.compiled_from;
   out.push(`    compiler_model: ${paint(noColor, 'yellow', cf.compiler_model)}`);
   out.push(`    compiled_at:    ${cf.compiled_at}`);
-  out.push(`    capability_version:        ${cf.capability_version}`);
+  out.push(`    capability_version:        ${formatInspectable(cf.capability_version)}`);
   out.push(`    component_catalog_version: ${cf.component_catalog_version}`);
   out.push(`    intent_profile_version:    ${String(cf.intent_profile_version)}`);
   const skillEntries = Object.entries(cf.skill_versions);

@@ -1,0 +1,203 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Support Console API",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/api/customers/{customerId}": {
+      "get": {
+        "operationId": "customer.get",
+        "summary": "Get customer context",
+        "security": [
+          {
+            "oauth": ["customer.read"]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{customerId}/interventions": {
+      "post": {
+        "operationId": "intervention.create",
+        "summary": "Create a customer intervention",
+        "security": [
+          {
+            "oauth": ["customer.intervene"]
+          }
+        ],
+        "x-confirmation": "modal",
+        "x-must-follow": ["customer.get"],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["kind", "reason"],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": ["call", "email", "escalate"]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Intervention"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{customerId}/archive": {
+      "delete": {
+        "operationId": "customer.archive",
+        "summary": "Archive a customer record",
+        "security": [
+          {
+            "oauth": ["customer.archive"]
+          }
+        ],
+        "x-confirmation": "modal",
+        "responses": {
+          "204": {
+            "description": "Archived"
+          }
+        },
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.example.test/authorize",
+            "tokenUrl": "https://auth.example.test/token",
+            "scopes": {
+              "customer.read": "Read customer records",
+              "customer.intervene": "Create interventions",
+              "customer.archive": "Archive customer records"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Customer": {
+        "type": "object",
+        "required": ["id", "name", "status", "riskScore"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "at_risk", "escalated", "archived"]
+          },
+          "riskScore": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "plan": {
+            "type": "string"
+          },
+          "openIncidents": {
+            "type": "integer"
+          },
+          "lastContactAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nextBestAction": {
+            "type": "string"
+          }
+        }
+      },
+      "Intervention": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

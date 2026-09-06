@@ -1,0 +1,14 @@
+{
+  "name": "@atelier-v2/contracts",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "description": "Core artifact contracts, validation, canonicalization and evidence.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ]
+}

@@ -450,7 +450,7 @@ export function astToString(ast: FilterAst): string {
  */
 export function toQueryString(binding: {
   filter?: string | StructuredFilter;
-  sort?: string;
+  sort?: string | StructuredSort;
   group_by?: string;
 }): URLSearchParams {
   const params = new URLSearchParams();

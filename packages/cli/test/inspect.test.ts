@@ -101,6 +101,24 @@ describe('renderManifest', () => {
     const ESC = String.fromCharCode(27);
     expect(out.includes(ESC)).toBe(false);
   });
+
+  it('renders structured sort and capability versions without object coercion', () => {
+    const manifest = fixtureManifest();
+    manifest.compiled_from.capability_version = {
+      'github.repo.list': '2.0.0',
+    };
+    const list = manifest.routes[0]?.layout.children?.[1];
+    if (!list) throw new Error('fixture list node is missing');
+    list.data = {
+      source: 'github.repo.list',
+      sort: [{ field: 'stars', direction: 'desc' }],
+    };
+
+    const out = renderManifest(manifest, true);
+    expect(out).toContain('capability_version:        {"github.repo.list":"2.0.0"}');
+    expect(out).toContain('sort: [{"field":"stars","direction":"desc"}]');
+    expect(out).not.toContain('[object Object]');
+  });
 });
 
 describe('runInspect (file-path mode)', () => {
