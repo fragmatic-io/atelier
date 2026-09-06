@@ -1,0 +1,43 @@
+name: Verify reconstructed Atelier platform
+on:
+  push:
+    branches: [feat/v2-reconstruction-artifact-agents]
+    paths: ['platform/**', 'docs/v2-reconstruction/transport/**', '.github/workflows/atelier-reconstruction.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: atelier-reconstruction
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'fragmatic-io/atelier' && github.ref == 'refs/heads/feat/v2-reconstruction-artifact-agents'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+      - name: Materialize integrity-checked source capsule when complete
+        if: hashFiles('docs/v2-reconstruction/transport/COMPLETE.json') != ''
+        run: python3 docs/v2-reconstruction/transport/hydrate.py
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.16.0'
+      - name: Verify source and execute tests
+        if: hashFiles('platform/package.json') != ''
+        working-directory: platform
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node scripts/reconstruction-verify.mjs
+      - name: Persist expanded readable source on this branch only
+        if: hashFiles('docs/v2-reconstruction/transport/COMPLETE.json') != ''
+        run: |
+          test "$GITHUB_REF" = 'refs/heads/feat/v2-reconstruction-artifact-agents'
+          git config user.name 'Atelier reconstruction automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add platform docs/v2-reconstruction/HYDRATED.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: persist verified reconstruction source and acceptance tests'
+            git push origin HEAD:refs/heads/feat/v2-reconstruction-artifact-agents
+          fi
