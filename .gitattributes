@@ -23,11 +23,7 @@
 *.pdf         binary
 *.zip         binary
 
-# Generated files — exclude from language stats and diffs.
-pnpm-lock.yaml linguist-generated=true -diff
-*.lock         linguist-generated=true
-
-# Generated JSON Schemas — versioned but produced by `pnpm schemas:dump`.
-# Keep them out of language stats and mark as generated for review tooling.
-.well-known/schemas/*.json     linguist-generated=true
-packages/schemas/test/golden/*.json linguist-generated=true
+# Current generated files — versioned, but excluded from language stats and
+# review diffs. The retired pnpm/schema-generator paths no longer exist.
+package-lock.json                   linguist-generated=true -diff
+platform/PACKAGE-MANIFEST.json      linguist-generated=true -diff

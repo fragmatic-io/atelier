@@ -9,6 +9,13 @@ import {
 } from '/assets/install-surface.mjs';
 import { agentSetupFields, specialistSetup } from '/assets/agent-setup.mjs';
 import { designOverrides, designReviewFields } from '/assets/design-setup.mjs';
+import { authScreen } from '/assets/auth-screen.mjs';
+import {
+  capabilitySelectionSummary,
+  renderCapabilityCatalog,
+  selectedCapabilityIds,
+  visibleCapabilityIds,
+} from '/assets/capability-catalog.mjs';
 const $ = (s, r = document) => r.querySelector(s),
   $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const icons = {
@@ -92,7 +99,7 @@ async function api(path, { method = 'GET', body, signal } = {}) {
   });
   const value = await res.json();
   if (!res.ok) {
-    if (res.status === 401 && path !== '/auth/login') {
+    if (res.status === 401 && !['/auth/login', '/auth/signup'].includes(path)) {
       state.me = null;
       renderAuth();
     }
@@ -135,11 +142,16 @@ function shell() {
       '',
     )}</nav><div class="nav-title">Tools</div><nav class="nav"><a href="/account">${icon('shield')}Account security</a><a href="#" data-action="search">${icon('search')}Search project</a></nav><div class="sidebar-foot"><div class="build-label"><strong><i class="status-dot"></i>Compile. Review. Extend.</strong><p>Native experiences for the apps<br>your team already uses.</p></div><div class="profile"><span class="avatar">${e(state.me.user.displayName.slice(0, 2).toUpperCase())}</span><div><div class="profile-name">${e(state.me.user.displayName)}</div><div class="profile-role">${e(humanize(tenant?.role ?? 'member'))}</div></div><button class="icon-btn" data-action="logout" aria-label="Sign out">${icon('logout')}</button></div></div></aside><div class="main-column"><header class="topbar"><div class="crumbs"><button class="icon-btn mobile-menu" data-action="menu" aria-label="Open navigation">${icon('menu')}</button>${e(tenant?.name ?? 'Workspace')}${icon('chevron')}<strong>${e(state.project?.name ?? humanize(state.view))}</strong></div><div class="top-actions"><button class="search-btn" data-action="search">${icon('search')}<span>Find anything…</span><kbd>⌘ K</kbd></button><button class="icon-btn" data-action="theme" aria-label="Toggle dark theme">${icon('moon')}</button><span class="avatar">${e(state.me.user.displayName.slice(0, 1).toUpperCase())}</span></div></header><main id="main" class="main"><div class="loading-page"><span class="spinner" role="status" aria-label="Loading"></span></div></main></div></div>`;
 }
-function renderAuth(joinToken = null) {
+function renderAuth({ mode = 'login', joinToken = null } = {}) {
   state.surface?.dispose();
-  $('#app').innerHTML =
-    `<div class="auth"><section class="auth-art"><a class="brand" href="/">${logo}atelier<sup>2.3</sup></a><h1>Good software.<br>A little more<br>personal.</h1><p>Understand your app. Discover what’s missing. Build the workspace your users actually need.</p><div class="auth-modules"><div class="auth-module"><small>01 / UNDERSTAND</small><strong>Your application.</strong></div><div class="auth-module"><small>02 / EXTEND</small><strong>Your patterns.</strong></div></div><span class="eyebrow">Built for the apps you already love.</span></section><section class="auth-form-wrap"><div class="auth-box"><span class="eyebrow">Welcome to your studio</span><h2>${joinToken ? 'Join your team.' : 'Make room for better.'}</h2><p>${joinToken ? 'Create an account or use your existing account password to accept this invitation.' : 'Sign in to manage your projects and shape what comes next.'}</p><form class="form" id="login-form">${joinToken ? '<label>Your name<input name="displayName" autocomplete="name" required></label>' : '<label>Email address<input name="email" type="email" autocomplete="username" placeholder="you@company.com" required></label>'}<label>Password<input name="password" type="password" autocomplete="${joinToken ? 'new-password' : 'current-password'}" required minlength="12" placeholder="At least 12 characters"></label>${joinToken ? '' : '<label>Verification or recovery code <span class="help">Only required when two-factor authentication is enabled.</span><input name="code" autocomplete="one-time-code" placeholder="Optional"></label>'}<p class="form-error" role="alert"></p><button class="btn" type="submit">${joinToken ? 'Accept invitation' : 'Sign in'}${icon('arrow')}</button></form><p class="auth-note">${joinToken ? 'The invitation is single-use and expires automatically.' : 'Accounts are invitation-only. Ask your workspace administrator for access.'}</p></div></section><span class="auth-small">Atelier Studio · 2.3</span></div>`;
-  $('#login-form').onsubmit = async (ev) => {
+  $('#app').innerHTML = authScreen({ mode, joinToken, logo, arrowIcon: icon('arrow') });
+  $$('[data-auth-route]').forEach((link) => {
+    link.onclick = (event) => {
+      event.preventDefault();
+      navigate(link.getAttribute('href'));
+    };
+  });
+  $('#auth-form').onsubmit = async (ev) => {
     ev.preventDefault();
     const form = ev.currentTarget,
       b = $('button[type=submit]', form);
@@ -155,6 +167,12 @@ function renderAuth(joinToken = null) {
         history.replaceState({}, '', '/');
         renderAuth();
         toast('Invitation accepted. Sign in to continue.');
+      } else if (mode === 'signup') {
+        await api('/auth/signup', { method: 'POST', body });
+        state.me = await api('/me');
+        state.t = null;
+        history.replaceState({}, '', '/');
+        await route();
       } else {
         await api('/auth/login', { method: 'POST', body });
         state.me = await api('/me');
@@ -174,7 +192,11 @@ async function route() {
   state.surface?.dispose();
   state.surface = null;
   if (location.pathname === '/join') {
-    renderAuth(decodeURIComponent(location.hash.slice(1)));
+    renderAuth({ joinToken: decodeURIComponent(location.hash.slice(1)) });
+    return;
+  }
+  if (!state.me && ['/login', '/signup'].includes(location.pathname)) {
+    renderAuth({ mode: location.pathname === '/signup' ? 'signup' : 'login' });
     return;
   }
   if (!state.me) {
@@ -329,19 +351,7 @@ async function projectPage(releaseId) {
           'Connect an observer or import an API contract before reviewing capabilities.',
           `<a class="btn" href="/project/${state.project.id}/setup">${icon('arrow')}Start setup</a>`,
         )
-      : `<div class="info-strip">Atelier recommendations are based on declared and observed evidence. <strong>They never approve a capability or expose it to the chatbot automatically.</strong></div><div class="section-head"><h2>Capabilities <span class="count">${model.capabilities.length}</span></h2><input class="filter-input" id="cap-filter" aria-label="Filter capabilities" placeholder="Filter capabilities…"></div><div class="panel no-pad table-wrap"><table class="table" id="cap-table"><thead><tr><th>CAPABILITY</th><th>EVIDENCE</th><th>RECOMMENDATION</th><th>REVIEW</th><th>CHATBOT</th><th></th></tr></thead><tbody>${model.capabilities
-          .map((c) => {
-            const sources = [...new Set((c.evidence ?? []).map((item) => item.source))];
-            const decision = c.securityReviewed
-              ? 'approved'
-              : c.reviewDecision === 'rejected'
-                ? 'rejected'
-                : 'pending';
-            return `<tr><td class="small"><strong>${e(c.title ?? humanize(c.id))}</strong><div class="muted code">${e(c.operation ? `${c.operation.method} ${c.operation.path}` : c.id)}</div></td><td class="small">${sources.map((source) => pill(source)).join(' ') || pill('unknown')}</td><td class="small"><strong>${e(humanize(c.recommendation?.review ?? 'manual_review'))}</strong><div class="muted">${e(c.recommendation?.reasons?.[0] ?? 'Human review required')}</div></td><td>${pill(decision)}</td><td>${pill(c.agentEnabled ? 'enabled' : 'disabled')}</td><td><button class="btn secondary sm" data-action="review-cap" data-id="${e(c.id)}">Review</button></td></tr>`;
-          })
-          .join(
-            '',
-          )}</tbody></table></div><div class="section-head"><h2>Host components</h2></div><div class="panel no-pad table-wrap"><table class="table"><thead><tr><th>COMPONENT</th><th>SOURCE</th><th>PROP CONTRACT</th></tr></thead><tbody>${model.components.map((c) => `<tr><td>${e(c.id)}</td><td class="code small">${e(c.sourcePath)}</td><td>${Object.keys(c.propsSchema?.properties ?? {}).length} typed properties</td></tr>`).join('')}</tbody></table></div>`;
+      : `${renderCapabilityCatalog(model, pill)}<div class="section-head"><h2>Host components</h2></div><div class="panel no-pad table-wrap"><table class="table"><thead><tr><th>COMPONENT</th><th>SOURCE</th><th>PROP CONTRACT</th></tr></thead><tbody>${model.components.map((c) => `<tr><td>${e(c.id)}</td><td class="code small">${e(c.sourcePath)}</td><td>${Object.keys(c.propsSchema?.properties ?? {}).length} typed properties</td></tr>`).join('')}</tbody></table></div>`;
   } else if (state.tab === 'api-docs') {
     state.apiSpec = await api(base() + '/openapi');
     const endpoint = `/api${base()}/openapi`;
@@ -582,6 +592,108 @@ async function uploadFiles(fileList) {
   toast(`Uploaded ${files.length} files. Scan queued.`);
   navigate(`/project/${state.project.id}/jobs`);
 }
+
+function updateCapabilitySelectionUi() {
+  const ids = selectedCapabilityIds();
+  const selected = state.model?.capabilities.filter((capability) => ids.includes(capability.id)) ?? [];
+  const count = $('#cap-selection-count');
+  if (count) count.textContent = `${selected.length} selected`;
+  const clear = $('[data-action="clear-capability-selection"]');
+  const review = $('[data-action="bulk-review-selected"]');
+  const reopen = $('[data-action="bulk-reopen-selected"]');
+  const enable = $('[data-action="bulk-agent-enable"]');
+  const disable = $('[data-action="bulk-agent-disable"]');
+  if (clear) clear.disabled = selected.length === 0;
+  if (review) review.disabled = selected.length === 0;
+  if (reopen)
+    reopen.disabled =
+      selected.length === 0 || selected.every((capability) => !capability.securityReviewed);
+  if (disable) disable.disabled = selected.length === 0;
+  if (enable)
+    enable.disabled =
+      selected.length === 0 || selected.some((capability) => !capability.securityReviewed);
+}
+
+function bulkReviewDialog(capabilityIds, label) {
+  const capabilities = state.model.capabilities.filter((capability) =>
+    capabilityIds.includes(capability.id),
+  );
+  const summary = capabilitySelectionSummary(capabilities);
+  formDialog(
+    label,
+    `<div class="bulk-review-summary"><strong>${summary.total} capabilities</strong><span>${summary.queries} queries</span><span>${summary.commands} commands</span><span>${summary.sensitive} sensitive</span><span>${summary.destructive} destructive</span><span>${summary.missingPermissions} without declared permissions</span></div><p>Atelier will accept the current title, purpose, risk, confirmation, permission and sensitive-field classifications for this exact model version.</p><label class="checkbox"><input type="checkbox" name="confirmed" required>I reviewed this inventory and understand approval does not expose these capabilities to agents.</label>`,
+    `Approve ${summary.total}`,
+    async (_body, _form, dialogHandle) => {
+      const result = await api(base() + '/capabilities/bulk-review', {
+        method: 'PATCH',
+        body: {
+          projectVersion: state.model.projectVersion,
+          capabilityIds,
+          approved: true,
+          agentEnabled: false,
+        },
+      });
+      dialogHandle.closeDialog();
+      await route();
+      toast(`${result.reviewed} capabilities approved. Agent access was not changed.`);
+    },
+    'This is one atomic review decision. If any capability is invalid or the inventory changed, none are approved.',
+  );
+}
+
+function bulkAgentAccessDialog(capabilityIds, enabled) {
+  const capabilities = state.model.capabilities.filter((capability) =>
+    capabilityIds.includes(capability.id),
+  );
+  const summary = capabilitySelectionSummary(capabilities);
+  formDialog(
+    enabled ? 'Enable selected capabilities for agents' : 'Disable selected capabilities for agents',
+    `<div class="bulk-review-summary"><strong>${summary.total} capabilities</strong><span>${summary.queries} queries</span><span>${summary.commands} commands</span><span>${summary.sensitive} sensitive</span><span>${summary.destructive} destructive</span></div><label class="checkbox"><input type="checkbox" name="confirmed" required>I understand this changes which reviewed tools chat and surface agents can call.</label>`,
+    `${enabled ? 'Enable' : 'Disable'} ${summary.total}`,
+    async (_body, _form, dialogHandle) => {
+      const result = await api(base() + '/capabilities/bulk-agent-access', {
+        method: 'PATCH',
+        body: {
+          projectVersion: state.model.projectVersion,
+          capabilityIds,
+          enabled,
+        },
+      });
+      dialogHandle.closeDialog();
+      await route();
+      toast(`${result.updated} capabilities ${enabled ? 'enabled for' : 'removed from'} agents.`);
+    },
+    enabled
+      ? 'Only already-approved capabilities can be enabled. Runtime authorization and confirmation rules still apply to every call.'
+      : 'Disabling removes these tools from future agent sessions without changing their review status.',
+  );
+}
+
+function bulkReopenDialog(capabilityIds) {
+  const capabilities = state.model.capabilities.filter((capability) =>
+    capabilityIds.includes(capability.id),
+  );
+  const summary = capabilitySelectionSummary(capabilities);
+  formDialog(
+    'Reopen selected capability reviews',
+    `<div class="bulk-review-summary"><strong>${summary.total} capabilities</strong><span>${summary.queries} queries</span><span>${summary.commands} commands</span><span>${summary.sensitive} sensitive</span><span>${summary.destructive} destructive</span></div><p>This removes their accepted/rejected decision and disables their agent access. The original decisions remain in the audit trail.</p><label class="checkbox"><input type="checkbox" name="confirmed" required>I want these capabilities returned to pending human review.</label>`,
+    `Reopen ${summary.total}`,
+    async (_body, _form, dialogHandle) => {
+      const result = await api(base() + '/capabilities/bulk-reopen', {
+        method: 'PATCH',
+        body: {
+          projectVersion: state.model.projectVersion,
+          capabilityIds,
+        },
+      });
+      dialogHandle.closeDialog();
+      await route();
+      toast(`${result.reopened} capability reviews reopened. Agent access is disabled.`);
+    },
+    'Reopening is itself an audited action and does not erase earlier review history.',
+  );
+}
+
 function bindPage() {
   if ($('#workspace'))
     $('#workspace').onchange = (ev) => {
@@ -592,11 +704,16 @@ function bindPage() {
       }
     };
   if ($('#cap-filter'))
-    $('#cap-filter').oninput = (ev) =>
+    $('#cap-filter').oninput = (ev) => {
       $$('#cap-table tbody tr').forEach(
         (row) =>
           (row.hidden = !row.textContent.toLowerCase().includes(ev.target.value.toLowerCase())),
       );
+      updateCapabilitySelectionUi();
+    };
+  $$('[data-cap-select]').forEach(
+    (checkbox) => (checkbox.onchange = updateCapabilitySelectionUi),
+  );
   $$('[data-color]').forEach((el) => {
     const v = el.dataset.color;
     if (/^#[0-9a-f]{3,8}$/i.test(v) || /^(rgb|hsl)a?\([\d\s.,%/]+\)$/.test(v))
@@ -800,10 +917,15 @@ const actions = {
   'upload-spec': () => {
     const picker = document.createElement('input');
     picker.type = 'file';
+    picker.className = 'file-input';
+    picker.setAttribute('aria-label', 'OpenAPI document');
     picker.accept = '.json,.yaml,.yml,application/json,application/yaml,text/yaml';
+    document.body.append(picker);
+    const cleanup = () => picker.remove();
+    picker.addEventListener('cancel', cleanup, { once: true });
     picker.onchange = async () => {
       const file = picker.files?.[0];
-      if (!file) return;
+      if (!file) return cleanup();
       try {
         if (file.size > 2 * 1024 * 1024) throw new Error('OpenAPI files are limited to 2 MB.');
         await api(base() + '/specifications', {
@@ -814,6 +936,8 @@ const actions = {
         await route();
       } catch (err) {
         toast(err.message, true);
+      } finally {
+        cleanup();
       }
     };
     picker.click();
@@ -980,6 +1104,44 @@ const actions = {
       },
       'Reuse your app’s contracts and design grammar. Every result remains a reviewable draft. Unreviewed commands are omitted.',
     );
+  },
+  'select-visible-capabilities': () => {
+    const visible = new Set(visibleCapabilityIds());
+    $$('[data-cap-select]').forEach((checkbox) => {
+      if (visible.has(checkbox.value)) checkbox.checked = true;
+    });
+    updateCapabilitySelectionUi();
+  },
+  'clear-capability-selection': () => {
+    $$('[data-cap-select]').forEach((checkbox) => (checkbox.checked = false));
+    updateCapabilitySelectionUi();
+  },
+  'bulk-review-selected': () => {
+    const ids = selectedCapabilityIds();
+    if (!ids.length) return toast('Select at least one capability.', true);
+    bulkReviewDialog(ids, 'Approve selected capabilities');
+  },
+  'bulk-reopen-selected': () => {
+    const ids = selectedCapabilityIds();
+    if (!ids.length) return toast('Select at least one reviewed capability.', true);
+    bulkReopenDialog(ids);
+  },
+  'bulk-review-all': () => {
+    const ids = state.model.capabilities
+      .filter((capability) => !capability.securityReviewed)
+      .map((capability) => capability.id);
+    if (!ids.length) return toast('Every capability is already reviewed.');
+    bulkReviewDialog(ids, 'Approve all pending capabilities');
+  },
+  'bulk-agent-enable': () => {
+    const ids = selectedCapabilityIds();
+    if (!ids.length) return toast('Select at least one approved capability.', true);
+    bulkAgentAccessDialog(ids, true);
+  },
+  'bulk-agent-disable': () => {
+    const ids = selectedCapabilityIds();
+    if (!ids.length) return toast('Select at least one capability.', true);
+    bulkAgentAccessDialog(ids, false);
   },
   'review-cap': (el) => {
     const c = state.model.capabilities.find((c) => c.id === el.dataset.id);

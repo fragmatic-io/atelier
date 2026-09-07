@@ -16,6 +16,8 @@ python3 -m venv .venv
 ATELIER_PYTHON="$PWD/.venv/bin/python" npm run acceptance
 ```
 
+`npm run test:browser` uses `ATELIER_PYTHON` when supplied, otherwise the executable at `platform/.venv/bin/python` (or `.venv/Scripts/python.exe` on Windows). It fails explicitly when neither runtime is available and uses the same interpreter for nested browser certification.
+
 `npm run acceptance` runs every nested Node test, a production dependency audit, an offline package/install smoke test, all nine source-kit browser matrices, and the complete local Studio/host browser journey. Missing browsers or modules fail explicitly. Results are written to `evidence/current/acceptance/` and are bound to the Git commit and package-lock hash.
 
 The default `core` profile may pass while external release gates remain blocked. `npm run acceptance -- --profile=release` requires every ledger item to be verified and therefore refuses a release when live API-provider or independent security evidence is absent. The production application/certifier images and real isolated browser certification passed locally; registry scanning remains a deployment-specific requirement. See [the requirements ledger](docs/v2.3/REQUIREMENTS.json).
@@ -35,6 +37,8 @@ npm run demo
 
 Open `http://127.0.0.1:4310`. The first boot prints a random development password once. Do not capture it in logs or commit the data directory. The demo uses explicitly labelled deterministic or controlled model behavior; it is not a live-provider result.
 
+Self-service signup is available at `/signup`. It requires a name, email address, and password of 12-256 characters, creates the browser session immediately, and performs no email-verification step. New accounts have no inherited workspace access; workspace membership still comes only from creating a workspace or accepting an invitation.
+
 For a customer or coding agent installing Atelier into another application, begin with the [guided customer onboarding](docs/CUSTOMER_ONBOARDING.md), then follow the complete [application integration handoff](docs/AGENT_SETUP.md). The normal SaaS path uses a privacy-safe browser observer and OpenAPI evidence without requiring source code. It then covers automatic Redoc documentation, capability review, provider/runner setup, a framework-aware route/mount installer, the server-authority bridge, embedded chat, rich response components, MCP registration, and deployment verification.
 
 The installable package exposes server authority, React slots, browser surfaces, providers, project MCP, the embedded-agent host/client/journal, the standalone chat and artifact mounts, and the source forge as documented subpath exports. Import `@atelier/platform/agent.css` inside the explicit host container for the scoped standalone chat theme.
@@ -42,6 +46,7 @@ The installable package exposes server authority, React slots, browser surfaces,
 ## Product surfaces
 
 - Studio: fact-derived guided onboarding, origin-bound browser observation, OpenAPI import, optional redacted semantic samples, privacy-safe host design contracts, capability review, independent custom-surface and chatbot delivery, bounded specialist-agent setup, framework-aware route/mount generation with factual verification, automatic Redoc API reference, source generation, real browser certification, human approval, signing, publication, rollback, and audit.
+- Capability review: filter and select operations, approve selected or all pending operations atomically, then make a separate explicit decision about agent access. Bulk review is rejected if the project model changed; reopening a review disables agent access and retains the original audit records.
 - Host runtime: the application retains authentication, object authorization, business data, and transactional idempotency. Atelier resolves signed additive surfaces and proposes only reviewed capabilities.
 - Embedded agent: durable private conversations, attachments, stop/retry, scoped tools, bounded read-only specialist consultations, primary-agent synthesis, exact-input confirmation, interactive artifacts, revision/pin/export behavior, and revocation checks.
 - Coding-agent MCP: current project search/model, published component source, and versioned coding/design skill resources. Configuration and tokens stay server-side. See [MCP integration](docs/MCP.md).

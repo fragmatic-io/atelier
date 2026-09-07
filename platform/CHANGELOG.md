@@ -4,6 +4,12 @@
 
 Adds a deterministic OpenAPI 3.1 exporter for current project-model HTTP capabilities and a locally served, authenticated Redoc reference inside each Studio project. The generated document preserves contract provenance, review state, permissions, risk, confirmation, side effects, idempotency, reversibility and PII metadata. Documentation does not make an unreviewed capability callable.
 
+Adds self-service Studio signup with name, email and password. New accounts receive an authenticated browser session immediately without email verification and start with no access to existing workspaces.
+
+Adds atomic bulk capability review in Studio with select-visible and approve-all-pending controls. Review approval remains separate from agent exposure, is pinned to the exact project-model version, and never enables tools implicitly. Reviewers can also reopen selected decisions without erasing the append-only audit history.
+
+Makes `npm run test:browser` select `ATELIER_PYTHON` or the documented project virtual environment explicitly and pass that same interpreter into nested component certification. Missing Playwright environments now fail with a setup-specific error instead of a generic child-process exit.
+
 Adds a decision-complete coding-agent handoff for installing Atelier into another application, wiring host authority, enabling the embedded agent and rich components, registering project MCP, and verifying the integration without provider fallback.
 
 Restores the embedded agent, client, journal, artifact, chat and source-forge package subpath exports found during RC2 comparison; adds current declarations, scoped standalone chat styles, external-consumer typechecking, and a credential-free project-skill exporter.

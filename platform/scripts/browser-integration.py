@@ -81,6 +81,17 @@ try:
                 page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+2'),'Host layout overflows mobile viewport'
                 page.screenshot(path=str(out/'host-mobile.png'),full_page=True)
             check('host-mobile-layout',mobile)
+            signup=browser.new_page(viewport={'width':1280,'height':900},reduced_motion='reduce');signup.set_default_timeout(15000);signup_errors=[];signup.on('pageerror',lambda e:signup_errors.append(str(e)))
+            def studio_signup():
+                signup.goto('http://127.0.0.1:4330/signup')
+                expect(signup.get_by_role('heading',name='Start your studio.',exact=True)).to_be_visible()
+                signup.get_by_role('textbox',name='Your name',exact=True).fill('Signup Operator')
+                signup.get_by_role('textbox',name='Work email',exact=True).fill('signup.operator@example.test')
+                signup.locator('input[name="password"]').fill('Signup-Test-Only-2026!x')
+                signup.get_by_role('button',name='Create account',exact=True).click()
+                expect(signup.get_by_role('heading',name='Your first workspace',exact=True)).to_be_visible()
+                assert signup.locator('.profile-name').inner_text()=='Signup Operator','Signed-up account did not receive an authenticated Studio session'
+            check('studio-self-service-signup-without-verification',studio_signup)
             studio=browser.new_page(viewport={'width':1512,'height':1050},reduced_motion='reduce');studio.set_default_timeout(15000);studio_errors=[];studio.on('pageerror',lambda e:studio_errors.append(str(e)))
             def studio_login():
                 studio.goto('http://127.0.0.1:4330/lab')
@@ -160,6 +171,7 @@ try:
                 studio.screenshot(path=str(out/'studio-onboarding-mobile.png'),full_page=True)
             check('studio-fact-derived-privacy-onboarding',onboarding_view)
             check('no-uncaught-host-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(errors))) if errors else None)
+            check('no-uncaught-signup-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(signup_errors))) if signup_errors else None)
             check('no-uncaught-studio-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(studio_errors))) if studio_errors else None)
         finally:browser.close()
 except Exception as error:

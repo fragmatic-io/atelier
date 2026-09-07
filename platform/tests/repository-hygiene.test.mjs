@@ -69,3 +69,14 @@ test('package manifest excludes every removed compatibility artifact', () => {
     assert.equal(paths.has(path), false, `retired artifact remains packaged: ${path}`);
   }
 });
+
+test('root repository metadata describes only the current npm implementation', () => {
+  const attributes = readFileSync(resolve(repositoryRoot, '.gitattributes'), 'utf8');
+  assert.match(attributes, /package-lock\.json\s+linguist-generated=true -diff/);
+  assert.match(attributes, /platform\/PACKAGE-MANIFEST\.json\s+linguist-generated=true -diff/);
+  assert.doesNotMatch(attributes, /pnpm-lock|\.well-known\/schemas|packages\/schemas/);
+
+  const actionlint = readFileSync(resolve(repositoryRoot, '.github/actionlint.yaml'), 'utf8');
+  assert.match(actionlint, /Current workflows use only/);
+  assert.doesNotMatch(actionlint, /Phase 2/);
+});

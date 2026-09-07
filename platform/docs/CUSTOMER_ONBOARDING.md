@@ -100,6 +100,8 @@ Heuristic redaction is not a DLP guarantee. High-risk customers should keep sema
 
 Studio accepts an OpenAPI 3.x JSON/YAML file or a public HTTPS URL. URL import rejects credentials, redirects, IP literals, local/private hostnames, private DNS answers, oversized responses and specifications above 2 MB. Production deployments must also enforce outbound network policy at the infrastructure layer.
 
+For a local development API or any private-network service, use the file-upload control. A blocked URL is an SSRF-policy result, not an API-documentation failure: after a valid file is accepted, Atelier generates the authenticated Redoc reference from the resulting project model.
+
 OpenAPI is `declared` evidence. Runtime calls are `observed` evidence. Studio shows both and does not silently replace one with the other:
 
 - declared and observed: high-confidence operation existence;
@@ -116,6 +118,8 @@ discovered != approved != chatbot enabled != published
 ```
 
 Studio recommendations are deterministic starting points based on operation kind, declared/observed provenance and PII-shaped fields. They never grant authority. A reviewer can edit the name, purpose, risk, confirmation rule, permission scopes, PII paths and reversibility; approve or reject the capability; and separately choose chatbot exposure.
+
+Reviewers can filter and select operations, approve the selection, or approve every pending operation in one atomic action. The server binds that decision to the exact project-model version and rejects the entire request if the inventory changed or any selected operation violates a safety invariant. Bulk approval never enables agent access. Agent exposure is a separate bulk action for already-approved capabilities. Reopening a review returns it to pending, disables its agent access and appends recovery records without deleting the original audit events.
 
 An approved capability may be composed into a custom rail, queue, dashboard, form or rich response component. That does not publish it: generated surface source must pass browser certification, human review, signing and slot-scoped publication. Conversely, checking chatbot exposure does not create or publish a custom surface.
 

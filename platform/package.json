@@ -86,7 +86,7 @@
     "acceptance": "node scripts/acceptance.mjs",
     "acceptance:cli": "node scripts/cli-provider-acceptance.mjs",
     "test:forge": "node --test tests/forge-compiler.test.mjs tests/forge/*.test.mjs",
-    "test:browser": "python3 scripts/browser-integration.py",
+    "test:browser": "node scripts/run-browser-integration.mjs",
     "mcp": "node scripts/mcp.mjs",
     "export:skills": "node scripts/export-project-skills.mjs",
     "certify:examples": "node scripts/certify-examples.mjs",

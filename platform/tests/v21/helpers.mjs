@@ -23,7 +23,9 @@ export async function fixture({ clock, dbPath = ':memory:' } = {}) {
   return { db, box, auth, service, user, who, tenant, project };
 }
 export async function runJob(f, { apiFactory } = {}) {
-  const job = f.service.store.claim('test-worker');
+  // Direct test execution has no WorkerLoop heartbeat. Keep the lease bounded,
+  // but long enough for CPU-contended acceptance runs on supported laptops.
+  const job = f.service.store.claim('test-worker', { leaseMs: 300_000 });
   if (!job) throw new Error('No queued job');
   try {
     const result = await new BuildPipeline(f.service, { apiFactory }).execute(job);

@@ -23,7 +23,7 @@ Create the first administrator in an empty database with the same environment:
 node scripts/admin.mjs bootstrap --email=owner@example.com --name=Owner --tenant=Company
 ```
 
-The generated password is shown once. Save it securely, sign in and enroll TOTP. Additional accounts use one-time invitations, not open registration. Invitation delivery is manual/private, not a bundled email service. Bootstrap occurs before optionally setting `ATELIER_ALLOW_TENANT_CREATION=false` for a closed deployment.
+The generated password is shown once. Save it securely, sign in and enroll TOTP. Signed-out users may also create an account at `/signup`; no email-verification message or code is sent. A self-created account starts without access to any existing workspace. Existing workspace access still requires a single-use invitation, whose delivery is manual/private rather than a bundled email service. Bootstrap occurs before optionally setting `ATELIER_ALLOW_TENANT_CREATION=false` for a closed deployment.
 
 ## HTTPS proxy and service supervision
 

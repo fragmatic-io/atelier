@@ -6,6 +6,22 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { assert, noPrototypeKeys } from '../../conversation/src/common.mjs';
+
+const COMPILE_TIMEOUT_MS = 90_000;
+
+function compilerProcessError(outcome, stderr) {
+  const reason = outcome.timedOut
+    ? `Compiler exceeded the ${COMPILE_TIMEOUT_MS} ms execution budget`
+    : `Compiler exited before producing a result (code ${outcome.code ?? 'none'}, signal ${outcome.signal ?? 'none'})`;
+  assert(
+    false,
+    outcome.timedOut ? 504 : 500,
+    outcome.timedOut ? 'COMPILE_TIMEOUT' : 'COMPILE_PROCESS',
+    reason,
+    { exitCode: outcome.code, signal: outcome.signal, stderr: stderr || null },
+  );
+}
+
 /** Resource-bounded compiler subprocess. No host API/master secrets are inherited.
  * OS-container isolation remains mandatory for adversarial production tenants. */
 export async function compileIsolated(kit, options = {}, signal) {
@@ -17,7 +33,7 @@ export async function compileIsolated(kit, options = {}, signal) {
     output = join(directory, 'output.json');
   try {
     await writeFile(input, raw, { mode: 0o600 });
-    await new Promise((ok, bad) => {
+    const outcome = await new Promise((ok, bad) => {
       const child = spawn(
         process.execPath,
         [
@@ -49,20 +65,27 @@ export async function compileIsolated(kit, options = {}, signal) {
           child.kill('SIGKILL');
         }
       };
-      const timer = setTimeout(kill, 35000);
+      let timedOut = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        kill();
+      }, COMPILE_TIMEOUT_MS);
       signal?.addEventListener('abort', kill, { once: true });
       child.once('error', (e) => {
         clearTimeout(timer);
         bad(e);
       });
-      child.once('close', () => {
+      child.once('close', (code, childSignal) => {
         clearTimeout(timer);
         signal?.removeEventListener('abort', kill);
-        ok();
+        ok({ code, signal: childSignal, timedOut });
       });
     });
     assert(!signal?.aborted, 409, 'JOB_CANCELLED', 'Compile was cancelled');
-    const meta = await stat(output);
+    const meta = await stat(output).catch((error) => {
+      if (error.code === 'ENOENT') compilerProcessError(outcome, stderr);
+      throw error;
+    });
     assert(meta.size <= 2500000, 413, 'COMPILE_OUTPUT', 'Compile output exceeded limit');
     const response = JSON.parse(await readFile(output, 'utf8'));
     assert(

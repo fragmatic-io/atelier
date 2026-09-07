@@ -3,8 +3,8 @@
   "package": "@atelier/platform",
   "version": "2.3.0-rc.1",
   "algorithm": "SHA-256",
-  "generatedAt": "2026-09-07T07:40:13.864Z",
-  "fileCount": 384,
+  "generatedAt": "2026-09-07T11:32:26.248Z",
+  "fileCount": 393,
   "files": [
     {
       "path": ".dockerignore",
@@ -20,8 +20,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 4749,
-      "sha256": "ae1736b9ed67d9dd07739c5aaf949b3c8931ab310322b785d592c843c881947a",
+      "size": 5572,
+      "sha256": "c7f808e74141013f230b35fd9d90b384ecd669a126172358ad69ac2c4d11b8ee",
       "executable": false
     },
     {
@@ -32,8 +32,8 @@
     },
     {
       "path": "README.md",
-      "size": 8435,
-      "sha256": "a0f47ede23a7966f272c9efa76834cd6d2bb475539bf9c25aaa208400697f051",
+      "size": 9355,
+      "sha256": "dd97c31482776a3094306d978e293de4811ce9a394401e8d34db07c7edc4aa2a",
       "executable": false
     },
     {
@@ -128,14 +128,26 @@
     },
     {
       "path": "apps/studio/web/app.css",
-      "size": 26895,
-      "sha256": "9fd4d8e38abdce489fa997876b069d12b4b9e78eab4cb20f428aa9d8bb413fa6",
+      "size": 28527,
+      "sha256": "2a4cd97a20c1864e1397a9707d7dd17c1acbad29823546f7dbfa75924c80e18f",
       "executable": false
     },
     {
       "path": "apps/studio/web/app.mjs",
-      "size": 84522,
-      "sha256": "93bd334e3c93fae1262f56e5009dddf209504a9b3f6fd9f5f408edcd675648ee",
+      "size": 89227,
+      "sha256": "aed5f612c625186cf4c8711148e69454f069d3e9af89270d18fb873cda5e5e9f",
+      "executable": false
+    },
+    {
+      "path": "apps/studio/web/auth-screen.mjs",
+      "size": 3606,
+      "sha256": "9662d4e81bfe61504bff1e520ccc5431e17d976b81509320f524ba56ca988c53",
+      "executable": false
+    },
+    {
+      "path": "apps/studio/web/capability-catalog.mjs",
+      "size": 4500,
+      "sha256": "488207b2ce129ca0c34ff301b759ce737b168537e79b2e9c1775295f967bf8bc",
       "executable": false
     },
     {
@@ -218,8 +230,8 @@
     },
     {
       "path": "docs/CUSTOMER_ONBOARDING.md",
-      "size": 14932,
-      "sha256": "3f8fc3f049281f77f94c06dff2d5dfbfbdb24becee2f651e0112a2d0c1b20a7a",
+      "size": 15775,
+      "sha256": "618eda89f090e2e253844368edace8de366331f6b720b79bdf72d074a3c2a135",
       "executable": false
     },
     {
@@ -248,8 +260,8 @@
     },
     {
       "path": "docs/OPERATIONS.md",
-      "size": 8377,
-      "sha256": "0cf4819901d910787b75a7bb315be463b00beca1f26713c9bbb8b4f141c7b3f5",
+      "size": 8553,
+      "sha256": "a939490ca7b9fc7e0d97482a2aff835fa1d05b668b974882d41691d1493b9976",
       "executable": false
     },
     {
@@ -262,6 +274,12 @@
       "path": "docs/RELEASE_CHECKLIST.md",
       "size": 1223,
       "sha256": "df557e9ce3da7ef0756dcef3721e54ed490a7a2576146f3dc0f270a686ddac93",
+      "executable": false
+    },
+    {
+      "path": "docs/REPOSITORY_HYGIENE.md",
+      "size": 1756,
+      "sha256": "30acdd60c4403b42eeadf87b3639115eacc76520c2f4a7abf821acb079bc05fc",
       "executable": false
     },
     {
@@ -488,8 +506,8 @@
     },
     {
       "path": "package.json",
-      "size": 4341,
-      "sha256": "e308fc42f168cad2c5e47b5c5339b1ae8a5f2893f93a0b1cbc4bff2bfb7324dc",
+      "size": 4343,
+      "sha256": "cd9d0049236250c1e8ddfc31ca1443783bda8cf3a1bfbfd58d39abcf51384ea1",
       "executable": false
     },
     {
@@ -632,8 +650,8 @@
     },
     {
       "path": "packages/control-plane/src/auth.mjs",
-      "size": 13204,
-      "sha256": "7ebd6eb5120ebbb2078e5d8a772c4c0e9bb6fac5b762012ea528143c2fc4691d",
+      "size": 13772,
+      "sha256": "5389e442582de2e00b82eb0e2c28147855b7768f4edaa0baaa8050a335ea1ee8",
       "executable": false
     },
     {
@@ -668,14 +686,14 @@
     },
     {
       "path": "packages/control-plane/src/server.mjs",
-      "size": 26465,
-      "sha256": "1a5f5eb9a990fda3e9f90fe258fc8d6886958af01cfa3ef49f1deba21dbee4b8",
+      "size": 27131,
+      "sha256": "5274d6085eefe43f2653f3a9b54aa1556a5cb4984756372060bfe525bf5ff3c5",
       "executable": false
     },
     {
       "path": "packages/control-plane/src/services.mjs",
-      "size": 63729,
-      "sha256": "2c873034a705a701fb7eb5160dc50d5a7789bfb63321b80eb8198235a9b65aac",
+      "size": 72798,
+      "sha256": "5814db779e12cb53cc5fe5c4ef72181dfeca85e73a33e797ddb0e07309817618",
       "executable": false
     },
     {
@@ -992,8 +1010,8 @@
     },
     {
       "path": "packages/source-forge/src/isolation.mjs",
-      "size": 2800,
-      "sha256": "ad8ff0ee243ed1fb586988b378d0a4d4af6645c732ab8618920e9db599fd6028",
+      "size": 3613,
+      "sha256": "9c2ccc044239ec705b0ba5b5441fbd61b3ec4c31f882b8b5c1c8b1ad07f1716f",
       "executable": false
     },
     {
@@ -1111,6 +1129,12 @@
       "executable": false
     },
     {
+      "path": "scripts/acceptance/exec-error.mjs",
+      "size": 529,
+      "sha256": "911b1feee76d4fb63ab8b476b045a3b1dce59f0c8f21db9ee2607b6dd3600cb6",
+      "executable": false
+    },
+    {
       "path": "scripts/acceptance/process.mjs",
       "size": 1852,
       "sha256": "c8a2a9c28be27dcdbb338664cf16e8660bad909b66dae8f878b8e2e4077ad290",
@@ -1130,8 +1154,8 @@
     },
     {
       "path": "scripts/browser-integration.py",
-      "size": 15367,
-      "sha256": "926463c8636f5bb2f8ab44bfd47f32cdf106dfe0a30fca9a2bae51cd144557a2",
+      "size": 16665,
+      "sha256": "fa7accb348a5c81e98a6610a995cf590c11998b427b2e8882ff63700d4c39bfb",
       "executable": false
     },
     {
@@ -1213,6 +1237,12 @@
       "executable": false
     },
     {
+      "path": "scripts/run-browser-integration.mjs",
+      "size": 1916,
+      "sha256": "60b68e6de0dd76b1069d4c1f128b74f2fac3dcbcbdaadc20d7ef70c873ec61aa",
+      "executable": false
+    },
+    {
       "path": "scripts/runner.mjs",
       "size": 4603,
       "sha256": "64c4c294e11c97438ade5823b37458cb6f426cd7d59448f9cdccefc676a2f555",
@@ -1238,8 +1268,8 @@
     },
     {
       "path": "scripts/smoke-package.mjs",
-      "size": 6695,
-      "sha256": "870ac8d778b1c0b591ccbc7ca01453e239e91833ed8533333c1d6c7def5ac8fb",
+      "size": 6749,
+      "sha256": "a5f9a262125358990af740d4229e1b607b04264ea3d3183ccc6961c4bcb687f2",
       "executable": false
     },
     {
@@ -1267,6 +1297,12 @@
       "executable": false
     },
     {
+      "path": "tests/acceptance/exec-error.test.mjs",
+      "size": 751,
+      "sha256": "c3497be5bc7b75604db7134a200d207e9d2fa81b73af430b84b8792728bdac62",
+      "executable": false
+    },
+    {
       "path": "tests/acceptance/requirements.test.mjs",
       "size": 773,
       "sha256": "6e73a2d80aac1b08d4a12122303dea3b56311af8ce57839d649feff36458f99c",
@@ -1276,6 +1312,18 @@
       "path": "tests/api-docs.test.mjs",
       "size": 4049,
       "sha256": "5b48ebb27226d03ed20c68f579470490cfb04d52bf6638554ad0aece71b0c0db",
+      "executable": false
+    },
+    {
+      "path": "tests/browser-runtime.test.mjs",
+      "size": 1447,
+      "sha256": "659bcdfb31a288c63dbbc721fd248224bf8af60cf2e307761e40aba1e8ffa63b",
+      "executable": false
+    },
+    {
+      "path": "tests/bulk-capability-review.test.mjs",
+      "size": 6197,
+      "sha256": "1ef9f3efdf36ebd94690d4190db88e9b921c0101f141daa5b83c3acc229c2299",
       "executable": false
     },
     {
@@ -1340,14 +1388,20 @@
     },
     {
       "path": "tests/repository-hygiene.test.mjs",
-      "size": 2152,
-      "sha256": "b13f38744325a24cc806d07483bb4d11cf7aa43d87e48ab0b167921d7494f2a5",
+      "size": 2796,
+      "sha256": "47905419ed6c579d80a3c09d58c35c9efebc664cc5615e7d3726d6323ee11591",
       "executable": false
     },
     {
       "path": "tests/runtime-security.test.mjs",
       "size": 11777,
       "sha256": "3786ea3a630902230d0c1671de7d7349364df597df409fa1a3100bebbfb8c9ba",
+      "executable": false
+    },
+    {
+      "path": "tests/studio-auth.test.mjs",
+      "size": 1427,
+      "sha256": "bd36111fad1c36dcc3a02a66fd2d69252fbae54f0af328e3c9405c9dfbabd310",
       "executable": false
     },
     {
@@ -1358,8 +1412,8 @@
     },
     {
       "path": "tests/v21/auth-http.test.mjs",
-      "size": 5225,
-      "sha256": "fce2267a1ff00a815fba5917eb8c6ca5e47555c998c4e008c34ab8b67a373231",
+      "size": 6477,
+      "sha256": "9e8716b7c318f9b1ef4f8b4830355eecabe89d696ec760e10cc0ce97b97935ee",
       "executable": false
     },
     {
@@ -1370,8 +1424,8 @@
     },
     {
       "path": "tests/v21/helpers.mjs",
-      "size": 2713,
-      "sha256": "6c398280f80775834e29b9105e8bae0ae2b092d92d3df43778f32d8a48e4da52",
+      "size": 2892,
+      "sha256": "8951537f6963354684d2f6aeb738413b4036cfe82c190cd38a3c794246923903",
       "executable": false
     },
     {
@@ -1442,8 +1496,8 @@
     },
     {
       "path": "tests/workflow-studio.test.mjs",
-      "size": 3278,
-      "sha256": "f4cd8fe1ec881b54dc84bc61205eac8091dca9601be38b2d96e6d8c9cffcca7e",
+      "size": 4489,
+      "sha256": "95776fe00fc06c5c85ead5c26a2868da59c02891b692be4fb4d175a9c83ecc0e",
       "executable": false
     },
     {

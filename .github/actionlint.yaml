@@ -2,8 +2,8 @@
 # Reference: https://github.com/rhysd/actionlint/blob/main/docs/config.md
 #
 # Self-hosted runner labels: register any custom runner labels here so
-# actionlint does not flag them as unknown. Phase 2 uses only GitHub-hosted
-# runners, so this list is empty.
+# actionlint does not flag them as unknown. Current workflows use only
+# GitHub-hosted runners, so this list is empty.
 #
 # To disable a rule project-wide, this file is the place to do it (e.g. via
 # `paths:` overrides). No rules are disabled today — keep the noise budget

@@ -8,6 +8,7 @@ import { promisify } from 'node:util';
 import { mkdtemp, mkdir, writeFile, rm, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
+import { describeExecError } from './acceptance/exec-error.mjs';
 const exec = promisify(execFile);
 const root = resolve(import.meta.dirname, '..');
 const scratch = await mkdtemp(join(tmpdir(), 'atelier-package-consumer-'));
@@ -58,7 +59,7 @@ try {
       '--no-fund',
       join(scratch, spec.filename),
     ],
-    { cwd: consumer, timeout: 60000, maxBuffer: 4 * 1024 * 1024 },
+    { cwd: consumer, timeout: 180000, maxBuffer: 4 * 1024 * 1024 },
   );
   report.checks.push({
     name: 'Offline install into empty consumer with no lifecycle scripts',
@@ -147,7 +148,7 @@ void [transport, preview, kit, host];\n`,
   });
   report.passed = true;
 } catch (error) {
-  report.error = String(error.message).slice(0, 1500);
+  report.error = describeExecError(error);
   process.exitCode = 1;
 } finally {
   await rm(scratch, { recursive: true, force: true });

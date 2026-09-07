@@ -191,6 +191,64 @@ export function stableModelVersion(model) {
   }
   return hash(stable(model)).slice(0, 32);
 }
+
+function capabilityReviewPatch(capability, input, identity, reviewedAt, model) {
+  const approved = input.approved !== false;
+  const patch = {
+    title:
+      input.title === undefined
+        ? capability.title
+        : text(input.title, 'Capability title', { max: 160 }),
+    description:
+      input.description === undefined
+        ? capability.description
+        : text(input.description, 'Capability description', { max: 1000 }),
+    risk: choice(input.risk, ['read_only', 'low', 'sensitive', 'destructive'], 'Risk'),
+    confirmation: choice(
+      input.confirmation,
+      ['none', 'inline', 'modal', 'verbal_required'],
+      'Confirmation',
+    ),
+    reversible: bool(input.reversible),
+    requiredPermissions: strings(input.requiredPermissions ?? [], 'Permissions'),
+    piiFields: strings(input.piiFields ?? capability.piiFields ?? [], 'PII fields'),
+    securityReviewed: approved,
+    reviewDecision: approved ? 'approved' : 'rejected',
+    agentEnabled: approved ? bool(input.agentEnabled ?? false) : false,
+    reviewedBy: identity.userId,
+    reviewedAt,
+    reviewedSchemaHash: capabilityFingerprint(capability),
+  };
+  assert(
+    capability.kind !== 'command' || patch.risk !== 'read_only',
+    400,
+    'UNSAFE_REVIEW',
+    'A command cannot be classified as read-only',
+  );
+  assert(
+    patch.risk !== 'destructive' || ['modal', 'verbal_required'].includes(patch.confirmation),
+    400,
+    'UNSAFE_REVIEW',
+    'Destructive commands require modal or verbal confirmation',
+  );
+  assert(
+    !patch.agentEnabled || approved,
+    400,
+    'AGENT_REQUIRES_APPROVAL',
+    'Only an approved capability can be exposed to the chatbot',
+  );
+  if (patch.reversible && capability.kind === 'command') {
+    patch.rollbackCapabilityId = text(input.rollbackCapabilityId, 'Rollback capability');
+    assert(
+      model.capabilities.some((candidate) => candidate.id === patch.rollbackCapabilityId),
+      400,
+      'INVALID_ROLLBACK',
+      'Rollback capability must be registered',
+    );
+  }
+  return patch;
+}
+
 export class ControlService {
   constructor(
     db,
@@ -1156,57 +1214,7 @@ export class ControlService {
     const model = this.store.getArtifact(s, s.project.model_id, 'model').content;
     const c = model.capabilities.find((x) => x.id === capId);
     assert(c, 404, 'NOT_FOUND', 'Capability not found');
-    const approved = input.approved !== false;
-    const patch = {
-      title:
-        input.title === undefined ? c.title : text(input.title, 'Capability title', { max: 160 }),
-      description:
-        input.description === undefined
-          ? c.description
-          : text(input.description, 'Capability description', { max: 1000 }),
-      risk: choice(input.risk, ['read_only', 'low', 'sensitive', 'destructive'], 'Risk'),
-      confirmation: choice(
-        input.confirmation,
-        ['none', 'inline', 'modal', 'verbal_required'],
-        'Confirmation',
-      ),
-      reversible: bool(input.reversible),
-      requiredPermissions: strings(input.requiredPermissions ?? [], 'Permissions'),
-      piiFields: strings(input.piiFields ?? c.piiFields ?? [], 'PII fields'),
-      securityReviewed: approved,
-      reviewDecision: approved ? 'approved' : 'rejected',
-      agentEnabled: approved ? bool(input.agentEnabled ?? false) : false,
-      reviewedBy: identity.userId,
-      reviewedAt: this.clock(),
-      reviewedSchemaHash: capabilityFingerprint(c),
-    };
-    assert(
-      c.kind !== 'command' || patch.risk !== 'read_only',
-      400,
-      'UNSAFE_REVIEW',
-      'A command cannot be classified as read-only',
-    );
-    assert(
-      patch.risk !== 'destructive' || ['modal', 'verbal_required'].includes(patch.confirmation),
-      400,
-      'UNSAFE_REVIEW',
-      'Destructive commands require modal or verbal confirmation',
-    );
-    assert(
-      !patch.agentEnabled || approved,
-      400,
-      'AGENT_REQUIRES_APPROVAL',
-      'Only an approved capability can be exposed to the chatbot',
-    );
-    if (patch.reversible && c.kind === 'command') {
-      patch.rollbackCapabilityId = text(input.rollbackCapabilityId, 'Rollback capability');
-      assert(
-        model.capabilities.some((x) => x.id === patch.rollbackCapabilityId),
-        400,
-        'INVALID_ROLLBACK',
-        'Rollback capability must be registered',
-      );
-    }
+    const patch = capabilityReviewPatch(c, input, identity, this.clock(), model);
     Object.assign(c, patch);
     model.capabilityGraph = buildCapabilityGraph(model.capabilities, model.entities);
     model.searchIndex = buildSearchIndex(model);
@@ -1233,6 +1241,235 @@ export class ControlService {
       });
     });
     return { reviewed: true, projectVersion: model.projectVersion };
+  }
+
+  bulkReviewCapabilities(identity, t, p, input) {
+    const s = projectAccess(this.db, identity, t, p, 'review');
+    assert(s.project.model_id, 409, 'MODEL_REQUIRED', 'Scan sources before reviewing capabilities');
+    const model = this.store.getArtifact(s, s.project.model_id, 'model').content;
+    assert(
+      input.projectVersion === model.projectVersion,
+      409,
+      'MODEL_VERSION_CHANGED',
+      'The capability inventory changed. Reload it before bulk approval.',
+    );
+    assert(
+      Array.isArray(input.capabilityIds) &&
+        input.capabilityIds.length > 0 &&
+        input.capabilityIds.length <= 500,
+      400,
+      'INVALID_BULK_REVIEW',
+      'Choose 1–500 capabilities for bulk review',
+    );
+    assert(
+      input.agentEnabled !== true,
+      400,
+      'AGENT_ACCESS_REQUIRES_SEPARATE_DECISION',
+      'Bulk review cannot expose capabilities to agents. Use the separate agent-access action.',
+    );
+    const ids = [...new Set(strings(input.capabilityIds, 'Capability IDs', { max: 500 }))];
+    assert(
+      ids.length === input.capabilityIds.length,
+      400,
+      'DUPLICATE_CAPABILITY',
+      'Each capability can appear only once in a bulk review',
+    );
+    const approved = input.approved !== false;
+    const reviewedAt = this.clock();
+    const changes = ids.map((capabilityId) => {
+      const capability = model.capabilities.find((candidate) => candidate.id === capabilityId);
+      assert(capability, 404, 'NOT_FOUND', `Capability not found: ${capabilityId}`);
+      return {
+        capability,
+        patch: capabilityReviewPatch(
+          capability,
+          {
+            title: capability.title,
+            description: capability.description,
+            risk: capability.risk,
+            confirmation: capability.confirmation,
+            // Discovery intentionally records unknown command reversibility as
+            // a string. Bulk review must choose the conservative boolean.
+            reversible: capability.reversible === true,
+            rollbackCapabilityId: capability.rollbackCapabilityId,
+            requiredPermissions: capability.requiredPermissions,
+            piiFields: capability.piiFields,
+            approved,
+            agentEnabled: capability.securityReviewed ? capability.agentEnabled : false,
+          },
+          identity,
+          reviewedAt,
+          model,
+        ),
+      };
+    });
+    for (const { capability, patch } of changes) Object.assign(capability, patch);
+    model.capabilityGraph = buildCapabilityGraph(model.capabilities, model.entities);
+    model.searchIndex = buildSearchIndex(model);
+    model.projectVersion = stableModelVersion(model);
+    this.db.transaction(() => {
+      const artifact = this.store.artifact(s, 'model', model);
+      assert(
+        this.db.run(
+          'UPDATE projects SET model_id=?,revision=revision+1 WHERE tenant_id=? AND id=? AND revision=?',
+          artifact.id,
+          t,
+          p,
+          s.project.revision,
+        ).changes === 1,
+        409,
+        'REVISION_CONFLICT',
+        'Project changed while reviewing. Reload before retrying.',
+      );
+      for (const { capability, patch } of changes)
+        this.store.audit(s, 'capability.reviewed', capability.id, {
+          decision: patch.reviewDecision,
+          agentEnabled: patch.agentEnabled,
+          risk: patch.risk,
+          confirmation: patch.confirmation,
+          bulk: true,
+        });
+      this.store.audit(s, 'capability.bulk_reviewed', p, {
+        decision: approved ? 'approved' : 'rejected',
+        count: changes.length,
+        capabilityIdsHash: hash(ids),
+      });
+    });
+    return {
+      reviewed: changes.length,
+      decision: approved ? 'approved' : 'rejected',
+      agentAccessChanged: false,
+      projectVersion: model.projectVersion,
+    };
+  }
+
+  bulkSetCapabilityAgentAccess(identity, t, p, input) {
+    const s = projectAccess(this.db, identity, t, p, 'review');
+    assert(s.project.model_id, 409, 'MODEL_REQUIRED', 'Scan sources before changing agent access');
+    const model = this.store.getArtifact(s, s.project.model_id, 'model').content;
+    assert(
+      input.projectVersion === model.projectVersion,
+      409,
+      'MODEL_VERSION_CHANGED',
+      'The capability inventory changed. Reload it before changing agent access.',
+    );
+    assert(
+      Array.isArray(input.capabilityIds) &&
+        input.capabilityIds.length > 0 &&
+        input.capabilityIds.length <= 500,
+      400,
+      'INVALID_BULK_AGENT_ACCESS',
+      'Choose 1–500 capabilities for agent access',
+    );
+    const ids = [...new Set(strings(input.capabilityIds, 'Capability IDs', { max: 500 }))];
+    assert(
+      ids.length === input.capabilityIds.length,
+      400,
+      'DUPLICATE_CAPABILITY',
+      'Each capability can appear only once',
+    );
+    const enabled = bool(input.enabled);
+    const capabilities = ids.map((capabilityId) => {
+      const capability = model.capabilities.find((candidate) => candidate.id === capabilityId);
+      assert(capability, 404, 'NOT_FOUND', `Capability not found: ${capabilityId}`);
+      assert(
+        !enabled || capability.securityReviewed,
+        400,
+        'AGENT_REQUIRES_APPROVAL',
+        `Approve ${capabilityId} before exposing it to agents`,
+      );
+      return capability;
+    });
+    for (const capability of capabilities) capability.agentEnabled = enabled;
+    model.capabilityGraph = buildCapabilityGraph(model.capabilities, model.entities);
+    model.searchIndex = buildSearchIndex(model);
+    model.projectVersion = stableModelVersion(model);
+    this.db.transaction(() => {
+      const artifact = this.store.artifact(s, 'model', model);
+      assert(
+        this.db.run(
+          'UPDATE projects SET model_id=?,revision=revision+1 WHERE tenant_id=? AND id=? AND revision=?',
+          artifact.id,
+          t,
+          p,
+          s.project.revision,
+        ).changes === 1,
+        409,
+        'REVISION_CONFLICT',
+        'Project changed while updating agent access. Reload before retrying.',
+      );
+      for (const capability of capabilities)
+        this.store.audit(s, 'capability.agent_access_changed', capability.id, {
+          enabled,
+          bulk: true,
+        });
+    });
+    return { updated: capabilities.length, enabled, projectVersion: model.projectVersion };
+  }
+
+  bulkReopenCapabilityReviews(identity, t, p, input) {
+    const s = projectAccess(this.db, identity, t, p, 'review');
+    assert(s.project.model_id, 409, 'MODEL_REQUIRED', 'Scan sources before reopening reviews');
+    const model = this.store.getArtifact(s, s.project.model_id, 'model').content;
+    assert(
+      input.projectVersion === model.projectVersion,
+      409,
+      'MODEL_VERSION_CHANGED',
+      'The capability inventory changed. Reload it before reopening reviews.',
+    );
+    assert(
+      Array.isArray(input.capabilityIds) &&
+        input.capabilityIds.length > 0 &&
+        input.capabilityIds.length <= 500,
+      400,
+      'INVALID_BULK_REOPEN',
+      'Choose 1–500 capabilities to reopen',
+    );
+    const ids = [...new Set(strings(input.capabilityIds, 'Capability IDs', { max: 500 }))];
+    assert(
+      ids.length === input.capabilityIds.length,
+      400,
+      'DUPLICATE_CAPABILITY',
+      'Each capability can appear only once',
+    );
+    const capabilities = ids.map((capabilityId) => {
+      const capability = model.capabilities.find((candidate) => candidate.id === capabilityId);
+      assert(capability, 404, 'NOT_FOUND', `Capability not found: ${capabilityId}`);
+      return capability;
+    });
+    for (const capability of capabilities) {
+      capability.securityReviewed = false;
+      capability.reviewDecision = 'pending';
+      capability.agentEnabled = false;
+      delete capability.reviewedBy;
+      delete capability.reviewedAt;
+      delete capability.reviewedSchemaHash;
+    }
+    model.capabilityGraph = buildCapabilityGraph(model.capabilities, model.entities);
+    model.searchIndex = buildSearchIndex(model);
+    model.projectVersion = stableModelVersion(model);
+    this.db.transaction(() => {
+      const artifact = this.store.artifact(s, 'model', model);
+      assert(
+        this.db.run(
+          'UPDATE projects SET model_id=?,revision=revision+1 WHERE tenant_id=? AND id=? AND revision=?',
+          artifact.id,
+          t,
+          p,
+          s.project.revision,
+        ).changes === 1,
+        409,
+        'REVISION_CONFLICT',
+        'Project changed while reopening reviews. Reload before retrying.',
+      );
+      for (const capability of capabilities)
+        this.store.audit(s, 'capability.review_reopened', capability.id, { bulk: true });
+      this.store.audit(s, 'capability.bulk_review_reopened', p, {
+        count: capabilities.length,
+        capabilityIdsHash: hash(ids),
+      });
+    });
+    return { reopened: capabilities.length, agentEnabled: 0, projectVersion: model.projectVersion };
   }
   generate(identity, t, p, input, dedupe) {
     const s = projectAccess(this.db, identity, t, p, 'run');
