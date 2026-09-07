@@ -218,7 +218,7 @@ const server = createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader(
     'Content-Security-Policy',
-    `default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-src ${config.origin}; frame-ancestors 'none'; object-src 'none'; base-uri 'none'`,
+    `default-src 'self'; script-src 'self' ${config.origin}; style-src 'self'; connect-src 'self' ${config.origin}; frame-src ${config.origin}; frame-ancestors 'none'; object-src 'none'; base-uri 'none'`,
   );
   try {
     assert(req.headers.host === `127.0.0.1:${port}`, 400, 'HOST_DENIED', 'Invalid host header');

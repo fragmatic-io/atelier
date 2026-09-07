@@ -9,6 +9,7 @@ import { join, extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { DiscoveryService } from '../../discovery/src/service.mjs';
+import { SurfaceInstallService } from '../../surface-install/src/service.mjs';
 import { projectAccess, tenantAccess } from './access.mjs';
 import {
   assert,
@@ -99,6 +100,7 @@ export function createControlServer(
   const configured = new URL(origin);
   const experiences = experienceRoutes(service, { production, enableExamples });
   const discovery = new DiscoveryService(service);
+  const installs = new SurfaceInstallService(service, { controlOrigin: configured.origin });
   assert(
     !production || configured.protocol === 'https:',
     500,
@@ -178,6 +180,44 @@ export function createControlServer(
           await readJson(req, 64 * 1024),
         );
         return send(res, 202, result);
+      }
+      if (req.method === 'OPTIONS' && url.pathname === '/api/install/v1/events') {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Install origin is required',
+        );
+        res.writeHead(204, {
+          'Access-Control-Allow-Origin': requestOrigin,
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, X-Atelier-Install-Key',
+          'Access-Control-Max-Age': '600',
+          Vary: 'Origin',
+        });
+        res.end();
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/install/v1/events') {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Install origin is required',
+        );
+        res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+        res.setHeader('Vary', 'Origin');
+        return send(
+          res,
+          202,
+          installs.ingest(
+            req.headers['x-atelier-install-key'],
+            requestOrigin,
+            await readJson(req, 16 * 1024),
+          ),
+        );
       }
       if (url.pathname.startsWith('/preview/') && req.method === 'GET') {
         const preview = await experiences.components.consumePreview(url.pathname.slice(9));
@@ -385,6 +425,16 @@ export function createControlServer(
         return send(res, 201, await discovery.importSpec(identity, t, p, body));
       if (resource === 'onboarding' && req.method === 'GET')
         return send(res, 200, discovery.status(identity, t, p));
+      if (resource === 'design-contract') {
+        if (req.method === 'GET') return send(res, 200, discovery.design(identity, t, p));
+        if (req.method === 'POST')
+          return send(res, 200, discovery.approveDesign(identity, t, p, body));
+      }
+      if (resource === 'surface-installs') {
+        if (req.method === 'GET') return send(res, 200, installs.list(identity, t, p));
+        if (req.method === 'POST') return send(res, 201, installs.create(identity, t, p, body));
+        if (req.method === 'DELETE') return send(res, 200, installs.revoke(identity, t, p, rid));
+      }
       const extension = await experiences.handle({
         identity,
         t,

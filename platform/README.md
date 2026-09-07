@@ -1,6 +1,6 @@
 # Atelier Platform 2.3 release candidate
 
-Atelier learns an existing application's capabilities and design language, grows a reviewed project-native component library, publishes signed artifacts into additive application slots, and exposes the same verified project knowledge to an embedded runtime agent and to coding agents over MCP.
+Atelier learns an existing application's capabilities and privacy-safe workflow evidence, turns that product intelligence into reviewed adaptive surfaces, and exposes the same approved capabilities to agents with rich in-product components. It can install a new customer-owned route, mount into an existing page, or improve an existing Atelier-owned slot without silently rewriting arbitrary host UI.
 
 This directory is an independent npm project inside the original Atelier pnpm repository. Root framework validation and `platform/` acceptance are separate required gates.
 
@@ -35,15 +35,15 @@ npm run demo
 
 Open `http://127.0.0.1:4310`. The first boot prints a random development password once. Do not capture it in logs or commit the data directory. The demo uses explicitly labelled deterministic or controlled model behavior; it is not a live-provider result.
 
-For a customer or coding agent installing Atelier into another application, begin with the [guided customer onboarding](docs/CUSTOMER_ONBOARDING.md), then follow the complete [application integration handoff](docs/AGENT_SETUP.md). The normal SaaS path uses a privacy-safe browser observer and OpenAPI evidence without requiring source code. It then covers automatic Redoc documentation, capability review, provider/runner setup, the server-authority bridge, embedded chat, rich response components, MCP registration, and deployment verification.
+For a customer or coding agent installing Atelier into another application, begin with the [guided customer onboarding](docs/CUSTOMER_ONBOARDING.md), then follow the complete [application integration handoff](docs/AGENT_SETUP.md). The normal SaaS path uses a privacy-safe browser observer and OpenAPI evidence without requiring source code. It then covers automatic Redoc documentation, capability review, provider/runner setup, a framework-aware route/mount installer, the server-authority bridge, embedded chat, rich response components, MCP registration, and deployment verification.
 
 The installable package exposes server authority, React slots, browser surfaces, providers, project MCP, the embedded-agent host/client/journal, the standalone chat and artifact mounts, and the source forge as documented subpath exports. Import `@atelier/platform/agent.css` inside the explicit host container for the scoped standalone chat theme.
 
 ## Product surfaces
 
-- Studio: fact-derived guided onboarding, origin-bound browser observation, OpenAPI import, optional redacted semantic samples, capability review, independent custom-surface and chatbot delivery, automatic Redoc API reference, source generation, real browser certification, human approval, signing, publication, rollback, and audit.
+- Studio: fact-derived guided onboarding, origin-bound browser observation, OpenAPI import, optional redacted semantic samples, privacy-safe host design contracts, capability review, independent custom-surface and chatbot delivery, bounded specialist-agent setup, framework-aware route/mount generation with factual verification, automatic Redoc API reference, source generation, real browser certification, human approval, signing, publication, rollback, and audit.
 - Host runtime: the application retains authentication, object authorization, business data, and transactional idempotency. Atelier resolves signed additive surfaces and proposes only reviewed capabilities.
-- Embedded agent: durable private conversations, attachments, stop/retry, scoped tools, exact-input confirmation, interactive artifacts, revision/pin/export behavior, and revocation checks.
+- Embedded agent: durable private conversations, attachments, stop/retry, scoped tools, bounded read-only specialist consultations, primary-agent synthesis, exact-input confirmation, interactive artifacts, revision/pin/export behavior, and revocation checks.
 - Coding-agent MCP: current project search/model, published component source, and versioned coding/design skill resources. Configuration and tokens stay server-side. See [MCP integration](docs/MCP.md).
 
 ## Source generation and publication
@@ -73,6 +73,7 @@ Read [architecture](docs/ARCHITECTURE.md), [host integration](docs/INTEGRATION.m
 | `packages/source-forge`                            | React source contract, isolated compilation, certification, signing lifecycle |
 | `packages/conversation`                            | Embedded agent, tools, artifacts, observations, browser clients               |
 | `packages/discovery`                               | Browser observer, privacy projection, API evidence and onboarding status      |
+| `packages/surface-install`                         | Framework bundles, fail-closed authority stubs and factual install receipts   |
 | `packages/mcp`                                     | Read-only project-scoped coding-agent tools and generated skills              |
 | `packages/host-sdk`, `surface`, `adapters`         | Server authority and host rendering integrations                              |
 | `apps/studio`, `apps/agent-demo`, `apps/host-demo` | Operator product and runnable local integrations                              |

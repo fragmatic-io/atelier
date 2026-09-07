@@ -127,6 +127,69 @@ test('samples fail closed unless the human enabled them on the discovery source'
   );
 });
 
+test('design capture sends computed styles only and requires explicit human approval', async (t) => {
+  const f = await fixture();
+  t.after(() => f.db.close());
+  const discovery = new DiscoveryService(f.service);
+  const disabled = discovery.create(f.who, f.tenant.id, f.project.id, {
+    kind: 'browser',
+    allowedOrigins: ['https://app.example'],
+  });
+  const contract = {
+    version: 1,
+    viewport: { bucket: 'desktop', colorScheme: 'light' },
+    roles: {
+      root: {
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '14px',
+        color: 'rgb(20, 24, 31)',
+        backgroundColor: 'rgb(255, 255, 255)',
+      },
+      button: { borderRadius: '8px', height: '36px' },
+    },
+  };
+  assert.throws(
+    () =>
+      discovery.ingest(disabled.projectKey, 'https://app.example', {
+        heartbeat: true,
+        design: contract,
+      }),
+    { code: 'DESIGN_CAPTURE_DISABLED' },
+  );
+  const source = discovery.create(f.who, f.tenant.id, f.project.id, {
+    kind: 'browser',
+    allowedOrigins: ['https://app.example'],
+    designCapture: true,
+  });
+  assert.throws(
+    () =>
+      discovery.ingest(source.projectKey, 'https://app.example', {
+        heartbeat: true,
+        design: {
+          ...contract,
+          roles: { root: { ...contract.roles.root, backgroundColor: 'url(secret)' } },
+        },
+      }),
+    { code: 'DESIGN_VALUE' },
+  );
+  discovery.ingest(source.projectKey, 'https://app.example', {
+    heartbeat: true,
+    design: contract,
+  });
+  let design = discovery.design(f.who, f.tenant.id, f.project.id);
+  assert.equal(design.observations.length, 1);
+  assert.equal(design.approved, null);
+  const approved = discovery.approveDesign(f.who, f.tenant.id, f.project.id, {
+    fingerprint: design.observations[0].fingerprint,
+    overrides: { roles: { button: { borderRadius: '10px' } } },
+  });
+  assert.equal(approved.contract.roles.button.borderRadius, '10px');
+  design = discovery.design(f.who, f.tenant.id, f.project.id);
+  assert.equal(design.approved.fingerprint, approved.fingerprint);
+  assert.equal(discovery.status(f.who, f.tenant.id, f.project.id).facts.designApproved, true);
+  assert(!JSON.stringify(design).includes('secret'));
+});
+
 test('OpenAPI is explicit declared evidence and private URL targets are rejected', async (t) => {
   const f = await fixture();
   t.after(() => f.db.close());
@@ -258,25 +321,33 @@ test('public observer endpoint enforces CORS origin and serves the standalone sn
 });
 
 test('Studio exposes guided setup, snippet privacy and fact-derived status copy', async () => {
-  const [app, onboarding, styles, observer] = await Promise.all([
+  const [app, onboarding, installer, styles, observer] = await Promise.all([
     readFile(new URL('../apps/studio/web/app.mjs', import.meta.url), 'utf8'),
     readFile(new URL('../apps/studio/web/onboarding.mjs', import.meta.url), 'utf8'),
+    readFile(new URL('../apps/studio/web/install-surface.mjs', import.meta.url), 'utf8'),
     readFile(new URL('../apps/studio/web/onboarding.css', import.meta.url), 'utf8'),
     readFile(new URL('../packages/discovery/src/observer.js', import.meta.url), 'utf8'),
   ]);
   assert.match(app, /connect-observer/);
   assert.match(app, /configure-agent/);
+  assert.match(app, /approve-design/);
   assert.match(onboarding, /Every status below comes from stored evidence/);
   assert.match(onboarding, /Custom surfaces and chatbot tools share one inventory/);
   assert.match(onboarding, /Markup renders inside the customer app/);
   assert.match(onboarding, /never arbitrary model-written HTML/);
   assert.match(onboarding, /observer never injects links or UI/);
+  assert.match(onboarding, /new route, mount into an existing page, or improve/);
   assert.match(
     onboarding,
     /Discovered, approved, chatbot enabled and published are separate states/,
   );
+  assert.match(installer, /Generated, not injected/);
+  assert.match(installer, /Copy coding-agent prompt/);
+  assert.match(installer, /factual installation receipt/);
   assert.match(styles, /\.setup-rail/);
   assert.match(observer, /XMLHttpRequest\.prototype\.send/);
   assert.match(observer, /atelier:observation-preview/);
+  assert.match(observer, /atelier:design-preview/);
+  assert.match(observer, /data-atelier-design-root/);
   assert.match(observer, /piiPath\.test\(decoded\)/);
 });

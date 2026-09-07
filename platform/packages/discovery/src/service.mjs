@@ -31,6 +31,11 @@ import {
   operationIdentity,
   recommendCapability,
 } from './contracts.mjs';
+import {
+  designFingerprint,
+  mergeDesignContract,
+  normalizeDesignContract,
+} from './design-contract.mjs';
 
 const PRIVATE_V4 = /^(?:10\.|127\.|169\.254\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)/;
 const PRIVATE_V6 = /^(?:::1$|f[cd][0-9a-f]{2}:|fe[89ab][0-9a-f]:)/i;
@@ -41,6 +46,7 @@ const sourceView = (row) => ({
   allowedOrigins: parseJson(row.allowed_origins_json, []),
   safeSampleFields: parseJson(row.config_json, {}).safeSampleFields ?? [],
   semanticSamples: parseJson(row.config_json, {}).semanticSamples === true,
+  designCapture: parseJson(row.config_json, {}).designCapture === true,
   status: row.status,
   lastSeenAt: row.last_seen_at,
   lastError: row.last_error,
@@ -112,6 +118,7 @@ export class DiscoveryService {
       ),
     ];
     const semanticSamples = bool(input.semanticSamples ?? false);
+    const designCapture = bool(input.designCapture ?? false);
     assert(
       safeSampleFields.length <= 20,
       400,
@@ -156,7 +163,7 @@ export class DiscoveryService {
       row.name,
       hash(projectKey),
       JSON.stringify(origins),
-      canonical({ safeSampleFields, semanticSamples }),
+      canonical({ safeSampleFields, semanticSamples, designCapture }),
       'active',
       identity.userId,
       row.createdAt,
@@ -189,6 +196,82 @@ export class DiscoveryService {
     return { revoked: true };
   }
 
+  design(identity, t, p) {
+    projectAccess(this.db, identity, t, p);
+    const rows = this.db.all(
+      `SELECT d.*,s.name source_name FROM design_observations d
+       JOIN discovery_sources s ON s.tenant_id=d.tenant_id AND s.project_id=d.project_id AND s.id=d.source_id
+       WHERE d.tenant_id=? AND d.project_id=? ORDER BY d.last_seen_at DESC,d.fingerprint LIMIT 20`,
+      t,
+      p,
+    );
+    const observations = rows.map((row) => ({
+      sourceId: row.source_id,
+      sourceName: row.source_name,
+      fingerprint: row.fingerprint,
+      contract: parseJson(row.contract_json),
+      approved: !!row.approved_at,
+      lastSeenAt: row.last_seen_at,
+    }));
+    const approved = rows.find((row) => row.approved_at)
+      ? (() => {
+          const row = rows.find((candidate) => candidate.approved_at);
+          return {
+            sourceId: row.source_id,
+            sourceName: row.source_name,
+            fingerprint: designFingerprint(parseJson(row.approved_contract_json)),
+            observedFingerprint: row.fingerprint,
+            contract: parseJson(row.approved_contract_json),
+            approvedAt: row.approved_at,
+          };
+        })()
+      : null;
+    return { observations, approved };
+  }
+
+  approveDesign(identity, t, p, input) {
+    const scope = projectAccess(this.db, identity, t, p, 'review');
+    assert(!identity.token, 403, 'HUMAN_REVIEW_REQUIRED', 'Design contracts require human review');
+    const observedFingerprint = text(input.fingerprint, 'Design fingerprint', { max: 80 });
+    const row = this.db.get(
+      'SELECT * FROM design_observations WHERE tenant_id=? AND project_id=? AND fingerprint=?',
+      t,
+      p,
+      observedFingerprint,
+    );
+    assert(row, 404, 'DESIGN_NOT_FOUND', 'Observed design contract not found');
+    const approved = mergeDesignContract(parseJson(row.contract_json), input.overrides ?? {}),
+      approvedFingerprint = designFingerprint(approved),
+      now = this.clock();
+    this.db.transaction(() => {
+      this.db.run(
+        'UPDATE design_observations SET approved_contract_json=NULL,approved_by=NULL,approved_at=NULL WHERE tenant_id=? AND project_id=?',
+        t,
+        p,
+      );
+      this.db.run(
+        'UPDATE design_observations SET approved_contract_json=?,approved_by=?,approved_at=? WHERE tenant_id=? AND project_id=? AND source_id=? AND fingerprint=?',
+        canonical(approved),
+        identity.userId,
+        now,
+        t,
+        p,
+        row.source_id,
+        row.fingerprint,
+      );
+      this.store.audit(scope, 'design.contract.approved', approvedFingerprint, {
+        observedFingerprint,
+        sourceId: row.source_id,
+      });
+    });
+    return {
+      observedFingerprint,
+      fingerprint: approvedFingerprint,
+      contract: approved,
+      approvedAt: now,
+    };
+  }
+
   ingest(projectKey, origin, input) {
     assert(
       typeof projectKey === 'string' && projectKey.startsWith('atl_obs_'),
@@ -210,6 +293,29 @@ export class DiscoveryService {
     );
     this.service.auth.rate(`observe:${source.id}`, { limit: 120, windowMs: 60000 });
     const now = this.clock();
+    let designRevision = null;
+    if (input.design !== undefined) {
+      const sourceConfig = parseJson(source.config_json, {});
+      assert(
+        sourceConfig.designCapture === true,
+        400,
+        'DESIGN_CAPTURE_DISABLED',
+        'Design capture is not enabled for this source',
+      );
+      const contract = normalizeDesignContract(input.design),
+        fingerprint = designFingerprint(contract);
+      this.db.run(
+        'INSERT INTO design_observations(tenant_id,project_id,source_id,fingerprint,contract_json,first_seen_at,last_seen_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(tenant_id,project_id,source_id,fingerprint) DO UPDATE SET last_seen_at=excluded.last_seen_at',
+        source.tenant_id,
+        source.project_id,
+        source.id,
+        fingerprint,
+        canonical(contract),
+        now,
+        now,
+      );
+      designRevision = fingerprint;
+    }
     if (input.heartbeat === true) {
       this.db.run(
         'UPDATE discovery_sources SET last_seen_at=?,last_error=NULL WHERE tenant_id=? AND project_id=? AND id=?',
@@ -218,7 +324,7 @@ export class DiscoveryService {
         source.project_id,
         source.id,
       );
-      return { accepted: true, heartbeat: true, newRevisions: 0 };
+      return { accepted: true, heartbeat: true, newRevisions: 0, designRevision };
     }
     assert(
       Array.isArray(input.events) && input.events.length > 0 && input.events.length <= 20,
@@ -607,6 +713,7 @@ export class DiscoveryService {
       ? this.store.getArtifact(scope, scope.project.model_id, 'model').content
       : null;
     const sources = this.list(identity, t, p).filter((source) => !source.revokedAt);
+    const design = this.design(identity, t, p);
     const activeCollectors = sources.filter((source) =>
       ['browser', 'server'].includes(source.kind),
     );
@@ -663,6 +770,31 @@ export class DiscoveryService {
         this.store.getArtifact(scope, release.artifact_id, 'experience').content.bundle
           ?.projectVersion === model.projectVersion,
     ).length;
+    const installs = this.db
+      .all(
+        "SELECT * FROM surface_installs WHERE tenant_id=? AND project_id=? AND status!='revoked' AND revoked_at IS NULL ORDER BY created_at DESC,id",
+        t,
+        p,
+      )
+      .map((row) => ({
+        id: row.id,
+        framework: row.framework,
+        mode: row.mode,
+        routePath: row.route_path,
+        navLabel: row.nav_label,
+        slotId: row.slot_id,
+        environment: row.environment,
+        status: row.status,
+        facts: {
+          routeMounted: row.route_mounted === 1,
+          bridgeReachable: row.bridge_reachable === 1,
+          authorityConfigured: row.authority_configured === 1,
+          designContractBound: !!row.design_fingerprint,
+        },
+        lastSeenAt: row.last_seen_at,
+        lastError: row.last_error,
+      }));
+    const verifiedInstalls = installs.filter((install) => install.status === 'verified').length;
     const steps = [
       {
         id: 'connect',
@@ -687,13 +819,22 @@ export class DiscoveryService {
         id: 'agent',
         label: 'Configure delivery',
         complete: profileCurrent && agentEnabled > 0 && provider,
-        facts: { profile: profileCurrent, agentEnabled, provider, surfaces: published },
+        facts: {
+          profile: profileCurrent,
+          agentEnabled,
+          provider,
+          specialists: profileCurrent ? (profile.specialists?.length ?? 0) : 0,
+          designApproved: !!design.approved,
+          surfaces: published,
+          installs: installs.length,
+          verifiedInstalls,
+        },
       },
       {
         id: 'publish',
         label: 'Publish integration',
-        complete: published > 0,
-        facts: { published },
+        complete: published > 0 && verifiedInstalls > 0 && !!design.approved,
+        facts: { published, verifiedInstalls },
       },
     ];
     const first = steps.find((step) => !step.complete);
@@ -708,13 +849,20 @@ export class DiscoveryService {
       nextStep: first?.id ?? null,
       steps,
       sources,
+      design,
+      installs,
       facts: {
         observations,
         capabilities: capabilities.length,
         reviewed,
         agentEnabled,
         provider,
+        specialists: profileCurrent ? (profile.specialists?.length ?? 0) : 0,
+        designObserved: design.observations.length,
+        designApproved: !!design.approved,
         published,
+        installs: installs.length,
+        verifiedInstalls,
       },
       generatedAt: this.clock(),
     };

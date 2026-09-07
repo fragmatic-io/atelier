@@ -20,7 +20,7 @@ function fact(step) {
   if (step.id === 'review') return `${step.facts.reviewed} of ${step.facts.total} reviewed`;
   if (step.id === 'agent')
     return `${step.facts.surfaces} surfaces, ${step.facts.agentEnabled} agent tools`;
-  return `${step.facts.published} published release${step.facts.published === 1 ? '' : 's'}`;
+  return `${step.facts.published} published, ${step.facts.verifiedInstalls} installed`;
 }
 
 export function renderOnboarding({ status, model, projectId, e, icon, pill, button }) {
@@ -30,12 +30,14 @@ export function renderOnboarding({ status, model, projectId, e, icon, pill, butt
   const reviewed = status.facts.reviewed;
   const total = status.facts.capabilities;
   const enabled = status.facts.agentEnabled;
+  const installs = status.installs ?? [];
+  const design = status.design ?? { observations: [], approved: null };
   return `
     <section class="setup-summary" aria-labelledby="setup-title">
       <div>
         <span class="setup-label">Guided setup</span>
         <h2 id="setup-title">${status.state === 'ready' ? 'Your integration is ready.' : 'Take Atelier from evidence to experiences.'}</h2>
-        <p>Every status below comes from stored evidence. Nothing is marked complete by a checkbox alone.</p>
+        <p>Turn API and workflow evidence into approved agent tools, rich chat responses and adaptive product surfaces. Every status below comes from stored evidence.</p>
       </div>
       <div class="setup-state">${pill(status.state)}<span>Updated ${new Date(status.generatedAt).toLocaleTimeString()}</span></div>
     </section>
@@ -63,6 +65,7 @@ export function renderOnboarding({ status, model, projectId, e, icon, pill, butt
               <strong>Always collected</strong><span>Method, route template, field names, types, status class, page path and role cohort</span>
               <strong>Never collected</strong><span>Headers, cookies, credentials, query strings, raw free text, raw identifiers or source code</span>
               <strong>Optional safe values</strong><span>Only approved categorical fields such as status, severity or plan</span>
+              <strong>Optional design contract</strong><span>Fixed computed styles from explicitly marked elements; never text, HTML or form values</span>
             </div>
             <p class="setup-note">Your application Content Security Policy must allow the Atelier script origin and collector connection. A blocked policy is reported in the browser console and the dashboard remains waiting.</p>
           </div>
@@ -101,14 +104,26 @@ export function renderOnboarding({ status, model, projectId, e, icon, pill, butt
       <section class="setup-section" id="setup-agent">
         <div class="setup-section-head"><span class="step-index">4</span><div><h2>Configure delivery</h2><p>Custom surfaces and chatbot tools share one inventory, but have separate release decisions.</p></div></div>
         <div class="delivery-tracks">
-          <article><span class="setup-label">Custom surfaces</span><h3>Design an additive workspace</h3><p>Build a rail, queue, dashboard, form or rich component from reviewed capabilities, then certify and publish it into an approved host slot.</p><p class="setup-note">A full page uses an explicit customer-owned route and navigation link. An embedded surface uses an approved mount on an existing page. The observer never injects links or UI.</p><p class="setup-note">Markup renders inside the customer app with installed or project-native components. Atelier supplies a signed contract, never arbitrary model-written HTML.</p>${button('new-experience', status.steps[3].facts.surfaces ? 'Create another surface' : 'Design a surface', 'spark')}</article>
+          <article><span class="setup-label">Custom surfaces</span><h3>Design and install an adaptive workspace</h3><p>Create a new route, mount into an existing page, or improve an Atelier-managed surface from reviewed capabilities and privacy-safe workflow evidence.</p><p class="setup-note">The observer never injects links or UI. Markup renders inside the customer app from a reviewed, versioned host design contract; Atelier supplies a signed component contract, never arbitrary model-written HTML.</p><div class="design-contract-state">${pill(design.approved ? 'approved' : design.observations.length ? 'review' : 'waiting')}<span>${design.approved ? `Host design ${e(design.approved.fingerprint.slice(0, 10))} approved` : design.observations.length ? 'A new computed-style contract is ready for review' : 'Mark a design root and open the customer app'}</span></div><div class="buttons">${button('approve-design', design.approved ? 'Review design again' : 'Review host design', 'layers', true, design.observations.length ? '' : 'disabled aria-disabled="true"')}${button('new-experience', status.steps[3].facts.surfaces ? 'Create another surface' : 'Design a surface', 'spark')}${button('install-surface', installs.length ? 'Create another installer' : 'Install a surface', 'code', true)}</div></article>
           <article><span class="setup-label">Chatbot agent</span><h3>Configure conversation</h3><p>Select a real model connection and expose only the reviewed capabilities explicitly enabled as agent tools.</p>${button('configure-agent', status.steps[3].facts.profile ? 'Update chatbot' : 'Configure chatbot', 'spark')}</article>
         </div>
+        <div class="install-status"><div class="section-head"><h3>Surface installation receipts</h3><span>${status.facts.verifiedInstalls} verified</span></div>${
+          installs.length
+            ? installs
+                .map(
+                  (install) =>
+                    `<div class="source-row"><div>${pill(install.status)}<strong>${e(install.navLabel)} · ${e(install.routePath)}</strong><small>${e(install.framework)} · ${e(install.mode)} · ${e(install.slotId)}</small><div class="install-facts"><span class="${install.facts.designContractBound ? 'ok' : ''}">${icon(install.facts.designContractBound ? 'check' : 'clock')}design</span><span class="${install.facts.routeMounted ? 'ok' : ''}">${icon(install.facts.routeMounted ? 'check' : 'clock')}mount</span><span class="${install.facts.bridgeReachable ? 'ok' : ''}">${icon(install.facts.bridgeReachable ? 'check' : 'clock')}bridge</span><span class="${install.facts.authorityConfigured ? 'ok' : ''}">${icon(install.facts.authorityConfigured ? 'check' : 'clock')}authority</span></div>${install.lastError ? `<small class="install-error">${e(install.lastError)}</small>` : ''}</div><button class="btn ghost sm" data-action="revoke-surface-install" data-id="${e(install.id)}">Revoke</button></div>`,
+                )
+                .join('')
+            : '<div class="setup-empty">No surface installer has been generated.</div>'
+        }</div>
         <div class="agent-readiness">
           <div class="fact-check ${status.steps[3].facts.surfaces ? 'complete' : ''}">${icon(status.steps[3].facts.surfaces ? 'check' : 'clock')}<span><strong>Published surfaces</strong><small>${status.steps[3].facts.surfaces ? `${status.steps[3].facts.surfaces} current release${status.steps[3].facts.surfaces === 1 ? '' : 's'}` : 'Create, review and publish a custom surface'}</small></span></div>
           <div class="fact-check ${status.steps[3].facts.provider ? 'complete' : ''}">${icon(status.steps[3].facts.provider ? 'check' : 'clock')}<span><strong>Model provider</strong><small>${status.steps[3].facts.provider ? 'Connected' : 'Connect Claude CLI, Codex CLI or an API provider'}</small></span></div>
           <div class="fact-check ${enabled ? 'complete' : ''}">${icon(enabled ? 'check' : 'clock')}<span><strong>Tool allowlist</strong><small>${enabled ? `${enabled} approved capabilities` : 'Enable at least one reviewed capability'}</small></span></div>
           <div class="fact-check ${status.steps[3].facts.profile ? 'complete' : ''}">${icon(status.steps[3].facts.profile ? 'check' : 'clock')}<span><strong>Agent profile</strong><small>${status.steps[3].facts.profile ? 'Saved against the current model' : 'Voice, retention and tools need review'}</small></span></div>
+          <div class="fact-check ${status.steps[3].facts.specialists ? 'complete' : ''}">${icon(status.steps[3].facts.specialists ? 'check' : 'clock')}<span><strong>Deep-answer specialists</strong><small>${status.steps[3].facts.specialists ? `${status.steps[3].facts.specialists} bounded specialist roles` : 'Optional research, workflow and explanation roles'}</small></span></div>
+          <div class="fact-check ${status.steps[3].facts.designApproved ? 'complete' : ''}">${icon(status.steps[3].facts.designApproved ? 'check' : 'clock')}<span><strong>Host design contract</strong><small>${status.steps[3].facts.designApproved ? 'Approved and version-bound' : 'Required before generating an installer'}</small></span></div>
         </div>
       </section>
 
@@ -129,5 +144,6 @@ export function snippet(origin, source, environment = 'production') {
     ? `\n  data-safe-sample-fields="${source.safeSampleFields.join(',')}"`
     : '';
   const samples = source.semanticSamples ? '\n  data-semantic-samples="true"' : '';
-  return `<script\n  src="${origin}/observe/v1.js"\n  data-project-key="${source.projectKey}"\n  data-environment="${environment}"${samples}${safe}\n  defer\n><\/script>`;
+  const design = source.designCapture ? '\n  data-design-capture="true"' : '';
+  return `<script\n  src="${origin}/observe/v1.js"\n  data-project-key="${source.projectKey}"\n  data-environment="${environment}"${samples}${safe}${design}\n  defer\n><\/script>`;
 }

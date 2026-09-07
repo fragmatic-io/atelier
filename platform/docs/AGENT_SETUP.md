@@ -33,12 +33,15 @@ curl --fail http://127.0.0.1:4310/readyz
 In Studio:
 
 1. Open the project and choose **Setup**.
-2. Create the origin-bound browser observer and paste the generated snippet into the host application. Source code is not required.
+2. Create the origin-bound browser observer and paste the generated snippet into the host application. Source code is not required. Mark one approved shell with `data-atelier-design-root` and representative controls with `data-atelier-design-role="button|input|card|nav"` when design capture is enabled.
 3. Optionally import an OpenAPI 3.x file or public HTTPS URL as declared evidence. Semantic samples remain disabled unless the customer explicitly enables locally redacted samples and an exact categorical-field allowlist.
 4. Wait for Studio to report observed revisions and discovered capabilities from stored facts.
 5. Inspect **App model**. Confirm every endpoint's purpose, method, path, input/output schema, permissions, risk, PII, reversibility and confirmation policy.
 6. Approve or reject each capability. Then make independent delivery decisions: which approved capabilities may appear in custom surfaces and which may be exposed as chatbot tools.
 7. Open **API reference** for the automatically generated Redoc documentation. Download the OpenAPI 3.1 document if another tool needs it.
+8. Review the observed host design contract in Setup. Correct any token that does not represent the application, then approve that exact fingerprint.
+9. Configure the primary chatbot and optional bounded specialists. Review every specialist instruction and the shared read-only tool subset; specialists never receive commands.
+10. Design and publish the first surface, then choose **Install a surface**. Select the exact host framework, new-route/inline/drawer placement, application origin, customer route, navigation label, approved slot and same-origin bridge path. Download the generated bundle immediately.
 
 Read [CUSTOMER_ONBOARDING.md](CUSTOMER_ONBOARDING.md) for the observer privacy contract, deduplication, evidence levels, status facts and required tests. Explicit source scanning remains available for separately authorized self-hosted/developer projects to extract React components and design tokens; it is not the default SaaS onboarding path.
 
@@ -57,7 +60,22 @@ node scripts/runner.mjs --config /private/atelier-runner.json
 
 The CLI process must run under a dedicated OS/container identity with an account home bound to this project. See [PROVIDERS.md](PROVIDERS.md) for the exact matrices and safety flags.
 
-## 4. Install the host SDK
+## 4. Apply the generated framework bundle
+
+The downloaded `atelier-*.install.json` is the authoritative, one-time handoff. It contains a list of new files and explicit insertion patches for Next.js App Router, React Router with Express, or framework-neutral DOM with Node/Express. It also contains an origin-bound public install-verification key; it contains no host token or confirmation key.
+
+Give the bundle to the coding agent with the generated **Copy coding-agent prompt**. The agent must:
+
+1. create only the listed new files;
+2. apply every listed patch to the corresponding customer-owned router, navigation and server bootstrap;
+3. replace the generated fail-closed authority adapter with the application's real server session, permissions, object checks, loaders and idempotent executors;
+4. store the host token and confirmation key only in server secrets;
+5. run the customer's typecheck, unit/integration tests and real browser test;
+6. open the installed route so the current bundle reports design binding, mount, bridge and authority facts.
+
+Studio remains `waiting` or `partial` until all four facts are true. The public receipt is operational evidence, not a security attestation. Do not set `authorityConfigured = true` before the adapter and authorization tests are real.
+
+## 5. Install the host SDK
 
 Until a registry release is explicitly published, pack the exact reviewed Atelier commit and install that tarball in the host application:
 
@@ -72,7 +90,7 @@ npm install /absolute/path/to/atelier-platform-2.3.0-rc.1.tgz
 
 Do not copy provider credentials into the host browser bundle. The host server uses a project-scoped token created under Studio **Settings**.
 
-## 5. Implement server authority
+## 6. Implement server authority
 
 Create one `HostBridge` on the host server. Map reviewed query capabilities to loaders and reviewed commands to idempotent executors. Both the authorization callback and the domain implementation must enforce the current user, tenant, object, permission, and business preconditions.
 
@@ -101,7 +119,7 @@ export const atelier = new HostBridge({
 
 Expose same-origin, authenticated, CSRF-protected host routes for resolve, load, confirm, dispatch, and the embedded-agent RPC. Never accept browser-supplied roles or permissions as authority. Follow the complete examples and security conditions in [INTEGRATION.md](INTEGRATION.md).
 
-## 6. Mount additive UI and the embedded agent
+## 7. Mount additive UI and the embedded agent
 
 Use `@atelier/platform/react` for reviewed application slots and `@atelier/platform/host-client` for browser-to-host calls. Keep the application's existing navigation and accessible modal/drawer primitives; Atelier owns only the explicit leaf slot.
 
@@ -130,7 +148,7 @@ const chat = mountAgentChat(root, { client, context: { route: location.pathname 
 
 The agent can call only reviewed tools included in its project profile. Queries return schema-projected data. Commands require exact-input confirmation and use the durable action ledger. Rich responses select only certified, approved, signed, published components; runtime-generated executable UI is rejected. Call `chat.destroy()` and `client.close()` when the host unmounts the feature.
 
-## 7. Give the next coding agent project knowledge
+## 8. Give the next coding agent project knowledge
 
 Create a project token with only `read` scope and save this private configuration outside the repositories:
 
@@ -162,7 +180,7 @@ ATELIER_PROJECT_MCP_TOKEN='atk_...' npm run export:skills -- \
 
 Give the next agent that directory alongside the host repository. Refresh it after every project-model change; the live MCP server remains authoritative.
 
-## 8. Required verification before deployment
+## 9. Required verification before deployment
 
 ```sh
 # Atelier checkout
@@ -178,11 +196,14 @@ Also test the host's real authorization boundaries, loading/empty/error states, 
 
 ## Completion checklist for the integrating agent
 
-- Source scan succeeds and the project version is recorded.
+- Browser observation or imported OpenAPI creates a current project model without requiring source code.
 - Redoc reference renders every discovered HTTP capability and downloads valid OpenAPI 3.1 JSON.
 - Every enabled agent tool has a reviewed contract and a host loader/executor.
 - No API key or project token reaches browser code or Git.
 - Commands require exact confirmation and durable idempotency.
 - At least one query and one command pass with a real authorized test user.
 - At least one published rich component renders actual projected tool data.
+- The generated route/mount, same-origin bridge and authority adapter produce a verified installation receipt.
+- The generated surface consumes the exact reviewed host design fingerprint and passes visual review at the customer's supported viewports and themes.
+- Any enabled specialist is a separate auditable turn with read-only subset tools, bounded consultations and a primary-agent synthesis.
 - Host typecheck, tests, browser tests, and Atelier verification pass without fallback.

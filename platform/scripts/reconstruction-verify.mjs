@@ -112,6 +112,16 @@ const expected = [
   'apps/studio/web/lab.mjs',
   'apps/agent-demo/server.mjs',
   'migrations/003-experience-agents.sql',
+  'migrations/004-discovery-onboarding.sql',
+  'migrations/005-surface-installs.sql',
+  'migrations/006-design-contracts.sql',
+  'packages/discovery/src/service.mjs',
+  'packages/discovery/src/design-contract.mjs',
+  'packages/surface-install/src/service.mjs',
+  'packages/surface-install/src/template-shared.mjs',
+  'packages/conversation/src/specialists.mjs',
+  'apps/studio/web/agent-setup.mjs',
+  'apps/studio/web/design-setup.mjs',
 ];
 const missing = [];
 for (const p of expected)

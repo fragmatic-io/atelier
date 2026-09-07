@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 The Atelier Authors
+
+const frameworkNames = {
+  'nextjs-app': 'Next.js App Router',
+  'react-router': 'React Router + Express',
+  dom: 'Framework-neutral DOM + Node',
+};
+
+export function installSurfaceFields(model, e) {
+  const slots = model?.slots ?? [];
+  return `<div class="install-intro"><strong>Generated, not injected</strong><p>Atelier creates new integration files and exact insertion snippets. It never edits an unknown navigation file or changes the application through the observer.</p></div><label>Application origin<input name="applicationOrigin" type="url" required placeholder="https://app.example.com"></label><div class="two-fields"><label>Framework<select name="framework"><option value="nextjs-app">Next.js App Router</option><option value="react-router">React Router + Express</option><option value="dom">Framework-neutral DOM + Node</option></select></label><label>Surface placement<select name="mode"><option value="route">New full page</option><option value="inline">Existing-page mount</option><option value="drawer">Existing-page drawer</option></select></label></div><div class="two-fields"><label>Customer route<input name="routePath" value="/atelier-workspace" required><span class="help">For an embedded mount, this records the page where the mount belongs.</span></label><label>Navigation label<input name="navLabel" value="Workspace" required></label></div><div class="two-fields"><label>Approved slot<select name="slotId">${slots.map((slot) => `<option value="${e(slot.id)}">${e(slot.id)}</option>`).join('')}</select></label><label>Release environment<select name="environment"><option>staging</option><option>production</option></select></label></div><label>Same-origin bridge path<input name="bridgePath" value="/api/atelier" required><span class="help">Runtime requests stay on the customer origin. Only the public operational receipt goes to Atelier; credentials remain server-only.</span></label>`;
+}
+
+export function installBundleSummary(result, e, icon) {
+  const bundle = result.bundle;
+  return `<div class="install-ready"><div>${icon('check')}</div><div><span class="setup-label">Generated integration</span><h3>${e(frameworkNames[bundle.install.framework])}</h3><p>${bundle.files.length} new files and ${bundle.patches.length} explicit insertion patches. The files include reviewed host design contract ${e(bundle.install.designFingerprint.slice(0, 10))}. Download now: the origin-bound verification key is returned only in this bundle.</p></div></div><div class="install-file-list">${bundle.files.map((entry) => `<div><code>${e(entry.path)}</code><span>${e(entry.purpose)}</span></div>`).join('')}</div><h3>Customer-owned insertion points</h3><div class="install-patches">${bundle.patches.map((entry) => `<details><summary>${e(entry.target)} · ${e(entry.purpose)}</summary><pre>${e(entry.snippet)}</pre></details>`).join('')}</div><div class="privacy-preview"><strong>Verification is factual</strong><p>Studio remains waiting until the generated mount is bound to the reviewed design contract, reports the current bundle hash, reaches the same-origin bridge and finds the fail-closed authority adapter configured. This public receipt is operational evidence, not an authorization grant.</p></div><div class="dialog-actions"><button class="btn secondary" data-copy-agent>Copy coding-agent prompt</button><button class="btn" data-download-install>Download install bundle</button></div>`;
+}
+
+export function codingAgentPrompt(bundle) {
+  return `Install the attached Atelier surface bundle into this application. Create only the listed new files, apply each insertion patch to the corresponding existing customer-owned file, and preserve the included reviewed host design contract ${bundle.install.designFingerprint}. Keep every ATELIER_HOST_TOKEN and ATELIER_CONFIRMATION_KEY server-side. Replace the fail-closed authority adapter only after mapping the real authenticated session, current permissions, object authorization, loaders, and idempotent executors. Do not weaken CSRF checks or inject navigation from the observer. Run the host application's unit, integration, visual and browser tests, then open ${bundle.install.routePath} so Atelier receives the factual installation receipt. If any named framework or design-system assumption is wrong, stop and report it; do not substitute another integration.`;
+}

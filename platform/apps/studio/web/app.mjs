@@ -2,6 +2,13 @@
 // Copyright (c) 2026 The Atelier Authors
 import { escapeHtml as e, humanize, mountSurface, exampleData } from '/assets/surface.mjs';
 import { renderOnboarding, snippet as observerSnippet } from '/assets/onboarding.mjs';
+import {
+  codingAgentPrompt,
+  installBundleSummary,
+  installSurfaceFields,
+} from '/assets/install-surface.mjs';
+import { agentSetupFields, specialistSetup } from '/assets/agent-setup.mjs';
+import { designOverrides, designReviewFields } from '/assets/design-setup.mjs';
 const $ = (s, r = document) => r.querySelector(s),
   $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const icons = {
@@ -683,6 +690,7 @@ function bindPage() {
   });
 }
 const actions = {
+  'new-experience': () => actions.generate(),
   reload: () => route(),
   menu: () => $('.sidebar').classList.toggle('open'),
   theme: () => {
@@ -723,7 +731,7 @@ const actions = {
   'connect-observer': () =>
     formDialog(
       'Create browser observer',
-      `<label>Application origin<input name="origin" type="url" required placeholder="https://app.example.com"><span class="help">Exact origin only. Requests from any other origin are rejected.</span></label><label>Environment<select name="environment"><option>production</option><option>staging</option><option>development</option></select></label><label class="checkbox"><input type="checkbox" name="semanticSamples">Send locally redacted semantic samples</label><label>Safe categorical fields<input name="safeSampleFields" placeholder="status, severity, plan"><span class="help">Optional. Only these short categorical values may remain visible after local redaction. PII-shaped names are rejected.</span></label><div class="privacy-preview"><strong>Privacy boundary</strong><p>Raw bodies are inspected only inside the application page to derive schemas and redacted samples. Headers, cookies, query strings, credentials, free text and identifiers are not transmitted.</p></div>`,
+      `<label>Application origin<input name="origin" type="url" required placeholder="https://app.example.com"><span class="help">Exact origin only. Requests from any other origin are rejected.</span></label><label>Environment<select name="environment"><option>production</option><option>staging</option><option>development</option></select></label><label class="checkbox"><input type="checkbox" name="designCapture" checked>Learn the host design contract from marked elements</label><span class="help">Add data-atelier-design-root to an approved shell and optional data-atelier-design-role="button|input|card|nav" markers. Only fixed computed CSS properties are sent.</span><label class="checkbox"><input type="checkbox" name="semanticSamples">Send locally redacted semantic samples</label><label>Safe categorical fields<input name="safeSampleFields" placeholder="status, severity, plan"><span class="help">Optional. Only these short categorical values may remain visible after local redaction. PII-shaped names are rejected.</span></label><div class="privacy-preview"><strong>Privacy boundary</strong><p>Raw bodies are inspected only inside the application page to derive schemas and redacted samples. Design capture sends fixed computed style values only. Headers, cookies, query strings, credentials, free text, identifiers, page text and DOM HTML are not transmitted.</p></div>`,
       'Create snippet',
       async (body, form, d) => {
         const semanticSamples = form.semanticSamples.checked;
@@ -734,6 +742,7 @@ const actions = {
             name: `${new URL(body.origin).hostname} browser`,
             allowedOrigins: [new URL(body.origin).origin],
             semanticSamples,
+            designCapture: form.designCapture.checked,
             safeSampleFields: semanticSamples
               ? body.safeSampleFields
                   .split(',')
@@ -752,6 +761,28 @@ const actions = {
       },
       'The observer is source-code independent and does not execute API operations itself.',
     ),
+  'approve-design': async () => {
+    const design = await api(base() + '/design-contract');
+    const latest = design.observations?.[0];
+    if (!latest)
+      return toast('Open a marked application page so the observer can learn styles.', true);
+    formDialog(
+      'Review host design contract',
+      designReviewFields(latest, e),
+      'Approve design contract',
+      async (body, form, d) => {
+        if (!form.reviewed.checked) throw new Error('Review the design contract first.');
+        await api(base() + '/design-contract', {
+          method: 'POST',
+          body: { fingerprint: latest.fingerprint, overrides: designOverrides(body) },
+        });
+        d.closeDialog();
+        toast('Versioned host design contract approved.');
+        await route();
+      },
+      'Generated components inherit these approved values. A new observed revision does not silently replace this contract.',
+    );
+  },
   'revoke-discovery': (el) =>
     formDialog(
       'Revoke discovery source',
@@ -812,11 +843,19 @@ const actions = {
     const profile = await api(base() + '/agent-profile').catch(() => null);
     formDialog(
       'Configure project chatbot',
-      `<label>Assistant name<input name="name" required value="${e(profile?.name ?? `${state.project.name} assistant`)}"></label><label>Product voice<textarea name="tone" required>${e(profile?.voice?.tone ?? 'Clear, calm and precise')}</textarea></label><div class="two-fields"><label>Locale<input name="locale" value="${e(profile?.voice?.locale ?? 'en')}" required></label><label>Retention days<input name="retentionDays" type="number" min="1" max="90" value="${profile?.retentionDays ?? 30}" required></label></div><fieldset class="tool-select"><legend>Approved chatbot tools</legend>${enabled.map((capability) => `<label class="checkbox"><input type="checkbox" name="tools" value="${e(capability.id)}" checked>${e(capability.title ?? capability.id)} ${pill(capability.kind)}</label>`).join('')}</fieldset><label class="checkbox"><input type="checkbox" name="voiceReviewed" required>I reviewed the voice, retention and complete tool allowlist.</label>${state.onboarding?.facts.provider ? '' : `<div class="info-strip">No project provider is connected. Save the profile now, then <a href="/project/${state.project.id}/settings"><strong>connect a provider in Settings</strong></a>. Atelier will not claim the chatbot is ready until both facts exist.</div>`}`,
+      agentSetupFields({
+        profile,
+        project: state.project,
+        enabled,
+        hasProvider: state.onboarding?.facts.provider,
+        e,
+        pill,
+      }),
       'Save chatbot profile',
       async (body, form, d) => {
         const tools = new FormData(form).getAll('tools');
         if (!tools.length) throw new Error('Select at least one chatbot tool.');
+        const delegation = specialistSetup(form, state.model.capabilities, tools);
         await api(base() + '/agent-profile', {
           method: 'POST',
           body: {
@@ -829,6 +868,7 @@ const actions = {
             voice: { name: body.name, tone: body.tone, locale: body.locale, terminology: [] },
             voiceReviewed: form.voiceReviewed.checked,
             retentionDays: Number(body.retentionDays),
+            ...delegation,
             ...(profile ? { revision: profile.revision } : {}),
           },
         });
@@ -839,6 +879,65 @@ const actions = {
       'The agent runtime receives only this allowlist. Model output cannot invent or enable tools.',
     );
   },
+  'install-surface': () => {
+    if (!state.model?.slots?.length)
+      return toast('Discover a project model with at least one approved surface slot first.', true);
+    if (!state.onboarding?.facts.designApproved)
+      return toast(
+        'Review the observed host design contract before generating an installer.',
+        true,
+      );
+    formDialog(
+      'Install a customer-owned surface',
+      installSurfaceFields(state.model, e),
+      'Generate install bundle',
+      async (body, _form, d) => {
+        const result = await api(base() + '/surface-installs', {
+          method: 'POST',
+          body,
+        });
+        d.closeDialog();
+        const ready = dialog('Install bundle ready', installBundleSummary(result, e, icon), {
+          wide: true,
+        });
+        const closeAndRefresh = async () => {
+          ready.close();
+          ready.remove();
+          await route();
+        };
+        ready.closeDialog = closeAndRefresh;
+        $('[data-close]', ready).onclick = closeAndRefresh;
+        $('[data-download-install]', ready).onclick = () =>
+          download(`atelier-${result.install.id}.install.json`, result.bundle);
+        $('[data-copy-agent]', ready).onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(codingAgentPrompt(result.bundle));
+            toast('Coding-agent prompt copied. Attach the downloaded bundle.');
+          } catch {
+            toast(
+              'Clipboard access failed. Download the bundle and use the customer handoff.',
+              true,
+            );
+          }
+        };
+      },
+      'Choose whether this is a new route, an existing-page mount or an Atelier-managed surface improvement. Generated authority code denies every operation until the customer wires real server authorization.',
+    );
+  },
+  'revoke-surface-install': (el) =>
+    formDialog(
+      'Revoke surface installer',
+      '<p>The generated verification key stops working immediately. Existing customer files and signed releases are not removed.</p>',
+      'Revoke installer',
+      async (_body, _form, d) => {
+        await api(base() + '/surface-installs/' + el.dataset.id, {
+          method: 'DELETE',
+          body: {},
+        });
+        d.closeDialog();
+        await route();
+      },
+    ),
   upload: () => {
     if (!state.project) return toast('Open a project first.', true);
     const d = dialog(

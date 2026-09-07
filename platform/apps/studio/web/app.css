@@ -1034,6 +1034,7 @@ p {
   border-radius: 16px;
   width: min(510px, calc(100vw - 36px));
   max-height: 88vh;
+  overflow: auto;
   box-shadow: 0 30px 100px #15281030;
 }
 .dialog.wide {

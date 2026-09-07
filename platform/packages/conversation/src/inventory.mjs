@@ -2,6 +2,7 @@
 // Copyright (c) 2026 The Atelier Authors
 import { assert, hash, noPrototypeKeys, text } from './common.mjs';
 import { normalizeDataSchema } from '../../providers/src/data-schema.mjs';
+import { normalizeSpecialists } from './specialists.mjs';
 const secret =
   /password|secret|authorization|cookie|access.?token|refresh.?token|api.?key|cvv|ssn/i;
 const pii = /email|phone|birth|street|address|postal|card.?number/i;
@@ -106,6 +107,8 @@ export function assembleProfile(
     componentIds = [],
     allowedPiiFields = [],
     retentionDays = 30,
+    specialists = [],
+    maxDelegations = 2,
   } = {},
 ) {
   const tools = model.capabilities
@@ -137,8 +140,9 @@ export function assembleProfile(
         }),
       };
     });
+  const delegation = normalizeSpecialists(specialists, tools, maxDelegations);
   const p = {
-    version: 1,
+    version: 2,
     projectVersion: model.projectVersion,
     name: voice?.name ?? 'Project assistant',
     voice,
@@ -147,6 +151,7 @@ export function assembleProfile(
     maxToolRounds: 6,
     maxMessages: 200,
     retentionDays,
+    ...delegation,
     runtimeCodeGeneration: false,
   };
   return { ...p, digest: hash(p) };

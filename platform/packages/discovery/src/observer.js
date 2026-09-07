@@ -19,6 +19,7 @@
     .filter(Boolean)
     .slice(0, 20);
   const semanticSamples = script.dataset.semanticSamples === 'true';
+  const designCapture = script.dataset.designCapture === 'true';
   const storageKey = `atelier:observed:v1:${key.slice(0, 12)}`;
   const originalFetch = window.fetch.bind(window);
   const originalXhrOpen = XMLHttpRequest.prototype.open;
@@ -38,6 +39,62 @@
     /password|secret|authorization|cookie|access.?token|refresh.?token|api.?key|cvv|ssn/i;
   const dynamic = /^(?:\d{4,}|[0-9a-f]{8}-[0-9a-f-]{27,}|[0-9a-f]{16,}|[A-Za-z0-9_-]{24,})$/i;
   const piiPath = /(?:[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\+?\d[\d ()-]{8,}\d)/i;
+  const designProperties = [
+    'fontFamily',
+    'fontSize',
+    'fontWeight',
+    'lineHeight',
+    'color',
+    'backgroundColor',
+    'borderColor',
+    'borderRadius',
+    'paddingBlock',
+    'paddingInline',
+    'height',
+    'gap',
+    'boxShadow',
+  ];
+
+  function styleContract(element) {
+    const computed = getComputedStyle(element);
+    return Object.fromEntries(
+      designProperties
+        .map((property) => [property, computed[property]])
+        .filter(
+          ([, value]) =>
+            typeof value === 'string' &&
+            value.length > 0 &&
+            value.length <= 180 &&
+            !/url\s*\(|[;{}<>]|javascript:/i.test(value) &&
+            /^[\w\s#().,%/'"+-]+$/.test(value),
+        ),
+    );
+  }
+
+  function designContract() {
+    if (!designCapture) return null;
+    const root = document.querySelector('[data-atelier-design-root]');
+    if (!(root instanceof Element)) return null;
+    const roles = { root: styleContract(root) };
+    for (const role of ['button', 'input', 'card', 'nav']) {
+      const element = root.querySelector(`[data-atelier-design-role="${role}"]`);
+      if (element instanceof Element) roles[role] = styleContract(element);
+    }
+    return {
+      version: 1,
+      viewport: {
+        bucket: innerWidth < 640 ? 'mobile' : innerWidth < 1024 ? 'tablet' : 'desktop',
+        colorScheme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      },
+      roles,
+      privacy: {
+        pageTextCaptured: false,
+        domCaptured: false,
+        formValuesCaptured: false,
+        computedStylesOnly: true,
+      },
+    };
+  }
 
   function shapeOf(value, depth = 0) {
     if (depth > 8) return {};
@@ -271,13 +328,21 @@
     return originalXhrSend.call(this, body);
   };
 
+  const design = designContract();
+  const heartbeat = {
+    heartbeat: true,
+    environment,
+    pagePath: route(location.href),
+    ...(design ? { design } : {}),
+  };
+  window.dispatchEvent(new CustomEvent('atelier:design-preview', { detail: heartbeat }));
   originalFetch(collector, {
     method: 'POST',
     mode: 'cors',
     credentials: 'omit',
     keepalive: true,
     headers: { 'Content-Type': 'application/json', 'X-Atelier-Project-Key': key },
-    body: JSON.stringify({ heartbeat: true, environment, pagePath: route(location.href) }),
+    body: JSON.stringify(heartbeat),
   }).catch((error) => console.warn('[Atelier] collector heartbeat failed:', error.message));
 
   window.AtelierObserver = Object.freeze({
@@ -285,6 +350,7 @@
     collector,
     environment,
     semanticSamples,
+    designCapture,
     safeValueFields,
     setContext({ userRole } = {}) {
       if (userRole && !/^[a-z][a-z0-9_.:-]{0,79}$/i.test(userRole))

@@ -100,18 +100,61 @@ try:
             def onboarding_view():
                 studio.goto('http://127.0.0.1:4330/')
                 expect(studio.get_by_role('heading',name='Room for what’s next.',exact=True)).to_be_visible()
-                project_path=studio.locator('.project-card').first.get_attribute('href')
+                project_path=studio.locator('.project-card').filter(has_text='Customer Operations').first.get_attribute('href')
                 assert project_path and project_path.startswith('/project/'),'Fresh project link is missing'
                 studio.goto('http://127.0.0.1:4330'+project_path+'/setup')
                 expect(studio.get_by_role('heading',name='Take Atelier from evidence to experiences.',exact=True)).to_be_visible()
                 expect(studio.get_by_text('Every status below comes from stored evidence.',exact=False)).to_be_visible()
-                expect(studio.get_by_role('heading',name='Design an additive workspace',exact=True)).to_be_visible()
+                expect(studio.get_by_role('heading',name='Design and install an adaptive workspace',exact=True)).to_be_visible()
                 expect(studio.get_by_text('Markup renders inside the customer app',exact=False)).to_be_visible()
                 studio.get_by_role('button',name='Create snippet',exact=True).click()
                 dialog=studio.get_by_role('dialog',name='Create browser observer',exact=True);expect(dialog).to_be_visible()
                 expect(dialog.get_by_text('Raw bodies are inspected only inside the application page',exact=False)).to_be_visible()
                 expect(dialog.get_by_role('checkbox',name='Send locally redacted semantic samples',exact=True)).not_to_be_checked()
-                dialog.get_by_role('button',name='Close dialog',exact=True).click()
+                expect(dialog.get_by_role('checkbox',name='Learn the host design contract from marked elements',exact=True)).to_be_checked()
+                dialog.locator('input[name="origin"]').fill('http://127.0.0.1:4331')
+                dialog.get_by_role('button',name='Create snippet',exact=True).click()
+                secret=studio.get_by_role('dialog',name='Paste this before the closing body tag',exact=True);expect(secret).to_be_visible()
+                snippet=secret.locator('code.secret').inner_text()
+                marker='data-project-key="';start=snippet.index(marker)+len(marker);project_key=snippet[start:snippet.index('"',start)]
+                assert project_key.startswith('atl_obs_'),'Observer key was not issued'
+                secret.get_by_role('button',name='Close dialog',exact=True).click()
+                page.evaluate("""async (key) => {
+                  document.body.setAttribute('data-atelier-design-root','');
+                  const button=document.querySelector('button');
+                  if (button) button.setAttribute('data-atelier-design-role','button');
+                  await new Promise((resolve,reject) => {
+                    const script=document.createElement('script');
+                    script.src='http://127.0.0.1:4330/observe/v1.js';
+                    script.dataset.projectKey=key;
+                    script.dataset.environment='development';
+                    script.dataset.designCapture='true';
+                    script.onload=resolve;script.onerror=reject;document.body.append(script);
+                  });
+                  await new Promise(resolve => setTimeout(resolve,500));
+                }""",project_key)
+                studio.reload()
+                review_design=studio.get_by_role('button',name='Review host design',exact=True);expect(review_design).to_be_enabled(timeout=15000);review_design.click()
+                design_dialog=studio.get_by_role('dialog',name='Review host design contract',exact=True);expect(design_dialog).to_be_visible()
+                expect(design_dialog.get_by_text('No page text, HTML, form value or user data is present',exact=False)).to_be_visible()
+                design_dialog.get_by_role('checkbox',name='I reviewed these host design tokens and approve them for generated surfaces.',exact=True).check()
+                design_dialog.get_by_role('button',name='Approve design contract',exact=True).click()
+                expect(studio.get_by_text('Approved and version-bound',exact=True)).to_be_visible(timeout=15000)
+                studio.locator('[data-action="configure-agent"]').click()
+                agent_dialog=studio.get_by_role('dialog',name='Configure project chatbot',exact=True);expect(agent_dialog).to_be_visible()
+                expect(agent_dialog.get_by_text('Deep-answer specialists',exact=True)).to_be_visible()
+                expect(agent_dialog.locator('input[name="specialists"][value="research"]')).to_be_visible()
+                agent_dialog.get_by_role('button',name='Close dialog',exact=True).click()
+                studio.get_by_role('button',name='Install a surface',exact=True).click()
+                install=studio.get_by_role('dialog',name='Install a customer-owned surface',exact=True);expect(install).to_be_visible()
+                expect(install.get_by_text('Generated, not injected',exact=True)).to_be_visible()
+                install.get_by_label('Application origin',exact=True).fill('http://127.0.0.1:4331')
+                install.locator('input[name="routePath"]').fill('/atelier-workspace')
+                install.get_by_role('button',name='Generate install bundle',exact=True).click()
+                ready=studio.get_by_role('dialog',name='Install bundle ready',exact=True);expect(ready).to_be_visible()
+                expect(ready.get_by_text('Fail-closed customer authority adapter',exact=True)).to_be_visible()
+                expect(ready.get_by_text('Verification is factual',exact=True)).to_be_visible()
+                ready.get_by_role('button',name='Close dialog',exact=True).click()
                 studio.set_viewport_size({'width':390,'height':844})
                 assert studio.evaluate('document.documentElement.scrollWidth <= innerWidth+2'),'Setup layout overflows mobile viewport'
                 studio.screenshot(path=str(out/'studio-onboarding-mobile.png'),full_page=True)

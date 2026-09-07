@@ -10,6 +10,13 @@ import {
   password,
 } from './helpers.mjs';
 const empty = { message: '', toolCalls: [], calculations: [], artifacts: [], suggestions: [] };
+const configuredSpecialist = {
+  id: 'research',
+  name: 'Research analyst',
+  description: 'Reconciles approved evidence.',
+  instructions: 'Investigate the question and return an evidence brief.',
+  toolIds: ['customer.get'],
+};
 test('unreviewed endpoints do not become callable agent tools', async (t) => {
   const f = await ready();
   t.after(() => f.db.close());
@@ -118,6 +125,83 @@ test('host subjects and permission fingerprints are enforced on every request', 
       f.chat.read(key.identity, f.tenant.id, f.project.id, thread.id, { ...host, permissions: [] }),
     { code: 'GRANTS_CHANGED' },
   );
+});
+test('specialist profiles are version-bound and cannot widen the approved read allowlist', async (t) => {
+  const f = await ready({ review: true });
+  t.after(() => f.db.close());
+  assert.throws(
+    () =>
+      f.chat.setup(f.who, f.tenant.id, f.project.id, {
+        tools: ['customer.get', 'intervention.create'],
+        enableCommands: true,
+        specialists: [{ ...configuredSpecialist, toolIds: ['intervention.create'] }],
+      }),
+    { code: 'SPECIALIST_TOOLS' },
+  );
+  const profile = f.chat.setup(f.who, f.tenant.id, f.project.id, {
+    tools: ['customer.get'],
+    specialists: [configuredSpecialist],
+    maxDelegations: 2,
+  });
+  assert.equal(profile.version, 2);
+  assert.deepEqual(profile.specialists[0].toolIds, ['customer.get']);
+  assert.equal(profile.maxDelegations, 2);
+});
+test('bounded specialist delegation executes separately and only exposes synthesized output', async (t) => {
+  const f = await ready({ review: true });
+  t.after(() => f.db.close());
+  useProvider(f);
+  f.chat.setup(f.who, f.tenant.id, f.project.id, {
+    tools: ['customer.get'],
+    specialists: [configuredSpecialist],
+    maxDelegations: 1,
+  });
+  const thread = f.chat.create(f.who, f.tenant.id, f.project.id, {}),
+    outputs = [
+      {
+        ...empty,
+        delegations: [
+          { specialistId: 'research', question: 'Reconcile the private customer evidence.' },
+        ],
+      },
+      { ...empty, message: 'Internal specialist evidence brief.' },
+      { ...empty, message: 'Synthesized answer for the customer.' },
+    ],
+    calls = [],
+    apiFactory = () => ({
+      generate: async (request) => {
+        calls.push(request);
+        return {
+          value: outputs.shift(),
+          provider: 'controlled-fixture',
+          model: 'not-a-live-model',
+        };
+      },
+    });
+  f.chat.turn(f.who, f.tenant.id, f.project.id, thread.id, {
+    message: 'Give me a deep answer',
+    requestId: 'specialist-turn',
+  });
+  assert.equal((await runJob(f, { apiFactory })).status, 'delegated');
+  assert.equal((await runJob(f, { apiFactory })).status, 'synthesizing');
+  assert.equal((await runJob(f, { apiFactory })).status, 'completed');
+  const read = f.chat.read(f.who, f.tenant.id, f.project.id, thread.id);
+  assert.deepEqual(
+    read.messages.map((message) => message.content.text),
+    ['Give me a deep answer', 'Synthesized answer for the customer.'],
+  );
+  assert.deepEqual(
+    calls[1].input.tools.map((tool) => tool.id),
+    ['customer.get'],
+  );
+  assert.equal(calls[1].input.role.id, 'research');
+  assert.deepEqual(calls[2].input.availableSpecialists, []);
+  const events = f.chat.events(f.who, f.tenant.id, f.project.id, thread.id);
+  assert(events.some((event) => event.type === 'specialist.delegated'));
+  assert(events.some((event) => event.type === 'specialist.completed'));
+  const storedInputs = JSON.stringify(f.db.all('SELECT input_json FROM jobs'));
+  assert(!storedInputs.includes('private customer evidence'));
+  assert(!storedInputs.includes('Internal specialist evidence'));
 });
 test('model-selected unregistered capability is rejected before tool execution', async (t) => {
   const f = await ready();
