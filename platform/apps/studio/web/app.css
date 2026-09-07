@@ -682,6 +682,70 @@ p {
 .table tbody tr:hover {
   background: var(--bg);
 }
+.table [data-cap-select] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary);
+}
+.capability-toolbar,
+.capability-agent-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 25px 0 13px;
+}
+.capability-toolbar h2,
+.capability-toolbar p,
+.capability-agent-bar p {
+  margin: 0;
+}
+.capability-toolbar p,
+.capability-agent-bar p {
+  margin-top: 5px;
+  font-size: 10px;
+}
+.capability-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.capability-actions .filter-input {
+  width: 230px;
+}
+.capability-agent-bar {
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.bulk-review-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--subtle);
+  font-size: 11px;
+}
+.bulk-review-summary strong {
+  grid-column: 1 / -1;
+  font-size: 14px;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .muted {
   color: var(--muted);
 }
@@ -1130,7 +1194,7 @@ p {
 .auth {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 .auth-art {
   background: #29392c;
@@ -1223,6 +1287,13 @@ p {
   font-size: 10px !important;
   margin-top: 22px;
   line-height: 1.8 !important;
+}
+.auth-note a {
+  color: var(--primary);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 .auth-small {
   font-size: 10px;
@@ -1475,6 +1546,18 @@ html[data-theme='dark'] .empty-mark {
   .two-fields {
     grid-template-columns: 1fr;
   }
+  .capability-toolbar,
+  .capability-agent-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .capability-actions {
+    justify-content: flex-start;
+  }
+  .capability-actions .filter-input {
+    width: 100%;
+    max-width: none;
+  }
   .preview-stage {
     padding: 12px;
   }
@@ -1486,7 +1569,7 @@ html[data-theme='dark'] .empty-mark {
   }
   .auth-form-wrap {
     padding: 50px 30px;
-    min-height: 100vh;
+    min-height: 100dvh;
   }
   .top-actions {
     gap: 6px;

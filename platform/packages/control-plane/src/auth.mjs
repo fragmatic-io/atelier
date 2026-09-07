@@ -106,6 +106,40 @@ export class AuthService {
     }
     return { id: userId, email: e, displayName: name };
   }
+  async register({ email: mail, password, displayName }, ip = 'local') {
+    const e = email(mail);
+    this.rate(`signup-ip:${ip}`, { limit: 10, windowMs: 15 * 60000 });
+    this.rate(`signup-email:${e}`, { limit: 3, windowMs: 15 * 60000 });
+    const created = await this.createUser({ email: e, password, displayName });
+    const user = this.db.get('SELECT * FROM users WHERE id=? AND disabled_at IS NULL', created.id);
+    assert(user, 500, 'ACCOUNT_CREATE_FAILED', 'The account could not be opened');
+    return this.createSession(user);
+  }
+  createSession(user) {
+    const raw = token();
+    const csrf = token();
+    const now = this.clock();
+    this.db.run(
+      'INSERT INTO sessions VALUES(?,?,?,?,?,?)',
+      hash(raw),
+      user.id,
+      csrf,
+      now,
+      now + this.sessionTtl,
+      now,
+    );
+    return {
+      session: raw,
+      csrf,
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.display_name,
+        mfaEnabled: !!user.mfa_secret,
+      },
+      expiresAt: now + this.sessionTtl,
+    };
+  }
   rate(bucket, { limit = 10, windowMs = 60000 } = {}) {
     const now = this.clock();
     return this.db.transaction(() => {
@@ -190,30 +224,8 @@ export class AuthService {
           );
         }
       }
-      const raw = token();
-      const csrf = token();
-      const now = this.clock();
-      this.db.run(
-        'INSERT INTO sessions VALUES(?,?,?,?,?,?)',
-        hash(raw),
-        user.id,
-        csrf,
-        now,
-        now + this.sessionTtl,
-        now,
-      );
       this.db.run('DELETE FROM rate_limits WHERE bucket=?', hash(`login-user:${e}`));
-      return {
-        session: raw,
-        csrf,
-        user: {
-          id: user.id,
-          email: user.email,
-          displayName: user.display_name,
-          mfaEnabled: !!user.mfa_secret,
-        },
-        expiresAt: now + this.sessionTtl,
-      };
+      return this.createSession(user);
     });
   }
   identity({ authorization, cookie }) {

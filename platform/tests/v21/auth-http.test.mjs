@@ -87,6 +87,38 @@ test('live HTTP authentication: secure headers, HttpOnly cookies, CSRF, foreign 
   );
   assert.equal((await f.call('/api/me', 'GET', null, { Cookie })).status, 401);
 });
+test('self-service signup creates a session without email verification or workspace access', async (t) => {
+  const f = await httpEnv(t);
+  const input = {
+    displayName: 'New Operator',
+    email: 'new.operator@example.test',
+    password: 'a new durable phrase 3842',
+  };
+  const foreign = await f.call('/api/auth/signup', 'POST', input, {
+    Origin: 'https://attacker.example',
+  });
+  assert.equal(foreign.status, 403);
+  assert.equal(f.db.get('SELECT count(*) n FROM users').n, 1);
+
+  const signup = await f.call('/api/auth/signup', 'POST', input);
+  assert.equal(signup.status, 201);
+  assert.deepEqual(signup.data.user, {
+    id: signup.data.user.id,
+    email: input.email,
+    displayName: input.displayName,
+    mfaEnabled: false,
+  });
+  assert.match(signup.headers['set-cookie'][0], /HttpOnly; SameSite=Strict/);
+  const Cookie = signup.headers['set-cookie'][0].split(';')[0];
+  const me = await f.call('/api/me', 'GET', null, { Cookie });
+  assert.equal(me.status, 200);
+  assert.equal(me.data.user.email, input.email);
+  assert.deepEqual(me.data.tenants, []);
+
+  const duplicate = await f.call('/api/auth/signup', 'POST', input);
+  assert.equal(duplicate.status, 409);
+  assert.equal(duplicate.data.error.code, 'ACCOUNT_EXISTS');
+});
 test('MFA setup, replay prevention, concurrent replay and single-use recovery', async (t) => {
   let now = Date.now();
   const f = await fixture({ clock: () => now });

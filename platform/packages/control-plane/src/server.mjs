@@ -85,6 +85,16 @@ function send(res, status, body, headers = {}) {
   });
   res.end(JSON.stringify(body));
 }
+function sendSession(res, status, result, production) {
+  return send(
+    res,
+    status,
+    { user: result.user, csrf: result.csrf },
+    {
+      'Set-Cookie': `atelier_session=${result.session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${production ? '; Secure' : ''}`,
+    },
+  );
+}
 export function createControlServer(
   service,
   {
@@ -311,16 +321,13 @@ export function createControlServer(
       }
       const ip = clientAddress(req, trustLoopbackProxy);
       const body = MUTATING.has(req.method) ? await readJson(req) : {};
+      if (req.method === 'POST' && url.pathname === '/api/auth/signup') {
+        const result = await service.auth.register(body, ip);
+        return sendSession(res, 201, result, production);
+      }
       if (req.method === 'POST' && url.pathname === '/api/auth/login') {
         const result = await service.auth.login(body, ip);
-        return send(
-          res,
-          200,
-          { user: result.user, csrf: result.csrf },
-          {
-            'Set-Cookie': `atelier_session=${result.session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${production ? '; Secure' : ''}`,
-          },
-        );
+        return sendSession(res, 200, result, production);
       }
       if (req.method === 'POST' && url.pathname === '/api/auth/accept-invitation') {
         service.auth.rate(`invite:${ip}`, { limit: 10, windowMs: 600000 });
@@ -455,12 +462,19 @@ export function createControlServer(
         return send(res, 200, service.search(identity, t, p, url.searchParams.get('q') ?? ''));
       if (resource === 'sources' && req.method === 'POST')
         return send(res, 202, service.upload(identity, t, p, body, req.headers['idempotency-key']));
-      if (resource === 'capabilities' && req.method === 'PATCH')
+      if (resource === 'capabilities' && req.method === 'PATCH') {
+        if (rid === 'bulk-review')
+          return send(res, 200, service.bulkReviewCapabilities(identity, t, p, body));
+        if (rid === 'bulk-agent-access')
+          return send(res, 200, service.bulkSetCapabilityAgentAccess(identity, t, p, body));
+        if (rid === 'bulk-reopen')
+          return send(res, 200, service.bulkReopenCapabilityReviews(identity, t, p, body));
         return send(
           res,
           200,
           service.reviewCapability(identity, t, p, decodeURIComponent(rid), body),
         );
+      }
       if (resource === 'visual-review' && req.method === 'POST')
         return send(res, 202, service.queueVisualReview(identity, t, p, body.releaseId, body));
       if (resource === 'generate' && req.method === 'POST')

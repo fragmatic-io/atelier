@@ -25,6 +25,8 @@ npm run demo
 
 Studio opens at `http://127.0.0.1:4310`. Its first boot prints a random development password once. Keep the data directory, credentials, project tokens, MCP configuration, and runner homes outside the repository.
 
+Signed-out users can create an account at `http://127.0.0.1:4310/signup` with a name, email address, and password. Signup creates an authenticated account immediately; it does not send or require an email verification code. A new account starts with no access to existing workspaces.
+
 ## Validate the complete product
 
 ```sh
@@ -34,18 +36,23 @@ ATELIER_PYTHON="$PWD/.venv/bin/python" npm run acceptance
 
 The acceptance command runs the V2.3 Node suite, production dependency audit, package/install smoke test, source-kit browser matrix, and integrated Studio/host browser journey. It fails instead of substituting missing browsers, providers, credentials, or external review.
 
+The Node suite intentionally keeps only distinct core-product and security boundaries. Redundant CLI/demo, auth-markup, certifier-error and component-HTTP happy-path suites were removed because the package, live HTTP and actual-browser gates already exercise those paths.
+
+Hosted CI and Dependabot are intentionally not configured. Run this canonical local gate on the exact commit before pushing; rebuild hosted automation only when GitHub Actions is intentionally enabled again.
+
 ## Customer integration flow
 
 1. Install the origin-bound browser observer. It derives API shapes locally, removes disallowed values, and sends only new fingerprints and approved metadata.
 2. Optionally upload or link OpenAPI evidence. Observed and declared evidence remain distinct.
 3. Review discovered capabilities and separately decide which may become chatbot tools.
+   Studio supports atomic approval of a selection or all pending capabilities; bulk approval never enables agent access.
 4. Review the bounded host design contract captured from explicitly marked elements.
 5. Configure Claude CLI, Codex CLI, or an API provider. Claude CLI defaults to `claude-opus-4-8` at `high` effort. There is no provider fallback.
 6. Configure the primary agent and optional bounded read-only specialists.
 7. Generate a Next.js, React Router/Express, or DOM/Node route, inline mount, or drawer installer.
 8. Verify route mounting, server authority, design binding, tools, confirmation behavior, and browser states before publishing.
 
-Start with the [platform operating guide](platform/README.md), [customer onboarding](platform/docs/CUSTOMER_ONBOARDING.md), [application/agent setup](platform/docs/AGENT_SETUP.md), and [legacy-removal record](platform/docs/LEGACY_REMOVAL.md).
+Start with the [platform operating guide](platform/README.md), [customer onboarding](platform/docs/CUSTOMER_ONBOARDING.md), [application/agent setup](platform/docs/AGENT_SETUP.md), [legacy-removal record](platform/docs/LEGACY_REMOVAL.md), and [repository hygiene audit](platform/docs/REPOSITORY_HYGIENE.md).
 
 ## Canonical repository map
 

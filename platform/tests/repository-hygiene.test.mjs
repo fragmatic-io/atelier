@@ -24,6 +24,10 @@ test('superseded root framework and duplicate V2.3 harnesses stay removed', () =
     'package.json',
     'pnpm-lock.yaml',
     'pnpm-workspace.yaml',
+    '.github/actionlint.yaml',
+    '.github/dependabot.yml',
+    '.github/workflows/actionlint.yml',
+    '.github/workflows/atelier-v23-acceptance.yml',
   ];
   for (const path of retiredRootPaths) {
     assert.equal(existsSync(resolve(repositoryRoot, path)), false, `retired root path returned: ${path}`);
@@ -36,6 +40,10 @@ test('superseded root framework and duplicate V2.3 harnesses stay removed', () =
     'scripts/self-test.mjs',
     'scripts/verify.mjs',
     'tests/browser',
+    'tests/cli-demo.test.mjs',
+    'tests/studio-auth.test.mjs',
+    'tests/forge/certify-runner.test.mjs',
+    'tests/v23/http-components.test.mjs',
   ];
   for (const path of retiredPlatformPaths) {
     assert.equal(
@@ -68,4 +76,11 @@ test('package manifest excludes every removed compatibility artifact', () => {
   ]) {
     assert.equal(paths.has(path), false, `retired artifact remains packaged: ${path}`);
   }
+});
+
+test('root repository metadata describes only the current local npm implementation', () => {
+  const attributes = readFileSync(resolve(repositoryRoot, '.gitattributes'), 'utf8');
+  assert.match(attributes, /package-lock\.json\s+linguist-generated=true -diff/);
+  assert.match(attributes, /platform\/PACKAGE-MANIFEST\.json\s+linguist-generated=true -diff/);
+  assert.doesNotMatch(attributes, /pnpm-lock|\.well-known\/schemas|packages\/schemas/);
 });

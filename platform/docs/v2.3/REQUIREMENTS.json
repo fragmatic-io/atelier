@@ -89,7 +89,7 @@
       "behavior": "Every supplied source kit runs actual Chromium tasks across ready, loading, empty, error, responsive, theme, and RTL cases.",
       "classification": "browser",
       "implementation": ["packages/source-forge/src/certifier.mjs", "scripts/certify-examples.mjs"],
-      "tests": ["scripts/certify-source.py", "tests/forge/certify-runner.test.mjs"],
+      "tests": ["scripts/certify-source.py", "scripts/certify-examples.mjs"],
       "status": "verified",
       "limitations": ["Canonical acceptance regenerates evidence for all nine supplied kits."]
     },
@@ -98,7 +98,7 @@
       "behavior": "Approval, signature, current project-version checks, and revocation are distinct mandatory component lifecycle gates.",
       "classification": "unit",
       "implementation": ["packages/source-forge/src/registry.mjs"],
-      "tests": ["tests/v23/conversation.test.mjs", "tests/v23/http-components.test.mjs"],
+      "tests": ["tests/v23/conversation.test.mjs", "tests/runtime-security.test.mjs"],
       "status": "verified",
       "limitations": []
     },

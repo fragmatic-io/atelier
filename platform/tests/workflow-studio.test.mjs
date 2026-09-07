@@ -82,3 +82,27 @@ test('Studio source exposes the automatic API reference controls and operation c
   assert.match(source, /operationCount/);
   assert.match(source, /\/openapi/);
 });
+
+test('Studio mounts an accessible OpenAPI picker for browser and keyboard clients', async () => {
+  const source = await readFile(join(FIXTURE, '../../apps/studio/web/app.mjs'), 'utf8');
+  assert.match(source, /aria-label', 'OpenAPI document'/);
+  assert.match(source, /document\.body\.append\(picker\)/);
+  assert.match(source, /picker\.addEventListener\('cancel', cleanup/);
+  assert.match(source, /finally \{\s*cleanup\(\);\s*\}/);
+});
+
+test('Studio exposes bulk capability review separately from bulk agent access', async () => {
+  const source = await readFile(join(FIXTURE, '../../apps/studio/web/app.mjs'), 'utf8');
+  const catalog = await readFile(
+    join(FIXTURE, '../../apps/studio/web/capability-catalog.mjs'),
+    'utf8',
+  );
+  assert.match(catalog, /Approve all pending/);
+  assert.match(catalog, /Bulk approval never exposes a capability to an agent/);
+  assert.match(catalog, /Enable selected for agents/);
+  assert.match(catalog, /Reopen selected/);
+  assert.match(source, /capabilities\/bulk-review/);
+  assert.match(source, /capabilities\/bulk-agent-access/);
+  assert.match(source, /capabilities\/bulk-reopen/);
+  assert.match(source, /projectVersion: state\.model\.projectVersion/);
+});
