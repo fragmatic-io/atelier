@@ -114,6 +114,8 @@ Custom surfaces render inside the customer application, under its origin, authen
 
 Atelier's control plane serves Studio, discovery, API documentation, reviewed capability metadata and signed release artifacts. It does not stream arbitrary model-authored HTML into the customer page. Model output cannot grant an action, register a component or bypass the host component registry. A rich chatbot response uses the same boundary: the model selects an approved artifact/tool contract, while the customer app renders the corresponding local component and the customer backend performs every authorized data read or command.
 
+A full-page surface requires an explicit customer-owned route and, if desired, a navigation link. An embedded card, rail, drawer or chatbot requires only an approved mount container on an existing page. The discovery observer never creates a route, inserts a link or changes the DOM. Studio may serve a sandboxed preview for review, but that preview is not the production host integration.
+
 ## Tests required before customer publication
 
 - foreign origins and revoked observer keys are rejected;

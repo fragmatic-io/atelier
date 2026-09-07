@@ -270,6 +270,7 @@ test('Studio exposes guided setup, snippet privacy and fact-derived status copy'
   assert.match(onboarding, /Custom surfaces and chatbot tools share one inventory/);
   assert.match(onboarding, /Markup renders inside the customer app/);
   assert.match(onboarding, /never arbitrary model-written HTML/);
+  assert.match(onboarding, /observer never injects links or UI/);
   assert.match(
     onboarding,
     /Discovered, approved, chatbot enabled and published are separate states/,
