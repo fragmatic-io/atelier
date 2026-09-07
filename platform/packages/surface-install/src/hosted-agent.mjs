@@ -24,7 +24,10 @@ const ALLOWED_ACTIONS = new Set([
   'client-result',
   'deny',
   'artifact',
+  'revise',
   'pin',
+  'artifact-action',
+  'attach',
   'feedback',
 ]);
 
@@ -152,10 +155,30 @@ export class HostedAgentService {
       case 'purge': return this.agents.purge(identity, t, p, key);
       case 'call': return this.agents.call(identity, t, p, key, body.callId);
       case 'client-lease': return this.agents.leaseTool(identity, t, p, key, body.callId, input);
-      case 'client-result': return this.agents.completeTool(identity, t, p, key, body.callId, input);
+      case 'client-result': {
+        const call = this.agents.call(identity, t, p, key, body.callId);
+        return this.agents.completeTool(identity, t, p, key, body.callId, {
+          leaseToken: input.leaseToken,
+          status: input.error
+            ? call.contract.kind === 'command' || input.uncertain
+              ? 'uncertain'
+              : 'failed'
+            : 'succeeded',
+          result: input.result,
+          code: input.error ? 'CLIENT_TOOL_FAILED' : undefined,
+        });
+      }
       case 'deny': return this.agents.denyTool(identity, t, p, key, body.callId);
-      case 'artifact': return this.agents.artifact(identity, t, p, key, body.artifactId);
+      case 'artifact':
+        return this.agents.artifact(identity, t, p, key, body.artifactId, null, {
+          frameOrigin: install.application_origin,
+        });
+      case 'revise':
+        return this.agents.reviseArtifact(identity, t, p, key, body.artifactId, input);
       case 'pin': return this.agents.pin(identity, t, p, key, body.artifactId, input.pinned);
+      case 'artifact-action':
+        return this.agents.artifactAction(identity, t, p, key, body.artifactId, input);
+      case 'attach': return this.agents.attach(identity, t, p, key, input);
       case 'feedback': return this.agents.feedback(identity, t, p, key, input.messageId, input.value);
       default: throw new Error('Unreachable hosted agent action');
     }

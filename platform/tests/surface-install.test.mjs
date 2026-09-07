@@ -6,7 +6,7 @@ import { DiscoveryService } from '../packages/discovery/src/service.mjs';
 import { SurfaceInstallService } from '../packages/surface-install/src/service.mjs';
 import { HostedAgentService } from '../packages/surface-install/src/hosted-agent.mjs';
 import { createControlServer } from '../packages/control-plane/src/server.mjs';
-import { projectAccess } from '../packages/control-plane/src/access.mjs';
+import { projectAccess, workerScope } from '../packages/control-plane/src/access.mjs';
 import { installSurfaceFields } from '../apps/studio/web/install-surface.mjs';
 import { signBundle } from '../packages/runtime/src/index.mjs';
 
@@ -170,6 +170,12 @@ test('hosted installer produces one secret-free script and an approved manifest'
   );
   assert.equal(manifest.bundle.releaseId, published.releaseId);
   assert.deepEqual(manifest.capabilities.map((entry) => entry.id), [published.capability.id]);
+  assert.match(manifest.designStylesheet, /\/api\/embed\/v1\/design\.css\?key=/);
+  assert.equal(Object.hasOwn(manifest, 'designContract'), false);
+  assert.match(
+    installs.publicStyles(result.bundle.publicVerification.key, 'https://app.example'),
+    /font-family:Inter, sans-serif/,
+  );
   assert.throws(
     () =>
       installs.publicManifest(result.bundle.publicVerification.key, 'https://attacker.example'),
@@ -177,7 +183,7 @@ test('hosted installer produces one secret-free script and an approved manifest'
   );
 });
 
-test('hosted chatbot is install-bound and executes only reviewed browser reads', async (t) => {
+test('hosted chatbot is install-bound and executes only reviewed browser tools', async (t) => {
   const f = await modelledFixture();
   t.after(() => f.db.close());
   const installs = new SurfaceInstallService(f.service, {
@@ -230,12 +236,22 @@ test('hosted chatbot is install-bound and executes only reviewed browser reads',
     input: { title: 'Browser-owned conversation' },
   });
   assert.match(thread.id, /^thread_/);
+  const queued = agents.rpc(key, origin, session.session, {
+    action: 'turn',
+    threadId: thread.id,
+    input: { message: 'Inspect accounts', mode: 'demo', requestId: 'hosted-turn' },
+  });
+  const job = f.db.get('SELECT * FROM jobs WHERE id=?', queued.jobId);
+  assert.equal(
+    workerScope(f.db, f.tenant.id, f.project.id, job.created_by).userId,
+    `install:${created.install.id}`,
+  );
   assert.deepEqual(
     agents.rpc(key, origin, session.session, { action: 'list' }).map((item) => item.id),
     [thread.id],
   );
   assert.throws(
-    () => agents.rpc(key, origin, session.session, { action: 'attach', threadId: thread.id }),
+    () => agents.rpc(key, origin, session.session, { action: 'unsupported', threadId: thread.id }),
     { code: 'AGENT_OPERATION' },
   );
   assert.throws(

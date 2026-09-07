@@ -167,7 +167,7 @@ export class AgentClient {
       input: { name: file.name, mediaType: file.type || 'text/plain', base64: btoa(binary) },
     });
   }
-  async executeClientTool(threadId, call) {
+  async executeClientTool(threadId, call, { confirmed = false } = {}) {
     const key = `client:${threadId}:${call.id}`;
     if (this.executing.has(key)) return this.executing.get(key);
     const promise = (async () => {
@@ -177,13 +177,21 @@ export class AgentClient {
       if (old) throw new Error('Client tool was interrupted; reconcile or cancel before retrying');
       const tool = this.tools.get(call.capabilityId);
       if (!tool) throw new Error('This client tool is not registered');
-      const lease = await this.rpc('client-lease', { threadId, callId: call.id });
+      const lease = await this.rpc('client-lease', {
+        threadId,
+        callId: call.id,
+        input: { confirmed, inputHash: call.inputHash },
+      });
       await this.journal.set(key, { started: true });
       let completion;
       try {
         completion = { leaseToken: lease.leaseToken, result: await tool.execute(lease.input) };
       } catch {
-        completion = { leaseToken: lease.leaseToken, error: true };
+        completion = {
+          leaseToken: lease.leaseToken,
+          error: true,
+          uncertain: call.contract?.kind === 'command',
+        };
       }
       await this.journal.set(key, { completion });
       return this.rpc('client-result', { threadId, callId: call.id, input: completion });

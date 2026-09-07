@@ -22,47 +22,19 @@ const selector = script.dataset.atelierMount ?? '[data-atelier-mount]';
 const root = document.querySelector(selector);
 if (!(root instanceof Element)) throw new Error('ATELIER_MOUNT_REQUIRED');
 
-const allowedStyleProperties = new Set([
-  'backgroundColor',
-  'borderColor',
-  'borderRadius',
-  'boxShadow',
-  'color',
-  'fontFamily',
-  'fontSize',
-  'fontWeight',
-  'height',
-  'letterSpacing',
-  'lineHeight',
-  'padding',
-]);
-const cssName = (name) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-const declarations = (values = {}) =>
-  Object.entries(values)
-    .filter(
-      ([name, value]) =>
-        allowedStyleProperties.has(name) &&
-        typeof value === 'string' &&
-        value.length <= 300 &&
-        !/[{};]/.test(value) &&
-        !/url\s*\(|@import/i.test(value),
-    )
-    .map(([name, value]) => `${cssName(name)}:${value}`)
-    .join(';');
-
 function installStyles(manifest) {
-  for (const href of ['/assets/surface.css', '/assets/agent.css', '/embed/v1.css']) {
+  for (const href of [
+    `${moduleUrl.origin}/assets/surface.css`,
+    `${moduleUrl.origin}/assets/agent.css`,
+    `${moduleUrl.origin}/embed/v1.css`,
+    manifest.designStylesheet,
+  ]) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = `${moduleUrl.origin}${href}`;
+    link.crossOrigin = 'anonymous';
+    link.href = href;
     document.head.append(link);
   }
-  const roles = manifest.designContract?.roles ?? {};
-  const scope = `[data-atelier-install="${manifest.install.id}"]`;
-  const style = document.createElement('style');
-  style.dataset.atelierDesign = manifest.install.designFingerprint;
-  style.textContent = `${scope}{${declarations(roles.root)}}${scope} :where(button,[role=button]){${declarations(roles.button)}}${scope} :where(input,select,textarea){${declarations(roles.input)}}${scope} :where([data-surface-card]){${declarations(roles.card)}}`;
-  document.head.append(style);
 }
 
 async function report(manifest, error = null) {
@@ -99,8 +71,12 @@ try {
   ];
   const browserApi = createBrowserApiClient(allCapabilities);
   const workspace = hostedWorkspace(root, { hasAgent: manifest.agent?.available === true });
+  const suppliedContext = globalThis.AtelierHost?.context?.() ?? {};
+  if (!suppliedContext || typeof suppliedContext !== 'object' || Array.isArray(suppliedContext))
+    throw new Error('ATELIER_HOST_CONTEXT_INVALID');
+  const context = { ...suppliedContext, route: location.pathname };
   mountSurface(workspace.surface, manifest.bundle, {
-    context: { route: location.pathname },
+    context,
     load: browserApi.load,
     dispatch: browserApi.dispatch,
   });
@@ -120,20 +96,22 @@ try {
       client: agentClient,
       name: manifest.agent.name,
       subtitle: manifest.agent.subtitle,
-      context: { route: location.pathname },
+      context,
       onTool: async ({ threadId, call, confirm }) => {
         if (call.contract.kind === 'command') {
           const accepted = await confirm({
             title: 'Confirm this application action',
             description:
-              'The action runs in this browser through your current application session and remains subject to its authorization rules.',
+              `${call.capabilityId} runs in this browser through your current application session and remains subject to its authorization rules.`,
             input: call.input,
             accept: 'Run action',
           });
           if (!accepted)
             return agentClient.rpc('deny', { threadId, callId: call.id });
         }
-        return agentClient.executeClientTool(threadId, call);
+        return agentClient.executeClientTool(threadId, call, {
+          confirmed: call.contract.kind === 'command',
+        });
       },
     });
   }

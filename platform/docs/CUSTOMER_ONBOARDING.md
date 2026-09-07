@@ -149,6 +149,8 @@ For a full page, the customer applies the generated route and consciously places
 
 The mounted client reports the current bundle hash while Studio verifies four facts: reviewed design binding, customer mount, hosted UI load and reviewed browser API-client initialization. Studio records `waiting`, `partial` or `verified` from those facts. The receipt is not proof that the customer API authorizes correctly and never grants authority; customer authorization tests and human review remain mandatory.
 
+Entity pages can provide a minimal synchronous `window.AtelierHost.context()` object containing only reviewed identifiers or coarse state required by tool inputs. This is optional client context, not a server bridge. It must not expose credentials, full records or arbitrary DOM content.
+
 Re-publishing an improved Atelier surface does not require a new route. The host keeps the same approved slot while signed release resolution selects the current compatible experience. Changes outside an Atelier-owned slot remain customer-owned code changes and must be delivered as an explicit reviewable patch.
 
 ## Product intelligence and personalization boundary

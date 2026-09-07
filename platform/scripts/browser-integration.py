@@ -7,9 +7,12 @@ import os,sys,json,time,pathlib,tempfile,subprocess,signal,urllib.request,shutil
 from playwright.sync_api import sync_playwright,expect
 root=pathlib.Path(__file__).resolve().parent.parent
 out=pathlib.Path(os.environ.get('ATELIER_BROWSER_OUT',str(root/'evidence/current/integration'))).resolve();out.mkdir(parents=True,exist_ok=True)
+for prior in ['host-desktop.png','host-mobile.png','studio-forge.png','studio-source-preview.png','studio-onboarding-mobile.png','seed.log','services.log','report.json']:
+    (out/prior).unlink(missing_ok=True)
 data=pathlib.Path(tempfile.mkdtemp(prefix='atelier-browser-'))
 env={**os.environ,'ATELIER_DATA_DIR':str(data),'ATELIER_DEMO_PASSWORD':'Integration-Test-Only-2026!x','CONTROL_PORT':'4330','HOST_PORT':'4331','PORT':'4330','ATELIER_ORIGIN':'http://127.0.0.1:4330','ATELIER_ENABLE_EXAMPLES':'true','NODE_ENV':'development'}
 checks=[];services=None;service_log=None;browser_diagnostics={'previewResponses':[],'console':[]}
+hosted_install={'key':None}
 
 def check(name,fn):
     started=time.monotonic()
@@ -168,11 +171,63 @@ try:
                 expect(ready.get_by_text('Mount the Atelier-hosted route UI with one script',exact=False)).to_be_visible()
                 expect(ready.get_by_role('button',name='Copy script',exact=True)).to_be_visible()
                 expect(ready.get_by_text('Verification is factual',exact=True)).to_be_visible()
+                snippet=ready.locator('pre').first.inner_text()
+                marker='data-atelier-install-key="';start=snippet.index(marker)+len(marker)
+                hosted_install['key']=snippet[start:snippet.index('"',start)]
+                assert hosted_install['key'].startswith('atl_ins_'),'Hosted install key was not issued'
                 ready.get_by_role('button',name='Close dialog',exact=True).click()
                 studio.set_viewport_size({'width':390,'height':844})
                 assert studio.evaluate('document.documentElement.scrollWidth <= innerWidth+2'),'Setup layout overflows mobile viewport'
                 studio.screenshot(path=str(out/'studio-onboarding-mobile.png'),full_page=True)
             check('studio-fact-derived-privacy-onboarding',onboarding_view)
+            def hosted_embed():
+                embedded=browser.new_page(viewport={'width':1280,'height':900},reduced_motion='reduce')
+                embedded_errors=[];embedded_api_errors=[];api_calls=[]
+                embedded.on('pageerror',lambda e:embedded_errors.append(str(e)))
+                def track_embedded_response(response):
+                    if '/api/customers/' in response.url:api_calls.append(response.url)
+                    if '/api/embed/' in response.url and response.status>=400:
+                        try:embedded_api_errors.append({'status':response.status,'body':response.text()[:800]})
+                        except Exception:embedded_api_errors.append({'status':response.status,'body':'unavailable'})
+                embedded.on('response',track_embedded_response)
+                embedded.goto('http://127.0.0.1:4331/atelier-workspace')
+                embedded.evaluate("""async (key) => {
+                  window.AtelierHost={
+                    context:()=>({customerId:'northstar'}),
+                    csrfToken:()=>document.querySelector('meta[name="csrf-token"]').content
+                  };
+                  const mount=document.createElement('div');mount.id='hosted-test';mount.dataset.atelierMount='';
+                  document.querySelector('#hosted-acceptance').append(mount);
+                  await new Promise((resolve,reject) => {
+                    addEventListener('atelier:ready',resolve,{once:true});
+                    addEventListener('atelier:error',(event)=>reject(new Error(event.detail)),{once:true});
+                    const script=document.createElement('script');script.type='module';
+                    script.src='http://127.0.0.1:4330/embed/v1.mjs';
+                    script.dataset.atelierInstallKey=key;script.dataset.atelierMount='#hosted-test';
+                    document.head.append(script);
+                  });
+                }""",hosted_install['key'])
+                expect(embedded.get_by_role('button',name='Assistant',exact=True)).to_be_visible()
+                embedded.get_by_role('button',name='Assistant',exact=True).click()
+                message=embedded.get_by_role('textbox',name='Message',exact=True);expect(message).to_be_visible()
+                message.fill('Inspect the current customer risk')
+                embedded.get_by_role('button',name='Send',exact=True).click()
+                load=embedded.get_by_role('button',name='Load context',exact=True);expect(load).to_be_visible(timeout=30000);load.click()
+                artifact=embedded.locator('button.artifact-link').filter(has_text='Customer context').last
+                expect(artifact).to_be_visible(timeout=30000);artifact.click()
+                artifact_frame=embedded.frame_locator('iframe.atelier-artifact-frame')
+                try:expect(artifact_frame.locator('h1')).to_contain_text('Northstar Retail')
+                except Exception as error:raise AssertionError(f'{error}; hosted API errors: {embedded_api_errors}')
+                assert any('/api/customers/northstar' in url for url in api_calls),'Hosted tool did not call the customer API in the browser'
+                artifact_frame.locator('#intervene').click()
+                dialog=embedded.get_by_role('dialog');expect(dialog).to_be_visible()
+                expect(dialog).to_contain_text('intervention.create')
+                dialog.get_by_role('button',name='Run action',exact=True).click()
+                expect(artifact_frame.locator('#result')).to_contain_text('Action processed')
+                assert any('/api/customers/northstar/interventions' in url for url in api_calls),'Hosted command did not call the customer API in the browser'
+                assert not embedded_errors,'; '.join(embedded_errors)
+                embedded.close()
+            check('cross-origin-hosted-surface-chat-and-browser-tool',hosted_embed)
             check('no-uncaught-host-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(errors))) if errors else None)
             check('no-uncaught-signup-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(signup_errors))) if signup_errors else None)
             check('no-uncaught-studio-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(studio_errors))) if studio_errors else None)

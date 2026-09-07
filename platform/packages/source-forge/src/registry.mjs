@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
-import { projectAccess } from '../../control-plane/src/access.mjs';
+import { projectAccess, requireScope, workerScope } from '../../control-plane/src/access.mjs';
 import {
   assert,
   id,
@@ -464,12 +464,16 @@ export class SourceRegistry {
     return { revoked: true };
   }
   published(s, key) {
-    const fresh = projectAccess(
-        this.db,
-        { userId: s.userId, ...(s.token ? { token: s.token } : {}) },
-        s.tenantId,
-        s.projectId,
-      ),
+    const fresh = s.token
+        ? projectAccess(
+            this.db,
+            { userId: s.userId, token: s.token },
+            s.tenantId,
+            s.projectId,
+          )
+        : s.userId.startsWith('install:')
+          ? workerScope(this.db, s.tenantId, s.projectId, s.userId)
+          : projectAccess(this.db, { userId: s.userId }, s.tenantId, s.projectId),
       r = this.row(fresh, key);
     assert(r.status === 'published', 410, 'COMPONENT_UNAVAILABLE', 'Component is not published');
     const signed = parseJson(r.signature_json);
@@ -571,9 +575,18 @@ export class SourceRegistry {
     t,
     p,
     key,
+    options = {},
+  ) {
+    return this.previewForScope(projectAccess(this.db, who, t, p), key, options);
+  }
+  previewForScope(
+    scope,
+    key,
     { state = 'ready', theme = 'light', data, mode = 'preview', frameOrigin, threadId = null } = {},
   ) {
-    const s = projectAccess(this.db, who, t, p),
+    const s = requireScope(scope),
+      t = s.tenantId,
+      p = s.projectId,
       r = this.row(s, key);
     assert(r.status !== 'revoked', 410, 'COMPONENT_REVOKED', 'Component revoked');
     const c =
@@ -598,7 +611,7 @@ export class SourceRegistry {
         state: ['ready', 'loading', 'empty', 'error'].includes(state) ? state : 'ready',
         theme: theme === 'dark' ? 'dark' : 'light',
         channel,
-        issuerToken: who.token?.id ?? null,
+        issuerToken: s.token?.id ?? null,
         frameOrigin: frameOrigin ?? null,
       };
     this.db.run('DELETE FROM preview_grants WHERE expires_at<?', this.clock());
@@ -618,7 +631,7 @@ export class SourceRegistry {
       t,
       p,
       key,
-      who.userId,
+      s.userId,
       mode,
       this.service.box.seal(JSON.stringify(payload), `preview:${t}:${p}:${key}`),
       this.clock() + 60000,
@@ -656,7 +669,9 @@ export class SourceRegistry {
         assert(token, 401, 'PREVIEW_REVOKED', 'Issuer credential revoked');
         who = { ...who, token };
       }
-      const s = projectAccess(this.db, who, r.tenant_id, r.project_id),
+      const s = typeof r.owner_id === 'string' && r.owner_id.startsWith('install:')
+          ? workerScope(this.db, r.tenant_id, r.project_id, r.owner_id)
+          : projectAccess(this.db, who, r.tenant_id, r.project_id),
         row = this.row(s, r.component_id);
       assert(row.status !== 'revoked', 410, 'COMPONENT_REVOKED', 'Component revoked');
       const compiled =

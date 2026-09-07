@@ -6,6 +6,7 @@ import { normalizeInstallReceipt, normalizeSurfaceInstall } from './contracts.mj
 import { generateSurfaceInstall } from './templates.mjs';
 import { surfaceTargetProfile } from './target-profiles.mjs';
 import { verifySignedBundle } from '../../runtime/src/index.mjs';
+import { designStyles } from './design-css.mjs';
 
 const view = (row) => ({
   id: row.id,
@@ -148,6 +149,29 @@ export class SurfaceInstallService {
     return install;
   }
 
+  designContract(install) {
+    const match = this.db
+      .all(
+        'SELECT approved_contract_json FROM design_observations WHERE tenant_id=? AND project_id=? AND approved_at IS NOT NULL ORDER BY approved_at DESC',
+        install.tenant_id,
+        install.project_id,
+      )
+      .map((row) => parseJson(row.approved_contract_json))
+      .find((contract) => hash(contract) === install.design_fingerprint);
+    assert(
+      match,
+      409,
+      'INSTALL_DESIGN_CHANGED',
+      'The approved design contract for this install is unavailable; create a new install',
+    );
+    return match;
+  }
+
+  publicStyles(verificationKey, origin) {
+    const install = this.authorize(verificationKey, origin, 'embed-style');
+    return designStyles(install.id, this.designContract(install));
+  }
+
   publicManifest(verificationKey, origin) {
     const install = this.authorize(verificationKey, origin, 'embed-manifest');
     const deployment = this.db.get(
@@ -229,11 +253,7 @@ export class SurfaceInstallService {
         confirmation: capability.confirmation,
       };
     });
-    const design = this.db.get(
-      'SELECT approved_contract_json FROM design_observations WHERE tenant_id=? AND project_id=? AND approved_at IS NOT NULL ORDER BY approved_at DESC LIMIT 1',
-      install.tenant_id,
-      install.project_id,
-    );
+    const designContract = this.designContract(install);
     let agent = { available: false };
     const agentRow = this.db.get(
       'SELECT artifact_id FROM agent_profiles WHERE tenant_id=? AND project_id=?',
@@ -286,7 +306,7 @@ export class SurfaceInstallService {
       bundle,
       capabilities,
       agent,
-      designContract: parseJson(design?.approved_contract_json, {}),
+      designStylesheet: `${this.controlOrigin}/api/embed/v1/design.css?key=${encodeURIComponent(verificationKey)}`,
     };
   }
 

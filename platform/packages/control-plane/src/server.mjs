@@ -211,6 +211,25 @@ export function createControlServer(
           installs.publicManifest(url.searchParams.get('key'), requestOrigin),
         );
       }
+      if (req.method === 'GET' && url.pathname === '/api/embed/v1/design.css') {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Embedding application origin is required',
+        );
+        const css = installs.publicStyles(url.searchParams.get('key'), requestOrigin);
+        res.writeHead(200, {
+          'Content-Type': 'text/css; charset=utf-8',
+          'Cache-Control': 'private, max-age=300',
+          'Access-Control-Allow-Origin': requestOrigin,
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+          Vary: 'Origin',
+        });
+        res.end(css);
+        return;
+      }
       if (
         req.method === 'OPTIONS' &&
         ['/api/embed/v1/session', '/api/embed/v1/agent'].includes(url.pathname)

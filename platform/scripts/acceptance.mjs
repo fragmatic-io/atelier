@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { runGate } from './acceptance/process.mjs';
 import { validateRequirements } from './acceptance/requirements.mjs';
+import { resolveBrowserPython } from './run-browser-integration.mjs';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const evidenceDir = resolve(
@@ -32,7 +33,7 @@ async function tests(directory) {
 const requirementSummary = await validateRequirements(root, profile);
 const testFiles = (await tests(join(root, 'tests'))).sort();
 if (!testFiles.length) throw new Error('ACCEPTANCE_TESTS: no Node test files found');
-const python = process.env.ATELIER_PYTHON ?? 'python3';
+const python = await resolveBrowserPython({ root });
 const gates = [];
 gates.push(
   await runGate(
@@ -84,7 +85,10 @@ gates.push(
     [python, 'scripts/browser-integration.py'],
     {
       timeoutMs: 600_000,
-      env: { ATELIER_BROWSER_OUT: join(evidenceDir, 'integration') },
+      env: {
+        ATELIER_PYTHON: python,
+        ATELIER_BROWSER_OUT: join(evidenceDir, 'integration'),
+      },
     },
   ),
 );

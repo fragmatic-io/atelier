@@ -58,6 +58,34 @@ export async function seedExperiences(
   const registry = new SourceRegistry(service),
     chat = new ConversationService(service),
     pipeline = new BuildPipeline(service);
+  const surfaceJob = service.generate(who, link.tenantId, link.projectId, {
+    goal: 'Understand customer health and the next intervention',
+    slotId: 'customer.detail.right-rail',
+    role: 'support_manager',
+    permissions: ['customer.read', 'customer.intervene'],
+    mode: 'deterministic',
+    variants: 1,
+  });
+  const claimedSurface = service.store.claim('reference-surface', { leaseMs: 300000 });
+  if (!claimedSurface || claimedSurface.id !== surfaceJob.id)
+    throw new Error('Reference surface generation requires an idle queue');
+  try {
+    const generated = await pipeline.execute(claimedSurface);
+    service.store.finish(claimedSurface, generated);
+  } catch (error) {
+    recordSeedFailure(services, claimedSurface, error);
+    throw error;
+  }
+  const release = service
+    .releases(who, link.tenantId, link.projectId)
+    .find((candidate) => candidate.status === 'draft');
+  if (!release) throw new Error('Reference surface generation did not produce a draft');
+  service.approve(who, link.tenantId, link.projectId, release.id, {
+    approved: true,
+    previewReviewed: true,
+    note: 'Controlled local browser fixture reviewed for the acceptance journey',
+  });
+  service.publish(who, link.tenantId, link.projectId, release.id);
   const selected = [];
   for (const name of kitIds) {
     const kit = JSON.parse(
@@ -91,6 +119,7 @@ export async function seedExperiences(
   }
   chat.setup(who, link.tenantId, link.projectId, {
     tools: ['customer.get', 'intervention.create'],
+    clientTools: ['customer.get', 'intervention.create'],
     enableCommands: true,
     componentIds: selected,
     voiceReviewed: true,

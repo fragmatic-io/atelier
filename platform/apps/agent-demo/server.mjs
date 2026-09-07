@@ -218,11 +218,28 @@ const server = createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader(
     'Content-Security-Policy',
-    `default-src 'self'; script-src 'self' ${config.origin}; style-src 'self'; connect-src 'self' ${config.origin}; frame-src ${config.origin}; frame-ancestors 'none'; object-src 'none'; base-uri 'none'`,
+    `default-src 'self'; script-src 'self' ${config.origin}; style-src 'self' ${config.origin}; connect-src 'self' ${config.origin}; frame-src ${config.origin}; frame-ancestors 'none'; object-src 'none'; base-uri 'none'`,
   );
   try {
     assert(req.headers.host === `127.0.0.1:${port}`, 400, 'HOST_DENIED', 'Invalid host header');
     if (req.method === 'GET') {
+      if (req.url === '/atelier-workspace') {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.end(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="csrf-token" content="${csrf}"><title>Hosted Atelier workspace</title></head><body><main id="hosted-acceptance"></main></body></html>`);
+        return;
+      }
+      const customerMatch = req.url.match(/^\/api\/customers\/([A-Za-z0-9_-]+)$/);
+      if (customerMatch) {
+        assert(customerMatch[1] === 'northstar', 404, 'NOT_FOUND', 'Customer not found');
+        const customer = business.prepare('SELECT * FROM customers WHERE id=?').get('northstar');
+        return send(res, 200, {
+          id: customer.id,
+          name: customer.name,
+          riskScore: customer.risk,
+          status: customer.interventions ? 'healthy' : 'at_risk',
+          email: 'private@example.test',
+        });
+      }
       if (req.url === '/api/bootstrap')
         return send(res, 200, {
           csrf,
@@ -252,7 +269,6 @@ const server = createServer(async (req, res) => {
       'CSRF_FAILED',
       'Use the current host session',
     );
-    assert(req.url === '/api/agent', 404, 'NOT_FOUND', 'Unknown endpoint');
     assert(
       req.headers['content-type']?.startsWith('application/json'),
       415,
@@ -267,6 +283,23 @@ const server = createServer(async (req, res) => {
       chunks.push(c);
     }
     const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    const interventionMatch = req.url.match(
+      /^\/api\/customers\/([A-Za-z0-9_-]+)\/interventions$/,
+    );
+    if (interventionMatch) {
+      assert(interventionMatch[1] === 'northstar', 404, 'NOT_FOUND', 'Customer not found');
+      assert(
+        ['call', 'email', 'escalate'].includes(body.kind) && typeof body.reason === 'string',
+        400,
+        'INVALID_INTERVENTION',
+        'Use a reviewed intervention input',
+      );
+      business
+        .prepare('UPDATE customers SET interventions=interventions+1 WHERE id=?')
+        .run('northstar');
+      return send(res, 201, { id: 'browser-fixture', status: 'created' });
+    }
+    assert(req.url === '/api/agent', 404, 'NOT_FOUND', 'Unknown endpoint');
     const action = body.action;
     let result;
     if (action === 'confirm')
@@ -280,7 +313,13 @@ const server = createServer(async (req, res) => {
         deny: body.input?.deny,
       });
     else if (action === 'client-lease')
-      result = await bridge.clientLease({ subject, threadId: body.threadId, callId: body.callId });
+      result = await bridge.clientLease({
+        subject,
+        threadId: body.threadId,
+        callId: body.callId,
+        confirmed: body.input?.confirmed,
+        inputHash: body.input?.inputHash,
+      });
     else if (action === 'client-result')
       result = await bridge.clientResult({
         subject,

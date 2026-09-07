@@ -361,29 +361,32 @@ export class AgentHostBridge {
     this.receipts.result(scope, c.id, outcome);
     return complete(outcome);
   }
-  async clientLease({ subject, threadId, callId }) {
+  async clientLease({ subject, threadId, callId, confirmed = false, inputHash }) {
     const c = await this.call(subject, threadId, callId);
     assert(
-      c.contract.execution === 'client' && c.contract.kind === 'query',
+      c.contract.execution === 'client',
       403,
-      'CLIENT_READ_ONLY',
-      'Only reviewed client reads may execute in the browser',
+      'CLIENT_TOOL_REQUIRED',
+      'Only registered browser tools may execute in the client',
     );
     return this.transport({
       action: 'lease',
       threadId,
       callId,
-      input: {},
+      input: {
+        confirmed: c.contract.kind === 'command' ? confirmed : false,
+        inputHash: c.contract.kind === 'command' ? inputHash : undefined,
+      },
       host: this.subject(subject),
     });
   }
-  async clientResult({ subject, threadId, callId, leaseToken, result, error }) {
+  async clientResult({ subject, threadId, callId, leaseToken, result, error, uncertain }) {
     const c = await this.call(subject, threadId, callId);
     assert(
-      c.contract.execution === 'client' && c.contract.kind === 'query',
+      c.contract.execution === 'client',
       403,
-      'CLIENT_READ_ONLY',
-      'Browser outputs are allowed for reviewed client reads only',
+      'CLIENT_TOOL_REQUIRED',
+      'Browser outputs are allowed only for registered client tools',
     );
     return this.transport({
       action: 'result',
@@ -391,7 +394,7 @@ export class AgentHostBridge {
       callId,
       input: {
         leaseToken,
-        status: error ? 'failed' : 'succeeded',
+        status: error ? (c.contract.kind === 'command' || uncertain ? 'uncertain' : 'failed') : 'succeeded',
         result,
         code: error ? 'CLIENT_TOOL_FAILED' : undefined,
       },

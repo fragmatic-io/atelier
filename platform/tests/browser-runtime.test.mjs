@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { resolveBrowserPython } from '../scripts/run-browser-integration.mjs';
@@ -28,4 +28,11 @@ test('browser integration fails explicitly when Playwright Python is not configu
     resolveBrowserPython({ root, configured: '', platform: 'darwin' }),
     /BROWSER_RUNTIME_REQUIRED/,
   );
+});
+
+test('canonical acceptance uses the same explicit browser interpreter resolver', async () => {
+  const source = await readFile(new URL('../scripts/acceptance.mjs', import.meta.url), 'utf8');
+  assert.match(source, /await resolveBrowserPython\(\{ root \}\)/);
+  assert.match(source, /ATELIER_PYTHON: python/);
+  assert.doesNotMatch(source, /\?\? 'python3'/);
 });

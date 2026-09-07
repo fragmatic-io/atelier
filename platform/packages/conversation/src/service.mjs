@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
-import { projectAccess, requireScope } from '../../control-plane/src/access.mjs';
+import { projectAccess, requireScope, workerScope } from '../../control-plane/src/access.mjs';
 import {
   assert,
   id,
@@ -636,7 +636,7 @@ export class ConversationService {
     });
   }
   checkJob(s, job, input) {
-    const scope = projectAccess(this.db, { userId: s.userId }, s.tenantId, s.projectId, 'run'),
+    const scope = workerScope(this.db, s.tenantId, s.projectId, s.userId),
       r = this.db.get(
         'SELECT * FROM agent_threads WHERE tenant_id=? AND project_id=? AND id=? AND archived_at IS NULL AND expires_at>?',
         ...keys(scope),
@@ -1587,7 +1587,7 @@ export class ConversationService {
       ...body,
       ...(includePreview
         ? {
-            preview: this.components.preview(who, t, p, body.componentId, {
+            preview: this.components.previewForScope(a.scope, body.componentId, {
               data: body.data,
               mode: 'published',
               threadId: thread,

@@ -76,6 +76,16 @@ export function projectAccess(db, identity, tenantId, projectId, need = 'read') 
 }
 /** Internal worker entry. Never construct this scope from request-supplied identity. */
 export function workerScope(db, tenantId, projectId, userId) {
+  if (typeof userId === 'string' && userId.startsWith('install:')) {
+    const install = db.get(
+      "SELECT * FROM surface_installs WHERE tenant_id=? AND project_id=? AND id=? AND framework='hosted-script' AND status!='revoked' AND revoked_at IS NULL",
+      tenantId,
+      projectId,
+      userId.slice('install:'.length),
+    );
+    assert(install, 401, 'INSTALL_REVOKED', 'Hosted install is unavailable');
+    return surfaceInstallScope(db, install);
+  }
   const identity = { userId };
   return projectAccess(db, identity, tenantId, projectId, 'run');
 }

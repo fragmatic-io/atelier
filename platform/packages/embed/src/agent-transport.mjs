@@ -56,6 +56,8 @@ export function createHostedAgentTransport(
     });
     const value = await response.json();
     if (!response.ok) throw responseError(response, value);
+    if (body.action === 'artifact' && value.preview?.url)
+      value.preview.url = new URL(value.preview.url, controlOrigin).href;
     return value;
   };
 }
