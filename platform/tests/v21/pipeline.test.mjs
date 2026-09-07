@@ -158,6 +158,83 @@ test('provider-neutral agent pipeline uses architect/designer/critic and persist
   assert.notEqual(first.releaseIds[0], second.releaseIds[0]);
   assert.ok(f.service.usage(f.who, f.tenant.id, f.project.id)[0].cache_hits >= 3);
 });
+test('model design repair receives exact approved coverage after an omission', async (t) => {
+  const f = await fixture();
+  t.after(() => f.db.close());
+  await scanned(f);
+  const con = f.service.createConnection(f.who, f.tenant.id, {
+    name: 'Repair fixture',
+    kind: 'openai',
+    apiKey: 'test-only-key',
+    model: 'fixture-model',
+    projectId: f.project.id,
+  });
+  const project = f.service.project(f.who, f.tenant.id, f.project.id);
+  f.service.updateProject(f.who, f.tenant.id, f.project.id, {
+    revision: project.revision,
+    providerId: con.id,
+    model: 'fixture-model',
+  });
+  let designerCalls = 0;
+  const apiFactory = () => ({
+    async generate(req) {
+      let value;
+      if (req.schema.properties.workflow) {
+        value = {
+          goal: 'Understand context',
+          workflow: ['Review'],
+          successCriteria: ['Complete safely'],
+          avoid: ['Unverified actions'],
+        };
+      } else if (req.schema.properties.sections) {
+        designerCalls += 1;
+        const coverage = req.input.requiredCoverage;
+        assert.ok(coverage.information.length > 0);
+        assert.deepEqual(coverage.actions, req.input.knowledge.task.permittedActions);
+        if (designerCalls === 2) {
+          assert.equal(req.input.repair[0].code, 'MISSING_INFORMATION');
+          assert.equal(
+            req.input.repair[0].details.capabilityId,
+            coverage.information.at(-1).capabilityId,
+          );
+          assert.deepEqual(req.input.repair[0].details.missingFields, [coverage.information.at(-1).fields.at(-1)]);
+        }
+        assert.ok(coverage.information.at(-1).fields.length > 1);
+        const included = coverage.information.map((source, index) => ({
+          ...source,
+          fields:
+            designerCalls === 1 && index === coverage.information.length - 1
+              ? source.fields.slice(0, -1)
+              : source.fields,
+        }));
+        value = {
+          title: 'Risk overview',
+          description: 'Approved operational context',
+          layout: 'workbench',
+          rationale: 'Preserve every approved information source',
+          sections: included.map((source) => ({
+            source: source.capabilityId,
+            title: 'Operational context',
+            fields: source.fields,
+            variant: 'facts',
+          })),
+          actions: coverage.actions.map((capabilityId) => ({ capabilityId, label: capabilityId })),
+        };
+      } else {
+        value = { approved: true, issues: [], strengths: ['Complete context'] };
+      }
+      return {
+        value,
+        usage: { inputTokens: 20, outputTokens: 10 },
+        model: 'fixture-model',
+        provider: 'repair-fixture',
+      };
+    },
+  });
+  const result = await generated(f, { mode: 'model', variants: 1, apiFactory });
+  assert.equal(result.releaseIds.length, 1);
+  assert.equal(designerCalls, 2);
+});
 test('source snapshot never executes configuration, scripts, source modules or server actions', async (t) => {
   const f = await fixture();
   t.after(() => f.db.close());
