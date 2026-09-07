@@ -51,7 +51,7 @@ The installable package exposes server authority, React slots, browser surfaces,
 
 - Studio: fact-derived guided onboarding, origin-bound browser observation, OpenAPI import, optional redacted semantic samples, deterministic design approval plus agentic semantic synthesis, capability review, independent custom-surface and chatbot delivery, bounded specialist-agent setup, one-script hosted UI generation with factual verification, automatic Redoc API reference, source generation, real browser certification, human approval, signing, publication, rollback, and audit.
 - Capability review: filter and select operations, approve selected or all pending operations atomically, then make a separate explicit decision about agent access. Bulk review is rejected if the project model changed; reopening a review disables agent access and retains the original audit records.
-- Hosted runtime: Atelier serves signed additive UI. The customer browser calls only reviewed same-origin API contracts through its existing session; the customer API retains authentication, tenant/object authorization, business data and transactional idempotency.
+- Hosted runtime: Atelier serves signed additive UI plus the configured chatbot. A short-lived, origin-bound Atelier chat session owns conversation state, while every approved data tool runs in the customer browser through its existing same-origin session. The customer API retains authentication, tenant/object authorization, business data and transactional idempotency.
 - Embedded agent: durable private conversations, attachments, stop/retry, scoped tools, bounded read-only specialist consultations, primary-agent synthesis, exact-input confirmation, interactive artifacts, revision/pin/export behavior, and revocation checks.
 - Coding-agent MCP: current project search/model, published component source, and versioned coding/design skill resources. Configuration and tokens stay server-side. See [MCP integration](docs/MCP.md).
 
@@ -82,7 +82,7 @@ Read [architecture](docs/ARCHITECTURE.md), [host integration](docs/INTEGRATION.m
 | `packages/source-forge`                            | React source contract, isolated compilation, certification, signing lifecycle |
 | `packages/conversation`                            | Embedded agent, tools, artifacts, observations, browser clients               |
 | `packages/discovery`                               | Browser observer, privacy projection, API evidence and onboarding status      |
-| `packages/surface-install`, `embed`                | Hosted script bundles, reviewed browser API client and install receipts        |
+| `packages/surface-install`, `embed`                | Hosted surface/chat runtime, browser API client and install receipts           |
 | `packages/mcp`                                     | Read-only project-scoped coding-agent tools and generated skills              |
 | `packages/host-sdk`, `surface`, `adapters`         | Server authority and host rendering integrations                              |
 | `apps/studio`, `apps/agent-demo`, `apps/host-demo` | Operator product and runnable local integrations                              |

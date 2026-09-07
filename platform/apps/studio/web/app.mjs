@@ -1016,6 +1016,7 @@ const actions = {
           method: 'POST',
           body: {
             tools,
+            clientTools: tools,
             enableCommands: tools.some(
               (tool) =>
                 state.model.capabilities.find((capability) => capability.id === tool)?.kind ===
@@ -1032,7 +1033,7 @@ const actions = {
         toast('Chatbot profile saved against the current capability model.');
         await route();
       },
-      'The agent runtime receives only this allowlist. Model output cannot invent or enable tools.',
+      'The hosted agent receives only this allowlist. Each selected API tool executes in the signed-in customer browser; model output cannot invent or enable tools.',
     );
   },
   'install-surface': () => {

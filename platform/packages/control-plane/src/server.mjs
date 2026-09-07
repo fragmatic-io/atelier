@@ -10,6 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { DiscoveryService } from '../../discovery/src/service.mjs';
 import { SurfaceInstallService } from '../../surface-install/src/service.mjs';
+import { HostedAgentService } from '../../surface-install/src/hosted-agent.mjs';
 import { projectAccess, tenantAccess } from './access.mjs';
 import {
   assert,
@@ -29,6 +30,11 @@ const redocFile = createRequire(import.meta.url).resolve('redoc/bundles/redoc.st
 const observerFile = fileURLToPath(new URL('../../discovery/src/observer.js', import.meta.url));
 const embedFile = fileURLToPath(new URL('../../embed/src/runtime.mjs', import.meta.url));
 const embedClientFile = fileURLToPath(new URL('../../embed/src/api-client.mjs', import.meta.url));
+const embedAgentTransportFile = fileURLToPath(
+  new URL('../../embed/src/agent-transport.mjs', import.meta.url),
+);
+const embedWorkspaceFile = fileURLToPath(new URL('../../embed/src/workspace.mjs', import.meta.url));
+const embedStyleFile = fileURLToPath(new URL('../../embed/src/embed.css', import.meta.url));
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -113,6 +119,7 @@ export function createControlServer(
   const experiences = experienceRoutes(service, { production, enableExamples });
   const discovery = new DiscoveryService(service);
   const installs = new SurfaceInstallService(service, { controlOrigin: configured.origin });
+  const hostedAgents = new HostedAgentService(service, installs);
   assert(
     !production || configured.protocol === 'https:',
     500,
@@ -169,10 +176,18 @@ export function createControlServer(
         res.end(data);
         return;
       }
-      if (req.method === 'GET' && url.pathname === '/embed/api-client.mjs') {
-        const data = await readFile(embedClientFile);
+      const publicEmbedAssets = {
+        '/embed/api-client.mjs': embedClientFile,
+        '/embed/agent-transport.mjs': embedAgentTransportFile,
+        '/embed/workspace.mjs': embedWorkspaceFile,
+        '/embed/v1.css': embedStyleFile,
+      };
+      if (req.method === 'GET' && publicEmbedAssets[url.pathname]) {
+        const data = await readFile(publicEmbedAssets[url.pathname]);
         res.writeHead(200, {
-          'Content-Type': 'text/javascript; charset=utf-8',
+          'Content-Type': url.pathname.endsWith('.css')
+            ? 'text/css; charset=utf-8'
+            : 'text/javascript; charset=utf-8',
           'Cache-Control': 'public, max-age=300',
           'Cross-Origin-Resource-Policy': 'cross-origin',
           'Access-Control-Allow-Origin': '*',
@@ -194,6 +209,56 @@ export function createControlServer(
           res,
           200,
           installs.publicManifest(url.searchParams.get('key'), requestOrigin),
+        );
+      }
+      if (
+        req.method === 'OPTIONS' &&
+        ['/api/embed/v1/session', '/api/embed/v1/agent'].includes(url.pathname)
+      ) {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Embedding application origin is required',
+        );
+        res.writeHead(204, {
+          'Access-Control-Allow-Origin': requestOrigin,
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers':
+            'Content-Type, X-Atelier-Install-Key, X-Atelier-Agent-Session',
+          'Access-Control-Max-Age': '600',
+          Vary: 'Origin',
+        });
+        res.end();
+        return;
+      }
+      if (
+        req.method === 'POST' &&
+        ['/api/embed/v1/session', '/api/embed/v1/agent'].includes(url.pathname)
+      ) {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Embedding application origin is required',
+        );
+        res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+        res.setHeader('Vary', 'Origin');
+        const payload = await readJson(req, 64 * 1024);
+        const verificationKey = req.headers['x-atelier-install-key'];
+        return send(
+          res,
+          200,
+          url.pathname.endsWith('/session')
+            ? hostedAgents.start(verificationKey, requestOrigin, payload)
+            : hostedAgents.rpc(
+                verificationKey,
+                requestOrigin,
+                req.headers['x-atelier-agent-session'],
+                payload,
+              ),
         );
       }
       if (req.method === 'OPTIONS' && url.pathname === '/api/observe/v1/events') {
@@ -286,7 +351,7 @@ export function createControlServer(
       if (url.pathname.startsWith('/assets/') && req.method === 'GET') {
         const name = url.pathname.slice(8);
         assert(/^[A-Za-z0-9_.-]+$/.test(name), 404, 'NOT_FOUND', 'Asset not found');
-        const modules = {
+        const conversationAssets = {
           'client.mjs': 'client.mjs',
           'agent-client.mjs': 'client.mjs',
           'journal.mjs': 'journal.mjs',
@@ -294,19 +359,29 @@ export function createControlServer(
           'frame.mjs': 'frame.mjs',
           'artifact-frame.mjs': 'frame.mjs',
           'chat.mjs': 'chat.mjs',
+          'agent.css': 'agent.css',
         };
         const path =
           name === 'redoc.standalone.js'
             ? redocFile
-            : modules[name]
-              ? fileURLToPath(new URL('../../conversation/src/' + modules[name], import.meta.url))
+            : conversationAssets[name]
+              ? fileURLToPath(
+                  new URL('../../conversation/src/' + conversationAssets[name], import.meta.url),
+                )
               : name === 'surface.mjs'
                 ? surfaceFile
                 : join(webRoot, name);
         const data = await readFile(path);
+        const publicRuntimeAsset = !!conversationAssets[name] || name === 'surface.mjs';
         res.writeHead(200, {
           'Content-Type': mime[extname(name)] ?? 'application/octet-stream',
           'Cache-Control': 'no-cache',
+          ...(publicRuntimeAsset
+            ? {
+                'Access-Control-Allow-Origin': '*',
+                'Cross-Origin-Resource-Policy': 'cross-origin',
+              }
+            : {}),
         });
         res.end(data);
         return;

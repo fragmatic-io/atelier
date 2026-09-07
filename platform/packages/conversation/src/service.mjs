@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
-import { projectAccess } from '../../control-plane/src/access.mjs';
+import { projectAccess, requireScope } from '../../control-plane/src/access.mjs';
 import {
   assert,
   id,
@@ -26,6 +26,15 @@ import {
 import { calculate, readPath } from './calculator.mjs';
 import { agentSystemPrompt, specialistFor } from './specialists.mjs';
 const keys = (s) => [s.tenantId, s.projectId];
+const hostedIdentities = new WeakMap();
+
+/** Build an identity for an origin-verified hosted install. The WeakMap keeps the
+ * authorized scope and browser subject out of request-controlled object fields. */
+export function hostedConversationIdentity(scope, host) {
+  const identity = { userId: scope.userId };
+  hostedIdentities.set(identity, { scope: requireScope(scope), host: Object.freeze({ ...host }) });
+  return identity;
+}
 export function responseSchema(tools, components, specialists = []) {
   return {
     type: 'object',
@@ -103,6 +112,29 @@ export class ConversationService {
     this.components = components ?? new SourceRegistry(service);
   }
   scope(identity, t, p, host = null, need = 'read') {
+    const hosted = hostedIdentities.get(identity);
+    if (hosted) {
+      assert(!host, 500, 'HOSTED_SUBJECT_DUPLICATE', 'Hosted subject is already bound');
+      assert(
+        hosted.scope.tenantId === t && hosted.scope.projectId === p,
+        404,
+        'NOT_FOUND',
+        'Project not found',
+      );
+      assert(
+        ['read', 'run'].includes(need),
+        403,
+        'HOSTED_SCOPE',
+        'Hosted conversations cannot administer the project',
+      );
+      return {
+        scope: hosted.scope,
+        identity,
+        host: hosted.host,
+        ownerType: 'host',
+        ownerHash: hash({ t, p, type: 'hosted', id: hosted.host.id }),
+      };
+    }
     const scope = projectAccess(this.db, identity, t, p, need);
     if (identity.token) {
       const live = this.db.get(
@@ -211,12 +243,10 @@ export class ConversationService {
     }
     const clientTools = strings(input.clientTools ?? [], 'Client tools');
     assert(
-      clientTools.every(
-        (x) => tools.includes(x) && model.capabilities.find((c) => c.id === x)?.kind === 'query',
-      ),
+      clientTools.every((x) => tools.includes(x)),
       400,
-      'CLIENT_READ_ONLY',
-      'Client tools must be reviewed reads',
+      'CLIENT_TOOL_SCOPE',
+      'Browser tools must be part of the reviewed chatbot allowlist',
     );
     const componentIds = strings(
       input.componentIds ??

@@ -310,6 +310,14 @@ test('public observer endpoint enforces CORS origin and serves the standalone sn
   const embedClient = await call('/embed/api-client.mjs');
   assert.equal(embedClient.status, 200);
   assert.match(embedClient.content, /Only same-origin API calls are allowed/);
+  const agentTransport = await call('/embed/agent-transport.mjs');
+  assert.equal(agentTransport.status, 200);
+  assert.equal(agentTransport.headers['access-control-allow-origin'], '*');
+  assert.match(agentTransport.content, /X-Atelier-Agent-Session/);
+  const agentStyle = await call('/assets/agent.css');
+  assert.equal(agentStyle.status, 200);
+  assert.equal(agentStyle.headers['access-control-allow-origin'], '*');
+  assert.match(agentStyle.content, /atelier-agent-root/);
   const accepted = await call(
     '/api/observe/v1/events',
     'POST',

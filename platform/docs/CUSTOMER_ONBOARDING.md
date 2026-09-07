@@ -125,7 +125,7 @@ Reviewers can filter and select operations, approve the selection, or approve ev
 
 An approved capability may be composed into a custom rail, queue, dashboard, form or rich response component. That does not publish it: generated surface source must pass browser certification, human review, signing and slot-scoped publication. Conversely, checking chatbot exposure does not create or publish a custom surface.
 
-The agent profile accepts only capabilities that are both security reviewed and explicitly chatbot enabled. A model-selected unknown or disabled tool fails before host execution. The customer backend remains responsible for current tenant, user, object and business-rule authorization on every call.
+The agent profile accepts only capabilities that are both security reviewed and explicitly chatbot enabled. The hosted setup registers every selected primary-agent tool for execution in the signed-in customer browser; specialists keep read-only subsets and cannot delegate again. A model-selected unknown or disabled tool fails before browser execution, and commands retain explicit confirmation. The customer backend remains responsible for current tenant, user, object and business-rule authorization on every call.
 
 ### Primary agent and bounded specialists
 
@@ -143,7 +143,7 @@ A full-page surface requires an explicit customer-owned route and, if desired, a
 
 ## One-script hosted surface installation
 
-Choose **Install hosted UI** after publishing an approved slot. Supply the exact customer origin, placement, page path, navigation label, slot and environment. Studio returns one snippet containing a customer-owned mount and an Atelier-hosted module script. There are no framework-specific files, packages, server bridge or API credentials. The origin-bound public key selects only this install's current signed UI manifest and reports installation facts.
+Choose **Install hosted UI** after publishing an approved slot. Supply the exact customer origin, placement, page path, navigation label, slot and environment. Studio returns one snippet containing a customer-owned mount and an Atelier-hosted module script. There are no framework-specific files, packages, server bridge or API credentials. The origin-bound public key selects only this install's current signed UI/chat manifest and reports installation facts. When a current reviewed chatbot profile and real provider exist, the same mount includes the assistant automatically.
 
 For a full page, the customer applies the generated route and consciously places the generated navigation component. For an inline or drawer placement, the recorded route identifies the existing host page and the customer places the generated mount there. Atelier does not guess or mutate an unknown application file.
 

@@ -4,6 +4,7 @@ import { request } from 'node:http';
 import { fixture } from './v21/helpers.mjs';
 import { DiscoveryService } from '../packages/discovery/src/service.mjs';
 import { SurfaceInstallService } from '../packages/surface-install/src/service.mjs';
+import { HostedAgentService } from '../packages/surface-install/src/hosted-agent.mjs';
 import { createControlServer } from '../packages/control-plane/src/server.mjs';
 import { projectAccess } from '../packages/control-plane/src/access.mjs';
 import { installSurfaceFields } from '../apps/studio/web/install-surface.mjs';
@@ -68,17 +69,18 @@ function createInstall(installs, f, overrides = {}) {
 function publishFixture(f, install) {
   const current = f.service.model(f.who, f.tenant.id, f.project.id);
   const capability = current.capabilities[0];
-  f.service.reviewCapability(f.who, f.tenant.id, f.project.id, capability.id, {
-    title: capability.title,
-    description: capability.description,
-    risk: 'read_only',
-    confirmation: 'none',
-    reversible: false,
-    requiredPermissions: [],
-    piiFields: [],
-    approved: true,
-    agentEnabled: false,
-  });
+  if (!capability.securityReviewed)
+    f.service.reviewCapability(f.who, f.tenant.id, f.project.id, capability.id, {
+      title: capability.title,
+      description: capability.description,
+      risk: 'read_only',
+      confirmation: 'none',
+      reversible: false,
+      requiredPermissions: [],
+      piiFields: [],
+      approved: true,
+      agentEnabled: capability.agentEnabled === true,
+    });
   const reviewed = f.service.model(f.who, f.tenant.id, f.project.id);
   const scope = projectAccess(f.db, f.who, f.tenant.id, f.project.id, 'run');
   const artifact = f.service.store.artifact(scope, 'bundle', { fixture: true });
@@ -171,6 +173,73 @@ test('hosted installer produces one secret-free script and an approved manifest'
   assert.throws(
     () =>
       installs.publicManifest(result.bundle.publicVerification.key, 'https://attacker.example'),
+    { code: 'INSTALL_ORIGIN' },
+  );
+});
+
+test('hosted chatbot is install-bound and executes only reviewed browser reads', async (t) => {
+  const f = await modelledFixture();
+  t.after(() => f.db.close());
+  const installs = new SurfaceInstallService(f.service, {
+    controlOrigin: 'https://atelier.example',
+  });
+  const created = createInstall(installs, f);
+  const capability = f.service.model(f.who, f.tenant.id, f.project.id).capabilities[0];
+  f.service.reviewCapability(f.who, f.tenant.id, f.project.id, capability.id, {
+    title: capability.title,
+    description: capability.description,
+    risk: 'read_only',
+    confirmation: 'none',
+    reversible: false,
+    requiredPermissions: ['accounts.read'],
+    piiFields: [],
+    approved: true,
+    agentEnabled: true,
+  });
+  publishFixture(f, created);
+  const connection = f.service.createConnection(f.who, f.tenant.id, {
+    name: 'Controlled unit provider',
+    kind: 'openai',
+    apiKey: 'not-a-real-provider-key',
+    model: 'unit-model',
+  });
+  const project = f.service.project(f.who, f.tenant.id, f.project.id);
+  f.service.updateProject(f.who, f.tenant.id, f.project.id, {
+    revision: project.revision,
+    providerId: connection.id,
+    modelName: 'unit-model',
+  });
+  const agents = new HostedAgentService(f.service, installs);
+  agents.agents.setup(f.who, f.tenant.id, f.project.id, {
+    voice: { name: 'Account guide', tone: 'Clear and concise', locale: 'en' },
+    voiceReviewed: true,
+    tools: [capability.id],
+    clientTools: [capability.id],
+    specialists: [],
+  });
+  const key = created.bundle.publicVerification.key;
+  const origin = 'https://app.example';
+  const manifest = installs.publicManifest(key, origin);
+  assert.equal(manifest.agent.available, true);
+  assert.equal(manifest.agent.clientTools[0].operation.path, '/accounts');
+  const session = agents.start(key, origin, {
+    subject: '128b7253-bd1d-4f37-8bd6-66cb0a20d8f4',
+  });
+  const thread = agents.rpc(key, origin, session.session, {
+    action: 'create',
+    input: { title: 'Browser-owned conversation' },
+  });
+  assert.match(thread.id, /^thread_/);
+  assert.deepEqual(
+    agents.rpc(key, origin, session.session, { action: 'list' }).map((item) => item.id),
+    [thread.id],
+  );
+  assert.throws(
+    () => agents.rpc(key, origin, session.session, { action: 'attach', threadId: thread.id }),
+    { code: 'AGENT_OPERATION' },
+  );
+  assert.throws(
+    () => agents.rpc(key, 'https://attacker.example', session.session, { action: 'list' }),
     { code: 'INSTALL_ORIGIN' },
   );
 });

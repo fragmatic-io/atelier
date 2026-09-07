@@ -2,7 +2,7 @@
 
 ## Unreleased — hosted runtime and intelligent design
 
-Replaces framework-specific generated bridges with one origin-bound hosted module script. Atelier serves the signed surface UI and approved design contract; the customer browser executes only reviewed same-origin HTTP operations through its existing application session. The runtime denies unknown capabilities and cross-origin URLs, forwards host CSRF for reviewed mutations, and requires no customer API credential, package or server bridge.
+Replaces framework-specific generated bridges with one origin-bound hosted module script. Atelier serves the signed surface, configured chatbot and approved design contract; the customer browser executes every reviewed API tool through its existing same-origin application session. Hosted conversation state uses a sealed short-lived install session that grants no customer API authority. The runtime denies unknown capabilities and cross-origin URLs, requires explicit command confirmation, forwards host CSRF for reviewed mutations, and requires no customer API credential, package or server bridge.
 
 Adds an optional agentic Design Genome synthesis after deterministic human approval. Model guidance must cite exact role/property/value evidence from the immutable approved contract, fails on invented evidence, and requires a separate human review before generation consumes it. Fixes React StrictMode remount lifecycle fencing and adds a regression test.
 

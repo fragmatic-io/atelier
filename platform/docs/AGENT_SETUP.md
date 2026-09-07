@@ -40,7 +40,7 @@ In Studio:
 6. Approve or reject each capability. Then make independent delivery decisions: which approved capabilities may appear in custom surfaces and which may be exposed as chatbot tools.
 7. Open **API reference** for the automatically generated Redoc documentation. Download the OpenAPI 3.1 document if another tool needs it.
 8. Review the observed host design contract in Setup. Correct any token that does not represent the application, then approve that exact fingerprint.
-9. Configure the primary chatbot and optional bounded specialists. Review every specialist instruction and the shared read-only tool subset; specialists never receive commands.
+9. Configure the primary chatbot and optional bounded specialists. Every selected primary-agent tool is registered for browser execution; commands retain their reviewed confirmation policy. Review every specialist instruction and its read-only subset; specialists never receive commands.
 10. Design and publish the first surface, then choose **Install hosted UI**. Select the new-route/inline/drawer placement, exact application origin, customer page, navigation label, approved slot and environment. Copy the one-script embed immediately.
 
 Read [CUSTOMER_ONBOARDING.md](CUSTOMER_ONBOARDING.md) for the observer privacy contract, deduplication, evidence levels, status facts and required tests. Explicit source scanning remains available for separately authorized self-hosted/developer projects to extract React components and design tokens; it is not the default SaaS onboarding path.
@@ -81,7 +81,9 @@ The hosted runtime derives an immutable client registry from the capabilities us
 
 The browser fetch uses `credentials: 'same-origin'`; therefore the customer's existing application session—not Atelier—authenticates the API call. The customer API must continue to enforce tenant isolation, permissions, object access and command preconditions. For mutations, expose the host application's existing CSRF value through a standard `<meta name="csrf-token">` or a synchronous `window.AtelierHost.csrfToken()` function. Never put an API key, Atelier project token or long-lived session in the embed attributes.
 
-The primary chatbot and bounded specialists use the same approved capability inventory. When a model selects a client tool, the browser executes only the registered reviewed operation and returns the bounded result. An unregistered capability is denied before `fetch`.
+The primary chatbot and bounded specialists use the same approved capability inventory. Atelier hosts the chat UI, encrypted transcript state and model orchestration behind a sealed 12-hour browser session bound to the exact install and origin. This session is not customer identity or API authority. When a model selects a client tool, the customer browser executes only the registered reviewed operation with its existing same-origin session and returns the schema-bounded result. Commands require the explicit confirmation dialog before execution. An unregistered capability is denied before `fetch`.
+
+Because the one-script path deliberately has no customer backend integration, Atelier cannot cryptographically identify the customer's signed-in user. The customer API is the hard authorization boundary and must reject any tenant, object or permission violation. If a deployment needs Atelier-side user identity, billing entitlements or cross-device transcript ownership, add a separately reviewed customer-signed identity exchange; do not treat the public install key as authentication.
 
 ## 6. Give the next coding agent project knowledge
 

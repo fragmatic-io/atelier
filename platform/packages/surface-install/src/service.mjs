@@ -126,7 +126,7 @@ export class SurfaceInstallService {
     );
   }
 
-  publicManifest(verificationKey, origin) {
+  authorize(verificationKey, origin, bucket = 'embed') {
     assert(
       typeof verificationKey === 'string' && verificationKey.startsWith('atl_ins_'),
       401,
@@ -144,7 +144,12 @@ export class SurfaceInstallService {
       'INSTALL_ORIGIN',
       'Install origin is not allowed',
     );
-    this.service.auth.rate(`embed:${install.id}`, { limit: 120, windowMs: 60000 });
+    this.service.auth.rate(`${bucket}:${install.id}`, { limit: 120, windowMs: 60000 });
+    return install;
+  }
+
+  publicManifest(verificationKey, origin) {
+    const install = this.authorize(verificationKey, origin, 'embed-manifest');
     const deployment = this.db.get(
       'SELECT * FROM deployments WHERE tenant_id=? AND project_id=? AND slot_id=? AND environment=?',
       install.tenant_id,
@@ -229,6 +234,45 @@ export class SurfaceInstallService {
       install.tenant_id,
       install.project_id,
     );
+    let agent = { available: false };
+    const agentRow = this.db.get(
+      'SELECT artifact_id FROM agent_profiles WHERE tenant_id=? AND project_id=?',
+      install.tenant_id,
+      install.project_id,
+    );
+    if (agentRow && project.provider_id) {
+      const profile = this.store.getArtifact(scope, agentRow.artifact_id, 'agent-profile').content;
+      const clientOnly =
+        profile.projectVersion === model.projectVersion &&
+        profile.voice?.status === 'reviewed' &&
+        profile.tools.length > 0 &&
+        profile.tools.every((tool) => tool.execution === 'client');
+      if (clientOnly)
+        agent = {
+          available: true,
+          name: profile.name,
+          subtitle: profile.voice.tone,
+          clientTools: profile.tools.map((tool) => {
+            const capability = model.capabilities.find((candidate) => candidate.id === tool.id);
+            assert(
+              capability?.securityReviewed &&
+                capability.operation?.protocol === 'http' &&
+                capability.operation.path.startsWith('/') &&
+                !capability.operation.path.startsWith('//') &&
+                !capability.operation.path.includes('..'),
+              409,
+              'HOSTED_AGENT_TOOL_DENIED',
+              `Hosted chatbot tool is not an approved same-origin HTTP operation: ${tool.id}`,
+            );
+            return {
+              id: tool.id,
+              operation: capability.operation,
+              inputSchema: tool.inputSchema,
+              outputSchema: tool.outputSchema,
+            };
+          }),
+        };
+    }
     return {
       schemaVersion: 1,
       install: {
@@ -241,6 +285,7 @@ export class SurfaceInstallService {
       },
       bundle,
       capabilities,
+      agent,
       designContract: parseJson(design?.approved_contract_json, {}),
     };
   }

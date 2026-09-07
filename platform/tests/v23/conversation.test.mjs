@@ -26,6 +26,20 @@ test('unreviewed endpoints do not become callable agent tools', async (t) => {
   const p = f.chat.setup(f.who, f.tenant.id, f.project.id, { tools: [] });
   assert.equal(p.tools.length, 0);
 });
+test('reviewed commands may execute in the browser but still retain confirmation policy', async (t) => {
+  const f = await ready({ review: true });
+  t.after(() => f.db.close());
+  const profile = f.chat.setup(f.who, f.tenant.id, f.project.id, {
+    tools: ['customer.get', 'intervention.create'],
+    clientTools: ['customer.get', 'intervention.create'],
+    enableCommands: true,
+    voiceReviewed: true,
+  });
+  const command = profile.tools.find((tool) => tool.id === 'intervention.create');
+  assert.equal(command.execution, 'client');
+  assert.equal(command.kind, 'command');
+  assert.notEqual(command.confirmation, 'none');
+});
 test('conversation turn is persisted, encrypted, idempotent and actually executed', async (t) => {
   const f = await ready();
   t.after(() => f.db.close());

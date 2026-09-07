@@ -1,0 +1,29 @@
+.atelier-hosted-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.3rem;
+  width: fit-content;
+  border: 1px solid var(--atelier-line, #dce4ed);
+  border-radius: var(--atelier-radius, 10px);
+  background: var(--atelier-soft, #edf2f7);
+}
+
+.atelier-hosted-tabs button {
+  border: 0;
+  border-radius: calc(var(--atelier-radius, 10px) - 3px);
+  padding: 0.55rem 0.9rem;
+  color: var(--atelier-muted, #66758a);
+  background: transparent;
+  cursor: pointer;
+}
+
+.atelier-hosted-tabs button.is-active {
+  color: var(--atelier-text, #182436);
+  background: var(--atelier-paper, #fff);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 12%);
+}
+
+.atelier-hosted-pane[hidden] {
+  display: none;
+}

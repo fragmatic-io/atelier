@@ -2,6 +2,10 @@
 // Copyright (c) 2026 The Atelier Authors
 import { mountSurface } from '/assets/surface.mjs';
 import { createBrowserApiClient } from '/embed/api-client.mjs';
+import { createHostedAgentTransport } from '/embed/agent-transport.mjs';
+import { hostedWorkspace } from '/embed/workspace.mjs';
+import { AgentClient, defineClientTool } from '/assets/agent-client.mjs';
+import { mountAgentChat } from '/assets/chat.mjs';
 
 const moduleUrl = new URL(import.meta.url);
 const script = [...document.scripts].find((candidate) => {
@@ -47,10 +51,12 @@ const declarations = (values = {}) =>
     .join(';');
 
 function installStyles(manifest) {
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = `${moduleUrl.origin}/assets/surface.css`;
-  document.head.append(link);
+  for (const href of ['/assets/surface.css', '/assets/agent.css', '/embed/v1.css']) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `${moduleUrl.origin}${href}`;
+    document.head.append(link);
+  }
   const roles = manifest.designContract?.roles ?? {};
   const scope = `[data-atelier-install="${manifest.install.id}"]`;
   const style = document.createElement('style');
@@ -86,12 +92,51 @@ try {
   root.dataset.atelierInstall = manifest.install.id;
   root.dataset.atelierDesign = manifest.install.designFingerprint;
   installStyles(manifest);
-  const client = createBrowserApiClient(manifest.capabilities);
-  mountSurface(root, manifest.bundle, {
+  const allCapabilities = [
+    ...new Map(
+      [...manifest.capabilities, ...(manifest.agent?.clientTools ?? [])].map((item) => [item.id, item]),
+    ).values(),
+  ];
+  const browserApi = createBrowserApiClient(allCapabilities);
+  const workspace = hostedWorkspace(root, { hasAgent: manifest.agent?.available === true });
+  mountSurface(workspace.surface, manifest.bundle, {
     context: { route: location.pathname },
-    load: client.load,
-    dispatch: client.dispatch,
+    load: browserApi.load,
+    dispatch: browserApi.dispatch,
   });
+  if (workspace.agent) {
+    const agentClient = new AgentClient({
+      transport: createHostedAgentTransport(moduleUrl.origin, key),
+      tools: manifest.agent.clientTools.map((tool) =>
+        defineClientTool({
+          name: tool.id,
+          inputSchema: tool.inputSchema,
+          outputSchema: tool.outputSchema,
+          execute: (input) => browserApi.dispatch(tool.id, input),
+        }),
+      ),
+    });
+    mountAgentChat(workspace.agent, {
+      client: agentClient,
+      name: manifest.agent.name,
+      subtitle: manifest.agent.subtitle,
+      context: { route: location.pathname },
+      onTool: async ({ threadId, call, confirm }) => {
+        if (call.contract.kind === 'command') {
+          const accepted = await confirm({
+            title: 'Confirm this application action',
+            description:
+              'The action runs in this browser through your current application session and remains subject to its authorization rules.',
+            input: call.input,
+            accept: 'Run action',
+          });
+          if (!accepted)
+            return agentClient.rpc('deny', { threadId, callId: call.id });
+        }
+        return agentClient.executeClientTool(threadId, call);
+      },
+    });
+  }
   await report(manifest);
   globalThis.dispatchEvent(
     new CustomEvent('atelier:ready', { detail: { installId: manifest.install.id } }),
