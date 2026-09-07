@@ -207,6 +207,37 @@ export class CliProvider {
         'CLI_VERSION_UNSUPPORTED',
         `Upgrade ${this.kind}; required safety flags are missing: ${missing.join(', ')}`,
       );
+    if (this.kind === 'claude-cli' && this.authMode === 'account') {
+      let auth;
+      try {
+        auth = await runProcess(this.executable, ['auth', 'status'], {
+          env: environment,
+          timeoutMs: 10000,
+          maxBytes: 20000,
+        });
+      } catch (error) {
+        if (error.code === 'CLI_EXIT')
+          throw new ProviderError(
+            'CLI_AUTH_REQUIRED',
+            'Claude CLI is not logged in for this project runner. Run claude auth login with its dedicated HOME.',
+          );
+        throw error;
+      }
+      let status;
+      try {
+        status = JSON.parse(auth.stdout);
+      } catch {
+        throw new ProviderError(
+          'CLI_AUTH_STATUS_INVALID',
+          'Claude CLI returned an invalid account status',
+        );
+      }
+      if (status.loggedIn !== true)
+        throw new ProviderError(
+          'CLI_AUTH_REQUIRED',
+          'Claude CLI is not logged in for this project runner. Run claude auth login with its dedicated HOME.',
+        );
+    }
     this.checked = true;
     return {
       provider: this.kind,

@@ -146,6 +146,33 @@ test('Claude CLI defaults pin Opus 4.8 at high effort', () => {
   assert.equal(provider.model, 'claude-opus-4-8');
   assert.equal(provider.effort, 'high');
 });
+test('Claude account runner doctor requires a logged-in dedicated HOME', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'atelier-claude-auth-fixture-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const exe = join(dir, 'fake-claude');
+  await writeFile(
+    exe,
+    `#!/usr/bin/env node
+const a=process.argv.slice(2);if(a.includes('--version'))console.log('contract-fixture 1');else if(a.includes('--help'))console.log('--setting-sources --settings --tools --json-schema --no-session-persistence --strict-mcp-config --model --effort');else if(a[0]==='auth'&&a[1]==='status')console.log(JSON.stringify({loggedIn:process.env.ANTHROPIC_API_KEY==='fixture-logged-in'}));else process.exit(2);`,
+  );
+  await chmod(exe, 0o700);
+  const loggedOut = new CliProvider({
+    kind: 'claude-cli',
+    executable: exe,
+    home: dir,
+    authMode: 'account',
+    env: { PATH: process.env.PATH },
+  });
+  await assert.rejects(() => loggedOut.doctor(), { code: 'CLI_AUTH_REQUIRED' });
+  const loggedIn = new CliProvider({
+    kind: 'claude-cli',
+    executable: exe,
+    home: dir,
+    authMode: 'account',
+    env: { PATH: process.env.PATH, ANTHROPIC_API_KEY: 'fixture-logged-in' },
+  });
+  assert.equal((await loggedIn.doctor()).provider, 'claude-cli');
+});
 test('Claude CLI connection persists the pinned default model and effort', async (t) => {
   const f = await fixture();
   t.after(() => f.db.close());
