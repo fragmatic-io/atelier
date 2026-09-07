@@ -30,6 +30,8 @@ platform/SBOM.cdx.json
 platform/CHECKPOINT-FILES.json
 platform/vendor
 platform/.venv
+platform/.atelier-data
+platform/.atelier-host-data
 
 # Agent worktree checkouts
 .claude/worktrees

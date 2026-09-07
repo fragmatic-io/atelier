@@ -165,12 +165,21 @@ export class ConversationService {
       ? strings(input.tools, 'Tools')
       : model.capabilities
           .filter(
-            (c) => c.securityReviewed && (input.enableCommands === true || c.kind === 'query'),
+            (c) =>
+              c.securityReviewed &&
+              c.agentEnabled === true &&
+              (input.enableCommands === true || c.kind === 'query'),
           )
           .map((c) => c.id);
     for (const name of tools) {
       const c = model.capabilities.find((c) => c.id === name);
       assert(c?.securityReviewed, 400, 'UNREVIEWED_TOOL', 'Tool needs explicit safety review');
+      assert(
+        c.agentEnabled === true,
+        400,
+        'AGENT_TOOL_DISABLED',
+        'Tool is not enabled for the chatbot',
+      );
       assert(
         c.kind === 'query' || input.enableCommands === true,
         400,
@@ -257,8 +266,13 @@ export class ConversationService {
       voice: extractVoice(snapshot, { name: s.project.name + ' assistant' }),
       coverage: {
         discovered: m.capabilities.length,
-        reviewed: m.capabilities.filter((c) => c.securityReviewed).length,
-        complete: false,
+        reviewed: m.capabilities.filter(
+          (c) => c.securityReviewed || c.reviewDecision === 'rejected',
+        ).length,
+        agentEnabled: m.capabilities.filter((c) => c.securityReviewed && c.agentEnabled).length,
+        complete: m.capabilities.every(
+          (c) => c.securityReviewed || c.reviewDecision === 'rejected',
+        ),
         explanation:
           'Coverage refers to supplied sources. It cannot prove unseen routes, workflows, or backend policies.',
       },

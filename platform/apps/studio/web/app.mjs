@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 import { escapeHtml as e, humanize, mountSurface, exampleData } from '/assets/surface.mjs';
+import { renderOnboarding, snippet as observerSnippet } from '/assets/onboarding.mjs';
 const $ = (s, r = document) => r.querySelector(s),
   $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const icons = {
@@ -43,6 +44,7 @@ const state = {
   renderToken: 0,
   surface: null,
   apiSpec: null,
+  onboarding: null,
   theme: localStorage.getItem('atelier-theme') ?? 'light',
 };
 document.documentElement.dataset.theme = state.theme;
@@ -192,6 +194,7 @@ async function route() {
   state.model = null;
   state.release = null;
   state.apiSpec = null;
+  state.onboarding = null;
   state.tab = parts[2] ?? 'overview';
   if (
     !['overview', 'projects', 'project', 'connections', 'team', 'audit', 'account'].includes(
@@ -250,7 +253,8 @@ function projectsPage() {
   return `${heading('Your applications', 'Built around your work.', 'Each project has its own sources, design genome, model connection, releases and access controls.', button('new-project', 'New project'))}${state.projects.length ? cards(state.projects) : empty('Your next project starts here', 'Connect an existing application without replacing its frontend.', button('new-project', 'Create project'))}`;
 }
 function projectHeading() {
-  return `${heading('Project studio', state.project.name, state.project.description || 'Learn from your application. Build native extensions. Publish with confidence.', button('upload', 'Add source', 'upload', true) + button('generate', 'New experience', 'spark'))}<nav class="tabs" aria-label="Project sections">${[
+  return `${heading('Project studio', state.project.name, state.project.description || 'Discover capabilities. Review agent access. Publish with confidence.', `<a class="btn secondary" href="/project/${state.project.id}/setup">${icon('check')}<span>Setup</span></a>` + button('generate', 'New experience', 'spark'))}<nav class="tabs" aria-label="Project sections">${[
+    ['setup', 'Setup'],
     ['overview', 'Overview'],
     ['model', 'App model'],
     ['api-docs', 'API reference'],
@@ -273,15 +277,29 @@ async function projectPage(releaseId) {
     state.release = await api(base() + '/releases/' + releaseId);
     return projectHeading() + previewPage();
   }
-  if (state.tab === 'overview') {
+  if (state.tab === 'setup') {
+    state.onboarding = await api(base() + '/onboarding');
+    content = renderOnboarding({
+      status: state.onboarding,
+      model,
+      projectId: state.project.id,
+      e,
+      icon,
+      pill,
+      button,
+    });
+    if (state.onboarding.state !== 'ready')
+      state.jobTimer = setInterval(() => {
+        if (!document.querySelector('dialog[open]')) route();
+      }, 5000);
+  } else if (state.tab === 'overview') {
     const jobs = await api(base() + '/jobs');
     content = `${
       !model
         ? empty(
-            'Let’s get to know this app.',
-            'Upload a source snapshot to discover routes, typed API contracts, host components and design tokens. Source is parsed—not executed.',
-            button('upload', 'Upload source', 'upload') +
-              button('sample', 'Try sample sources', 'spark', true),
+            'Connect this application.',
+            'Install the privacy-safe observer or import an API contract. Source code is not required.',
+            `<a class="btn" href="/project/${state.project.id}/setup">${icon('arrow')}Start guided setup</a>`,
           )
         : `<section class="metrics">${[
             ['Capabilities', model.capabilities.length],
@@ -291,7 +309,7 @@ async function projectPage(releaseId) {
           ]
             .map(
               ([title, n]) =>
-                `<div class="metric"><div class="metric-label">${title}</div><div class="metric-number">${n}</div><div class="metric-meta">From your source snapshot</div></div>`,
+                `<div class="metric"><div class="metric-label">${title}</div><div class="metric-number">${n}</div><div class="metric-meta">From connected evidence</div></div>`,
             )
             .join(
               '',
@@ -301,10 +319,22 @@ async function projectPage(releaseId) {
     content = !model
       ? empty(
           'No project model yet',
-          'Upload source files before reviewing capabilities.',
-          button('upload', 'Upload source', 'upload'),
+          'Connect an observer or import an API contract before reviewing capabilities.',
+          `<a class="btn" href="/project/${state.project.id}/setup">${icon('arrow')}Start setup</a>`,
         )
-      : `<div class="info-strip">API shapes are discovered automatically. <strong>Commands remain disabled until a developer reviews their permissions, risk and confirmation requirements.</strong></div><div class="section-head"><h2>Capabilities <span class="count">${model.capabilities.length}</span></h2><input class="filter-input" id="cap-filter" aria-label="Filter capabilities" placeholder="Filter capabilities…"></div><div class="panel no-pad table-wrap"><table class="table" id="cap-table"><thead><tr><th>CAPABILITY</th><th>TYPE</th><th>PERMISSIONS</th><th>REVIEW</th><th></th></tr></thead><tbody>${model.capabilities.map((c) => `<tr><td class="small"><strong>${e(c.title ?? humanize(c.id))}</strong><div class="muted code">${e(c.id)}</div></td><td>${pill(c.kind)}</td><td class="small">${e(c.requiredPermissions.join(', ') || 'No declared scopes')}</td><td>${pill(c.securityReviewed ? 'verified' : c.kind === 'query' ? 'read only' : 'unreviewed')}</td><td><button class="btn secondary sm" data-action="review-cap" data-id="${e(c.id)}">Inspect</button></td></tr>`).join('')}</tbody></table></div><div class="section-head"><h2>Host components</h2></div><div class="panel no-pad table-wrap"><table class="table"><thead><tr><th>COMPONENT</th><th>SOURCE</th><th>PROP CONTRACT</th></tr></thead><tbody>${model.components.map((c) => `<tr><td>${e(c.id)}</td><td class="code small">${e(c.sourcePath)}</td><td>${Object.keys(c.propsSchema?.properties ?? {}).length} typed properties</td></tr>`).join('')}</tbody></table></div>`;
+      : `<div class="info-strip">Atelier recommendations are based on declared and observed evidence. <strong>They never approve a capability or expose it to the chatbot automatically.</strong></div><div class="section-head"><h2>Capabilities <span class="count">${model.capabilities.length}</span></h2><input class="filter-input" id="cap-filter" aria-label="Filter capabilities" placeholder="Filter capabilities…"></div><div class="panel no-pad table-wrap"><table class="table" id="cap-table"><thead><tr><th>CAPABILITY</th><th>EVIDENCE</th><th>RECOMMENDATION</th><th>REVIEW</th><th>CHATBOT</th><th></th></tr></thead><tbody>${model.capabilities
+          .map((c) => {
+            const sources = [...new Set((c.evidence ?? []).map((item) => item.source))];
+            const decision = c.securityReviewed
+              ? 'approved'
+              : c.reviewDecision === 'rejected'
+                ? 'rejected'
+                : 'pending';
+            return `<tr><td class="small"><strong>${e(c.title ?? humanize(c.id))}</strong><div class="muted code">${e(c.operation ? `${c.operation.method} ${c.operation.path}` : c.id)}</div></td><td class="small">${sources.map((source) => pill(source)).join(' ') || pill('unknown')}</td><td class="small"><strong>${e(humanize(c.recommendation?.review ?? 'manual_review'))}</strong><div class="muted">${e(c.recommendation?.reasons?.[0] ?? 'Human review required')}</div></td><td>${pill(decision)}</td><td>${pill(c.agentEnabled ? 'enabled' : 'disabled')}</td><td><button class="btn secondary sm" data-action="review-cap" data-id="${e(c.id)}">Review</button></td></tr>`;
+          })
+          .join(
+            '',
+          )}</tbody></table></div><div class="section-head"><h2>Host components</h2></div><div class="panel no-pad table-wrap"><table class="table"><thead><tr><th>COMPONENT</th><th>SOURCE</th><th>PROP CONTRACT</th></tr></thead><tbody>${model.components.map((c) => `<tr><td>${e(c.id)}</td><td class="code small">${e(c.sourcePath)}</td><td>${Object.keys(c.propsSchema?.properties ?? {}).length} typed properties</td></tr>`).join('')}</tbody></table></div>`;
   } else if (state.tab === 'api-docs') {
     state.apiSpec = await api(base() + '/openapi');
     const endpoint = `/api${base()}/openapi`;
@@ -686,10 +716,129 @@ const actions = {
       async (body, _f, d) => {
         const p = await api(tbase() + '/projects', { method: 'POST', body });
         d.closeDialog();
-        navigate('/project/' + p.id);
+        navigate('/project/' + p.id + '/setup');
       },
       'A project is an isolated space for source, design patterns, model connections and published experiences.',
     ),
+  'connect-observer': () =>
+    formDialog(
+      'Create browser observer',
+      `<label>Application origin<input name="origin" type="url" required placeholder="https://app.example.com"><span class="help">Exact origin only. Requests from any other origin are rejected.</span></label><label>Environment<select name="environment"><option>production</option><option>staging</option><option>development</option></select></label><label class="checkbox"><input type="checkbox" name="semanticSamples">Send locally redacted semantic samples</label><label>Safe categorical fields<input name="safeSampleFields" placeholder="status, severity, plan"><span class="help">Optional. Only these short categorical values may remain visible after local redaction. PII-shaped names are rejected.</span></label><div class="privacy-preview"><strong>Privacy boundary</strong><p>Raw bodies are inspected only inside the application page to derive schemas and redacted samples. Headers, cookies, query strings, credentials, free text and identifiers are not transmitted.</p></div>`,
+      'Create snippet',
+      async (body, form, d) => {
+        const semanticSamples = form.semanticSamples.checked;
+        const source = await api(base() + '/discovery-sources', {
+          method: 'POST',
+          body: {
+            kind: 'browser',
+            name: `${new URL(body.origin).hostname} browser`,
+            allowedOrigins: [new URL(body.origin).origin],
+            semanticSamples,
+            safeSampleFields: semanticSamples
+              ? body.safeSampleFields
+                  .split(',')
+                  .map((field) => field.trim())
+                  .filter(Boolean)
+              : [],
+          },
+        });
+        d.closeDialog();
+        secretDialog(
+          'Paste this before the closing body tag',
+          observerSnippet(location.origin, source, body.environment),
+          'This public key can only submit redacted observations from the allowed origin. Copy the snippet now; rotating the source issues a new key.',
+        );
+        await route();
+      },
+      'The observer is source-code independent and does not execute API operations itself.',
+    ),
+  'revoke-discovery': (el) =>
+    formDialog(
+      'Revoke discovery source',
+      '<p>The installed snippet will stop sending observations immediately. Existing capability evidence and audit records remain.</p>',
+      'Revoke source',
+      async (_body, _form, d) => {
+        await api(base() + '/discovery-sources/' + el.dataset.id, {
+          method: 'DELETE',
+          body: {},
+        });
+        d.closeDialog();
+        await route();
+      },
+    ),
+  'upload-spec': () => {
+    const picker = document.createElement('input');
+    picker.type = 'file';
+    picker.accept = '.json,.yaml,.yml,application/json,application/yaml,text/yaml';
+    picker.onchange = async () => {
+      const file = picker.files?.[0];
+      if (!file) return;
+      try {
+        if (file.size > 2 * 1024 * 1024) throw new Error('OpenAPI files are limited to 2 MB.');
+        await api(base() + '/specifications', {
+          method: 'POST',
+          body: { sourceName: file.name, document: await file.text() },
+        });
+        toast('OpenAPI contract imported. Review the discovered capabilities.');
+        await route();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    };
+    picker.click();
+  },
+  'import-spec-url': () =>
+    formDialog(
+      'Import an OpenAPI URL',
+      '<label>Public HTTPS URL<input name="sourceUrl" type="url" required placeholder="https://api.example.com/openapi.json"><span class="help">Redirects, IP addresses, local hosts and private network destinations are rejected.</span></label><label>Source name<input name="sourceName" placeholder="Production API contract"></label>',
+      'Import contract',
+      async (body, _form, d) => {
+        await api(base() + '/specifications', {
+          method: 'POST',
+          body: { sourceUrl: body.sourceUrl, sourceName: body.sourceName || undefined },
+        });
+        d.closeDialog();
+        toast('OpenAPI contract imported.');
+        await route();
+      },
+    ),
+  'configure-agent': async () => {
+    if (!state.model) return toast('Discover and review capabilities first.', true);
+    const enabled = state.model.capabilities.filter(
+      (capability) => capability.securityReviewed && capability.agentEnabled,
+    );
+    if (!enabled.length)
+      return toast('Enable at least one approved capability for the chatbot.', true);
+    const profile = await api(base() + '/agent-profile').catch(() => null);
+    formDialog(
+      'Configure project chatbot',
+      `<label>Assistant name<input name="name" required value="${e(profile?.name ?? `${state.project.name} assistant`)}"></label><label>Product voice<textarea name="tone" required>${e(profile?.voice?.tone ?? 'Clear, calm and precise')}</textarea></label><div class="two-fields"><label>Locale<input name="locale" value="${e(profile?.voice?.locale ?? 'en')}" required></label><label>Retention days<input name="retentionDays" type="number" min="1" max="90" value="${profile?.retentionDays ?? 30}" required></label></div><fieldset class="tool-select"><legend>Approved chatbot tools</legend>${enabled.map((capability) => `<label class="checkbox"><input type="checkbox" name="tools" value="${e(capability.id)}" checked>${e(capability.title ?? capability.id)} ${pill(capability.kind)}</label>`).join('')}</fieldset><label class="checkbox"><input type="checkbox" name="voiceReviewed" required>I reviewed the voice, retention and complete tool allowlist.</label>${state.onboarding?.facts.provider ? '' : `<div class="info-strip">No project provider is connected. Save the profile now, then <a href="/project/${state.project.id}/settings"><strong>connect a provider in Settings</strong></a>. Atelier will not claim the chatbot is ready until both facts exist.</div>`}`,
+      'Save chatbot profile',
+      async (body, form, d) => {
+        const tools = new FormData(form).getAll('tools');
+        if (!tools.length) throw new Error('Select at least one chatbot tool.');
+        await api(base() + '/agent-profile', {
+          method: 'POST',
+          body: {
+            tools,
+            enableCommands: tools.some(
+              (tool) =>
+                state.model.capabilities.find((capability) => capability.id === tool)?.kind ===
+                'command',
+            ),
+            voice: { name: body.name, tone: body.tone, locale: body.locale, terminology: [] },
+            voiceReviewed: form.voiceReviewed.checked,
+            retentionDays: Number(body.retentionDays),
+            ...(profile ? { revision: profile.revision } : {}),
+          },
+        });
+        d.closeDialog();
+        toast('Chatbot profile saved against the current capability model.');
+        await route();
+      },
+      'The agent runtime receives only this allowlist. Model output cannot invent or enable tools.',
+    );
+  },
   upload: () => {
     if (!state.project) return toast('Open a project first.', true);
     const d = dialog(
@@ -737,8 +886,8 @@ const actions = {
     const c = state.model.capabilities.find((c) => c.id === el.dataset.id);
     formDialog(
       'Review capability',
-      `<code class="code-tag">${e(c.id)}</code><details><summary>Input and output contracts</summary><pre class="small-code">${e(JSON.stringify({ input: c.inputSchema, output: c.outputSchema, operation: c.operation, evidence: c.evidence }, null, 2))}</pre></details><div class="two-fields"><label>Risk<select name="risk">${['read_only', 'low', 'sensitive', 'destructive'].map((x) => `<option ${x === c.risk ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label>Confirmation<select name="confirmation">${['none', 'inline', 'modal', 'verbal_required'].map((x) => `<option ${x === c.confirmation ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div><label>Required permissions<input name="requiredPermissions" value="${e(c.requiredPermissions.join(', '))}"></label><label>Sensitive field paths<input name="piiFields" value="${e((c.piiFields ?? []).join(', '))}"></label><label class="checkbox"><input type="checkbox" name="reversible" ${c.reversible === true ? 'checked' : ''}>Reversible, with a registered rollback action</label><label>Rollback capability ID<input name="rollbackCapabilityId" value="${e(c.rollbackCapabilityId ?? '')}"></label>`,
-      'Verify contract',
+      `<code class="code-tag">${e(c.id)}</code><div class="recommendation"><strong>Atelier recommendation: ${e(humanize(c.recommendation?.review ?? 'manual_review'))}</strong><p>${e((c.recommendation?.reasons ?? ['Verify actual authorization and behavior.']).join(' '))}</p></div><label>Capability name<input name="title" value="${e(c.title ?? humanize(c.id))}" required></label><label>Purpose<textarea name="description" required>${e(c.description ?? c.summary ?? `Use ${c.id}`)}</textarea></label><details><summary>Evidence and redacted samples</summary><pre class="small-code">${e(JSON.stringify({ input: c.inputSchema, output: c.outputSchema, operation: c.operation, evidence: c.evidence, redactedSamples: c.redactedSamples ?? [] }, null, 2))}</pre></details><div class="two-fields"><label>Decision<select name="decision"><option value="approved" ${c.securityReviewed ? 'selected' : ''}>Approve</option><option value="rejected" ${c.reviewDecision === 'rejected' ? 'selected' : ''}>Reject</option></select></label><label>Risk<select name="risk">${['read_only', 'low', 'sensitive', 'destructive'].map((x) => `<option ${x === c.risk ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div><label>Confirmation<select name="confirmation">${['none', 'inline', 'modal', 'verbal_required'].map((x) => `<option ${x === c.confirmation ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label>Required permissions<input name="requiredPermissions" value="${e(c.requiredPermissions.join(', '))}"></label><label>Sensitive field paths<input name="piiFields" value="${e((c.piiFields ?? []).join(', '))}"></label><label class="checkbox"><input type="checkbox" name="agentEnabled" ${c.agentEnabled === true ? 'checked' : ''}>Expose to the chatbot after approval</label><label class="checkbox"><input type="checkbox" name="reversible" ${c.reversible === true ? 'checked' : ''}>Reversible, with a registered rollback action</label><label>Rollback capability ID<input name="rollbackCapabilityId" value="${e(c.rollbackCapabilityId ?? '')}"></label>`,
+      'Save decision',
       async (body, f, d) => {
         body.requiredPermissions = body.requiredPermissions
           .split(',')
@@ -749,10 +898,17 @@ const actions = {
           .map((x) => x.trim())
           .filter(Boolean);
         body.reversible = f.reversible.checked;
+        body.agentEnabled = f.agentEnabled.checked;
+        body.approved = body.decision === 'approved';
+        delete body.decision;
         await api(base() + '/capabilities/' + encodeURIComponent(c.id), { method: 'PATCH', body });
         d.closeDialog();
         await route();
-        toast('Contract reviewed. Generate fresh drafts against the updated model.');
+        toast(
+          body.approved
+            ? 'Capability approved with an explicit chatbot decision.'
+            : 'Capability rejected and kept out of the chatbot.',
+        );
       },
       'These semantics are authoritative. Confirm actual backend behavior; HTTP methods alone do not prove safety or reversibility.',
     );

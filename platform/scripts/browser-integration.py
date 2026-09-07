@@ -81,7 +81,7 @@ try:
                 page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+2'),'Host layout overflows mobile viewport'
                 page.screenshot(path=str(out/'host-mobile.png'),full_page=True)
             check('host-mobile-layout',mobile)
-            studio=browser.new_page(viewport={'width':1512,'height':1050},reduced_motion='reduce');studio.set_default_timeout(15000)
+            studio=browser.new_page(viewport={'width':1512,'height':1050},reduced_motion='reduce');studio.set_default_timeout(15000);studio_errors=[];studio.on('pageerror',lambda e:studio_errors.append(str(e)))
             def studio_login():
                 studio.goto('http://127.0.0.1:4330/lab')
                 studio.get_by_role('textbox',name='Email',exact=True).fill('builder@example.test')
@@ -97,7 +97,27 @@ try:
                 expect(studio.frame_locator('iframe.atelier-artifact-frame').locator('#result')).to_contain_text('In progress')
                 studio.screenshot(path=str(out/'studio-source-preview.png'),full_page=True)
             check('studio-approved-react-source-preview',forge_view)
+            def onboarding_view():
+                studio.goto('http://127.0.0.1:4330/')
+                expect(studio.get_by_role('heading',name='Room for what’s next.',exact=True)).to_be_visible()
+                project_path=studio.locator('.project-card').first.get_attribute('href')
+                assert project_path and project_path.startswith('/project/'),'Fresh project link is missing'
+                studio.goto('http://127.0.0.1:4330'+project_path+'/setup')
+                expect(studio.get_by_role('heading',name='Take Atelier from evidence to experiences.',exact=True)).to_be_visible()
+                expect(studio.get_by_text('Every status below comes from stored evidence.',exact=False)).to_be_visible()
+                expect(studio.get_by_role('heading',name='Design an additive workspace',exact=True)).to_be_visible()
+                expect(studio.get_by_text('Markup renders inside the customer app',exact=False)).to_be_visible()
+                studio.get_by_role('button',name='Create snippet',exact=True).click()
+                dialog=studio.get_by_role('dialog',name='Create browser observer',exact=True);expect(dialog).to_be_visible()
+                expect(dialog.get_by_text('Raw bodies are inspected only inside the application page',exact=False)).to_be_visible()
+                expect(dialog.get_by_role('checkbox',name='Send locally redacted semantic samples',exact=True)).not_to_be_checked()
+                dialog.get_by_role('button',name='Close dialog',exact=True).click()
+                studio.set_viewport_size({'width':390,'height':844})
+                assert studio.evaluate('document.documentElement.scrollWidth <= innerWidth+2'),'Setup layout overflows mobile viewport'
+                studio.screenshot(path=str(out/'studio-onboarding-mobile.png'),full_page=True)
+            check('studio-fact-derived-privacy-onboarding',onboarding_view)
             check('no-uncaught-host-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(errors))) if errors else None)
+            check('no-uncaught-studio-javascript-errors',lambda:(_ for _ in ()).throw(AssertionError('; '.join(studio_errors))) if studio_errors else None)
         finally:browser.close()
 except Exception as error:
     if not checks or checks[-1].get('passed'):

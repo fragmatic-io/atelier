@@ -42,9 +42,11 @@ export async function seedExperiences(
     const cap = service
       .model(who, link.tenantId, link.projectId)
       .capabilities.find((c) => c.id === name);
-    if (!cap.securityReviewed)
+    if (!cap.securityReviewed || !cap.agentEnabled)
       service.reviewCapability(who, link.tenantId, link.projectId, name, {
         confirmed: true,
+        approved: true,
+        agentEnabled: true,
         note: 'Explicit reviewed local fixture contract',
         risk: cap.kind === 'query' ? 'read_only' : 'sensitive',
         confirmation: cap.kind === 'query' ? 'none' : 'modal',

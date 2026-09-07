@@ -32,6 +32,7 @@ export async function ready({ review = false } = {}) {
         requiredPermissions: c.kind === 'query' ? ['customer.read'] : ['customer.intervene'],
         piiFields: name === 'customer.get' ? ['email'] : [],
         reversible: c.kind === 'query',
+        agentEnabled: true,
       });
     }
   return f;

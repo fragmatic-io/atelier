@@ -496,6 +496,8 @@ export class BuildPipeline {
               'reversible',
               'rollbackCapabilityId',
               'securityReviewed',
+              'reviewDecision',
+              'agentEnabled',
               'reviewedSchemaHash',
               'reviewedBy',
               'reviewedAt',

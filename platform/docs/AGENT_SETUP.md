@@ -28,20 +28,21 @@ curl --fail http://127.0.0.1:4310/healthz
 curl --fail http://127.0.0.1:4310/readyz
 ```
 
-## 2. Import and review the host application
+## 2. Discover and review the host application
 
 In Studio:
 
-1. Open the project and choose **Add source**.
-2. Select the host application's source folder. Secret files, dependencies, generated output, databases, and oversized files are rejected or skipped.
-3. Wait for the scan job to succeed.
-4. Inspect **App model**. Confirm every endpoint's method, path, input/output schema, permissions, risk, PII, reversibility, and confirmation policy.
-5. Open **API reference** for the automatically generated Redoc documentation. Download the OpenAPI 3.1 document if another tool needs it.
-6. Security-review only the capabilities whose actual host behavior you have verified. Discovery never grants agent authority.
+1. Open the project and choose **Setup**.
+2. Create the origin-bound browser observer and paste the generated snippet into the host application. Source code is not required.
+3. Optionally import an OpenAPI 3.x file or public HTTPS URL as declared evidence. Semantic samples remain disabled unless the customer explicitly enables locally redacted samples and an exact categorical-field allowlist.
+4. Wait for Studio to report observed revisions and discovered capabilities from stored facts.
+5. Inspect **App model**. Confirm every endpoint's purpose, method, path, input/output schema, permissions, risk, PII, reversibility and confirmation policy.
+6. Approve or reject each capability. Then make independent delivery decisions: which approved capabilities may appear in custom surfaces and which may be exposed as chatbot tools.
+7. Open **API reference** for the automatically generated Redoc documentation. Download the OpenAPI 3.1 document if another tool needs it.
 
-Atelier reads OpenAPI 3 JSON/YAML, Next.js route handlers, client calls, server actions, tRPC, GraphQL SDL, Prisma, React components, design tokens, and explicit runtime observations. Source is parsed rather than executed.
+Read [CUSTOMER_ONBOARDING.md](CUSTOMER_ONBOARDING.md) for the observer privacy contract, deduplication, evidence levels, status facts and required tests. Explicit source scanning remains available for separately authorized self-hosted/developer projects to extract React components and design tokens; it is not the default SaaS onboarding path.
 
-Rescan after API or schema changes. A changed contract invalidates its previous capability review and incompatible generated artifacts.
+The observer submits only new operation/schema/context fingerprints. A changed contract invalidates its previous capability review and incompatible generated artifacts.
 
 ## 3. Choose the model provider
 

@@ -177,6 +177,7 @@ export function stableModelVersion(model) {
     'projectVersion',
     'searchIndex',
     'projectRoot',
+    'observedContexts',
   ]);
   function stable(v) {
     if (Array.isArray(v)) return v.map(stable);
@@ -1155,7 +1156,14 @@ export class ControlService {
     const model = this.store.getArtifact(s, s.project.model_id, 'model').content;
     const c = model.capabilities.find((x) => x.id === capId);
     assert(c, 404, 'NOT_FOUND', 'Capability not found');
+    const approved = input.approved !== false;
     const patch = {
+      title:
+        input.title === undefined ? c.title : text(input.title, 'Capability title', { max: 160 }),
+      description:
+        input.description === undefined
+          ? c.description
+          : text(input.description, 'Capability description', { max: 1000 }),
       risk: choice(input.risk, ['read_only', 'low', 'sensitive', 'destructive'], 'Risk'),
       confirmation: choice(
         input.confirmation,
@@ -1165,7 +1173,9 @@ export class ControlService {
       reversible: bool(input.reversible),
       requiredPermissions: strings(input.requiredPermissions ?? [], 'Permissions'),
       piiFields: strings(input.piiFields ?? c.piiFields ?? [], 'PII fields'),
-      securityReviewed: true,
+      securityReviewed: approved,
+      reviewDecision: approved ? 'approved' : 'rejected',
+      agentEnabled: approved ? bool(input.agentEnabled ?? false) : false,
       reviewedBy: identity.userId,
       reviewedAt: this.clock(),
       reviewedSchemaHash: capabilityFingerprint(c),
@@ -1181,6 +1191,12 @@ export class ControlService {
       400,
       'UNSAFE_REVIEW',
       'Destructive commands require modal or verbal confirmation',
+    );
+    assert(
+      !patch.agentEnabled || approved,
+      400,
+      'AGENT_REQUIRES_APPROVAL',
+      'Only an approved capability can be exposed to the chatbot',
     );
     if (patch.reversible && c.kind === 'command') {
       patch.rollbackCapabilityId = text(input.rollbackCapabilityId, 'Rollback capability');
@@ -1210,6 +1226,8 @@ export class ControlService {
         'Project changed while reviewing. Reload before retrying.',
       );
       this.store.audit(s, 'capability.reviewed', capId, {
+        decision: patch.reviewDecision,
+        agentEnabled: patch.agentEnabled,
         risk: patch.risk,
         confirmation: patch.confirmation,
       });

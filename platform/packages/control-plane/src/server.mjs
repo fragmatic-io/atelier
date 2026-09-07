@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { join, extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
+import { DiscoveryService } from '../../discovery/src/service.mjs';
 import { projectAccess, tenantAccess } from './access.mjs';
 import {
   assert,
@@ -24,6 +25,7 @@ import { mineWorkflowOpportunities } from '../../workflow/src/index.mjs';
 const webRoot = fileURLToPath(new URL('../../../apps/studio/web/', import.meta.url));
 const surfaceFile = fileURLToPath(new URL('../../surface/src/browser.mjs', import.meta.url));
 const redocFile = createRequire(import.meta.url).resolve('redoc/bundles/redoc.standalone.js');
+const observerFile = fileURLToPath(new URL('../../discovery/src/observer.js', import.meta.url));
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -96,6 +98,7 @@ export function createControlServer(
 ) {
   const configured = new URL(origin);
   const experiences = experienceRoutes(service, { production, enableExamples });
+  const discovery = new DiscoveryService(service);
   assert(
     !production || configured.protocol === 'https:',
     500,
@@ -131,6 +134,51 @@ export function createControlServer(
           ready: !shuttingDown,
           database: service.db.get('SELECT 1 ok')?.ok === 1,
         });
+      if (req.method === 'GET' && url.pathname === '/observe/v1.js') {
+        const data = await readFile(observerFile);
+        res.writeHead(200, {
+          'Content-Type': 'text/javascript; charset=utf-8',
+          'Cache-Control': 'public, max-age=300',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+        });
+        res.end(data);
+        return;
+      }
+      if (req.method === 'OPTIONS' && url.pathname === '/api/observe/v1/events') {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Observation origin is required',
+        );
+        res.writeHead(204, {
+          'Access-Control-Allow-Origin': requestOrigin,
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, X-Atelier-Project-Key',
+          'Access-Control-Max-Age': '600',
+          Vary: 'Origin',
+        });
+        res.end();
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/observe/v1/events') {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Observation origin is required',
+        );
+        res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+        res.setHeader('Vary', 'Origin');
+        const result = discovery.ingest(
+          req.headers['x-atelier-project-key'],
+          requestOrigin,
+          await readJson(req, 64 * 1024),
+        );
+        return send(res, 202, result);
+      }
       if (url.pathname.startsWith('/preview/') && req.method === 'GET') {
         const preview = await experiences.components.consumePreview(url.pathname.slice(9));
         res.removeHeader('X-Frame-Options');
@@ -328,6 +376,15 @@ export function createControlServer(
           return send(res, 200, service.updateProject(identity, t, p, body));
         if (req.method === 'DELETE') return send(res, 200, service.archiveProject(identity, t, p));
       }
+      if (resource === 'discovery-sources') {
+        if (req.method === 'GET') return send(res, 200, discovery.list(identity, t, p));
+        if (req.method === 'POST') return send(res, 201, discovery.create(identity, t, p, body));
+        if (req.method === 'DELETE') return send(res, 200, discovery.revoke(identity, t, p, rid));
+      }
+      if (resource === 'specifications' && req.method === 'POST')
+        return send(res, 201, await discovery.importSpec(identity, t, p, body));
+      if (resource === 'onboarding' && req.method === 'GET')
+        return send(res, 200, discovery.status(identity, t, p));
       const extension = await experiences.handle({
         identity,
         t,

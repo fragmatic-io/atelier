@@ -2,7 +2,7 @@
 
 ## Three surfaces and five trust domains
 
-**Build/control plane:** Studio/API → authorized project scope → immutable source snapshot → isolated build worker → repository scanner + TypeScript extractor → project model → authorized task → model or deterministic design → independent critique and repair → project-native kit → human review → signed staged/production release.
+**Build/control plane:** Studio/API → metadata discovery from a privacy-safe observer and declared API contracts → deduplicated project model → explicit capability and chatbot review → authorized task → model or deterministic design → independent critique and repair → project-native kit → human review → signed staged/production release. An immutable source snapshot and isolated repository scanner are an optional, separately authorized developer path for component and design-language extraction.
 
 **Runtime plane:** existing host session → server HostBridge → scoped current-release resolution → signature/activation checks → host loader/object permission → field projection → browser surface. Action collection is followed by server authorization, a context/input-bound confirmation ticket and durable effect dispatch. A published screen does not call a model on ordinary render or interaction.
 
@@ -12,7 +12,7 @@
 
 ## Core records
 
-All durable project records use `(tenant_id, project_id, …)` keys and foreign keys. Workspaces have members and project quotas. Projects have their own model, source snapshot, slots, connection selection, stage routing, settings revision, signing keys, releases and telemetry. Workspace membership does not automatically grant project visibility except for owners/admins.
+All durable project records use `(tenant_id, project_id, …)` keys and foreign keys. Workspaces have members and project quotas. Projects have their own discovery sources, capability revisions and contexts, model, optional source snapshot, slots, connection selection, stage routing, settings revision, signing keys, releases and telemetry. Workspace membership does not automatically grant project visibility except for owners/admins.
 
 Artifacts are immutable canonical JSON identified by content hash and scoped even when two tenants upload identical bytes. Project-model versions exclude timestamps/absolute temporary paths. Security reviews survive a rescan only when capability input/output/operation/kind fingerprints match. Changing an endpoint invalidates its prior review.
 

@@ -79,6 +79,34 @@ export function workerScope(db, tenantId, projectId, userId) {
   const identity = { userId };
   return projectAccess(db, identity, tenantId, projectId, 'run');
 }
+/** Internal observer entry. The caller must supply a row selected by credential hash. */
+export function observerScope(db, source) {
+  assert(
+    source?.id && source?.tenant_id && source?.project_id,
+    500,
+    'OBSERVER_SOURCE',
+    'Observer source is required',
+  );
+  const row = db.get(
+    "SELECT s.*,p.* FROM discovery_sources s JOIN projects p ON p.tenant_id=s.tenant_id AND p.id=s.project_id WHERE s.tenant_id=? AND s.project_id=? AND s.id=? AND s.status='active' AND s.revoked_at IS NULL AND p.archived_at IS NULL",
+    source.tenant_id,
+    source.project_id,
+    source.id,
+  );
+  assert(row, 401, 'OBSERVER_REVOKED', 'Observation source is not active');
+  return scope({
+    tenantId: source.tenant_id,
+    projectId: source.project_id,
+    userId: `observer:${source.id}`,
+    role: 'observer',
+    project: db.get(
+      'SELECT * FROM projects WHERE tenant_id=? AND id=? AND archived_at IS NULL',
+      source.tenant_id,
+      source.project_id,
+    ),
+    token: null,
+  });
+}
 export function listProjects(db, identity, tenantId) {
   const t = tenantAccess(db, identity, tenantId);
   let rows;
