@@ -8,33 +8,37 @@ const secret =
 const pii = /email|phone|birth|street|address|postal|card.?number/i;
 export function projectSchema(
   schema,
-  { piiFields = [], allowedPiiFields = [] } = {},
+  options = {},
   path = '',
   depth = 0,
 ) {
+  const { piiFields = [], allowedPiiFields = [], denyHeaders = false } = options;
   assert(depth < 30, 400, 'SCHEMA_DEPTH', 'Schema is too deep');
   if (typeof schema === 'boolean') return schema;
   const s = structuredClone(schema ?? {});
   if (s.type === 'array') {
-    s.items = projectSchema(s.items, { piiFields, allowedPiiFields }, path, depth + 1);
+    s.items = projectSchema(s.items, options, path, depth + 1);
     return s;
   }
   if (s.type === 'object' || s.properties) {
     const properties = {};
     for (const [k, v] of Object.entries(s.properties ?? {})) {
       const field = path ? path + '.' + k : k;
-      if (secret.test(k)) continue;
+      if (secret.test(k) || (denyHeaders && v?.['x-location'] === 'header')) continue;
       const sensitive =
         pii.test(k) || piiFields.some((x) => x === field || field.startsWith(x + '.'));
       if (sensitive && !allowedPiiFields.some((x) => x === field || field.startsWith(x + '.')))
         continue;
-      properties[k] = projectSchema(v, { piiFields, allowedPiiFields }, field, depth + 1);
+      properties[k] = projectSchema(v, options, field, depth + 1);
     }
     s.properties = properties;
     s.required = (s.required ?? []).filter((k) => Object.hasOwn(properties, k));
     s.additionalProperties = false;
   }
   return s;
+}
+export function browserInputSchema(schema) {
+  return normalizeDataSchema(projectSchema(schema, { denyHeaders: true }));
 }
 export function projectResult(value, schema, depth = 0) {
   noPrototypeKeys(value);
@@ -114,7 +118,9 @@ export function assembleProfile(
   const tools = model.capabilities
     .filter((c) => c.securityReviewed === true && (!toolIds || toolIds.includes(c.id)))
     .map((c) => {
-      const inputSchema = normalizeDataSchema(c.inputSchema),
+      const inputSchema = clientTools.includes(c.id)
+          ? browserInputSchema(c.inputSchema)
+          : normalizeDataSchema(c.inputSchema),
         outputSchema = projectSchema(normalizeDataSchema(c.outputSchema), {
           piiFields: c.piiFields ?? [],
           allowedPiiFields,

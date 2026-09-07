@@ -7,6 +7,7 @@ import { generateSurfaceInstall } from './templates.mjs';
 import { surfaceTargetProfile } from './target-profiles.mjs';
 import { verifySignedBundle } from '../../runtime/src/index.mjs';
 import { designStyles } from './design-css.mjs';
+import { browserInputSchema } from '../../conversation/src/inventory.mjs';
 
 const view = (row) => ({
   id: row.id,
@@ -247,7 +248,7 @@ export class SurfaceInstallService {
         id: capability.id,
         kind: capability.kind,
         operation: capability.operation,
-        inputSchema: capability.inputSchema,
+        inputSchema: browserInputSchema(capability.inputSchema),
         outputSchema: capability.outputSchema,
         risk: capability.risk,
         confirmation: capability.confirmation,

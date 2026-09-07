@@ -28,17 +28,20 @@ export function createBrowserApiClient(
     });
     const url = new URL(path, origin);
     if (url.origin !== origin) throw new Error('Only same-origin API calls are allowed.');
-    const declared = new Set(Object.keys(contract.inputSchema?.properties ?? {}));
-    if (method === 'GET' || method === 'HEAD') {
-      for (const [name, value] of Object.entries(input))
-        if (
-          declared.has(name) &&
-          !consumed.has(name) &&
-          value !== undefined &&
-          value !== null &&
-          ['string', 'number', 'boolean'].includes(typeof value)
-        )
+    const properties = contract.inputSchema?.properties ?? {};
+    const payload = {};
+    for (const [name, value] of Object.entries(input)) {
+      const property = properties[name];
+      if (!property || consumed.has(name) || value === undefined || value === null) continue;
+      const location = property['x-location'];
+      if (location === 'header') continue;
+      if (
+        location === 'query' ||
+        (!location && ['GET', 'HEAD'].includes(method))
+      ) {
+        if (['string', 'number', 'boolean'].includes(typeof value))
           url.searchParams.set(name, String(value));
+      } else payload[name] = value;
     }
     const csrf = csrfToken();
     const response = await fetcher(url, {
@@ -51,7 +54,7 @@ export function createBrowserApiClient(
         ...(!['GET', 'HEAD'].includes(method) ? { 'Content-Type': 'application/json' } : {}),
         ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
       },
-      ...(!['GET', 'HEAD'].includes(method) ? { body: JSON.stringify(input) } : {}),
+      ...(!['GET', 'HEAD'].includes(method) ? { body: JSON.stringify(payload) } : {}),
     });
     const contentType = response.headers.get('content-type') ?? '';
     const value =
