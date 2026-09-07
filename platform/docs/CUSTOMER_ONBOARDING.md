@@ -145,6 +145,8 @@ A full-page surface requires an explicit customer-owned route and, if desired, a
 
 Choose **Install hosted UI** after publishing an approved slot. Supply the exact customer origin, placement, page path, navigation label, slot and environment. Studio returns one snippet containing a customer-owned mount and an Atelier-hosted module script. There are no framework-specific files, packages, server bridge or API credentials. The origin-bound public key selects only this install's current signed UI/chat manifest and reports installation facts. When a current reviewed chatbot profile and real provider exist, the same mount includes the assistant automatically.
 
+The customer page CSP must allow the exact Atelier origin in `script-src`, `connect-src`, `style-src` and `frame-src`. The last directive is required for signed sandboxed rich-component frames; omitting it leaves the artifact pane visibly blocked rather than substituting local markup.
+
 For a full page, the customer applies the generated route and consciously places the generated navigation component. For an inline or drawer placement, the recorded route identifies the existing host page and the customer places the generated mount there. Atelier does not guess or mutate an unknown application file.
 
 The mounted client reports the current bundle hash while Studio verifies four facts: reviewed design binding, customer mount, hosted UI load and reviewed browser API-client initialization. Studio records `waiting`, `partial` or `verified` from those facts. The receipt is not proof that the customer API authorizes correctly and never grants authority; customer authorization tests and human review remain mandatory.
@@ -178,7 +180,7 @@ Cohort- and task-level adaptation is the safe default. Per-user personalization 
 - provider failure remains explicit and does not publish a new artifact.
 - generated framework files compile and server modules pass syntax checks;
 - a foreign origin, stale bundle hash or revoked install key cannot verify a mount;
-- install status stays partial until design, mount, bridge and authority facts are all true;
+- install status stays partial until design, mount, hosted runtime and browser API-client facts are all true;
 - unsafe design values are rejected and no installer is generated before human design approval;
 - specialists cannot receive commands or tools outside the primary reviewed allowlist;
 - internal specialist notes stay encrypted and only the primary synthesized answer enters the customer transcript.

@@ -67,7 +67,7 @@ The downloaded `atelier-*.install.json` is an auditable receipt of the one-scrip
 Give the bundle to the coding agent with the generated **Copy coding-agent prompt**. The agent must:
 
 1. apply the single snippet to the named customer-owned page;
-2. allow the Atelier origin in the page's `script-src`, `connect-src` and `style-src` Content Security Policy;
+2. allow the Atelier origin in the page's `script-src`, `connect-src`, `style-src` and `frame-src` Content Security Policy;
 3. verify every selected API path uses the application's existing browser session and still enforces tenant, permission and object authorization;
 4. expose the host's existing CSRF value through `<meta name="csrf-token">` or `window.AtelierHost.csrfToken()` before enabling mutations;
 5. run the customer's unit/integration tests and a real browser test covering a reviewed operation and denial of an unreviewed operation;

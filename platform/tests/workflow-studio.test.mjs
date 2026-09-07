@@ -106,3 +106,11 @@ test('Studio exposes bulk capability review separately from bulk agent access', 
   assert.match(source, /capabilities\/bulk-reopen/);
   assert.match(source, /projectVersion: state\.model\.projectVersion/);
 });
+
+test('hosted installer handoff includes the rich-component frame CSP directive', async () => {
+  const source = await readFile(
+    join(FIXTURE, '../../apps/studio/web/install-surface.mjs'),
+    'utf8',
+  );
+  assert.match(source, /script-src, connect-src, style-src and frame-src/);
+});
