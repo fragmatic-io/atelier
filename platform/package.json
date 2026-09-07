@@ -79,6 +79,7 @@
     "runner": "node scripts/runner.mjs",
     "host-demo": "node apps/host-demo/server.mjs",
     "test:package": "node scripts/smoke-package.mjs",
+    "manifest": "node scripts/package-manifest.mjs",
     "sbom": "node scripts/sbom.mjs",
     "test:reconstruction": "node --test --test-concurrency=1 tests/*.test.mjs tests/*/*.test.mjs",
     "verify:reconstruction": "node scripts/reconstruction-verify.mjs",

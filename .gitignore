@@ -1,86 +1,51 @@
-# Dependencies
+# Dependencies and build output
 node_modules/
-.pnpm-store/
-
-# Build output
 dist/
 build/
 out/
-*.tsbuildinfo
-.turbo/
-
-# Test / coverage
 coverage/
-.nyc_output/
-*.lcov
+*.tsbuildinfo
 
-# Marketplace eval gate output (V-6.e). The CI uploads this as an artifact;
-# locally it's regenerated per `pnpm marketplace:eval` invocation.
-eval-results/
+# Atelier runtime and private state
+.atelier/
+.atelier-data/
+.atelier-host-data/
+.atelier-verification/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.tgz
+*.zip
 
-# Logs
+# Environments, credentials, and keys
+.env
+.env.*
+*.key
+*.pem
+*.p12
+.secrets/
+
+# Python and browser tooling
+.venv/
+__pycache__/
+.pytest_cache/
+playwright-report/
+test-results/
+
+# Generated acceptance evidence stays local
+platform/evidence/current/
+
+# Logs and editor/OS state
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Editor / OS
+*.pid
+*.lock
 .DS_Store
-.DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
 
-# Environment / secrets
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
-*.p12
-.secrets/
-
-# Local manifests / cache (Atelier-specific)
-.cir-cache/
-.cir-vault.json
-.manifests-local/
-local-vault/
-
-# Local coding-agent runtime state
-.claude/*.lock
-
-# Next.js demo (apps/demo)
-apps/*/.next/
-apps/*/next-env.d.ts
-apps/*/.turbo/
-
-# Astro marketing site (apps/marketing)
-apps/*/.astro/
-
-# Playwright
-apps/*/test-results/
-apps/*/playwright-report/
-apps/*/playwright/.cache/
-packages/*/storybook-static/
-packages/*/test-results/
-packages/*/playwright-report/
-
-# Misc
-.cache/
-.parcel-cache/
-.eslintcache
-.stylelintcache
-*.pid
-*.seed
-*.pid.lock
-
-# Claude Code agent worktrees (per-agent isolated checkouts; auto-cleaned)
-.claude/worktrees/
+!platform/ops/platform.env.example

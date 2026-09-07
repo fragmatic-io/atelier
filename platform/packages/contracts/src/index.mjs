@@ -288,12 +288,3 @@ export function stripSignature(bundle) {
   delete copy.signature;
   return copy;
 }
-
-export function compileArtifact(type, payload, provenance = {}) {
-  const body = { type, version: 1, payload, provenance };
-  return {
-    ...body,
-    artifactId: stableId(type, body),
-    contentHash: sha256(body),
-  };
-}

@@ -2,7 +2,7 @@
 
 Atelier learns an existing application's capabilities and privacy-safe workflow evidence, turns that product intelligence into reviewed adaptive surfaces, and exposes the same approved capabilities to agents with rich in-product components. It can install a new customer-owned route, mount into an existing page, or improve an existing Atelier-owned slot without silently rewriting arbitrary host UI.
 
-This directory is an independent npm project inside the original Atelier pnpm repository. Root framework validation and `platform/` acceptance are separate required gates.
+This directory is the repository's only supported product implementation. The removed root pnpm/CIR prototype is available only through Git history and is not a supported integration or runtime path.
 
 ## Local development
 

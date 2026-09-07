@@ -1,57 +1,17 @@
 version: 2
 
-# Dependabot config notes (2026-05-04 cleanup):
-#
-# - `include: scope` was REMOVED on both ecosystems. With it set,
-#   dependabot emits commit messages like
-#   `chore(deps)(deps-dev): bump foo` — TWO scope parens. The repo's
-#   commitlint config rejects that as a malformed header (scope is a
-#   single identifier per Conventional Commits). Without `include`,
-#   dependabot emits `chore(deps): bump foo` which validates cleanly.
-#
-# - Major-version bumps on github-actions are gated to *patch* +
-#   *minor* only. Dependabot was filing aggressive v4 → v6 / v4 → v7
-#   bumps for `setup-node` / `checkout` / `upload-artifact` even
-#   though v4 is still on the supported track. Major bumps are still
-#   surfaced on npm packages — the constraint is action-specific.
-
 updates:
   - package-ecosystem: npm
-    directory: /
+    directory: /platform
     schedule:
       interval: weekly
       day: monday
       time: '09:00'
-      timezone: Europe/London
+      timezone: Asia/Kolkata
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'
-    labels:
-      - dependencies
-    groups:
-      dev-dependencies:
-        dependency-type: development
-    ignore:
-      # Major-version bumps on heavy framework deps need coordinated
-      # migrations across packages + demos. PRs #22/#23/#24/#25 (closed
-      # 2026-05-05) were all aggressive majors that landed CI-red. Skip
-      # the auto-PRs; we'll do these as planned migrations.
-      - dependency-name: 'astro'
-        update-types: ['version-update:semver-major']
-      - dependency-name: '@astrojs/*'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'next'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'zod'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'react'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'react-dom'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'typescript'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'vitest'
-        update-types: ['version-update:semver-major']
+    labels: [dependencies]
 
   - package-ecosystem: github-actions
     directory: /
@@ -59,17 +19,8 @@ updates:
       interval: weekly
       day: monday
       time: '09:00'
-      timezone: Europe/London
+      timezone: Asia/Kolkata
     open-pull-requests-limit: 3
     commit-message:
       prefix: 'chore(ci)'
-    labels:
-      - dependencies
-      - ci
-    ignore:
-      # Skip major bumps on GitHub Actions — v4 is the supported track
-      # for `setup-node` / `checkout` / `upload-artifact` etc., and
-      # the v5 / v6 / v7 lines have introduced breaking-change PRs that
-      # land stale and bitrot. Patch + minor still flow through.
-      - dependency-name: '*'
-        update-types: ['version-update:semver-major']
+    labels: [dependencies, ci]

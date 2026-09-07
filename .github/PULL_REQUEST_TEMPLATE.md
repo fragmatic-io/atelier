@@ -1,65 +1,18 @@
-<!--
-Thanks for contributing to Atelier.
+## Outcome
 
-Before opening: see AGENTS.md for which artifact category your change belongs
-under (capability / skill / component / policy / recipe / runtime / compiler /
-docs / tooling). One change = one artifact category where possible.
--->
+Describe the user-visible or operational result.
 
-## Summary
+## Security and compatibility
 
-<!-- 1-3 bullets. What changed and why. -->
+- [ ] Tenant/project scope is preserved.
+- [ ] Provider, authorization, confirmation, design-review, and privacy failures remain explicit.
+- [ ] No credentials, runtime databases, private evidence, or customer payloads are committed.
+- [ ] Removed or changed public contracts have a documented migration decision.
 
--
--
+## Verification
 
-## Which artifacts changed
-
-<!-- Tick all that apply. See AGENTS.md for the canonical layout. -->
-
-- [ ] Capability (`/capabilities/**`)
-- [ ] Skill (`/skills/**`)
-- [ ] Component (`/components/**`)
-- [ ] Policy (`/policies/**`)
-- [ ] Recipe (`/recipes/**`)
-- [ ] Schemas (`packages/schemas/**`, `.well-known/schemas/**`)
-- [ ] Policies (`packages/policies/**`)
-- [ ] Evals (`packages/evals/**`, `evals/**`)
-- [ ] Runtime (`packages/runtime/**`)
-- [ ] Compiler (`packages/compiler/**`)
-- [ ] Docs (`/docs/**`, `README.md`, `ETHOS.md`, `AGENTS.md`)
-- [ ] Tooling / CI / config (`.github/**`, build/lint/test config)
-
-## Test plan
-
-<!-- How did you verify this? Commands, manual checks, eval cases added, etc. -->
-
--
--
-
-## ETHOS principles touched
-
-<!--
-Which of the ten principles in /ETHOS.md does this change interact with?
-Link to the principle and explain in one line how the change upholds it.
--->
-
--
-
-## Reviewer notes
-
-<!-- Anything reviewers should know: trade-offs, follow-ups, screenshots, etc. -->
-
----
-
-### Checklist
-
-- [ ] Tests added or updated
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm lint` passes
-- [ ] `pnpm format:check` passes
-- [ ] Docs updated if behaviour changed
-- [ ] No destructive changes (schema breaks, removed components, removed
-      capabilities) without a migration note in the PR description
-- [ ] If a capability/component version was bumped, the deprecation window
-      and migration path are documented
+- [ ] Focused tests cover the changed behavior.
+- [ ] `cd platform && npm run test:unit` passes.
+- [ ] `cd platform && npm run verify` passes.
+- [ ] Commit-bound acceptance passed, or its exact external blocker is documented.
+- [ ] Documentation was updated when setup or behavior changed.

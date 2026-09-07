@@ -420,10 +420,11 @@ async function commandDoctor() {
 async function commandSelfTest() {
   const root = resolve(import.meta.dirname, '../../..');
   await new Promise((resolvePromise, reject) => {
-    const child = spawn(process.execPath, [join(root, 'scripts/self-test.mjs')], {
-      stdio: 'inherit',
-      cwd: root,
-    });
+    const child = spawn(
+      process.execPath,
+      [join(root, 'scripts/reconstruction-verify.mjs'), '--package'],
+      { stdio: 'inherit', cwd: root },
+    );
     child.on('exit', (code) =>
       code === 0 ? resolvePromise() : reject(new Error(`Self-test failed with exit ${code}`)),
     );

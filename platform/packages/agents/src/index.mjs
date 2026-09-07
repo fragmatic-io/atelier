@@ -87,39 +87,6 @@ export class JsonModelAdapter {
   }
 }
 
-export class HttpJsonModelAdapter extends JsonModelAdapter {
-  constructor({ id = 'http-json-model', endpoint, headers = {}, model, fetchImpl = fetch }) {
-    super({
-      id,
-      complete: async ({ system, input, schema, temperature }) => {
-        const response = await fetchImpl(endpoint, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', ...headers },
-          body: JSON.stringify({ model, system, input, schema, temperature }),
-        });
-        if (!response.ok) throw new Error(`Model endpoint failed: ${response.status}`);
-        const payload = await response.json();
-        return payload.output ?? payload.result ?? payload;
-      },
-    });
-    this.endpoint = endpoint;
-    this.model = model;
-  }
-}
-
-export function artifactEnvelope(
-  type,
-  value,
-  { agentId = 'deterministic', model = 'deterministic' } = {},
-) {
-  return {
-    type,
-    value,
-    contentHash: sha256(value),
-    provenance: { agentId, model },
-  };
-}
-
 export function deterministicBuildAgents({ forge, evaluator }) {
   return [
     {

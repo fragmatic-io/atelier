@@ -388,32 +388,6 @@ export function sanitizeRuntimePatch(patch, { bundle, projectModel, maxAdaptatio
   return Object.fromEntries(Object.entries(clean).filter(([, value]) => value !== undefined));
 }
 
-export function applyRuntimePatch(bundle, patch, context) {
-  const copy = deepClone(bundle);
-  const clean = sanitizeRuntimePatch(patch, context);
-  const children = copy.manifest.root.children;
-  if (clean.density) copy.manifest.root.props.density = clean.density;
-  if (clean.hiddenModules?.length) {
-    const regionComponents = {
-      summary: ['Heading', 'Text', 'StatusBadge'],
-      evidence: ['KeyValueList', 'Table', 'Timeline'],
-      actions: ['ActionBar'],
-    };
-    copy.manifest.root.children = children.filter(
-      (node) =>
-        !clean.hiddenModules.some((region) => regionComponents[region]?.includes(node.component)),
-    );
-  }
-  copy.runtimePatch = {
-    ...clean,
-    appliedAt: new Date().toISOString(),
-    originalBundleId: bundle.bundleId,
-  };
-  copy.bundleId = stableId('bundle', { base: bundle.bundleId, patch: clean });
-  delete copy.signature;
-  return copy;
-}
-
 export function sanitizeModelRefinement(proposal, { task, bundle, projectModel }) {
   const allowedComponents = new Set([
     ...BASELINE_COMPONENTS,

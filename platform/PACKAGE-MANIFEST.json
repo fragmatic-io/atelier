@@ -3,8 +3,8 @@
   "package": "@atelier/platform",
   "version": "2.3.0-rc.1",
   "algorithm": "SHA-256",
-  "generatedAt": "2026-09-07T02:17:50.303Z",
-  "fileCount": 365,
+  "generatedAt": "2026-09-07T07:40:13.864Z",
+  "fileCount": 384,
   "files": [
     {
       "path": ".dockerignore",
@@ -25,12 +25,6 @@
       "executable": false
     },
     {
-      "path": "CHECKPOINT-FILES.json",
-      "size": 45757,
-      "sha256": "bb7298aaac536d57739ae7e0ea78a7e4eb739efcd29e59583e54f279d88bd8b8",
-      "executable": false
-    },
-    {
       "path": "LICENSE",
       "size": 1079,
       "sha256": "f0c8dbb5ab5614c3886be71c88a5e3b27f4a9279b63959fdc375db10c4314452",
@@ -38,8 +32,8 @@
     },
     {
       "path": "README.md",
-      "size": 7505,
-      "sha256": "b2411530cae701cb040f0e59dede6eb5f1460bf2b7f6be75e8e5a3fcc7ebc13d",
+      "size": 8435,
+      "sha256": "a0f47ede23a7966f272c9efa76834cd6d2bb475539bf9c25aaa208400697f051",
       "executable": false
     },
     {
@@ -68,8 +62,8 @@
     },
     {
       "path": "apps/agent-demo/server.mjs",
-      "size": 11645,
-      "sha256": "3f020f7adc7c2ab3d0c9c3f6b78067454e7c4f4ab0a855912657bd5205a2665d",
+      "size": 11679,
+      "sha256": "8d68c954b41b47ccd991d93f0fa8025dcd80db324830114ff1f17d65354b315b",
       "executable": false
     },
     {
@@ -109,6 +103,12 @@
       "executable": false
     },
     {
+      "path": "apps/studio/web/agent-setup.mjs",
+      "size": 4650,
+      "sha256": "ba5a3703c90f749200359b7e8397ee4267082e5551f758ce7d1bf2b6e2748297",
+      "executable": false
+    },
+    {
       "path": "apps/studio/web/api-docs.css",
       "size": 436,
       "sha256": "b404ee46ba4d593ccb60c87a977e607ceaa5cf98592f2018c6e5dfbfce304892",
@@ -128,20 +128,32 @@
     },
     {
       "path": "apps/studio/web/app.css",
-      "size": 26877,
-      "sha256": "cea4d46a5706db15517b32b0f4b740c2265471af691cfb50f5ae6a166b52ebb1",
+      "size": 26895,
+      "sha256": "9fd4d8e38abdce489fa997876b069d12b4b9e78eab4cb20f428aa9d8bb413fa6",
       "executable": false
     },
     {
       "path": "apps/studio/web/app.mjs",
-      "size": 72183,
-      "sha256": "67ded1bccf0e01ef0dc2fd105a4f709b20bddf937c829305739cf587cc8c6db5",
+      "size": 84522,
+      "sha256": "93bd334e3c93fae1262f56e5009dddf209504a9b3f6fd9f5f408edcd675648ee",
+      "executable": false
+    },
+    {
+      "path": "apps/studio/web/design-setup.mjs",
+      "size": 1918,
+      "sha256": "1b9fca8f46f264101aeafa149596b10e4574769e8e1cdc17787aea301966189d",
       "executable": false
     },
     {
       "path": "apps/studio/web/index.html",
-      "size": 699,
-      "sha256": "6cc7a0a10001c1c727c568f03957f5b8cf05bba828a595a7e6e21974ed6e27fa",
+      "size": 759,
+      "sha256": "d2e02cbbc26744c11af576352b34d18a022b7474569dbb90f03dfb8bddf88604",
+      "executable": false
+    },
+    {
+      "path": "apps/studio/web/install-surface.mjs",
+      "size": 4413,
+      "sha256": "a866cb5bb20487e44b9fa45950cf8b7b7ee2bf24a4aa464848efb84075a611c5",
       "executable": false
     },
     {
@@ -163,6 +175,18 @@
       "executable": false
     },
     {
+      "path": "apps/studio/web/onboarding.css",
+      "size": 9807,
+      "sha256": "24487e38c971543a12d8c7734eae95adff8669db1dac31e413d7e2ca35f8061d",
+      "executable": false
+    },
+    {
+      "path": "apps/studio/web/onboarding.mjs",
+      "size": 13723,
+      "sha256": "6febd7847fd70a5770cdf9366eb46f5939d00e0ec27f9ce07385c7c173fc19b7",
+      "executable": false
+    },
+    {
       "path": "apps/studio/web/surface.css",
       "size": 5404,
       "sha256": "e30875471aa52b8c465c7d44cf0e314de104d4d1292e48b5703e53d6cee87ff4",
@@ -176,20 +200,26 @@
     },
     {
       "path": "docs/AGENT_SETUP.md",
-      "size": 9047,
-      "sha256": "3b43a2816faac8cf08c262dfe5afdb7b280b47473a0a9c5a3eb49152961af16c",
+      "size": 12044,
+      "sha256": "118d4ac96521d7ce089710f7a3b3e4ba75a39713765f9d75f2dce6d8fbe5ba4d",
       "executable": false
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "size": 5447,
-      "sha256": "36d6ed917fe5facfa9bbeb99e188946bc14c163c7cc3a45bc2e17416b8be84fa",
+      "size": 7739,
+      "sha256": "c56a3e4cd6101a934ab1115ece9df0d6b4074475213793e5bbfd20102d7a9fb2",
       "executable": false
     },
     {
       "path": "docs/AUDIT_REPORT.md",
       "size": 1280,
       "sha256": "bebef3350694156dde946ee60682a4c200bd530f95a018beda98b49a32d919c0",
+      "executable": false
+    },
+    {
+      "path": "docs/CUSTOMER_ONBOARDING.md",
+      "size": 14932,
+      "sha256": "3f8fc3f049281f77f94c06dff2d5dfbfbdb24becee2f651e0112a2d0c1b20a7a",
       "executable": false
     },
     {
@@ -202,6 +232,12 @@
       "path": "docs/INTEGRATION.md",
       "size": 6439,
       "sha256": "6c5a2e6bf9a4735f6ceca1bbad6f863ec65e65f7e1034332235090e48f6b1d65",
+      "executable": false
+    },
+    {
+      "path": "docs/LEGACY_REMOVAL.md",
+      "size": 1309,
+      "sha256": "a01544eb70001b88543b9ede96255dd3971946d9c660af5da870fdeb43dad28b",
       "executable": false
     },
     {
@@ -224,14 +260,14 @@
     },
     {
       "path": "docs/RELEASE_CHECKLIST.md",
-      "size": 1235,
-      "sha256": "d680ebc0962d9dde97fd41b1f5064b87f961dc3b7210a8a4960d4eb8ef0e88d5",
+      "size": 1223,
+      "sha256": "df557e9ce3da7ef0756dcef3721e54ed490a7a2576146f3dc0f270a686ddac93",
       "executable": false
     },
     {
       "path": "docs/THREAT_MODEL.md",
-      "size": 3254,
-      "sha256": "88ce890144927f35de772254330d57822e77a7511c6c282352252779b065945a",
+      "size": 4368,
+      "sha256": "5d39d8ff1555082001a210dbd6e57505d54e9ea935fef75c0b244816e460f909",
       "executable": false
     },
     {
@@ -385,6 +421,24 @@
       "executable": false
     },
     {
+      "path": "migrations/004-discovery-onboarding.sql",
+      "size": 1977,
+      "sha256": "1eb005153c0d4b3e7dc4cc144c29e18597b444676561695f6916bed21fbce14c",
+      "executable": false
+    },
+    {
+      "path": "migrations/005-surface-installs.sql",
+      "size": 1212,
+      "sha256": "4422460d0393169e0b478a9a4a45c3d6ba85b9c9a40f674830f357eb0bc99d1f",
+      "executable": false
+    },
+    {
+      "path": "migrations/006-design-contracts.sql",
+      "size": 662,
+      "sha256": "7afcbcd5fc515a23116764b6d30817e28f64bd8f1365d700388f6c4e478c19bb",
+      "executable": false
+    },
+    {
       "path": "ops/Caddyfile.example",
       "size": 231,
       "sha256": "6025ea55530949700ee2097ca6688457199a1059d116789fb0f3b72b553d7547",
@@ -434,26 +488,26 @@
     },
     {
       "path": "package.json",
-      "size": 4288,
-      "sha256": "6a8878836ebd74ab6205446e19acb0d6f0cd0b632e7c9d03af309dcd64e4af88",
+      "size": 4341,
+      "sha256": "e308fc42f168cad2c5e47b5c5339b1ae8a5f2893f93a0b1cbc4bff2bfb7324dc",
       "executable": false
     },
     {
       "path": "packages/adapters/dom/README.md",
-      "size": 78,
-      "sha256": "87718b834d86730a0b31f6936c61480087bceac652ab6c30be0a9c73cd3fdd88",
+      "size": 190,
+      "sha256": "90651f732118cead9d91cdb6b2dcfb27d377b8e6e610e003955fc736844971fa",
       "executable": false
     },
     {
       "path": "packages/adapters/dom/package.json",
-      "size": 339,
-      "sha256": "0992c9732e2fc036936919d89a07a78420a918fefda60702e529c9550c8a4fe1",
+      "size": 338,
+      "sha256": "cb19412eac8ab3b6f1e6c7a885da5db14e0daa8c2312dc90a87a43a8adbbd91e",
       "executable": false
     },
     {
       "path": "packages/adapters/dom/src/index.mjs",
-      "size": 8390,
-      "sha256": "75af885da9041a51ac4035de1a98916b5a8d26a28d9be297ca7edf6378ed22e6",
+      "size": 6646,
+      "sha256": "61465bfdd8d7e45615d00255f02727b5e098cd0045fc8741d61f51ec244b9972",
       "executable": false
     },
     {
@@ -466,12 +520,6 @@
       "path": "packages/adapters/react/package.json",
       "size": 377,
       "sha256": "42ce626688cabbf0e9f028b506629712d14762f586a92539a766295f04690c43",
-      "executable": false
-    },
-    {
-      "path": "packages/adapters/react/src/agent.mjs",
-      "size": 984,
-      "sha256": "6202e268e5a959ca85ba4512ed205044adf14cf20366372818928ef659ae8684",
       "executable": false
     },
     {
@@ -506,8 +554,8 @@
     },
     {
       "path": "packages/agents/src/index.mjs",
-      "size": 8822,
-      "sha256": "a01568062406f75fc87afd4d97c659be09344a48080d486da6f1089e04d1c35f",
+      "size": 7837,
+      "sha256": "5108fb7594ef01abdb3178a62c723df6b07321ca91222b1bf988ef22e3293ea5",
       "executable": false
     },
     {
@@ -536,8 +584,8 @@
     },
     {
       "path": "packages/cli/src/index.mjs",
-      "size": 15909,
-      "sha256": "7481db9dce75e5a184931cf342fdc28b1c939ff57aa308a3a1e3b7f1b47973ca",
+      "size": 15942,
+      "sha256": "5187c4f7efe229d9a1ae05af4d25e974f9cb62722d5a23bd38608bfd354360fd",
       "executable": false
     },
     {
@@ -572,14 +620,14 @@
     },
     {
       "path": "packages/contracts/src/index.mjs",
-      "size": 9004,
-      "sha256": "b0ed74c038637a39bf7efcc1553fdb06ed98d736caae321a306fb1cf2b3e69b4",
+      "size": 8779,
+      "sha256": "ad2ae8ed80719ac99166d4eadd5e47a2df9e56864c426aab8a86429186921103",
       "executable": false
     },
     {
       "path": "packages/control-plane/src/access.mjs",
-      "size": 3687,
-      "sha256": "590ea756ad66b2565111d8f6205105e8d3a943309ab5f188dd09c145b4a3161b",
+      "size": 4687,
+      "sha256": "b6dc844bb21904e6eb675c6081ccf51d02cf5b4f9473424ea8002b8f9e253ab0",
       "executable": false
     },
     {
@@ -614,20 +662,20 @@
     },
     {
       "path": "packages/control-plane/src/pipeline.mjs",
-      "size": 37744,
-      "sha256": "f37f700ef4ee46519fe06a74c6917eb9f6f7c9f8fb554df8d1c983945ddb4e1c",
+      "size": 37806,
+      "sha256": "5e325e78925756b68538c9f48b6c37bfdf4e486d10ef3b157a064b74b954c5cc",
       "executable": false
     },
     {
       "path": "packages/control-plane/src/server.mjs",
-      "size": 21971,
-      "sha256": "c6f10f8bb105ba587813a0481da69305b106e415bd79b7f18726c1871b628c60",
+      "size": 26465,
+      "sha256": "1a5f5eb9a990fda3e9f90fe258fc8d6886958af01cfa3ef49f1deba21dbee4b8",
       "executable": false
     },
     {
       "path": "packages/control-plane/src/services.mjs",
-      "size": 62996,
-      "sha256": "2dcafa8404bcea831f7e53aa11708c0490895485607b84a7619f6cb74701cd54",
+      "size": 63729,
+      "sha256": "2c873034a705a701fb7eb5160dc50d5a7789bfb63321b80eb8198235a9b65aac",
       "executable": false
     },
     {
@@ -638,8 +686,8 @@
     },
     {
       "path": "packages/control-plane/src/util.mjs",
-      "size": 5716,
-      "sha256": "9c6ccb427ad22f98d8d0f20aeac1d36f65232254d468966a3837a29143d722a7",
+      "size": 5665,
+      "sha256": "72816c34007d82368841f722fa8fa264d33a2a5738ae1f2187727be61fe9d5b6",
       "executable": false
     },
     {
@@ -692,8 +740,8 @@
     },
     {
       "path": "packages/conversation/src/inventory.mjs",
-      "size": 6009,
-      "sha256": "b270dbd53fb2f7ae8bb82d87d0988e65e8ce92daa4dff579a07368bdcd3ecf80",
+      "size": 6211,
+      "sha256": "ebe7134dc1694605abf768479b5140b24aa15618243db914bad833f7313a3d0f",
       "executable": false
     },
     {
@@ -710,8 +758,14 @@
     },
     {
       "path": "packages/conversation/src/service.mjs",
-      "size": 56471,
-      "sha256": "1c6517a7e3d6a958266822ef4a509ae452dd060c7c825cffcc512327a1d0d45a",
+      "size": 62438,
+      "sha256": "a04e9a005abc608a84bb706d164b1f35a2d76c92da7062d782c2e139e5ab898e",
+      "executable": false
+    },
+    {
+      "path": "packages/conversation/src/specialists.mjs",
+      "size": 4140,
+      "sha256": "da157968ecdb2a45cd9a66a12d9138030ab5e857f3698ed85f2aa01b674d30ba",
       "executable": false
     },
     {
@@ -728,8 +782,32 @@
     },
     {
       "path": "packages/design-genome/src/index.mjs",
-      "size": 5875,
-      "sha256": "99198e36cd2494c7feb5b6de21e353f3d1389d2f1e9326ae4d0f7a715b9985ff",
+      "size": 5617,
+      "sha256": "f5dc0e85260bcac07545b7f79b8139e6bd65cb2061c0732a990bc791608770da",
+      "executable": false
+    },
+    {
+      "path": "packages/discovery/src/contracts.mjs",
+      "size": 11786,
+      "sha256": "a166055853593111457535602d73df5ab53c470216538da207c4902640531c33",
+      "executable": false
+    },
+    {
+      "path": "packages/discovery/src/design-contract.mjs",
+      "size": 2915,
+      "sha256": "374e74199ea54d5d802390b97ff52fbb7c4fc4d0d218929e77d95d3286060582",
+      "executable": false
+    },
+    {
+      "path": "packages/discovery/src/observer.js",
+      "size": 12138,
+      "sha256": "becfffd4a69553df69de0ed33f8d533feb21e1efada4afb40511caf0e14176c2",
+      "executable": false
+    },
+    {
+      "path": "packages/discovery/src/service.mjs",
+      "size": 29754,
+      "sha256": "e4613fffcdc626fd21b253fa30d0f6a1d4a435a381bf257e2be06e27427a1630",
       "executable": false
     },
     {
@@ -764,8 +842,8 @@
     },
     {
       "path": "packages/experience-compiler/src/index.mjs",
-      "size": 16805,
-      "sha256": "6ae1207b47521f5e8d2a93a38a133aef8ed78dff5123916c6ca81ac6bdfd8a51",
+      "size": 15905,
+      "sha256": "74fa11182bd4ac7b8b685794a16799e64466a922568f15ad9d28dc465641cba7",
       "executable": false
     },
     {
@@ -943,6 +1021,54 @@
       "executable": false
     },
     {
+      "path": "packages/surface-install/src/contracts.mjs",
+      "size": 2645,
+      "sha256": "f4caf88da5421908fa38bca12d56812ef25786d4a3d35f47ffa303136d4bf6b6",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/service.mjs",
+      "size": 6745,
+      "sha256": "acd821503bcf9521b63534023d46f23fbc18649213503cb80bc3b9c9b5b5ec49",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-dom.mjs",
+      "size": 5240,
+      "sha256": "b3e6d2bdf983ed6d35123e173bcda1806a9cf62fe002aa9b3c30d35e98c68cb6",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-express.mjs",
+      "size": 3461,
+      "sha256": "a33a84607e352ba8e8cc5565906230fb1b16a4810f5413a1d527984c6032de2f",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-next.mjs",
+      "size": 8912,
+      "sha256": "e28174b6d030ac32bbed20b756810d9947b77d793acea814ee63a68380d22d5e",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-react-router.mjs",
+      "size": 3457,
+      "sha256": "7f41b050f62a9a9cca69303e9bd8d777e4cb189820e1a9d20654f551e1ee03c7",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-shared.mjs",
+      "size": 4960,
+      "sha256": "a2ba9f3450ae535187f7af6f03776f38e4752ccb44205a2a5a677b08abcc022b",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/templates.mjs",
+      "size": 1940,
+      "sha256": "7200c0f8618db07460ccb5c940ef9a7a34e739889eb76d121842a140e2ab83cf",
+      "executable": false
+    },
+    {
       "path": "packages/surface/src/browser.mjs",
       "size": 16504,
       "sha256": "a704479c76c5a53e435219fc9342ce27ff733c70c83443933f5a6c5cf7133634",
@@ -1004,8 +1130,8 @@
     },
     {
       "path": "scripts/browser-integration.py",
-      "size": 9199,
-      "sha256": "334fe882023f16a92009a522ed914f0198833eea651ea92986e2a806fe02fcce",
+      "size": 15367,
+      "sha256": "926463c8636f5bb2f8ab44bfd47f32cdf106dfe0a30fca9a2bae51cd144557a2",
       "executable": false
     },
     {
@@ -1081,15 +1207,9 @@
       "executable": false
     },
     {
-      "path": "scripts/probe-native.mjs",
-      "size": 1647,
-      "sha256": "db6e4b7c167eea108212ad22f0135fa590b5c0c3e1eba835f99c1008bd5b84cc",
-      "executable": false
-    },
-    {
       "path": "scripts/reconstruction-verify.mjs",
-      "size": 6647,
-      "sha256": "c9b8a5383f3eaba924cf59690375d6d2bbf593ebb1cd75313b16315c41cb455e",
+      "size": 7084,
+      "sha256": "bf175a5fd7885c4a96e6028556fb1a4bd22d93aae5a13437c2ab3fc549df06aa",
       "executable": false
     },
     {
@@ -1112,14 +1232,8 @@
     },
     {
       "path": "scripts/seed-experiences.mjs",
-      "size": 6361,
-      "sha256": "5aa0e3748b0081557075dacf1ab0438dc538e753cd05c68858c606ae7ca0a2d6",
-      "executable": false
-    },
-    {
-      "path": "scripts/self-test.mjs",
-      "size": 189,
-      "sha256": "3ca2b8741e29242935723ae68449fc393d096b044608b1882f151b81a311fe0f",
+      "size": 6434,
+      "sha256": "b0331e320c94cdd976eb1418749b91b92fd0d064e4453a375809b04cdfdac361",
       "executable": false
     },
     {
@@ -1147,12 +1261,6 @@
       "executable": false
     },
     {
-      "path": "scripts/verify.mjs",
-      "size": 307,
-      "sha256": "883ccaf54f3295af790a45011c0c20e08cf0a61bc52a2f2b638b50000d35dc2e",
-      "executable": false
-    },
-    {
       "path": "scripts/worker.mjs",
       "size": 1329,
       "sha256": "6167fb972431d14c8114e5021619ad8dbc26020275b30835a7be600cdb2f9c3e",
@@ -1171,18 +1279,6 @@
       "executable": false
     },
     {
-      "path": "tests/browser/host.test.py",
-      "size": 5172,
-      "sha256": "a0ac2f19bad7a553b4c62e9164824501d986c89718ecdc2c546ced2deb049e32",
-      "executable": false
-    },
-    {
-      "path": "tests/browser/studio.test.py",
-      "size": 7356,
-      "sha256": "91a620020a43fc74b09289621453d74535e50bb5651d4df69d3868d64004c6d5",
-      "executable": false
-    },
-    {
       "path": "tests/cli-demo.test.mjs",
       "size": 6679,
       "sha256": "46facea39c3b52d720b666c47b71523774114d9eeb1e566fec1206a2e3af0500",
@@ -1192,6 +1288,12 @@
       "path": "tests/contracts-scanner.test.mjs",
       "size": 7824,
       "sha256": "fb59187e5cadada916792497962cf9a7726d7f993f962f7c5ae42f3f42e315cb",
+      "executable": false
+    },
+    {
+      "path": "tests/discovery-onboarding.test.mjs",
+      "size": 13189,
+      "sha256": "8bffaeb4388f1d863f01309b202181faa08f9debeef8f3ee437e700d55ebb302",
       "executable": false
     },
     {
@@ -1237,9 +1339,21 @@
       "executable": false
     },
     {
+      "path": "tests/repository-hygiene.test.mjs",
+      "size": 2152,
+      "sha256": "b13f38744325a24cc806d07483bb4d11cf7aa43d87e48ab0b167921d7494f2a5",
+      "executable": false
+    },
+    {
       "path": "tests/runtime-security.test.mjs",
       "size": 11777,
       "sha256": "3786ea3a630902230d0c1671de7d7349364df597df409fa1a3100bebbfb8c9ba",
+      "executable": false
+    },
+    {
+      "path": "tests/surface-install.test.mjs",
+      "size": 11374,
+      "sha256": "9ff1b656798c8dd436d09100443f3da1743968bb7b4a64414690553c1717d0db",
       "executable": false
     },
     {
@@ -1304,8 +1418,8 @@
     },
     {
       "path": "tests/v23/conversation.test.mjs",
-      "size": 11483,
-      "sha256": "d0975a2395cc3e30b0cec0cd876eb426f5f31da73656638a71b6529d3b9482b7",
+      "size": 14753,
+      "sha256": "5c951269f1137549cf72d9522a4efeabdfc52f9325a12f69cabb890442324b76",
       "executable": false
     },
     {
@@ -1316,8 +1430,8 @@
     },
     {
       "path": "tests/v23/helpers.mjs",
-      "size": 4322,
-      "sha256": "714b16a05b02c274219b74b902ea44a1eff4f506ce23f8a2381ea4bd29643908",
+      "size": 4350,
+      "sha256": "2a0836b564eb8707e414ca3eb54b6154a003c43052248d554981277122682db1",
       "executable": false
     },
     {

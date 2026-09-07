@@ -1,8 +1,14 @@
 name: Atelier V2.3 acceptance
 on:
   push:
-    branches: [main, feat/atelier-v2.3-release]
-    paths: ['platform/**', '.github/workflows/atelier-v23-acceptance.yml']
+    branches: [main]
+    paths:
+      - 'platform/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - '.github/workflows/atelier-v23-acceptance.yml'
   pull_request:
     paths: ['platform/**', '.github/workflows/atelier-v23-acceptance.yml']
   workflow_dispatch:
@@ -47,19 +53,3 @@ jobs:
           path: platform/evidence/current/acceptance
           retention-days: 14
           if-no-files-found: error
-  original-framework:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: '22.16.0'
-      - name: Enable declared pnpm
-        run: corepack enable && corepack prepare pnpm@10.33.2 --activate
-      - name: Install root framework
-        run: pnpm install --frozen-lockfile
-      - name: Validate root framework
-        run: pnpm validate

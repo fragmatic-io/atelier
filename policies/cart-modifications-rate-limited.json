@@ -1,6 +1,0 @@
-{
-  "id": "cart_modifications_rate_limited",
-  "description": "Every cart-mutating action (currently `dummyjson.cart.add`, future `dummyjson.cart.remove`) must declare a `rate_limit` and the manifest binding it must surface a visible rate-limit indicator (Progress, Toast, or inline counter). Catches the failure mode where a runaway agent loop adds the same product hundreds of times before a human sees it.",
-  "applies_to": "action",
-  "severity": "warn"
-}

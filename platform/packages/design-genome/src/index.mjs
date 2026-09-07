@@ -146,15 +146,6 @@ export function inferComponentFamilies(components) {
   return [...families.entries()].map(([id, members]) => ({ id, members: members.sort() }));
 }
 
-export function cssVariablesForGenome(genome) {
-  return `:root {\n${Object.entries(genome.hardTokens.all)
-    .map(
-      ([name, value]) =>
-        `  --atelier-${name.replace(/[^a-z0-9-]/gi, '-').toLowerCase()}: ${value};`,
-    )
-    .join('\n')}\n}`;
-}
-
 export function scoreNativeFit({ component, genome }) {
   const used = new Set(component.tokensUsed ?? []);
   const available = new Set(Object.keys(genome.hardTokens.all ?? {}));

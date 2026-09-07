@@ -19,7 +19,6 @@ export const hash = (value) =>
   createHash('sha256')
     .update(typeof value === 'string' ? value : canonical(value))
     .digest('hex');
-export const iso = () => new Date().toISOString();
 export function canonical(value) {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
   if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';

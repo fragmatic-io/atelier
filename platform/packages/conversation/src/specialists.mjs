@@ -2,30 +2,6 @@
 // Copyright (c) 2026 The Atelier Authors
 import { assert, integer, strings, text } from './common.mjs';
 
-export const specialistPresets = [
-  {
-    id: 'research',
-    name: 'Research analyst',
-    description: 'Collects and reconciles evidence from approved read tools.',
-    instructions:
-      'Investigate the question using only the available evidence. Reconcile conflicting results, name material uncertainty, and return a concise evidence brief for the primary assistant.',
-  },
-  {
-    id: 'workflow',
-    name: 'Workflow analyst',
-    description: 'Explains process state, blockers and practical next actions.',
-    instructions:
-      'Analyze the current workflow state and identify blockers, dependencies and the safest useful next actions. Distinguish observed facts from recommendations.',
-  },
-  {
-    id: 'explanation',
-    name: 'Explanation specialist',
-    description: 'Turns complex evidence into a clear audience-appropriate explanation.',
-    instructions:
-      'Explain the supplied evidence clearly for the user context. Preserve important caveats, avoid unsupported claims, and give the primary assistant a structured explanation it can synthesize.',
-  },
-];
-
 export function normalizeSpecialists(input = [], tools = [], maxDelegations = 2) {
   assert(Array.isArray(input), 400, 'SPECIALISTS_TYPE', 'Specialists must be a list');
   assert(input.length <= 4, 400, 'SPECIALISTS_LIMIT', 'Configure at most four specialists');

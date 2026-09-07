@@ -2,7 +2,7 @@
   "name": "@atelier-v2/dom",
   "version": "2.0.0-alpha.1",
   "type": "module",
-  "description": "Dependency-free HTML/DOM renderer and explicit slot mount.",
+  "description": "Dependency-free HTML renderer for signed Atelier bundles.",
   "license": "MIT",
   "exports": {
     ".": "./src/index.mjs"

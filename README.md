@@ -1,375 +1,64 @@
-# Atelier
+# Atelier 2.3
 
-> **V2.3 application integration:** the current multi-project Studio, privacy-safe capability and host-design discovery, bounded specialist agents, project-native rich components, swappable API/CLI model providers, framework-aware surface installer, and automatic Redoc API reference live under [`platform/`](platform/README.md). SaaS onboarding starts with the no-source-code [customer onboarding flow](platform/docs/CUSTOMER_ONBOARDING.md). Coding agents integrating Atelier into another application should then follow [`platform/docs/AGENT_SETUP.md`](platform/docs/AGENT_SETUP.md). The older framework packages documented below remain in the repository and have their own validation gate.
+Atelier is a fail-closed control plane for learning an application's API capabilities, reviewing which operations agents may use, and delivering native rich chat and adaptive product surfaces.
 
-> **Legacy boundary:** the older demos below intentionally contain deterministic compiler and local-storage fallback paths. They are retained as tested framework examples, but they do not satisfy the current fail-closed provider policy. Do not use those fallback paths in a new production integration; use `platform/`, which reports provider failures and preserves the last approved artifact.
+This repository has one supported implementation: [`platform/`](platform/). The superseded pnpm/CIR prototype, its automatic compiler and vault fallbacks, demo applications, generated registries, and historical build plans were removed in September 2026. They remain available only through Git history and are not supported runtime paths.
 
-The full Git-age and RC2 comparison is recorded in [`docs/audits/2026-09-07-old-file-audit.md`](docs/audits/2026-09-07-old-file-audit.md), with an individual decision for every older tracked file in its adjacent JSON inventory.
+## Start locally
 
-**Capability · Intent · Render** — a production architecture for policy-safe adaptive operational interfaces.
+Requirements: Node.js 22.16 or newer, npm, Python 3, Python Playwright 1.62.0, and Chromium.
 
-> **Capabilities and skills are the public artifact.**
-> **Intent is the private artifact.**
-> **UI is ephemeral output.**
+```sh
+cd platform
+npm ci
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-browser.txt
+.venv/bin/playwright install chromium
 
-Software ships **capabilities and skills** (typed actions, data, usage knowledge). Users keep **intent** (preferences, lenses, rules). Agents emit **operational UI as ephemeral output** — a `Manifest` JSON document that the runtime renders. Cached. Versioned. Recomputed only on trigger.
-
-Atelier is the integration of pieces that already exist — MCP-style capabilities, skills, JSON manifest UI, intent profiles, multi-tier caching, pub-sub triggers — into one principled architecture. Compile rarely, render constantly. **The interface is not the product. The capability is.**
-
-The product promise is intentionally narrow: **operational UI generated from
-capabilities, policies, intent, and a strong component/composition system.**
-Atelier is not trying to generate arbitrary consumer apps, marketing sites, or
-canvas-heavy creative tools. It targets teams drowning in internal operational
-workflows where the same systems of record need many role-specific, auditable
-interfaces.
-
-## Target audience
-
-Atelier is for **ops-heavy organisations whose internal software fragments by role**:
-support ops, sales/revenue ops, marketplace ops, compliance/risk ops, and
-engineering/platform ops. These teams already have real systems of record,
-APIs, permissions, and audit obligations. Their pain is maintaining many
-slightly different dashboards, queues, review tools, and action surfaces for
-different teams.
-
-The first wedge is not "replace every app builder." It is: **replace stale,
-role-specific operational dashboards with policy-safe compiled interfaces over
-the same capability surface.** Retool-style tools prove teams will pay for
-internal apps; Atelier targets the next bottleneck, where the app itself needs
-to adapt per user/workflow without forking the frontend.
-
-The first product-quality proof should look like an ops workbench, not a toy
-component catalog: exception review, customer context, approval commands,
-policy obligations, audit trail, and reversible action dispatch in one coherent
-generated surface.
-
----
-
-## Quick start (10 minutes from `git clone` to an adaptive operational UI)
-
-```bash
-git clone https://github.com/fragmatic-io/atelier.git
-cd atelier
-pnpm install                                              # ≈ 60s
-
-# (Optional) drop your Gemini API key into apps/demo/.env.local for LLM
-# compile; without a key, the FallbackCompiler runs and the demo still
-# boots end-to-end.
-cp apps/demo/.env.local.example apps/demo/.env.local      # seeds sane defaults
-
-pnpm demo                                                 # boots vault + Next.js together
-# vault: http://localhost:4001  (consent UI lives here)
-# demo:  http://localhost:3000  (lands on /onboarding for a clean profile)
+export ATELIER_DATA_DIR="$HOME/.local/share/atelier-v23-dev"
+export ATELIER_BIND=127.0.0.1
+export PORT=4310
+export ATELIER_PUBLIC_ORIGIN=http://127.0.0.1:4310
+export NODE_ENV=development
+npm run demo
 ```
 
-`pnpm demo` is the orchestration script — it spawns `atelier vault dev` (the
-intent vault server) and `next dev` (the demo app) with prefixed log
-streams, sets `NEXT_PUBLIC_VAULT_URL` automatically, and tears both down
-on Ctrl-C. First-boot path: **`/onboarding` → vault consent UI → token
-minted → `/today` rendered with intent-honoured manifest.**
+Studio opens at `http://127.0.0.1:4310`. Its first boot prints a random development password once. Keep the data directory, credentials, project tokens, MCP configuration, and runner homes outside the repository.
 
-Three demos ship in `apps/`:
+## Validate the complete product
 
-- **`apps/demo`** — the personalisation showcase (LLM-assisted onboarding,
-  intent profile editing, dark mode toggle, optimistic UI, undo toasts).
-- **`apps/demo-dummyjson`** — e-commerce catalog with lens-switching
-  (compact / cozy / spacious), bulk cart actions, hover-card product
-  previews.
-- **`apps/demo-github`** — real-mutations issue queue with optimistic
-  archive, undo within 5s, hierarchy treatment for assigned-to-me, hover
-  cards on `#issue` references.
-
-Each is bootable individually with `pnpm --filter @atelier/demo-<name> dev`,
-or via `pnpm demo --app <name>` once the vault is running.
-
-Developer CLI — same `atelier` entry point you'll use in your own apps:
-
-```bash
-pnpm atelier --help                                    # top-level usage
-pnpm atelier init my-app                               # scaffold a new Atelier app
-pnpm atelier compile fixtures/intent.json \            # offline compile to a manifest
-  --capabilities capabilities/ \
-  --components components/registry.json
-pnpm atelier inspect manifests/m_xyz.json              # pretty-print a manifest tree
-pnpm atelier dev --tail                                # spawn next dev + tail audit SSE
-pnpm atelier import openapi spec.yaml                  # generate draft capabilities
-pnpm atelier add Button                                # copy a baseline component into ./components/
-pnpm atelier components-sync                           # regen registry.json from @atelier/components
-pnpm atelier validate                                  # run the host validate chain
+```sh
+cd platform
+ATELIER_PYTHON="$PWD/.venv/bin/python" npm run acceptance
 ```
 
-See [`packages/cli/README.md`](packages/cli/README.md) for the full subcommand surface and the flags (`--strict`, `--tail`, `--tail-only`, `--audit-url`, `--no-color`, `--json`, `--server`).
+The acceptance command runs the V2.3 Node suite, production dependency audit, package/install smoke test, source-kit browser matrix, and integrated Studio/host browser journey. It fails instead of substituting missing browsers, providers, credentials, or external review.
 
----
+## Customer integration flow
 
-## Architecture
+1. Install the origin-bound browser observer. It derives API shapes locally, removes disallowed values, and sends only new fingerprints and approved metadata.
+2. Optionally upload or link OpenAPI evidence. Observed and declared evidence remain distinct.
+3. Review discovered capabilities and separately decide which may become chatbot tools.
+4. Review the bounded host design contract captured from explicitly marked elements.
+5. Configure Claude CLI, Codex CLI, or an API provider. Claude CLI defaults to `claude-opus-4-8` at `high` effort. There is no provider fallback.
+6. Configure the primary agent and optional bounded read-only specialists.
+7. Generate a Next.js, React Router/Express, or DOM/Node route, inline mount, or drawer installer.
+8. Verify route mounting, server authority, design binding, tools, confirmation behavior, and browser states before publishing.
 
-```mermaid
-graph TB
-  subgraph Public["PUBLIC SURFACE (per app, signed, versioned)"]
-    Caps[/"Capabilities<br/>typed actions + data"/]
-    Skills[/"Skills<br/>usage knowledge"/]
-    Components[/"Component catalog<br/>83 primitives + composition rules"/]
-    Policies[/"Policies<br/>safety rules"/]
-    Brand[/"Brand kit<br/>tokens + variants + voice"/]
-  end
+Start with the [platform operating guide](platform/README.md), [customer onboarding](platform/docs/CUSTOMER_ONBOARDING.md), [application/agent setup](platform/docs/AGENT_SETUP.md), and [legacy-removal record](platform/docs/LEGACY_REMOVAL.md).
 
-  subgraph Private["PRIVATE (per user, vault)"]
-    Intent[/"Intent profile<br/>lenses, rules, vocabulary"/]
-  end
+## Canonical repository map
 
-  subgraph Compile["COMPILER SERVICE (LLM)"]
-    Compiler["@atelier/compiler<br/>Gemini + Fallback + Composite"]
-  end
+| Path | Purpose |
+| --- | --- |
+| `platform/packages/control-plane` | Authentication, tenant/project scope, durable jobs, releases, providers, and API |
+| `platform/packages/discovery` | Privacy projection, runtime observation, design evidence, and onboarding facts |
+| `platform/packages/conversation` | Embedded agent, bounded specialists, tools, confirmations, and artifacts |
+| `platform/packages/surface-install` | Framework-aware customer-owned installers and factual receipts |
+| `platform/packages/source-forge` | Bounded source generation, compilation, certification, and signing |
+| `platform/packages/mcp` | Read-only project-scoped coding-agent tools and generated skills |
+| `platform/apps` | Studio plus runnable host and embedded-agent examples |
+| `platform/tests`, `platform/scripts` | Unit, security, package, browser, and release acceptance gates |
+| `platform/docs` | Current architecture, operations, security, provider, and integration documentation |
 
-  subgraph Cache["MULTI-TIER CACHE"]
-    T3[("Tier 3: ManifestStore<br/>Memory or Redis")]
-    T4[("Tier 4/5: Browser<br/>Memory + IndexedDB")]
-  end
-
-  subgraph Runtime["RUNTIME (the dumb client)"]
-    Resolver["ManifestResolver"]
-    Dispatcher["ActionDispatcher<br/>(modal + verbal_required)"]
-    Bus["TriggerBus + SSE"]
-    Renderer["@atelier/react walker"]
-  end
-
-  Caps --> Compiler
-  Skills --> Compiler
-  Components --> Compiler
-  Brand --> Compiler
-  Intent --> Compiler
-
-  Compiler -.->|emits| Manifest{{Manifest}}
-  Manifest --> Policies
-  Policies -.->|validate every| Manifest
-  Manifest --> T3
-  T3 -.->|served, no recompile| T4
-  T4 --> Resolver
-  Resolver --> Renderer
-  Renderer --> User([User])
-  User -->|action| Dispatcher
-  Dispatcher -->|side-effect call| Backend[(App Backend)]
-  Backend -->|trigger| Bus
-  Bus -->|invalidate| T3
-  Bus -->|invalidate| T4
-
-  Audit[("StreamingAuditSink<br/>+ SSE /api/cir/audit/stream<br/>+ atelier dev --tail")]
-  Compiler -.-> Audit
-  Dispatcher -.-> Audit
-  Resolver -.-> Audit
-```
-
-Five public artifacts at the top, signed and versioned by the app. Private intent below them belongs to the user. The compiler is the only LLM-touching component. Every manifest passes the policy engine before serving. Once cached, nothing in the hot path is non-deterministic — render is a pure function of `(manifest, data)`.
-
-```mermaid
-graph TB
-  ColdReq[/"Browser GET /today"/] --> T4Miss{T4 miss?}
-  T4Miss -->|HIT| HotRender["Render from cache<br/>token_cost = 0"]
-  T4Miss -->|MISS| T3Lookup["ManifestStore lookup<br/>via /api/cir/compile"]
-  T3Lookup --> T3Hit{T3 hit?}
-  T3Hit -->|HIT| Validate1["Re-validate against policies"]
-  T3Hit -->|MISS| LLM["Compiler → Gemini<br/>system prompt cached + per-call context"]
-  LLM --> Validate1
-  Validate1 -->|pass| StoreT3["Store in T3<br/>+ emit manifest.compiled"]
-  StoreT3 --> StoreT4["Send to browser, store in T4"]
-  StoreT4 --> Render["Render"]
-  Validate1 -->|fail| Retry["Compiler retry with violation"]
-  Retry -->|N retries fail| Error["ManifestValidationError → fallback to prior manifest"]
-```
-
-Cost: 1 LLM call on cold path (~5–20k tokens). Zero LLM calls on the hot path. Triggers (capability bumped, intent changed, component removed, user-requested recompile) are the only things that invalidate.
-
----
-
-## Packages
-
-| Package                        | One-liner                                                                                                                                                                                                                                                                        |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@atelier/schemas`             | Zod schemas + JSON Schema codegen for every Atelier artifact (Capability, Skill, Component, Manifest, Trigger, Intent, Audit, BrandKit, Policy, CompositionRules). [README](packages/schemas/README.md).                                                                         |
-| `@atelier/policies`            | 10 baseline pure-function validators + `PolicyRegistry` for app-supplied custom policies + `BehavioralPatternDetector` interface. [README](packages/policies/README.md).                                                                                                         |
-| `@atelier/runtime`             | Framework-agnostic core: manifest cache (Memory + IndexedDB), fetcher, resolver, action dispatcher (modal + verbal-phrase confirm + LRU undo), trigger bus + SSE transport, render-plan builder, audit sinks (incl. `StreamingAuditSink`). [README](packages/runtime/README.md). |
-| `@atelier/components`          | 83 baseline React primitives (Layout, Display, Input, Navigation, Feedback, Action, Specialized) with composition rules + per-component metadata. [README](packages/components/README.md).                                                                                       |
-| `@atelier/react`               | React adapter: `<CirRuntime>` provider, `<CirRoute>` walker, hooks, confirmation portal, SWR + optimistic UI, `@atelier/react/debug` subpath for the floating audit panel. [README](packages/react/README.md).                                                                   |
-| `@atelier/compiler`            | LLM-backed compile service: `GeminiCompiler`, `ToolUsingCompiler`, validation provenance, baseline policy validation, `MemoryManifestStore` + `RedisManifestStore`, `ServerManifestResolver`. [README](packages/compiler/README.md).                                             |
-| `@atelier/evals`               | Eval harness, `defineEval()`, `atelier-evals` CLI. End-to-end Gemini smoke + nightly workflow. [README](packages/evals/README.md).                                                                                                                                               |
-| `@atelier/cli`                 | Unified developer CLI: `atelier init / dev / add / components-sync / validate / import openapi / inspect / compile / vault dev`, with `--tail` for terminal-side audit observability. [README](packages/cli/README.md).                                                          |
-| `@atelier/vault-server`        | The reference intent vault server. `node:http` + ed25519 JWTs + JSON-file storage. Mints scoped tokens, enforces scope-based read/write filtering, emits `system.security_revocation` triggers. [README](packages/vault-server/README.md).                                       |
-| `@atelier/vault-client`        | Typed wire client for the vault. Local JWKS-cached signature verification, pluggable token storage (browser localStorage + in-memory + custom), typed errors for clean fall-through. [README](packages/vault-client/README.md).                                                  |
-| `@atelier/capability-resolver` | Two-stage capability scoping helpers for large registries. [README](packages/capability-resolver/README.md).                                                                                                                                                                     |
-| `@atelier/recipe-resolver`     | Recipe retrieval and resolver primitives for marketplace/RAG-backed recipe selection. [README](packages/recipe-resolver/README.md).                                                                                                                                              |
-| `@atelier/data-resolvers`      | Runtime data-binding resolver helpers. [README](packages/data-resolvers/README.md).                                                                                                                                                                                              |
-| `@atelier/eval-marketplace`    | Marketplace eval fixtures and harness extensions. [README](packages/eval-marketplace/README.md).                                                                                                                                                                                 |
-| `@atelier/keyboard`            | Keyboard registry, shortcut resolution, and command palette support. [README](packages/keyboard/README.md).                                                                                                                                                                      |
-
----
-
-## Vault
-
-Atelier's vault — the user-owned store apps request scoped read access to — ships in two packages:
-
-- **`@atelier/vault-server`** — Reference vault server. `node:http` + ed25519 JWT signing + JSON-file storage by default. Run with `pnpm atelier vault dev --port 4001`.
-- **`@atelier/vault-client`** — Typed wire client. The demo's `apps/demo/lib/intent-store.ts` swapped from `localStorage` to this client (Wave 7 / track V-1). On vault unreachable, the demo falls back to `localStorage` with a console warning. Production hosts disable the fallback via `NEXT_PUBLIC_VAULT_FALLBACK=disabled`.
-
-The wire format — endpoints, scope grammar, JWT claims, key rotation, revocation propagation — lives in [`docs/vault-protocol.md`](docs/vault-protocol.md).
-
-```bash
-# 1. Boot the vault.
-pnpm atelier vault dev --port 4001
-
-# 2. Run the demo. NEXT_PUBLIC_VAULT_URL points at the vault by default.
-pnpm --filter @atelier/demo dev
-# → http://localhost:3000
-```
-
-The two packages plug into the existing trigger bus via `system.security_revocation`: when a user revokes a grant, every running runtime that subscribes to triggers invalidates the affected manifests. The bus is the host's choice (in-memory, SSE, Redis); the vault doesn't care.
-
----
-
-## What's shipped
-
-```mermaid
-graph TB
-  subgraph Shipped["Shipped (verifiable in the current tree)"]
-    direction TB
-    S1["83 baseline components<br/>+ composition rules JSON sibling"]
-    S2["10 baseline policies<br/>+ PolicyRegistry for app-defined"]
-    S3["LLM compiler<br/>Gemini + Fallback + Composite"]
-    S4["StreamingAuditSink<br/>+ IndexedDB cache + SSE transport"]
-    S5["Public artifacts<br/>capabilities/ skills/ recipes/ policies/<br/>+ .well-known/cir.json"]
-    S6["_review envelope<br/>+ strict validate-data gate<br/>for OpenAPI imports"]
-    S7["LLM-assisted onboarding<br/>compileIntentProfile + /onboarding/describe<br/>+ /onboarding/review human gate"]
-    S8["atelier CLI<br/>incl. inspect / compile / dev / vault / marketplace"]
-    S9["Nightly Gemini eval workflow<br/>auth-fail vs no-key distinction"]
-    S10["3800+ tests across 320+ files<br/>schema-validated artifact files"]
-  end
-
-  subgraph Roadmap["Roadmap / not yet shipped"]
-    direction TB
-    R3["Cross-app workflow compilation"]
-    R4["Hosted vault + marketplace operations"]
-    R5["Live-query subscriptions<br/>(SWR + optimistic UI cover the common cases)"]
-    R6["Native/mobile render runtimes"]
-    R7["Richer marketplace provenance + security review"]
-  end
-```
-
----
-
-## Run the demo end-to-end
-
-```bash
-pnpm --filter @atelier/demo dev
-# → http://localhost:3000
-```
-
-First visit lands on `/onboarding`. Two paths:
-
-1. **Checkbox grant** — list of lens scopes, Grant all / Customize / Deny.
-2. **"Or describe yourself in your own words →"** — `/onboarding/describe` POSTs free text to `/api/cir/onboarding/compile`, which calls `compileIntentProfile()` (Gemini, deterministic fallback). The user then **reviews and edits** the draft `IntentProfile` on `/onboarding/review` before saving. The free-text description is request-scoped — never logged, never persisted.
-
-Once granted, `/today` loads. Open DevTools console for audit events. Try:
-
-- Click any thread → `/thread/{id}` with sanitized markdown.
-- Click **Archive** → modal confirmation (`confirmation: 'modal'`).
-- Click **↶ Undo** → action dispatcher pops the LRU undo stack.
-- Visit `/settings/intent` → revoke per-lens or revoke all.
-- The intent profile carries `global_preferences.color_mode` (`light`,
-  `dark`, or `system`). `<CirRoute>` mirrors it onto
-  `<html data-color-mode>` and every component ships paired light + `dark:`
-  Tailwind utilities (Wave 7c / Vis-2) — the demo's Tailwind config keys
-  off `[data-color-mode="dark"]` so the theme switches automatically when
-  the LLM-onboarding flow infers a dark preference. See
-  [`packages/components/README.md`](packages/components/README.md) §"Dark
-  mode" for the per-component pairing reference.
-- Trigger an SSE recompile from another shell:
-  ```bash
-  curl -XPOST http://localhost:3000/api/triggers/publish \
-    -H 'content-type: application/json' \
-    -d '{"type":"user.recompile_route","user_id":"demo-user","manifest_id":"m_demo_today","route":"/today"}'
-  ```
-  Browser refetches via SSE.
-
-In a second terminal:
-
-```bash
-pnpm atelier dev --tail-only
-# tails /api/cir/audit/stream — every compile / policy fail / action.executed
-```
-
-See [`apps/demo/README.md`](apps/demo/README.md) for what's wired and how to swap in a real compiler (Gemini / Anthropic / Claude Code CLI / Codex CLI).
-
----
-
-## Verifying the whole thing
-
-```bash
-pnpm validate                 # license + typecheck + lint + format + components:check + validate-data + tests
-pnpm validate:fast            # everything except tests (pre-push hook)
-pnpm test                     # vitest (3800+ tests across 320+ files)
-pnpm test:coverage            # detailed coverage by package
-pnpm exec atelier-schemas dump --out .well-known/schemas      # regenerate published JSON Schemas
-pnpm exec atelier-schemas validate-data --strict              # fail on _review drafts
-pnpm exec atelier-evals run                                   # eval suite
-pnpm exec atelier-evals run --tag smoke                       # Gemini end-to-end smoke (skips without key)
-pnpm exec atelier-evals run --tag chain                       # personalisation chain integration witness (offline-first, deterministic)
-pnpm --filter @atelier/demo build                             # Next.js production build
-pnpm --filter @atelier/demo e2e                               # Playwright (requires `e2e:install` first)
-```
-
-The nightly Gemini job runs at `.github/workflows/nightly-evals.yml` against the `GEMINI_API_KEY` repo secret. PR CI skips it; nightly catches drift. If the key is revoked or invalid, the eval surfaces `auth_failed: true` and the workflow exits non-zero — silent skip on a revoked key would be a regression, not a pass.
-
----
-
-## Repo layout
-
-```
-atelier/
-├── ETHOS.md                    # The ten principles
-├── AGENTS.md                   # Coding-agent instructions
-├── README.md                   # ← this file
-├── docs/                       # framework chapters + chat/voice/agent extensions
-├── packages/                   # pnpm workspace (15 @atelier packages)
-├── apps/demo/                  # Next.js 15 end-to-end showcase
-├── capabilities/               # typed action+data definitions (with _review envelope)
-├── skills/                     # markdown skills with YAML frontmatter
-├── components/                 # registry.json + composition-rules.json (synced from @atelier/components)
-├── policies/                   # app-defined declarative policies (JSON, PolicySchema)
-├── recipes/                    # default manifests per persona
-├── evals/                      # *.eval.ts scenarios, incl. nightly Gemini smoke
-├── .well-known/
-│   ├── cir.json                # public discovery manifest
-│   └── schemas/                # generated JSON Schemas (versioned)
-└── scripts/                    # check-license-headers, sync-component-registry, sanity test
-```
-
----
-
-## Where to read next
-
-| You want to                               | Read                                                         |
-| ----------------------------------------- | ------------------------------------------------------------ |
-| Understand the philosophy                 | [`ETHOS.md`](ETHOS.md) — 10 principles                       |
-| Understand the architecture               | [`docs/architecture.md`](docs/architecture.md)               |
-| Understand caching + invalidation         | [`docs/caching.md`](docs/caching.md)                         |
-| Understand triggers                       | [`docs/triggers.md`](docs/triggers.md)                       |
-| Understand cost economics                 | [`docs/token-economics.md`](docs/token-economics.md)         |
-| Understand the component catalog          | [`docs/component-catalog.md`](docs/component-catalog.md)     |
-| Understand chat / voice / agent surfaces  | [`docs/chat/overview.md`](docs/chat/overview.md)             |
-| See how the framework was built (history) | [`docs/build-plan.md`](docs/build-plan.md)                   |
-| Operate it in production                  | [`docs/production-concerns.md`](docs/production-concerns.md) |
-| Build something on this repo              | [`AGENTS.md`](AGENTS.md)                                     |
-| See it run                                | [`apps/demo/README.md`](apps/demo/README.md)                 |
-| Help out                                  | [`CONTRIBUTING.md`](CONTRIBUTING.md)                         |
-
----
-
-## The bet
-
-The next decade of operational software is built on **capability surfaces** and
-**ephemeral interfaces**, with users (or agents acting for them) composing what
-they actually need from a stable substrate. Get the three artifacts right —
-capability is contract, intent is private, UI is ephemeral — and teams can stop
-forking internal dashboards every time a role, queue, or policy changes.
-
-The interface is not the product. The capability is.
+Atelier 2.3 remains a release candidate until the exact release commit has live scoped API-provider evidence and an independent signed security review. Local tests do not self-attest those external gates.

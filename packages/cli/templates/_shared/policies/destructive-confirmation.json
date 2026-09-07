@@ -1,6 +1,0 @@
-{
-  "id": "destructive_confirmation",
-  "description": "Every destructive action (delete, archive, remove) must declare a `confirmation` field in its capability JSON, AND the manifest binding it must surface a confirmation affordance (`<ConfirmDialog>`, `<BulkActionBar>` with `confirmation: \"modal\"`, etc.). Catches the failure mode where an LLM-generated manifest binds a destructive capability to a bare `<Button>` with no guard.",
-  "applies_to": "action",
-  "severity": "warn"
-}
