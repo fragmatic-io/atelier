@@ -1,5 +1,7 @@
 # Add Atelier to an existing app
 
+This document covers the optional self-hosted SDK path for teams that deliberately keep surface resolution and execution inside their own server. It is not the default SaaS installer. The supported SaaS path is the one-script Atelier-hosted UI and reviewed browser API client in [AGENT_SETUP.md](AGENT_SETUP.md).
+
 ## Package and imports
 
 This is one source package. In a host checkout, install the locally packed source (or an approved file dependency), retaining your existing React version and design system. No independent registry publication is assumed.

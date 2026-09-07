@@ -44,6 +44,16 @@ test('superseded root framework and duplicate V2.3 harnesses stay removed', () =
     'tests/studio-auth.test.mjs',
     'tests/forge/certify-runner.test.mjs',
     'tests/v23/http-components.test.mjs',
+    'packages/surface-install/src/template-dom.mjs',
+    'packages/surface-install/src/template-express.mjs',
+    'packages/surface-install/src/template-fastapi-bridge.mjs',
+    'packages/surface-install/src/template-fastapi-canonical.mjs',
+    'packages/surface-install/src/template-fastapi-config.mjs',
+    'packages/surface-install/src/template-fastapi-contracts.mjs',
+    'packages/surface-install/src/template-fastapi-ledger.mjs',
+    'packages/surface-install/src/template-next.mjs',
+    'packages/surface-install/src/template-react-router.mjs',
+    'packages/surface-install/src/template-vite-fastapi.mjs',
   ];
   for (const path of retiredPlatformPaths) {
     assert.equal(

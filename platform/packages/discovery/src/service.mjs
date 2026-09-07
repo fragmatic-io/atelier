@@ -197,7 +197,7 @@ export class DiscoveryService {
   }
 
   design(identity, t, p) {
-    projectAccess(this.db, identity, t, p);
+    const scope = projectAccess(this.db, identity, t, p);
     const rows = this.db.all(
       `SELECT d.*,s.name source_name FROM design_observations d
        JOIN discovery_sources s ON s.tenant_id=d.tenant_id AND s.project_id=d.project_id AND s.id=d.source_id
@@ -226,7 +226,21 @@ export class DiscoveryService {
           };
         })()
       : null;
-    return { observations, approved };
+    const syntheses = this.db
+      .all(
+        'SELECT * FROM design_syntheses WHERE tenant_id=? AND project_id=? ORDER BY created_at DESC,id LIMIT 20',
+        t,
+        p,
+      )
+      .map((row) => ({
+        id: row.id,
+        status: row.status,
+        contractFingerprint: row.contract_fingerprint,
+        synthesis: this.store.getArtifact(scope, row.artifact_id, 'design-synthesis').content,
+        createdAt: row.created_at,
+        reviewedAt: row.reviewed_at,
+      }));
+    return { observations, approved, syntheses };
   }
 
   approveDesign(identity, t, p, input) {
@@ -270,6 +284,81 @@ export class DiscoveryService {
       contract: approved,
       approvedAt: now,
     };
+  }
+
+  synthesizeDesign(identity, t, p) {
+    const scope = projectAccess(this.db, identity, t, p, 'run');
+    assert(
+      scope.project.provider_id,
+      409,
+      'PROVIDER_REQUIRED',
+      'Configure this project model connection before design synthesis',
+    );
+    const row = this.db.get(
+      'SELECT approved_contract_json FROM design_observations WHERE tenant_id=? AND project_id=? AND approved_at IS NOT NULL ORDER BY approved_at DESC LIMIT 1',
+      t,
+      p,
+    );
+    const contract = parseJson(row?.approved_contract_json);
+    assert(contract, 409, 'DESIGN_REVIEW_REQUIRED', 'Approve a design contract first');
+    const contractFingerprint = designFingerprint(contract);
+    return this.store.enqueue(
+      scope,
+      'design-synthesis',
+      { contractFingerprint },
+      { dedupeKey: `design-synthesis:${contractFingerprint}` },
+    );
+  }
+
+  reviewDesignSynthesis(identity, t, p, synthesisId, input) {
+    const scope = projectAccess(this.db, identity, t, p, 'review');
+    assert(!identity.token, 403, 'HUMAN_REVIEW_REQUIRED', 'Design synthesis requires human review');
+    const row = this.db.get(
+      'SELECT * FROM design_syntheses WHERE tenant_id=? AND project_id=? AND id=?',
+      t,
+      p,
+      synthesisId,
+    );
+    assert(row, 404, 'NOT_FOUND', 'Design synthesis not found');
+    assert(row.status === 'draft', 409, 'DESIGN_SYNTHESIS_REVIEWED', 'Synthesis is already reviewed');
+    const approvedContract = this.db.get(
+      'SELECT approved_contract_json FROM design_observations WHERE tenant_id=? AND project_id=? AND approved_at IS NOT NULL ORDER BY approved_at DESC LIMIT 1',
+      t,
+      p,
+    );
+    assert(
+      designFingerprint(parseJson(approvedContract?.approved_contract_json)) ===
+        row.contract_fingerprint,
+      409,
+      'DESIGN_CONTRACT_CHANGED',
+      'Synthesize again against the current approved contract',
+    );
+    const decision = input.approved === true ? 'approved' : 'rejected';
+    const now = this.clock();
+    this.db.transaction(() => {
+      if (decision === 'approved')
+        this.db.run(
+          "UPDATE design_syntheses SET status='rejected',reviewed_by=?,reviewed_at=? WHERE tenant_id=? AND project_id=? AND status='approved'",
+          identity.userId,
+          now,
+          t,
+          p,
+        );
+      this.db.run(
+        'UPDATE design_syntheses SET status=?,reviewed_by=?,reviewed_at=? WHERE tenant_id=? AND project_id=? AND id=?',
+        decision,
+        identity.userId,
+        now,
+        t,
+        p,
+        synthesisId,
+      );
+      this.store.audit(scope, 'design.synthesis.reviewed', synthesisId, {
+        decision,
+        contractFingerprint: row.contract_fingerprint,
+      });
+    });
+    return { id: synthesisId, status: decision, reviewedAt: now };
   }
 
   ingest(projectKey, origin, input) {

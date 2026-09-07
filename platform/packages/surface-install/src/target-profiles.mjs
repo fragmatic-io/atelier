@@ -3,6 +3,14 @@
 import { assert } from '../../control-plane/src/util.mjs';
 
 export const SURFACE_TARGET_PROFILES = Object.freeze({
+  'hosted-script': Object.freeze({
+    id: 'hosted-script',
+    label: 'Atelier hosted script',
+    clientRuntime: 'browser',
+    clientLanguage: 'javascript',
+    buildTool: 'none',
+    serverFramework: 'none',
+  }),
   'nextjs-app': Object.freeze({
     id: 'nextjs-app',
     label: 'Next.js App Router',
@@ -37,7 +45,9 @@ export const SURFACE_TARGET_PROFILES = Object.freeze({
   }),
 });
 
-export const SURFACE_TARGETS = Object.freeze(Object.keys(SURFACE_TARGET_PROFILES));
+// Older rows remain displayable and revocable after the hosted-runtime migration,
+// but new installs have one supported product path.
+export const SURFACE_TARGETS = Object.freeze(['hosted-script']);
 
 export function surfaceTargetProfile(id) {
   const profile = SURFACE_TARGET_PROFILES[id];

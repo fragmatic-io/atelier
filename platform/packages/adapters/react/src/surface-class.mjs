@@ -11,6 +11,10 @@ export function createAtelierSurface(React) {
       this.unmounted = false;
     }
     componentDidMount() {
+      // React StrictMode deliberately simulates an unmount/remount cycle while
+      // preserving the component instance. Re-open the lifecycle fence before
+      // resolving so the second mount may publish either its result or error.
+      this.unmounted = false;
       this.begin();
     }
     componentDidUpdate(previous) {

@@ -303,6 +303,13 @@ test('public observer endpoint enforces CORS origin and serves the standalone sn
   const script = await call('/observe/v1.js');
   assert.equal(script.status, 200);
   assert.match(script.content, /AtelierObserver/);
+  const embed = await call('/embed/v1.mjs');
+  assert.equal(embed.status, 200);
+  assert.equal(embed.headers['access-control-allow-origin'], '*');
+  assert.match(embed.content, /dataset\.atelierInstallKey/);
+  const embedClient = await call('/embed/api-client.mjs');
+  assert.equal(embedClient.status, 200);
+  assert.match(embedClient.content, /Only same-origin API calls are allowed/);
   const accepted = await call(
     '/api/observe/v1/events',
     'POST',
@@ -333,17 +340,17 @@ test('Studio exposes guided setup, snippet privacy and fact-derived status copy'
   assert.match(app, /approve-design/);
   assert.match(onboarding, /Every status below comes from stored evidence/);
   assert.match(onboarding, /Custom surfaces and chatbot tools share one inventory/);
-  assert.match(onboarding, /Markup renders inside the customer app/);
-  assert.match(onboarding, /never arbitrary model-written HTML/);
-  assert.match(onboarding, /observer never injects links or UI/);
-  assert.match(onboarding, /new route, mount into an existing page, or improve/);
+  assert.match(onboarding, /Atelier serves a reviewed surface/);
+  assert.match(onboarding, /calls only approved same-origin API paths/);
+  assert.match(onboarding, /observer never injects UI/);
   assert.match(
     onboarding,
     /Discovered, approved, chatbot enabled and published are separate states/,
   );
-  assert.match(installer, /Generated, not injected/);
+  assert.match(installer, /One hosted script/);
+  assert.match(installer, /name="target" value="hosted-script"/);
   assert.match(installer, /Copy coding-agent prompt/);
-  assert.match(installer, /factual installation receipt/);
+  assert.match(installer, /Studio verifies that the hosted manifest loaded/);
   assert.match(styles, /\.setup-rail/);
   assert.match(observer, /XMLHttpRequest\.prototype\.send/);
   assert.match(observer, /atelier:observation-preview/);

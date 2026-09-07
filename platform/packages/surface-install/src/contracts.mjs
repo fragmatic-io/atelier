@@ -46,7 +46,8 @@ export function normalizeSurfaceInstall(input, model) {
     'Choose a slot declared by the current project model',
   );
   assert(
-    !routePath.startsWith(bridgePath + '/') && routePath !== bridgePath,
+    framework === 'hosted-script' ||
+      (!routePath.startsWith(bridgePath + '/') && routePath !== bridgePath),
     400,
     'INSTALL_PATH_COLLISION',
     'Surface route and server bridge paths must be different',

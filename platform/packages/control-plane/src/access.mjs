@@ -107,6 +107,30 @@ export function observerScope(db, source) {
     token: null,
   });
 }
+/** Internal hosted-embed entry. The caller must supply an origin-verified,
+ * active surface install row selected by credential hash. */
+export function surfaceInstallScope(db, install) {
+  assert(
+    install?.id && install?.tenant_id && install?.project_id,
+    500,
+    'SURFACE_INSTALL_REQUIRED',
+    'A verified surface install is required',
+  );
+  const project = db.get(
+    'SELECT * FROM projects WHERE tenant_id=? AND id=? AND archived_at IS NULL',
+    install.tenant_id,
+    install.project_id,
+  );
+  assert(project, 401, 'INSTALL_REVOKED', 'Surface install project is unavailable');
+  return scope({
+    tenantId: install.tenant_id,
+    projectId: install.project_id,
+    userId: `install:${install.id}`,
+    role: 'embed',
+    project,
+    token: null,
+  });
+}
 export function listProjects(db, identity, tenantId) {
   const t = tenantAccess(db, identity, tenantId);
   let rows;

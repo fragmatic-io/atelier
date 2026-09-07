@@ -9,8 +9,8 @@ Create a project and open **Setup**. Studio shows five fact-derived stages:
 1. **Connect discovery** creates an ingest-only browser key restricted to exact application origins and generates the snippet to paste before the closing `body` tag.
 2. **Collect evidence** records new operation/schema revisions or imports an OpenAPI 3.x file or public HTTPS URL.
 3. **Review capabilities** shows evidence provenance, a deterministic recommendation, editable purpose and safety fields, and separate approval and chatbot-exposure decisions.
-4. **Configure delivery** offers two explicit outputs from the same reviewed inventory: custom additive surfaces and an optional chatbot agent. A human reviews the computed host design contract before **Install a surface** generates an exact client/server target bundle for a new route, existing-page mount or drawer. First-class targets include Vite React + FastAPI, Next.js App Router, React Router + Express and DOM + Node. Chatbot setup binds selected tools, voice, retention, bounded specialist roles and a real model connection to the current project-model version.
-5. **Verify and publish** tests both delivery tracks: host authorization, unreviewed action/tool denial, rich query rendering, exact command confirmation and explicit provider/network failure behavior. Setup remains incomplete until there is both a current published surface and a factual installation receipt proving the reviewed design contract, mount, same-origin bridge and fail-closed authority adapter are configured.
+4. **Configure delivery** offers two explicit outputs from the same reviewed inventory: custom additive surfaces and an optional chatbot agent. A human reviews the computed host design contract before **Install hosted UI** generates one script for a new route, existing-page mount or drawer. Chatbot setup binds selected tools, voice, retention, bounded specialist roles and a real model connection to the current project-model version.
+5. **Verify and publish** tests both delivery tracks: customer API authorization, unreviewed action/tool denial, rich query rendering, exact command confirmation and explicit provider/network failure behavior. Setup remains incomplete until there is both a current published surface and a factual installation receipt proving the reviewed design contract, mount, hosted runtime and browser API client initialized.
 
 The status API is `GET /api/tenants/{tenant}/projects/{project}/onboarding`. It derives every step from active discovery sources, stored observations, the current model, recorded review decisions, a current agent profile, a live provider/runner, current published releases and verified surface-install receipts. A UI checkbox cannot mark a step complete.
 
@@ -43,6 +43,8 @@ To learn host-native presentation without source access, mark one approved shell
 ```
 
 Enable **Learn the host design contract** when creating the snippet. The observer reads a fixed allowlist of computed typography, color, spacing, radius, control-size and shadow properties. It does not send page text, HTML, selectors, form values or user data. Studio shows the observed values for human correction and approval. A new fingerprint never silently replaces the approved contract.
+
+After approval, **Synthesize design** can ask the configured project model to interpret those sanitized values into semantic density, hierarchy, interaction tone and component-pattern guidance. This is an explicitly separate agentic stage. Every pattern cites exact approved evidence and remains a reviewable draft; invented or mismatched evidence fails the job. A human must approve the synthesis before surface generation can consume it, and the deterministic contract remains the rendering boundary.
 
 For role-specific evidence, set only a non-personal cohort label after authentication changes:
 
@@ -133,30 +135,19 @@ Delegation requests, specialist tool steps and evidence briefs are encrypted wit
 
 ## Where markup and components run
 
-Custom surfaces render inside the customer application, under its origin, authentication, routing and Content Security Policy. The normal host integration installs Atelier's scoped renderer and approved components, or checks generated project-native component source into the customer repository. The host server resolves a signed, slot-scoped experience contract and supplies only currently authorized projected data.
+Custom surfaces render in a customer-owned mount while Atelier serves the versioned UI/runtime. Reviewed HTTP calls execute directly from the customer page under its origin, existing authenticated browser session and Content Security Policy. The customer API remains authoritative for tenant, permission, object and business-rule checks.
 
-Atelier's control plane serves Studio, discovery, API documentation, reviewed capability metadata and signed release artifacts. It does not stream arbitrary model-authored HTML into the customer page. Model output cannot grant an action, register a component or bypass the host component registry. A rich chatbot response uses the same boundary: the model selects an approved artifact/tool contract, while the customer app renders the corresponding local component and the customer backend performs every authorized data read or command.
+Atelier's control plane serves Studio, discovery, API documentation, reviewed capability metadata, signed releases and their certified UI. It does not stream arbitrary model-authored HTML into the customer page. Model output cannot grant an action, register a component, choose an arbitrary URL or bypass the reviewed operation registry.
 
 A full-page surface requires an explicit customer-owned route and, if desired, a navigation link. An embedded card, rail, drawer or chatbot requires only an approved mount container on an existing page. The discovery observer never creates a route, inserts a link or changes the DOM. Studio may serve a sandboxed preview for review, but that preview is not the production host integration.
 
-## Target-profile surface installation
+## One-script hosted surface installation
 
-Choose **Install a surface** in Setup after the project model contains an approved slot. Supply the exact customer application origin, installation target, placement, route, navigation label, slot, environment and same-origin bridge path. A target profile independently records client runtime, client language, build tool and server framework; adding a server adapter no longer requires pretending it is a browser framework. Studio returns a one-time JSON bundle containing:
-
-- **Vite React + FastAPI:** React TypeScript mount files plus a modular native Python bridge with Ed25519 verification, schema and scope checks, exact-origin enforcement, fail-closed authority hooks, HMAC-bound confirmation and a durable SQLite command ledger;
-- **Next.js App Router**, **React Router + Express**, and **DOM + Node/Express** for their exact named stacks;
-- no automatic substitute when the customer's stack does not match a supported target.
-
-- new customer-owned mount, route, navigation and server-bridge files;
-- exact insertion patches for the customer's existing router, navigation and server bootstrap;
-- a fail-closed authority adapter whose default denies every operation;
-- a scoped CSS contract generated from the reviewed host design fingerprint;
-- server-only environment placeholders, never a host token or confirmation key;
-- an origin-bound public verification key used only to report installation facts.
+Choose **Install hosted UI** after publishing an approved slot. Supply the exact customer origin, placement, page path, navigation label, slot and environment. Studio returns one snippet containing a customer-owned mount and an Atelier-hosted module script. There are no framework-specific files, packages, server bridge or API credentials. The origin-bound public key selects only this install's current signed UI manifest and reports installation facts.
 
 For a full page, the customer applies the generated route and consciously places the generated navigation component. For an inline or drawer placement, the recorded route identifies the existing host page and the customer places the generated mount there. Atelier does not guess or mutate an unknown application file.
 
-The mounted client reports the current bundle hash while Studio verifies four facts: the bundle is bound to the reviewed host design contract, the route mounted, the same-origin bridge answered with complete server configuration, and the customer changed the authority adapter from its fail-closed default. Studio records `waiting`, `partial` or `verified` from those facts. The receipt is not proof that authorization is correct and never grants authority; the host's authorization tests and human review remain mandatory.
+The mounted client reports the current bundle hash while Studio verifies four facts: reviewed design binding, customer mount, hosted UI load and reviewed browser API-client initialization. Studio records `waiting`, `partial` or `verified` from those facts. The receipt is not proof that the customer API authorizes correctly and never grants authority; customer authorization tests and human review remain mandatory.
 
 Re-publishing an improved Atelier surface does not require a new route. The host keeps the same approved slot while signed release resolution selects the current compatible experience. Changes outside an Atelier-owned slot remain customer-owned code changes and must be delivered as an explicit reviewable patch.
 

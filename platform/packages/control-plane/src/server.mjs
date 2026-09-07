@@ -27,6 +27,8 @@ const webRoot = fileURLToPath(new URL('../../../apps/studio/web/', import.meta.u
 const surfaceFile = fileURLToPath(new URL('../../surface/src/browser.mjs', import.meta.url));
 const redocFile = createRequire(import.meta.url).resolve('redoc/bundles/redoc.standalone.js');
 const observerFile = fileURLToPath(new URL('../../discovery/src/observer.js', import.meta.url));
+const embedFile = fileURLToPath(new URL('../../embed/src/runtime.mjs', import.meta.url));
+const embedClientFile = fileURLToPath(new URL('../../embed/src/api-client.mjs', import.meta.url));
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -155,6 +157,44 @@ export function createControlServer(
         });
         res.end(data);
         return;
+      }
+      if (req.method === 'GET' && url.pathname === '/embed/v1.mjs') {
+        const data = await readFile(embedFile);
+        res.writeHead(200, {
+          'Content-Type': 'text/javascript; charset=utf-8',
+          'Cache-Control': 'public, max-age=300',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(data);
+        return;
+      }
+      if (req.method === 'GET' && url.pathname === '/embed/api-client.mjs') {
+        const data = await readFile(embedClientFile);
+        res.writeHead(200, {
+          'Content-Type': 'text/javascript; charset=utf-8',
+          'Cache-Control': 'public, max-age=300',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(data);
+        return;
+      }
+      if (req.method === 'GET' && url.pathname === '/api/embed/v1/manifest') {
+        const requestOrigin = req.headers.origin;
+        assert(
+          typeof requestOrigin === 'string',
+          400,
+          'ORIGIN_REQUIRED',
+          'Embedding application origin is required',
+        );
+        res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+        res.setHeader('Vary', 'Origin');
+        return send(
+          res,
+          200,
+          installs.publicManifest(url.searchParams.get('key'), requestOrigin),
+        );
       }
       if (req.method === 'OPTIONS' && url.pathname === '/api/observe/v1/events') {
         const requestOrigin = req.headers.origin;
@@ -436,6 +476,16 @@ export function createControlServer(
         if (req.method === 'GET') return send(res, 200, discovery.design(identity, t, p));
         if (req.method === 'POST')
           return send(res, 200, discovery.approveDesign(identity, t, p, body));
+      }
+      if (resource === 'design-synthesis') {
+        if (req.method === 'POST' && !rid)
+          return send(res, 202, discovery.synthesizeDesign(identity, t, p));
+        if (req.method === 'POST' && rid && action === 'review')
+          return send(
+            res,
+            200,
+            discovery.reviewDesignSynthesis(identity, t, p, rid, body),
+          );
       }
       if (resource === 'surface-installs') {
         if (req.method === 'GET') return send(res, 200, installs.list(identity, t, p));

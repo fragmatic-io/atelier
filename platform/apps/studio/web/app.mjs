@@ -900,6 +900,38 @@ const actions = {
       'Generated components inherit these approved values. A new observed revision does not silently replace this contract.',
     );
   },
+  'synthesize-design': async () => {
+    const job = await api(base() + '/design-synthesis', { method: 'POST', body: {} });
+    toast('Agentic Design Genome synthesis queued against the approved contract.');
+    navigate(`/project/${state.project.id}/jobs`);
+    return job;
+  },
+  'review-design-synthesis': async () => {
+    const design = await api(base() + '/design-contract');
+    const synthesis = (design.syntheses ?? []).find(
+      (candidate) =>
+        candidate.status === 'draft' &&
+        candidate.contractFingerprint === design.approved?.fingerprint,
+    );
+    if (!synthesis) return toast('No current design synthesis is waiting for review.', true);
+    const value = synthesis.synthesis;
+    formDialog(
+      'Review intelligent design guidance',
+      `<div class="privacy-preview"><strong>Approved contract remains authoritative</strong><p>The model interpreted only sanitized computed-style evidence. It cannot change tokens or grant UI/API authority.</p></div><h3>${e(value.summary)}</h3><div class="evidence-facts"><div><strong>${e(value.density)}</strong><span>density</span></div><div><strong>${e(value.hierarchy)}</strong><span>hierarchy</span></div><div><strong>${e(value.interactionTone)}</strong><span>interaction tone</span></div></div>${value.patterns.map((pattern) => `<details><summary>${e(pattern.name)} · ${Math.round(pattern.confidence * 100)}%</summary><p>${e(pattern.guidance)}</p><pre class="small-code">${e(JSON.stringify(pattern.evidence, null, 2))}</pre></details>`).join('')}<label>Decision<select name="decision"><option value="approved">Approve for generation</option><option value="rejected">Reject</option></select></label><label class="checkbox"><input type="checkbox" name="reviewed" required>I checked the cited evidence and semantic guidance.</label>`,
+      'Save design decision',
+      async (body, form, d) => {
+        if (!form.reviewed.checked) throw new Error('Review the design synthesis first.');
+        await api(base() + '/design-synthesis/' + synthesis.id + '/review', {
+          method: 'POST',
+          body: { approved: body.decision === 'approved' },
+        });
+        d.closeDialog();
+        toast('Design synthesis decision saved.');
+        await route();
+      },
+      'Only approved synthesis is supplied to the surface generator, alongside the unchanged deterministic contract.',
+    );
+  },
   'revoke-discovery': (el) =>
     formDialog(
       'Revoke discovery source',
@@ -1033,6 +1065,14 @@ const actions = {
         $('[data-close]', ready).onclick = closeAndRefresh;
         $('[data-download-install]', ready).onclick = () =>
           download(`atelier-${result.install.id}.install.json`, result.bundle);
+        $('[data-copy-snippet]', ready).onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(result.bundle.patches[0].snippet);
+            toast('Hosted script copied.');
+          } catch {
+            toast('Clipboard access failed. Download the receipt bundle.', true);
+          }
+        };
         $('[data-copy-agent]', ready).onclick = async () => {
           try {
             await navigator.clipboard.writeText(codingAgentPrompt(result.bundle));
@@ -1045,7 +1085,7 @@ const actions = {
           }
         };
       },
-      'Choose whether this is a new route, an existing-page mount or an Atelier-managed surface improvement. Generated authority code denies every operation until the customer wires real server authorization.',
+      'Atelier serves the UI. The script calls only approved same-origin API contracts through the customer browser session; the customer API remains the authorization boundary.',
     );
   },
   'revoke-surface-install': (el) =>

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
-import { projectAccess } from '../../control-plane/src/access.mjs';
+import { projectAccess, surfaceInstallScope } from '../../control-plane/src/access.mjs';
 import { assert, hash, id, parseJson, token } from '../../control-plane/src/util.mjs';
 import { normalizeInstallReceipt, normalizeSurfaceInstall } from './contracts.mjs';
 import { generateSurfaceInstall } from './templates.mjs';
 import { surfaceTargetProfile } from './target-profiles.mjs';
+import { verifySignedBundle } from '../../runtime/src/index.mjs';
 
 const view = (row) => ({
   id: row.id,
@@ -123,6 +124,125 @@ export class SurfaceInstallService {
       projectId,
       installId,
     );
+  }
+
+  publicManifest(verificationKey, origin) {
+    assert(
+      typeof verificationKey === 'string' && verificationKey.startsWith('atl_ins_'),
+      401,
+      'INSTALL_KEY',
+      'Install key is invalid',
+    );
+    const install = this.db.get(
+      "SELECT * FROM surface_installs WHERE credential_hash=? AND framework='hosted-script' AND status!='revoked' AND revoked_at IS NULL",
+      hash(verificationKey),
+    );
+    assert(install, 401, 'INSTALL_KEY', 'Hosted install key is invalid or revoked');
+    assert(
+      origin === install.application_origin,
+      403,
+      'INSTALL_ORIGIN',
+      'Install origin is not allowed',
+    );
+    this.service.auth.rate(`embed:${install.id}`, { limit: 120, windowMs: 60000 });
+    const deployment = this.db.get(
+      'SELECT * FROM deployments WHERE tenant_id=? AND project_id=? AND slot_id=? AND environment=?',
+      install.tenant_id,
+      install.project_id,
+      install.slot_id,
+      install.environment,
+    );
+    assert(
+      deployment?.release_id,
+      409,
+      'SURFACE_NOT_PUBLISHED',
+      `Publish ${install.slot_id} to ${install.environment} before loading the hosted script`,
+    );
+    const release = this.db.get(
+      'SELECT signature_json FROM releases WHERE tenant_id=? AND project_id=? AND id=?',
+      install.tenant_id,
+      install.project_id,
+      deployment.release_id,
+    );
+    const bundle = parseJson(release?.signature_json);
+    assert(bundle, 409, 'INVALID_RELEASE', 'Published surface bundle is missing');
+    try {
+      verifySignedBundle(bundle, this.service.publicKeys(surfaceInstallScope(this.db, install)));
+    } catch {
+      assert(false, 410, 'RELEASE_REVOKED', 'Published surface signature is invalid or revoked');
+    }
+    assert(
+      bundle.tenantId === install.tenant_id &&
+        bundle.projectId === install.project_id &&
+        bundle.slotId === install.slot_id &&
+        bundle.environment === install.environment,
+      409,
+      'BUNDLE_SCOPE',
+      'Published surface scope does not match this install',
+    );
+    const scope = surfaceInstallScope(this.db, install);
+    const project = scope.project;
+    assert(project.model_id, 409, 'MODEL_REQUIRED', 'A current capability model is required');
+    const model = this.store.getArtifact(
+      scope,
+      project.model_id,
+      'model',
+    ).content;
+    assert(
+      bundle.projectVersion === model.projectVersion,
+      409,
+      'PROJECT_VERSION_CHANGED',
+      'The published surface must be regenerated against the current capability model',
+    );
+    const ids = [
+      ...new Set(
+        [...bundle.experiencePlan.queryPlan, ...bundle.experiencePlan.actionPlan].map(
+          (entry) => entry.capabilityId,
+        ),
+      ),
+    ];
+    const capabilities = ids.map((capabilityId) => {
+      const capability = model.capabilities.find((candidate) => candidate.id === capabilityId);
+      assert(
+        capability?.securityReviewed &&
+          capability.operation?.protocol === 'http' &&
+          /^[A-Z]+$/.test(capability.operation.method) &&
+          capability.operation.path.startsWith('/') &&
+          !capability.operation.path.startsWith('//') &&
+          !capability.operation.path.includes('..'),
+        409,
+        'CLIENT_CAPABILITY_DENIED',
+        `Hosted client capability is not an approved same-origin HTTP operation: ${capabilityId}`,
+      );
+      return {
+        id: capability.id,
+        kind: capability.kind,
+        operation: capability.operation,
+        inputSchema: capability.inputSchema,
+        outputSchema: capability.outputSchema,
+        risk: capability.risk,
+        confirmation: capability.confirmation,
+      };
+    });
+    const design = this.db.get(
+      'SELECT approved_contract_json FROM design_observations WHERE tenant_id=? AND project_id=? AND approved_at IS NOT NULL ORDER BY approved_at DESC LIMIT 1',
+      install.tenant_id,
+      install.project_id,
+    );
+    return {
+      schemaVersion: 1,
+      install: {
+        id: install.id,
+        bundleHash: install.bundle_hash,
+        mode: install.mode,
+        slotId: install.slot_id,
+        environment: install.environment,
+        designFingerprint: install.design_fingerprint,
+      },
+      bundle,
+      capabilities,
+      designContract: parseJson(design?.approved_contract_json, {}),
+    };
   }
 
   revoke(identity, tenantId, projectId, installId) {

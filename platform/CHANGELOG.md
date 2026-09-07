@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased — automatic API reference
+## Unreleased — hosted runtime and intelligent design
 
-Adds a framework-agnostic surface-installer target core that records client runtime, source language, build tool and server framework independently. Adds first-class Vite React + FastAPI output with React TypeScript mounts and a native modular Python same-origin bridge; the generated bridge verifies Ed25519 releases, schema/scope/permissions, host authorization, confirmation bindings and durable command idempotency without a Node sidecar.
+Replaces framework-specific generated bridges with one origin-bound hosted module script. Atelier serves the signed surface UI and approved design contract; the customer browser executes only reviewed same-origin HTTP operations through its existing application session. The runtime denies unknown capabilities and cross-origin URLs, forwards host CSRF for reviewed mutations, and requires no customer API credential, package or server bridge.
+
+Adds an optional agentic Design Genome synthesis after deterministic human approval. Model guidance must cite exact role/property/value evidence from the immutable approved contract, fails on invented evidence, and requires a separate human review before generation consumes it. Fixes React StrictMode remount lifecycle fencing and adds a regression test.
 
 Adds a deterministic OpenAPI 3.1 exporter for current project-model HTTP capabilities and a locally served, authenticated Redoc reference inside each Studio project. The generated document preserves contract provenance, review state, permissions, risk, confirmation, side effects, idempotency, reversibility and PII metadata. Documentation does not make an unreviewed capability callable.
 

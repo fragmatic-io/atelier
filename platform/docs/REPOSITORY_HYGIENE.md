@@ -17,6 +17,8 @@ The newer GitHub acceptance workflow and Dependabot configuration were also remo
 
 No old runtime source, test, compatibility shim or product documentation survived this cutoff review. Superseded application/framework trees, duplicate V2.3 harnesses and retired hosted-automation files are enforced by `platform/tests/repository-hygiene.test.mjs`. Age alone was not treated as evidence that a governance file was dead.
 
+The September 7 hosted-runtime decision also removed the generated Next.js, Express, DOM and Vite/FastAPI bridge templates and their framework-specific syntax fixtures. New SaaS installs have one supported path: the Atelier-hosted module script and its reviewed same-origin browser API client. Historical install rows remain readable and revocable for migration evidence, but Studio cannot create another legacy bridge install.
+
 The test cleanup also removed four redundant suites: CLI/demo happy paths duplicated by package and browser acceptance, Studio auth markup duplicated by live HTTP and Chromium coverage, certifier-runner errors duplicated by isolation and the reference matrix, and component-HTTP happy paths duplicated by lifecycle/package/browser gates. Distinct tests for tenant isolation, authorization, privacy, signatures, confirmation, idempotency, providers, source isolation, capability governance, rich surfaces and the actual browser journey remain mandatory.
 
 Run the canonical check after future cleanup changes:

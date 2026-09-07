@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 import { canonical, hash } from '../../control-plane/src/util.mjs';
-import { domBundle } from './template-dom.mjs';
-import { nextBundle } from './template-next.mjs';
-import { reactRouterBundle } from './template-react-router.mjs';
 import { surfaceTargetProfile } from './target-profiles.mjs';
-import { viteReactFastApiBundle } from './template-vite-fastapi.mjs';
+import { hostedScriptBundle } from './template-hosted.mjs';
 
 export function generateSurfaceInstall(input) {
   const target = surfaceTargetProfile(input.framework);
@@ -13,14 +10,7 @@ export function generateSurfaceInstall(input) {
   delete seed.verificationKey;
   const bundleHash = hash(seed);
   const install = { ...input, target, bundleHash };
-  const generated =
-    install.framework === 'nextjs-app'
-      ? nextBundle(install)
-      : install.framework === 'react-router'
-        ? reactRouterBundle(install)
-        : install.framework === 'vite-react-fastapi'
-          ? viteReactFastApiBundle(install)
-          : domBundle(install);
+  const generated = hostedScriptBundle(install);
   return {
     schemaVersion: 1,
     generatedAt: new Date(install.createdAt).toISOString(),
@@ -44,10 +34,7 @@ export function generateSurfaceInstall(input) {
       originBound: install.applicationOrigin,
       authority: 'Operational evidence only; never an authorization grant.',
     },
-    serverSecrets: {
-      committed: false,
-      required: ['ATELIER_HOST_TOKEN', 'ATELIER_CONFIRMATION_KEY'],
-    },
+    serverSecrets: { committed: false, required: [] },
     files: generated.files,
     patches: generated.patches,
     verification: {
