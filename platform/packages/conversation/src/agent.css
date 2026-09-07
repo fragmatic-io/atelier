@@ -1,0 +1,364 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 The Atelier Authors
+ * Standalone host-scoped styles for mountAgentChat().
+ */
+:where(.atelier-agent-root) {
+  color-scheme: light;
+  --agent-bg: var(--atelier-bg, #f4f7fb);
+  --agent-paper: var(--atelier-paper, #ffffff);
+  --agent-soft: var(--atelier-soft, #edf2f7);
+  --agent-text: var(--atelier-text, #182436);
+  --agent-muted: var(--atelier-muted, #66758a);
+  --agent-line: var(--atelier-line, #dce4ed);
+  --agent-accent: var(--atelier-accent, #286b62);
+  --agent-accent-soft: var(--atelier-accent-soft, #e4f1ed);
+  box-sizing: border-box;
+  display: block;
+  background: var(--agent-bg);
+  color: var(--agent-text);
+  font:
+    14px/1.55 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+:where(.atelier-agent-root) *,
+:where(.atelier-agent-root) *::before,
+:where(.atelier-agent-root) *::after {
+  box-sizing: border-box;
+}
+
+:where(.atelier-agent-root) button,
+:where(.atelier-agent-root) input,
+:where(.atelier-agent-root) select,
+:where(.atelier-agent-root) textarea {
+  font: inherit;
+}
+
+:where(.atelier-agent-root) button:focus-visible,
+:where(.atelier-agent-root) input:focus-visible,
+:where(.atelier-agent-root) select:focus-visible,
+:where(.atelier-agent-root) textarea:focus-visible {
+  outline: 3px solid #5a9fda;
+  outline-offset: 3px;
+}
+
+:where(.atelier-agent-root) .atelier-chat {
+  display: grid;
+  grid-template-columns: minmax(350px, 0.94fr) minmax(350px, 1.06fr);
+  min-height: 680px;
+  overflow: hidden;
+  border: 1px solid var(--agent-line);
+  border-radius: 16px;
+  background: var(--agent-paper);
+  box-shadow: 0 22px 65px rgb(24 36 54 / 8%);
+}
+
+:where(.atelier-agent-root) .chat-pane {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--agent-line);
+}
+
+:where(.atelier-agent-root) .chat-heading,
+:where(.atelier-agent-root) .chat-composer,
+:where(.atelier-agent-root) .chat-artifacts {
+  padding: 22px;
+}
+
+:where(.atelier-agent-root) .chat-heading {
+  border-bottom: 1px solid var(--agent-line);
+}
+
+:where(.atelier-agent-root) .chat-heading h2,
+:where(.atelier-agent-root) .artifact-heading h3 {
+  margin: 0 0 7px;
+  letter-spacing: -0.02em;
+}
+
+:where(.atelier-agent-root) .chat-heading p,
+:where(.atelier-agent-root) .artifact-heading p {
+  margin: 0 0 14px;
+}
+
+:where(.atelier-agent-root) .eyebrow,
+:where(.atelier-agent-root) .message-role {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--agent-accent);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+:where(.atelier-agent-root) .row,
+:where(.atelier-agent-root) .composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+:where(.atelier-agent-root) .button,
+:where(.atelier-agent-root) .suggestion,
+:where(.atelier-agent-root) .artifact-link {
+  border: 1px solid var(--agent-line);
+  border-radius: 9px;
+  background: var(--agent-paper);
+  color: var(--agent-text);
+  cursor: pointer;
+}
+
+:where(.atelier-agent-root) .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+:where(.atelier-agent-root) .button.primary {
+  border-color: var(--agent-accent);
+  background: var(--agent-accent);
+  color: #ffffff;
+}
+
+:where(.atelier-agent-root) .button.micro {
+  margin-top: 9px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+:where(.atelier-agent-root) .button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+:where(.atelier-agent-root) .chat-notice {
+  min-height: 32px;
+  padding: 8px 22px;
+  color: var(--agent-muted);
+  font-size: 11px;
+}
+
+:where(.atelier-agent-root) .chat-messages {
+  height: 420px;
+  flex: 1;
+  overflow: auto;
+  padding: 5px 22px 24px;
+}
+
+:where(.atelier-agent-root) .chat-empty {
+  padding: 50px 18px;
+  text-align: center;
+}
+
+:where(.atelier-agent-root) .spark {
+  margin-bottom: 16px;
+  color: var(--agent-accent);
+  font-size: 38px;
+}
+
+:where(.atelier-agent-root) .chat-message {
+  padding: 14px 0;
+}
+
+:where(.atelier-agent-root) .chat-message.user {
+  margin: 8px 0 8px 28px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--agent-soft);
+}
+
+:where(.atelier-agent-root) .chat-message.tool {
+  padding: 7px 12px;
+  border-left: 2px solid var(--agent-accent);
+  color: var(--agent-muted);
+  font-size: 11px;
+}
+
+:where(.atelier-agent-root) .message-text,
+:where(.atelier-agent-root) pre {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+:where(.atelier-agent-root) .message-feedback {
+  display: flex;
+  gap: 6px;
+}
+
+:where(.atelier-agent-root) .suggestion {
+  margin: 7px 5px 0 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--agent-muted);
+  font-size: 11px;
+}
+
+:where(.atelier-agent-root) .chat-composer {
+  margin-top: auto;
+  border-top: 1px solid var(--agent-line);
+}
+
+:where(.atelier-agent-root) .chat-composer textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: var(--agent-soft);
+  color: var(--agent-text);
+}
+
+:where(.atelier-agent-root) .composer-actions {
+  margin-top: 10px;
+}
+
+:where(.atelier-agent-root) .composer-actions .muted {
+  flex: 1;
+}
+
+:where(.atelier-agent-root) .attachment-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+:where(.atelier-agent-root) .tag {
+  display: inline-flex;
+  border: 1px solid var(--agent-line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  background: var(--agent-paper);
+  color: var(--agent-muted);
+  font-size: 11px;
+}
+
+:where(.atelier-agent-root) .file-input {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+:where(.atelier-agent-root) .chat-artifacts {
+  min-width: 0;
+  background: var(--agent-bg);
+}
+
+:where(.atelier-agent-root) .artifact-mount {
+  height: 520px;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--agent-line);
+  border-radius: 12px;
+  background: var(--agent-paper);
+}
+
+:where(.atelier-agent-root) .atelier-artifact-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  border: 0;
+}
+
+:where(.atelier-agent-root) .artifact-link {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  text-align: left;
+}
+
+:where(.atelier-agent-root) .artifact-link > span:nth-child(2) {
+  flex: 1;
+}
+
+:where(.atelier-agent-root) .artifact-link small,
+:where(.atelier-agent-root) .muted {
+  color: var(--agent-muted);
+}
+
+:where(.atelier-agent-root) .micro,
+:where(.atelier-agent-root) .artifact-link small {
+  font-size: 11px;
+}
+
+:where(.atelier-agent-root) .artifact-icon {
+  color: var(--agent-accent);
+  font-size: 28px;
+}
+
+:where(.atelier-agent-root) .tool-card {
+  margin: 14px 0;
+  border: 1px solid var(--agent-line);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--agent-accent-soft);
+}
+
+:where(.atelier-agent-root) .agent-dialog {
+  width: min(600px, 92vw);
+  border: 1px solid var(--agent-line);
+  border-radius: 16px;
+  padding: 28px;
+  background: var(--agent-paper);
+  color: var(--agent-text);
+  box-shadow: 0 30px 100px rgb(0 0 0 / 27%);
+}
+
+:where(.atelier-agent-root) .agent-dialog::backdrop {
+  background: rgb(19 34 51 / 45%);
+}
+
+:where(.atelier-agent-root) .agent-dialog .row {
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+:where(.atelier-agent-root) [hidden] {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  :where(.atelier-agent-root) .atelier-chat {
+    grid-template-columns: 1fr;
+  }
+
+  :where(.atelier-agent-root) .chat-pane {
+    border-right: 0;
+  }
+
+  :where(.atelier-agent-root) .chat-artifacts {
+    border-top: 1px solid var(--agent-line);
+  }
+}
+
+@media (max-width: 520px) {
+  :where(.atelier-agent-root) .chat-heading,
+  :where(.atelier-agent-root) .chat-composer,
+  :where(.atelier-agent-root) .chat-artifacts {
+    padding: 16px;
+  }
+
+  :where(.atelier-agent-root) .chat-messages {
+    padding: 5px 16px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.atelier-agent-root) * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

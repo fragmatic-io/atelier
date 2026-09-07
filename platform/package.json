@@ -33,11 +33,36 @@
       "types": "./types/providers.d.ts",
       "default": "./packages/providers/src/index.mjs"
     },
+    "./agent": {
+      "types": "./types/agent.d.ts",
+      "default": "./packages/conversation/src/host.mjs"
+    },
+    "./agent-client": {
+      "types": "./types/agent-client.d.ts",
+      "default": "./packages/conversation/src/client.mjs"
+    },
+    "./agent-journal": {
+      "types": "./types/agent-journal.d.ts",
+      "default": "./packages/conversation/src/journal.mjs"
+    },
+    "./artifact": {
+      "types": "./types/artifact.d.ts",
+      "default": "./packages/conversation/src/frame.mjs"
+    },
+    "./chat": {
+      "types": "./types/chat.d.ts",
+      "default": "./packages/conversation/src/chat.mjs"
+    },
+    "./source-forge": {
+      "types": "./types/source-forge.d.ts",
+      "default": "./packages/source-forge/src/compiler.mjs"
+    },
     "./mcp": {
       "types": "./types/mcp.d.ts",
       "default": "./packages/mcp/src/server.mjs"
     },
-    "./surface.css": "./apps/studio/web/surface.css"
+    "./surface.css": "./apps/studio/web/surface.css",
+    "./agent.css": "./packages/conversation/src/agent.css"
   },
   "bin": {
     "atelier": "./scripts/cli.mjs"
@@ -62,6 +87,7 @@
     "test:forge": "node --test tests/forge-compiler.test.mjs tests/forge/*.test.mjs",
     "test:browser": "python3 scripts/browser-integration.py",
     "mcp": "node scripts/mcp.mjs",
+    "export:skills": "node scripts/export-project-skills.mjs",
     "certify:examples": "node scripts/certify-examples.mjs",
     "demo:agent": "node apps/agent-demo/server.mjs",
     "seed:experiences": "node scripts/seed-experiences.mjs",
@@ -77,6 +103,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
+    "@types/node": "22.19.17",
     "@types/react": "19.2.0",
     "@types/react-dom": "19.2.0",
     "ajv": "8.20.0",
@@ -85,6 +112,7 @@
     "postcss": "8.5.28",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "redoc": "2.5.0",
     "typescript": "5.8.3",
     "yaml": "2.9.0",
     "zod": "4.5.4"

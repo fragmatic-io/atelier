@@ -71,6 +71,12 @@ import { mountSurface, readField } from '@atelier/platform/surface';
 import { createHostClient } from '@atelier/platform/host-client';
 import { ApiProvider, CliProvider, validateOutput } from '@atelier/platform/providers';
 import { createAtelierMcpServer } from '@atelier/platform/mcp';
+import { AgentHostBridge, SqliteToolReceipts } from '@atelier/platform/agent';
+import { AgentClient, defineClientTool } from '@atelier/platform/agent-client';
+import { MemoryJournal } from '@atelier/platform/agent-journal';
+import { mountArtifactFrame } from '@atelier/platform/artifact';
+import { mountAgentChat } from '@atelier/platform/chat';
+import { compileSourceKit } from '@atelier/platform/source-forge';
 assert.equal(typeof HostBridge, 'function');assert.equal(typeof mountSurface, 'function');
 assert.equal(readField({a:{b:2}}, 'a.b'),2);assert.equal(typeof createHostClient, 'function');
 const ledger = new SqliteActionLedger(':memory:');
@@ -81,13 +87,53 @@ assert.equal(count,1);assert.equal(replay.replayed,true);ledger.close();
 validateOutput({ok:true},{type:'object',properties:{ok:{type:'boolean'}},required:['ok'],additionalProperties:false});
 assert.equal(typeof ApiProvider,'function');assert.equal(typeof CliProvider,'function');
 assert.equal(typeof createAtelierMcpServer,'function');
+assert.equal(typeof AgentHostBridge,'function');assert.equal(typeof SqliteToolReceipts,'function');
+assert.equal(typeof AgentClient,'function');assert.equal(typeof defineClientTool,'function');
+assert.equal(typeof MemoryJournal,'function');assert.equal(typeof mountArtifactFrame,'function');
+assert.equal(typeof mountAgentChat,'function');assert.equal(typeof compileSourceKit,'function');
 assert(import.meta.resolve('@atelier/platform/surface.css').endsWith('/surface.css'));
+assert(import.meta.resolve('@atelier/platform/agent.css').endsWith('/agent.css'));
 console.log('external consumer passed');`;
   await writeFile(join(consumer, 'smoke.mjs'), code);
   const result = await exec(process.execPath, ['smoke.mjs'], { cwd: consumer, timeout: 15000 });
   assert(result.stdout.includes('external consumer passed'));
   report.checks.push({
     name: 'Real installed public imports and durable duplicate-action contract',
+    passed: true,
+  });
+  await writeFile(
+    join(consumer, 'types.ts'),
+    `import type { AgentTransport } from '@atelier/platform/agent-client';
+import type { SourceKit } from '@atelier/platform/source-forge';
+import type { PreviewGrant } from '@atelier/platform/artifact';
+import type { HostBridgeOptions } from '@atelier/platform/host';
+const transport: AgentTransport = async () => ({});
+const preview: PreviewGrant = { url: 'https://example.test/preview', channel: 'channel' };
+const kit = {} as SourceKit;
+const host = {} as HostBridgeOptions;
+void [transport, preview, kit, host];\n`,
+  );
+  await writeFile(
+    join(consumer, 'tsconfig.json'),
+    JSON.stringify({
+      compilerOptions: {
+        target: 'ES2022',
+        module: 'NodeNext',
+        moduleResolution: 'NodeNext',
+        lib: ['ES2022', 'DOM'],
+        strict: true,
+        noEmit: true,
+        skipLibCheck: false,
+      },
+      include: ['types.ts'],
+    }),
+  );
+  await exec(join(consumer, 'node_modules/.bin/tsc'), ['--project', 'tsconfig.json'], {
+    cwd: consumer,
+    timeout: 30000,
+  });
+  report.checks.push({
+    name: 'Installed public TypeScript declarations compile in an external consumer',
     passed: true,
   });
   const cli = await exec(join(consumer, 'node_modules/.bin/atelier'), ['--help'], {

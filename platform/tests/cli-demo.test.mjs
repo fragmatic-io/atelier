@@ -141,8 +141,15 @@ test('live demo rejects unconfirmed actions and executes confirmed authorized ac
 
 test('distribution self-audit finds documented packages and the exact compiler dependency set', async () => {
   const packageJson = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf8'));
+  const manifest = JSON.parse(await readFile(join(ROOT, 'PACKAGE-MANIFEST.json'), 'utf8'));
+  assert.equal(
+    manifest.files.some((entry) => entry.path.startsWith('.venv/')),
+    false,
+    'Local browser environments must never enter the source manifest',
+  );
   assert.deepEqual(packageJson.dependencies, {
     '@modelcontextprotocol/server': '2.0.0',
+    '@types/node': '22.19.17',
     '@types/react': '19.2.0',
     '@types/react-dom': '19.2.0',
     ajv: '8.20.0',
@@ -151,6 +158,7 @@ test('distribution self-audit finds documented packages and the exact compiler d
     postcss: '8.5.28',
     react: '19.2.8',
     'react-dom': '19.2.8',
+    redoc: '2.5.0',
     typescript: '5.8.3',
     yaml: '2.9.0',
     zod: '4.5.4',
@@ -169,6 +177,7 @@ test('distribution self-audit finds documented packages and the exact compiler d
     'studio',
     'cli',
     'mcp',
+    'api-docs',
   ];
   for (const name of required) {
     const files = await readdir(join(ROOT, 'packages', name));

@@ -37,6 +37,7 @@ import {
 import { newApiToken, passwordMatches } from './crypto.mjs';
 import { validateOutput } from '../../providers/src/schema.mjs';
 import { DEFAULT_HOSTS, API_KINDS } from '../../providers/src/api.mjs';
+import { createOpenApiDocument } from '../../api-docs/src/openapi.mjs';
 export const SOURCE_EXTENSIONS = new Set([
   '.js',
   '.jsx',
@@ -1137,6 +1138,12 @@ export class ControlService {
     const s = projectAccess(this.db, identity, t, p);
     if (!s.project.model_id) return null;
     return this.store.getArtifact(s, s.project.model_id, 'model').content;
+  }
+  openApi(identity, t, p) {
+    const project = this.project(identity, t, p);
+    const model = this.model(identity, t, p);
+    assert(model, 409, 'MODEL_REQUIRED', 'Scan project sources before opening API reference');
+    return createOpenApiDocument({ project, model });
   }
   search(identity, t, p, query) {
     const m = this.model(identity, t, p);

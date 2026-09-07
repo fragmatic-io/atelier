@@ -37,6 +37,18 @@ Every call reaches the control API again. The MCP process does not cache an auth
 
 Project content is untrusted evidence, not executable instructions. The generated skill explicitly preserves host authority and cannot grant a capability. MCP is the coding-time surface; the embedded in-app agent is separate and uses host-session authorization.
 
+## Export a credential-free skill pack
+
+Use the same private config to freeze the current coding and design skills for a handoff to another agent:
+
+```sh
+ATELIER_PROJECT_MCP_TOKEN='atk_...' npm run export:skills -- \
+  --config /private/atelier-project-mcp.json \
+  --output /absolute/new/atelier-project-skills
+```
+
+The exporter writes `AGENTS.md`, two `SKILL.md` files, `project-version.json`, and `FILES.sha256` into a new mode-0700 directory. It refuses overwrite and does not embed the token. Because the pack is a snapshot, regenerate it whenever the project version changes.
+
 ## Verification
 
 `tests/mcp/protocol.test.mjs` launches the stdio server through the official MCP client pinned to the same protocol revision. It tests discovery, tools, resources, published-only filtering, source retrieval, project binding, draft rejection, and live token revocation.

@@ -42,6 +42,7 @@ const state = {
   jobTimer: null,
   renderToken: 0,
   surface: null,
+  apiSpec: null,
   theme: localStorage.getItem('atelier-theme') ?? 'light',
 };
 document.documentElement.dataset.theme = state.theme;
@@ -190,6 +191,7 @@ async function route() {
   state.project = null;
   state.model = null;
   state.release = null;
+  state.apiSpec = null;
   state.tab = parts[2] ?? 'overview';
   if (
     !['overview', 'projects', 'project', 'connections', 'team', 'audit', 'account'].includes(
@@ -251,6 +253,7 @@ function projectHeading() {
   return `${heading('Project studio', state.project.name, state.project.description || 'Learn from your application. Build native extensions. Publish with confidence.', button('upload', 'Add source', 'upload', true) + button('generate', 'New experience', 'spark'))}<nav class="tabs" aria-label="Project sections">${[
     ['overview', 'Overview'],
     ['model', 'App model'],
+    ['api-docs', 'API reference'],
     ['design', 'Design genome'],
     ['lab', 'Experience lab'],
     ['releases', 'Releases'],
@@ -302,6 +305,18 @@ async function projectPage(releaseId) {
           button('upload', 'Upload source', 'upload'),
         )
       : `<div class="info-strip">API shapes are discovered automatically. <strong>Commands remain disabled until a developer reviews their permissions, risk and confirmation requirements.</strong></div><div class="section-head"><h2>Capabilities <span class="count">${model.capabilities.length}</span></h2><input class="filter-input" id="cap-filter" aria-label="Filter capabilities" placeholder="Filter capabilities…"></div><div class="panel no-pad table-wrap"><table class="table" id="cap-table"><thead><tr><th>CAPABILITY</th><th>TYPE</th><th>PERMISSIONS</th><th>REVIEW</th><th></th></tr></thead><tbody>${model.capabilities.map((c) => `<tr><td class="small"><strong>${e(c.title ?? humanize(c.id))}</strong><div class="muted code">${e(c.id)}</div></td><td>${pill(c.kind)}</td><td class="small">${e(c.requiredPermissions.join(', ') || 'No declared scopes')}</td><td>${pill(c.securityReviewed ? 'verified' : c.kind === 'query' ? 'read only' : 'unreviewed')}</td><td><button class="btn secondary sm" data-action="review-cap" data-id="${e(c.id)}">Inspect</button></td></tr>`).join('')}</tbody></table></div><div class="section-head"><h2>Host components</h2></div><div class="panel no-pad table-wrap"><table class="table"><thead><tr><th>COMPONENT</th><th>SOURCE</th><th>PROP CONTRACT</th></tr></thead><tbody>${model.components.map((c) => `<tr><td>${e(c.id)}</td><td class="code small">${e(c.sourcePath)}</td><td>${Object.keys(c.propsSchema?.properties ?? {}).length} typed properties</td></tr>`).join('')}</tbody></table></div>`;
+  } else if (state.tab === 'api-docs') {
+    state.apiSpec = await api(base() + '/openapi');
+    const endpoint = `/api${base()}/openapi`;
+    const operationCount = Object.values(state.apiSpec.paths).reduce(
+      (count, path) =>
+        count +
+        ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'].filter(
+          (method) => path[method],
+        ).length,
+      0,
+    );
+    content = `<div class="info-strip">Generated automatically from project-model HTTP capabilities. <strong>Documentation does not grant execution authority; only security-reviewed capabilities can become agent tools.</strong></div><div class="section-head"><div><h2>API reference <span class="count">${operationCount} operations</span></h2><p class="muted">OpenAPI ${e(state.apiSpec.openapi)} · model ${e(state.apiSpec.info.version)}</p></div><div class="buttons">${button('download-openapi', 'Download OpenAPI', 'code', true)}<a class="btn secondary" href="${e(endpoint)}" target="_blank" rel="noopener">${icon('arrow')}<span>Open JSON</span></a></div></div><div class="api-docs-shell"><iframe class="api-docs-frame" title="${e(state.apiSpec.info.title)}" src="/api-reference/${encodeURIComponent(state.t)}/${encodeURIComponent(state.project.id)}" sandbox="allow-scripts allow-same-origin"></iframe></div>`;
   } else if (state.tab === 'design') {
     content = designPage();
   } else if (state.tab === 'lab' || state.tab === 'releases') {
@@ -883,6 +898,8 @@ const actions = {
   },
   'download-kit': () =>
     download(`${state.release.artifact.kit.name}.kit.json`, state.release.artifact.kit),
+  'download-openapi': () =>
+    download(`${state.project.slug || state.project.id}.openapi.json`, state.apiSpec),
   export: async () => download('atelier-project-export.json', await api(base() + '/export')),
   'new-connection': () =>
     formDialog(

@@ -2,7 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { compileSourceKit } from '../../packages/source-forge/src/compiler.mjs';
-import { certifySourceKit } from '../../packages/source-forge/src/certifier.mjs';
+import {
+  certifySourceKit,
+  playwrightBrowserCache,
+} from '../../packages/source-forge/src/certifier.mjs';
+
+test('local certifier keeps the installed browser cache while isolating HOME', () => {
+  assert.equal(
+    playwrightBrowserCache({ platform: 'darwin', home: '/Users/example' }),
+    '/Users/example/Library/Caches/ms-playwright',
+  );
+  assert.equal(
+    playwrightBrowserCache({ platform: 'linux', home: '/home/example' }),
+    '/home/example/.cache/ms-playwright',
+  );
+});
 
 test('production source certification refuses the local browser process', async () => {
   const kit = JSON.parse(

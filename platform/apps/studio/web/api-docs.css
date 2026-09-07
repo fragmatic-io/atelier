@@ -1,0 +1,29 @@
+:root {
+  color: #252b24;
+  background: #fff;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+html,
+body,
+#redoc {
+  min-height: 100%;
+  margin: 0;
+}
+.api-docs-loading,
+.api-docs-error {
+  max-width: 720px;
+  margin: 64px auto;
+  padding: 28px;
+  border: 1px solid #e5e8df;
+  border-radius: 12px;
+  background: #f7f8f3;
+}
+.api-docs-loading,
+.api-docs-error p {
+  color: #61695a;
+}

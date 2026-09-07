@@ -16,6 +16,8 @@ All durable project records use `(tenant_id, project_id, …)` keys and foreign 
 
 Artifacts are immutable canonical JSON identified by content hash and scoped even when two tenants upload identical bytes. Project-model versions exclude timestamps/absolute temporary paths. Security reviews survive a rescan only when capability input/output/operation/kind fingerprints match. Changing an endpoint invalidates its prior review.
 
+Studio derives an authenticated OpenAPI 3.1 document from the current model and renders it with a locally pinned Redoc bundle. This is a projection, not a second contract store: rescans and capability reviews change the model version and therefore the generated reference. Atelier review metadata is retained as `x-atelier-*` extensions, and documentation never grants tool authority.
+
 Build jobs are durable and lease-fenced. A late worker cannot complete an expired/cancelled/reclaimed job. Progress checkpoints reauthorize the creating user. Source parsing runs in a dedicated worker process in the production profile so it cannot block HTTP service. Inference tasks independently fence project-runner leases and validate exact JSON output before acceptance.
 
 ## Models and caching

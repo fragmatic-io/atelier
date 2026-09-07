@@ -29,6 +29,7 @@ platform/PACKAGE-MANIFEST.json
 platform/SBOM.cdx.json
 platform/CHECKPOINT-FILES.json
 platform/vendor
+platform/.venv
 
 # Agent worktree checkouts
 .claude/worktrees

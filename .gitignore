@@ -50,8 +50,12 @@ Thumbs.db
 
 # Local manifests / cache (Atelier-specific)
 .cir-cache/
+.cir-vault.json
 .manifests-local/
 local-vault/
+
+# Local coding-agent runtime state
+.claude/*.lock
 
 # Next.js demo (apps/demo)
 apps/*/.next/

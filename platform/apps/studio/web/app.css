@@ -630,6 +630,21 @@ p {
   border-color: var(--primary);
   font-weight: 550;
 }
+.api-docs-shell {
+  min-height: 760px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.api-docs-frame {
+  display: block;
+  width: 100%;
+  min-height: 760px;
+  border: 0;
+  background: #fff;
+}
 .table-wrap {
   overflow: auto;
 }

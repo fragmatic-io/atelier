@@ -1,6 +1,6 @@
 # TODO
 
-> Single source of truth. Updated 2026-05-04 (production-readiness reprioritisation following external review).
+> Legacy-framework backlog, audited 2026-09-07. The canonical V2.3 application platform and its release gates now live under [`platform/`](platform/README.md); unchecked items here still describe the older pnpm workspace unless explicitly closed below.
 >
 > **Top priority: production readiness, not feature expansion.** A green `pnpm test` does not offset a broken `pnpm validate` gate. Every advertised command, env-gated path, and package export must work for an external consumer.
 >
@@ -50,7 +50,7 @@ Bands ordered top→bottom by what closes the gap fastest. Within a band, items 
 
 **The advertised CI gate must pass on a fresh clone, every time.** A broken `pnpm validate` is a credibility bug; everything else can wait.
 
-### P0.1 — `pnpm validate` survives a fresh clone (CONFIRMED FAILING earlier today)
+### P0.1 — `pnpm validate` survives a fresh clone (historical incident; guarded by CI)
 
 The review's headline issue: `scripts/marketplace-eval.ts` line 40 imports `@atelier/eval-marketplace`, but the workspace symlink wasn't populated until `pnpm install` ran. Reproduced + fixed locally; need a permanent guardrail.
 
@@ -128,14 +128,14 @@ For each of the six `_ENABLED` flags:
 
 ## P2 — Consumer DX
 
-**All 15 packages currently export `./src/index.ts` directly.** This works in-monorepo because pnpm + tsx + vitest read TS directly. It does NOT work for an external consumer who installs `@atelier/runtime` from npm — they get raw TypeScript that their build pipeline must compile, which is often a non-starter for downstream apps.
+**All 15 packages now publish `dist/` JavaScript and declarations.** The original source-only packaging defect is retained below as historical context; the recursive build and external-consumer pack smoke gate now protect the corrected shape.
 
 ### P2.1 — Build artifacts on every package
 
 - [x] **Pilot: `@atelier/schemas`** ships built artifacts. `packages/schemas/package.json` now declares `"main": "./dist/index.js"` + `"types": "./dist/index.d.ts"` + a conditional `exports` map; `packages/schemas/tsconfig.build.json` drives `tsc -b` to emit JS + `.d.ts` + sourcemaps. Root `pnpm build` is filter-scoped to schemas; in-repo workspace symlinks resolve through `dist/`. CI builds before tests so the test suite consumes the same artefact downstream npm consumers will. _This commit._
 - [x] **Smoke test gate.** `scripts/smoke-test-pack.ts` packs `@atelier/schemas`, installs the tgz into a scratch dir with bare `npm install`, runs `tsc --noEmit` over a tiny consumer that imports both runtime + type exports, then loads the runtime under bare Node — no `tsx` / `ts-node` involved. New `Smoke-test @atelier/schemas pack + install` step in CI gates the merge. _Original schemas-only commit._
 - [x] **Sprint 1.3 — smoke-test pack covers all 15 published packages.** `scripts/smoke-test-pack.ts` rewritten as a declarative spec runner; per-package surface lives in `scripts/smoke-test-specs.ts`. Each spec packs the package, the runner installs every tarball into one shared scratch dir (so `@atelier/react` → `@atelier/runtime` resolves through published artefacts), writes a TS consumer that imports + uses representative runtime + type exports, typechecks against the published `.d.ts`, runs the JS under bare Node, and execs the bin (`atelier`, `atelier-schemas`, `atelier-evals`) with `--help`. Flags: `--keep`, `--package=<name>`, `--parallel`. Failures point at the exact package + the exact phase (pack / install / typecheck / runtime / bin). Bonus: caught + fixed a pre-existing bug in `@atelier/cli`'s entry-point guard that made the published `atelier` bin silently exit 0 with no output when launched via the npm `node_modules/.bin/atelier` symlink. Replaces the single-package CI step on both the split-step `validate` job and the `validate-fresh-clone` job. New doc: `apps/docs/src/content/docs/operations/publishing.mdx`. _This commit._
-- [ ] **Migrate the other 14 packages' build artefacts** to the same pilot shape. The pilot pinned the shape (`dist/` outputs, `tsconfig.build.json` sibling, files: [dist, src, README, CHANGELOG], conditional `exports`); rolling it out is mechanical but each package needs an audit for subpath exports (`./testing`, `./debug`, etc.) and bin entries that currently use `tsx` shebangs. `pnpm build` flips from `--filter @atelier/schemas` to `-r --if-present` (or a tag-based filter) once the batch is done. The `pnpm build:all` script already runs the full recursive build for early experimentation. **NOTE**: the smoke-test gate above already proves every workspace package builds + packs + installs cleanly today; this item is about the per-package PR cadence (CHANGELOGs, exports audit). **2-3 d, batched.**
+- [x] **Migrate the other 14 packages' build artefacts** to the same pilot shape. Every package manifest now points `main`, `types`, and public exports at existing `dist/` files; `pnpm build` recursively builds the workspace and the external-consumer pack smoke gate verifies the published surfaces. _Confirmed by the 2026-09-07 stale-file audit._
 - [ ] **In-repo dev mode under `tsconfig.dev.json`.** Today the schemas pilot publishes `dist/index.js` as the canonical entry, so workspace consumers also resolve through `dist/` and a `pnpm build:watch` is needed during dev. A `tsconfig.dev.json` with path mappings back to `src/` per package would short-circuit that for in-monorepo work. **<1 d** once the migration is done.
 
 ### P2.2 — `atelier init` actually works outside the monorepo
@@ -156,7 +156,7 @@ Today: it shells out to `pnpm validate` blindly, which only works if the consume
 - [x] **`pnpm release [patch|minor|major|x.y.z]`** — one-command release driver: `pnpm validate` + `pnpm smoke-test:pack` + lockstep version bump + commit + tag + publish (dry-run by default, `--real` for actual npm push). `scripts/release.ts`. _This commit (Sprint 1.4)._
 - [x] **Per-package `CHANGELOG.md`** seeded with the `0.5.0` entry summarising what each package contains today. _This commit (Sprint 1.4)._
 - [x] **Operator docs.** New `apps/docs/src/content/docs/operations/releasing.mdx` + sidebar entry; `CONTRIBUTING.md` extended with a "Release process" section. _This commit (Sprint 1.4)._
-- [ ] **README per package** — short package-scoped READMEs explaining the export surface (today they live in src code comments). **2-3 d.**
+- [x] **README per package** — every package now has a package-scoped README; the missing `@atelier/eval-marketplace` guide was added during the 2026-09-07 stale-file audit.
 
 ---
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — automatic API reference
+
+Adds a deterministic OpenAPI 3.1 exporter for current project-model HTTP capabilities and a locally served, authenticated Redoc reference inside each Studio project. The generated document preserves contract provenance, review state, permissions, risk, confirmation, side effects, idempotency, reversibility and PII metadata. Documentation does not make an unreviewed capability callable.
+
+Adds a decision-complete coding-agent handoff for installing Atelier into another application, wiring host authority, enabling the embedded agent and rich components, registering project MCP, and verifying the integration without provider fallback.
+
+Restores the embedded agent, client, journal, artifact, chat and source-forge package subpath exports found during RC2 comparison; adds current declarations, scoped standalone chat styles, external-consumer typechecking, and a credential-free project-skill exporter.
+
 ## 2.3.0-rc.1 — source forge, embedded agent and coding-agent MCP
 
 Adds project-native React source generation with locked compiler dependencies, actual browser state/task certification, explicit human approval and signed component publication. Adds durable private conversations, reviewed host tools, exact-input confirmation, attachments, interactive artifact revisions and the integrated Studio/host agent journey.

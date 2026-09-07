@@ -12,6 +12,7 @@ const blockedDirectories = new Set([
   '.atelier',
   '.atelier-data',
   '.atelier-verification',
+  '.venv',
   '__pycache__',
   'coverage',
   '.pytest_cache',

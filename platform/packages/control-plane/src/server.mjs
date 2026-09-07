@@ -7,6 +7,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { projectAccess, tenantAccess } from './access.mjs';
 import {
   assert,
@@ -22,6 +23,7 @@ import { safeJob } from './services.mjs';
 import { mineWorkflowOpportunities } from '../../workflow/src/index.mjs';
 const webRoot = fileURLToPath(new URL('../../../apps/studio/web/', import.meta.url));
 const surfaceFile = fileURLToPath(new URL('../../surface/src/browser.mjs', import.meta.url));
+const redocFile = createRequire(import.meta.url).resolve('redoc/bundles/redoc.standalone.js');
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -155,15 +157,38 @@ export function createControlServer(
           'artifact-frame.mjs': 'frame.mjs',
           'chat.mjs': 'chat.mjs',
         };
-        const path = modules[name]
-          ? fileURLToPath(new URL('../../conversation/src/' + modules[name], import.meta.url))
-          : name === 'surface.mjs'
-            ? surfaceFile
-            : join(webRoot, name);
+        const path =
+          name === 'redoc.standalone.js'
+            ? redocFile
+            : modules[name]
+              ? fileURLToPath(new URL('../../conversation/src/' + modules[name], import.meta.url))
+              : name === 'surface.mjs'
+                ? surfaceFile
+                : join(webRoot, name);
         const data = await readFile(path);
         res.writeHead(200, {
           'Content-Type': mime[extname(name)] ?? 'application/octet-stream',
           'Cache-Control': 'no-cache',
+        });
+        res.end(data);
+        return;
+      }
+      if (url.pathname.startsWith('/api-reference/') && req.method === 'GET') {
+        assert(
+          /^\/api-reference\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/.test(url.pathname),
+          404,
+          'NOT_FOUND',
+          'API reference not found',
+        );
+        res.removeHeader('X-Frame-Options');
+        res.setHeader(
+          'Content-Security-Policy',
+          "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self' data:; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; form-action 'none'",
+        );
+        const data = await readFile(join(webRoot, 'api-docs.html'));
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
         });
         res.end(data);
         return;
@@ -317,6 +342,8 @@ export function createControlServer(
       if (extension) return send(res, extension.status, extension.data);
       if (resource === 'model' && req.method === 'GET')
         return send(res, 200, service.model(identity, t, p));
+      if (resource === 'openapi' && req.method === 'GET')
+        return send(res, 200, service.openApi(identity, t, p));
       if (resource === 'search' && req.method === 'GET')
         return send(res, 200, service.search(identity, t, p, url.searchParams.get('q') ?? ''));
       if (resource === 'sources' && req.method === 'POST')

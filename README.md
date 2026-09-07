@@ -1,5 +1,11 @@
 # Atelier
 
+> **V2.3 application integration:** the current multi-project Studio, embedded agent, project-native component forge, swappable API/CLI model providers, and automatic Redoc API reference live under [`platform/`](platform/README.md). Coding agents integrating Atelier into another application should start with [`platform/docs/AGENT_SETUP.md`](platform/docs/AGENT_SETUP.md). The older framework packages documented below remain in the repository and have their own validation gate.
+
+> **Legacy boundary:** the older demos below intentionally contain deterministic compiler and local-storage fallback paths. They are retained as tested framework examples, but they do not satisfy the current fail-closed provider policy. Do not use those fallback paths in a new production integration; use `platform/`, which reports provider failures and preserves the last approved artifact.
+
+The full Git-age and RC2 comparison is recorded in [`docs/audits/2026-09-07-old-file-audit.md`](docs/audits/2026-09-07-old-file-audit.md), with an individual decision for every older tracked file in its adjacent JSON inventory.
+
 **Capability · Intent · Render** — a production architecture for policy-safe adaptive operational interfaces.
 
 > **Capabilities and skills are the public artifact.**

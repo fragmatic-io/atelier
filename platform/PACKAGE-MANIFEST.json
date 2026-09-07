@@ -3,8 +3,8 @@
   "package": "@atelier/platform",
   "version": "2.3.0-rc.1",
   "algorithm": "SHA-256",
-  "generatedAt": "2026-09-06T22:55:20.963Z",
-  "fileCount": 350,
+  "generatedAt": "2026-09-07T02:17:50.303Z",
+  "fileCount": 365,
   "files": [
     {
       "path": ".dockerignore",
@@ -20,8 +20,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 3798,
-      "sha256": "5a3103554dee412af29ee825bea542dcde824764b0652abe4c05b038a12d2361",
+      "size": 4749,
+      "sha256": "ae1736b9ed67d9dd07739c5aaf949b3c8931ab310322b785d592c843c881947a",
       "executable": false
     },
     {
@@ -38,14 +38,14 @@
     },
     {
       "path": "README.md",
-      "size": 6630,
-      "sha256": "c2eec9c7dc62090eaf0d37816ce00db6c6a390dd2d45bdcc58726be465af11f0",
+      "size": 7505,
+      "sha256": "b2411530cae701cb040f0e59dede6eb5f1460bf2b7f6be75e8e5a3fcc7ebc13d",
       "executable": false
     },
     {
       "path": "SBOM.cdx.json",
-      "size": 25345,
-      "sha256": "fbbaaefc540017013782623bdb1c66a3b8bf463efe21f818520139464c3be95a",
+      "size": 188983,
+      "sha256": "1686605d400d98aea66cded24d83b078cd152759f4275976f029459f1608d387",
       "executable": false
     },
     {
@@ -109,15 +109,33 @@
       "executable": false
     },
     {
+      "path": "apps/studio/web/api-docs.css",
+      "size": 436,
+      "sha256": "b404ee46ba4d593ccb60c87a977e607ceaa5cf98592f2018c6e5dfbfce304892",
+      "executable": false
+    },
+    {
+      "path": "apps/studio/web/api-docs.html",
+      "size": 597,
+      "sha256": "aa4d621086da385f085d52e1b632ebb7d52a9b1b4317d9d9a229fc02a8d96c7b",
+      "executable": false
+    },
+    {
+      "path": "apps/studio/web/api-docs.mjs",
+      "size": 2031,
+      "sha256": "4eb306dd4657e97952fd4feb04e79b8753c207c8cd29e2f6a27d6d27b3e4ecf4",
+      "executable": false
+    },
+    {
       "path": "apps/studio/web/app.css",
-      "size": 26592,
-      "sha256": "f469502f16d2349b9edfd3aea3b97efbfa982212d490671f07d2d9b803921cca",
+      "size": 26877,
+      "sha256": "cea4d46a5706db15517b32b0f4b740c2265471af691cfb50f5ae6a166b52ebb1",
       "executable": false
     },
     {
       "path": "apps/studio/web/app.mjs",
-      "size": 70685,
-      "sha256": "2c577ae46dadbce73e608f9658dafb47854ed93d524be238b8690a3637b9146a",
+      "size": 72183,
+      "sha256": "67ded1bccf0e01ef0dc2fd105a4f709b20bddf937c829305739cf587cc8c6db5",
       "executable": false
     },
     {
@@ -157,9 +175,15 @@
       "executable": false
     },
     {
+      "path": "docs/AGENT_SETUP.md",
+      "size": 9047,
+      "sha256": "3b43a2816faac8cf08c262dfe5afdb7b280b47473a0a9c5a3eb49152961af16c",
+      "executable": false
+    },
+    {
       "path": "docs/ARCHITECTURE.md",
-      "size": 5061,
-      "sha256": "d795792e41b01f03e8345d047e081b438d73534e0f2e725010a8c48e430a2094",
+      "size": 5447,
+      "sha256": "36d6ed917fe5facfa9bbeb99e188946bc14c163c7cc3a45bc2e17416b8be84fa",
       "executable": false
     },
     {
@@ -182,8 +206,8 @@
     },
     {
       "path": "docs/MCP.md",
-      "size": 2744,
-      "sha256": "0dccad8b2ee35045b11112c02e329a994921618614944c3e5126b1fa9a8296cf",
+      "size": 3327,
+      "sha256": "c3552035cb106d28bd55b410b121a5035bfddda70a22e394e58289b3e30347cb",
       "executable": false
     },
     {
@@ -212,8 +236,8 @@
     },
     {
       "path": "docs/v2.3/REQUIREMENTS.json",
-      "size": 12818,
-      "sha256": "e78dd662e0a9724284ef385973f3b74ed6b7b9a534c43f12e3e06935fbc9512d",
+      "size": 12849,
+      "sha256": "878981ccd1d703aa959621974ea34c8d02fee600397b212be0093015d0e7655a",
       "executable": false
     },
     {
@@ -404,14 +428,14 @@
     },
     {
       "path": "package-lock.json",
-      "size": 28163,
-      "sha256": "63833483d0b612ea00a443b64990795ee09caa60074705076757f00144246ba6",
+      "size": 74567,
+      "sha256": "33bdca285c2d1441dbe9669dfd6489c7f1b75da7fadbd4b20b074db242f9f955",
       "executable": false
     },
     {
       "path": "package.json",
-      "size": 3352,
-      "sha256": "70eb7a2c0bde491bac1ac9372f4854a5f3019f2d2de7c0a48a40d7f941fb67fe",
+      "size": 4288,
+      "sha256": "6a8878836ebd74ab6205446e19acb0d6f0cd0b632e7c9d03af309dcd64e4af88",
       "executable": false
     },
     {
@@ -484,6 +508,12 @@
       "path": "packages/agents/src/index.mjs",
       "size": 8822,
       "sha256": "a01568062406f75fc87afd4d97c659be09344a48080d486da6f1089e04d1c35f",
+      "executable": false
+    },
+    {
+      "path": "packages/api-docs/src/openapi.mjs",
+      "size": 7449,
+      "sha256": "2096a51f5ba40754baf2ab11639a9a9f57ed77a9f61598c69356da367ed7b911",
       "executable": false
     },
     {
@@ -590,14 +620,14 @@
     },
     {
       "path": "packages/control-plane/src/server.mjs",
-      "size": 20754,
-      "sha256": "9eeb8ebf0920a278bb3d8033e711895f2fda6839a81db5a4b147aff38af0f472",
+      "size": 21971,
+      "sha256": "c6f10f8bb105ba587813a0481da69305b106e415bd79b7f18726c1871b628c60",
       "executable": false
     },
     {
       "path": "packages/control-plane/src/services.mjs",
-      "size": 62647,
-      "sha256": "00b1d8c0a26b8dae896abce007a8d65699cd798157e8d8963e19ffd72aca2e35",
+      "size": 62996,
+      "sha256": "2dcafa8404bcea831f7e53aa11708c0490895485607b84a7619f6cb74701cd54",
       "executable": false
     },
     {
@@ -610,6 +640,12 @@
       "path": "packages/control-plane/src/util.mjs",
       "size": 5716,
       "sha256": "9c6ccb427ad22f98d8d0f20aeac1d36f65232254d468966a3837a29143d722a7",
+      "executable": false
+    },
+    {
+      "path": "packages/conversation/src/agent.css",
+      "size": 8134,
+      "sha256": "c2b9172899899ad834a0794be8e71877f5716bc7590c718f5542adf8e2dede9b",
       "executable": false
     },
     {
@@ -860,8 +896,8 @@
     },
     {
       "path": "packages/source-forge/src/certifier.mjs",
-      "size": 4122,
-      "sha256": "67fff2e12b24f4de7c1212b4edd0e2a14656553cffd3f9d1b666656504471a9e",
+      "size": 4519,
+      "sha256": "3e43af239d19d28e45c2aa806b691fd032de28fef6c32fc74a7972b62312d3da",
       "executable": false
     },
     {
@@ -1009,6 +1045,12 @@
       "executable": false
     },
     {
+      "path": "scripts/export-project-skills.mjs",
+      "size": 3308,
+      "sha256": "f3c047255884ce4398ca3b47b03b4c620393a259d60f8d554001bf4fcdb9200f",
+      "executable": false
+    },
+    {
       "path": "scripts/export-source.mjs",
       "size": 1040,
       "sha256": "a2776508ddafb31703fb669deed55e745a3a9abf8dd87447aaeb3a7711673fb9",
@@ -1034,8 +1076,8 @@
     },
     {
       "path": "scripts/package-manifest.mjs",
-      "size": 2412,
-      "sha256": "6e9e69a39b76b80a3987ed07f7ea472422f8076dd8af608e0bddd012e146f232",
+      "size": 2423,
+      "sha256": "ea5ab1e0446c422e7ba9379f9141f889d5d9f3e88e2cbf156b5ce01bd8057a65",
       "executable": false
     },
     {
@@ -1070,8 +1112,8 @@
     },
     {
       "path": "scripts/seed-experiences.mjs",
-      "size": 6217,
-      "sha256": "b05ab2b71bbbc928029e13465daba4e89dd1b125b47ea68a6375fac2fb7ab3df",
+      "size": 6361,
+      "sha256": "5aa0e3748b0081557075dacf1ab0438dc538e753cd05c68858c606ae7ca0a2d6",
       "executable": false
     },
     {
@@ -1082,8 +1124,8 @@
     },
     {
       "path": "scripts/smoke-package.mjs",
-      "size": 4617,
-      "sha256": "1173b1e5634bfaee94e4388c0ee98f8e72aac1b067b87a16b419a90cb39ded8a",
+      "size": 6695,
+      "sha256": "870ac8d778b1c0b591ccbc7ca01453e239e91833ed8533333c1d6c7def5ac8fb",
       "executable": false
     },
     {
@@ -1123,6 +1165,12 @@
       "executable": false
     },
     {
+      "path": "tests/api-docs.test.mjs",
+      "size": 4049,
+      "sha256": "5b48ebb27226d03ed20c68f579470490cfb04d52bf6638554ad0aece71b0c0db",
+      "executable": false
+    },
+    {
       "path": "tests/browser/host.test.py",
       "size": 5172,
       "sha256": "a0ac2f19bad7a553b4c62e9164824501d986c89718ecdc2c546ced2deb049e32",
@@ -1136,8 +1184,8 @@
     },
     {
       "path": "tests/cli-demo.test.mjs",
-      "size": 6348,
-      "sha256": "50c1db478fab0e7b44856f865d22f0d413cca840ed8c9cff399f737bd955f0c8",
+      "size": 6679,
+      "sha256": "46facea39c3b52d720b666c47b71523774114d9eeb1e566fec1206a2e3af0500",
       "executable": false
     },
     {
@@ -1154,14 +1202,14 @@
     },
     {
       "path": "tests/forge/certifier-isolation.test.mjs",
-      "size": 1758,
-      "sha256": "c146a359ce16f84ba578de8088ea53a8aae6a9ea8190dc843b412acd0a1a512b",
+      "size": 2164,
+      "sha256": "9b19ff2b6c1029faec74f6f8ff2b98f8f12c87c07b2ad7d0cf766c4870cb2545",
       "executable": false
     },
     {
       "path": "tests/forge/certify-runner.test.mjs",
-      "size": 665,
-      "sha256": "c257754b0bee501a6346dc208046355ec7b5f4b8552c6454c52bd11acec2ad7a",
+      "size": 1541,
+      "sha256": "cea1ce9e4b06693f80c65722c75fa5832d7c1200a6df14d50cbdb9a092d57353",
       "executable": false
     },
     {
@@ -1174,6 +1222,12 @@
       "path": "tests/helpers.mjs",
       "size": 1665,
       "sha256": "104d6ccf4b086264c8c51f7420e2a1a58f5ee25be4323192f30f68114a4e74d2",
+      "executable": false
+    },
+    {
+      "path": "tests/mcp/export-skills.test.mjs",
+      "size": 3415,
+      "sha256": "58d6bc566b8c29797a6e375b785e332a7cf754aefa54ffb7b1865f1bb154f1f1",
       "executable": false
     },
     {
@@ -1274,8 +1328,38 @@
     },
     {
       "path": "tests/workflow-studio.test.mjs",
-      "size": 2919,
-      "sha256": "2b536556d17bc7d093e7ff017f65cae74698f7216523c4a1a2024dd16cbe8718",
+      "size": 3278,
+      "sha256": "f4cd8fe1ec881b54dc84bc61205eac8091dca9601be38b2d96e6d8c9cffcca7e",
+      "executable": false
+    },
+    {
+      "path": "types/agent-client.d.ts",
+      "size": 2397,
+      "sha256": "8c22429f732eb7ebe6d99b617e1665f400c7fb634b8e2664ea96bbd8f0752dc5",
+      "executable": false
+    },
+    {
+      "path": "types/agent-journal.d.ts",
+      "size": 789,
+      "sha256": "a17f1f4483520a6327cd401ea9c615114a2f03266f2dffc691e9b18fc96c6b67",
+      "executable": false
+    },
+    {
+      "path": "types/agent.d.ts",
+      "size": 2140,
+      "sha256": "906c8f6bf4c6a8a2d792b97e8e5d9f82c5fd3e0bf25a1e2d07696ac4aeae8968",
+      "executable": false
+    },
+    {
+      "path": "types/artifact.d.ts",
+      "size": 497,
+      "sha256": "18fa3be16cd1cee15a337313d513a2df52d744da0ecccdad37bc54c50268846b",
+      "executable": false
+    },
+    {
+      "path": "types/chat.d.ts",
+      "size": 605,
+      "sha256": "0f1d3ebf3d5edf4358b912a2a11cf0eb8e28169b61db387c997f88227f2d8e72",
       "executable": false
     },
     {
@@ -1312,6 +1396,12 @@
       "path": "types/react.d.ts",
       "size": 897,
       "sha256": "942c639135e63802a90fd4820da0fefa8f6004068bf7a5ef974573fe1669760a",
+      "executable": false
+    },
+    {
+      "path": "types/source-forge.d.ts",
+      "size": 1959,
+      "sha256": "ac8a6eeb56e90d8b523594c8bf263b139d9cd5525bf2ebdabda7ad000f3e4091",
       "executable": false
     },
     {

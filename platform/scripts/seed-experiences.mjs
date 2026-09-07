@@ -7,6 +7,20 @@ import { BuildPipeline } from '../packages/control-plane/src/pipeline.mjs';
 import { seedDemo } from './seed-demo.mjs';
 import { SourceRegistry } from '../packages/source-forge/src/registry.mjs';
 import { ConversationService } from '../packages/conversation/src/service.mjs';
+
+export function recordSeedFailure(services, job, error) {
+  const current = services.db.get(
+    'SELECT status FROM jobs WHERE tenant_id=? AND project_id=? AND id=?',
+    job.tenant_id,
+    job.project_id,
+    job.id,
+  );
+  if (current?.status === 'running')
+    services.service.store.finish(job, null, {
+      code: error.code ?? 'CERTIFY_FAILED',
+      message: error.message,
+    });
+}
 export async function seedExperiences(
   services,
   config,
@@ -58,13 +72,7 @@ export async function seedExperiences(
         service.store.finish(job, result);
         if (!result.passed) throw new Error('Reference browser acceptance failed');
       } catch (e) {
-        if (
-          service.store.job(
-            { tenantId: link.tenantId, projectId: link.projectId, userId: who.userId },
-            job.id,
-          ).status === 'running'
-        )
-          service.store.finish(job, null, { code: e.code ?? 'CERTIFY_FAILED', message: e.message });
+        recordSeedFailure(services, job, e);
         throw e;
       }
       registry.approve(who, link.tenantId, link.projectId, c.id, {

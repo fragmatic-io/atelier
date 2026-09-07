@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 import { mkdtemp, writeFile, readFile, rm, mkdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runProcess } from '../../providers/src/cli.mjs';
 import { assert } from '../../conversation/src/common.mjs';
+
+export function playwrightBrowserCache({ platform = process.platform, home = homedir() } = {}) {
+  if (platform === 'darwin') return join(home, 'Library', 'Caches', 'ms-playwright');
+  if (platform === 'win32') return join(home, 'AppData', 'Local', 'ms-playwright');
+  return join(home, '.cache', 'ms-playwright');
+}
 export function expectedCases() {
   const out = [];
   for (const width of [390, 1280])
@@ -101,12 +107,13 @@ export async function certifySourceKit(
         },
       );
     } else {
-      const env = { PATH: process.env.PATH, HOME: directory, LANG: 'C.UTF-8' };
-      for (const name of [
-        'CHROMIUM_PATH',
-        'PLAYWRIGHT_BROWSERS_PATH',
-        'ATELIER_BROWSER_NO_SANDBOX',
-      ])
+      const env = {
+        PATH: process.env.PATH,
+        HOME: directory,
+        LANG: 'C.UTF-8',
+        PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? playwrightBrowserCache(),
+      };
+      for (const name of ['CHROMIUM_PATH', 'ATELIER_BROWSER_NO_SANDBOX'])
         if (process.env[name]) env[name] = process.env[name];
       result = await runProcess(
         python,

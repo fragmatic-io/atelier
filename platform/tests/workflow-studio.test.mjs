@@ -74,3 +74,11 @@ test('Studio renders escaped project review, design and opportunity views', asyn
   assert.ok((await readFile(out.html, 'utf8')).includes('ATELIER V2 STUDIO'));
   assert.ok(JSON.parse(await readFile(out.data, 'utf8')).model.projectId);
 });
+
+test('Studio source exposes the automatic API reference controls and operation count', async () => {
+  const source = await readFile(join(FIXTURE, '../../apps/studio/web/app.mjs'), 'utf8');
+  assert.match(source, /API reference/);
+  assert.match(source, /Download OpenAPI/);
+  assert.match(source, /operationCount/);
+  assert.match(source, /\/openapi/);
+});

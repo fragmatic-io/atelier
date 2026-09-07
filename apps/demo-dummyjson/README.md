@@ -36,9 +36,9 @@ folded into the compiler's system prompt + enforced by the
   manipulation, no ALL-CAPS for emphasis. Per-surface exemplars for
   buttons, errors, empty states, marketing, and confirmations live on
   `voice.surfaces`.
-- **Wordmark.** [`components/Wordmark.tsx`](./components/Wordmark.tsx) —
-  a 26 px parcel-ribbon mark + "DummyJSON Shop" letterform. Uses
-  `currentColor` for the wordmark, the brand primary for the parcel.
+- **Wordmark.** The retired app-specific `Wordmark` was replaced by the shared
+  [`Logo`](../../packages/components/src/components/Logo.tsx) primitive. The
+  Marigold host supplies its glyph and wordmark through the component contract.
 - **CSS variables.** [`app/globals.css`](./app/globals.css) is the
   runtime source of truth — every surface, radius, shadow, and motion
   token reads off `--cir-color-*` / `--cir-radius-*` / `--cir-shadow-*`
