@@ -3,7 +3,7 @@
   "package": "@atelier/platform",
   "version": "2.3.0-rc.1",
   "algorithm": "SHA-256",
-  "generatedAt": "2026-09-07T14:02:19.217Z",
+  "generatedAt": "2026-09-07T14:05:19.212Z",
   "fileCount": 396,
   "files": [
     {
@@ -1178,8 +1178,8 @@
     },
     {
       "path": "scripts/browser-integration.py",
-      "size": 16972,
-      "sha256": "3dbf47a53203582bdb69fee2c6e0957d1f56746fe1ff837297300d6df69c202d",
+      "size": 16967,
+      "sha256": "07de0a588d5cd148cb27a66b9749d85c61daed97becfbc2340376faf43072cb6",
       "executable": false
     },
     {

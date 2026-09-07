@@ -117,7 +117,7 @@ try:
                 expect(studio.get_by_role('heading',name='Take Atelier from evidence to experiences.',exact=True)).to_be_visible()
                 expect(studio.get_by_text('Every status below comes from stored evidence.',exact=False)).to_be_visible()
                 expect(studio.get_by_role('heading',name='Design and install an adaptive workspace',exact=True)).to_be_visible()
-                expect(studio.get_by_text('Markup renders inside the customer app',exact=False)).to_be_visible()
+                expect(studio.get_by_text('Atelier serves a reviewed surface',exact=False)).to_be_visible()
                 studio.get_by_role('button',name='Create snippet',exact=True).click()
                 dialog=studio.get_by_role('dialog',name='Create browser observer',exact=True);expect(dialog).to_be_visible()
                 expect(dialog.get_by_text('Raw bodies are inspected only inside the application page',exact=False)).to_be_visible()
