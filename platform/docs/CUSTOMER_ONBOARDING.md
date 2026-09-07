@@ -9,7 +9,7 @@ Create a project and open **Setup**. Studio shows five fact-derived stages:
 1. **Connect discovery** creates an ingest-only browser key restricted to exact application origins and generates the snippet to paste before the closing `body` tag.
 2. **Collect evidence** records new operation/schema revisions or imports an OpenAPI 3.x file or public HTTPS URL.
 3. **Review capabilities** shows evidence provenance, a deterministic recommendation, editable purpose and safety fields, and separate approval and chatbot-exposure decisions.
-4. **Configure delivery** offers two explicit outputs from the same reviewed inventory: custom additive surfaces and an optional chatbot agent. A human reviews the computed host design contract before **Install a surface** generates an exact Next.js, React Router or DOM integration bundle for a new route, existing-page mount or drawer. Chatbot setup binds selected tools, voice, retention, bounded specialist roles and a real model connection to the current project-model version.
+4. **Configure delivery** offers two explicit outputs from the same reviewed inventory: custom additive surfaces and an optional chatbot agent. A human reviews the computed host design contract before **Install a surface** generates an exact client/server target bundle for a new route, existing-page mount or drawer. First-class targets include Vite React + FastAPI, Next.js App Router, React Router + Express and DOM + Node. Chatbot setup binds selected tools, voice, retention, bounded specialist roles and a real model connection to the current project-model version.
 5. **Verify and publish** tests both delivery tracks: host authorization, unreviewed action/tool denial, rich query rendering, exact command confirmation and explicit provider/network failure behavior. Setup remains incomplete until there is both a current published surface and a factual installation receipt proving the reviewed design contract, mount, same-origin bridge and fail-closed authority adapter are configured.
 
 The status API is `GET /api/tenants/{tenant}/projects/{project}/onboarding`. It derives every step from active discovery sources, stored observations, the current model, recorded review decisions, a current agent profile, a live provider/runner, current published releases and verified surface-install receipts. A UI checkbox cannot mark a step complete.
@@ -139,9 +139,13 @@ Atelier's control plane serves Studio, discovery, API documentation, reviewed ca
 
 A full-page surface requires an explicit customer-owned route and, if desired, a navigation link. An embedded card, rail, drawer or chatbot requires only an approved mount container on an existing page. The discovery observer never creates a route, inserts a link or changes the DOM. Studio may serve a sandboxed preview for review, but that preview is not the production host integration.
 
-## Framework-aware surface installation
+## Target-profile surface installation
 
-Choose **Install a surface** in Setup after the project model contains an approved slot. Supply the exact customer application origin, framework, placement, route, navigation label, slot, environment and same-origin bridge path. Studio returns a one-time JSON bundle containing:
+Choose **Install a surface** in Setup after the project model contains an approved slot. Supply the exact customer application origin, installation target, placement, route, navigation label, slot, environment and same-origin bridge path. A target profile independently records client runtime, client language, build tool and server framework; adding a server adapter no longer requires pretending it is a browser framework. Studio returns a one-time JSON bundle containing:
+
+- **Vite React + FastAPI:** React TypeScript mount files plus a modular native Python bridge with Ed25519 verification, schema and scope checks, exact-origin enforcement, fail-closed authority hooks, HMAC-bound confirmation and a durable SQLite command ledger;
+- **Next.js App Router**, **React Router + Express**, and **DOM + Node/Express** for their exact named stacks;
+- no automatic substitute when the customer's stack does not match a supported target.
 
 - new customer-owned mount, route, navigation and server-bridge files;
 - exact insertion patches for the customer's existing router, navigation and server bootstrap;

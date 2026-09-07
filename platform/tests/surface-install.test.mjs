@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -10,6 +10,8 @@ import { fixture } from './v21/helpers.mjs';
 import { DiscoveryService } from '../packages/discovery/src/service.mjs';
 import { SurfaceInstallService } from '../packages/surface-install/src/service.mjs';
 import { createControlServer } from '../packages/control-plane/src/server.mjs';
+import { canonical } from '../packages/control-plane/src/util.mjs';
+import { installSurfaceFields } from '../apps/studio/web/install-surface.mjs';
 
 async function modelledFixture() {
   const f = await fixture();
@@ -61,7 +63,7 @@ async function modelledFixture() {
 
 function createInstall(installs, f, framework, overrides = {}) {
   return installs.create(f.who, f.tenant.id, f.project.id, {
-    framework,
+    target: framework,
     mode: 'route',
     applicationOrigin: 'https://app.example',
     routePath: '/customer/workspace',
@@ -102,20 +104,57 @@ async function assertGeneratedSyntax(bundle) {
           entry.path,
         );
       }
+      if (entry.path.endsWith('.py')) {
+        const path = join(directory, entry.path);
+        await mkdir(join(path, '..'), { recursive: true });
+        await writeFile(path, entry.content);
+        const python = process.env.ATELIER_PYTHON ?? join(process.cwd(), '.venv/bin/python');
+        const checked = spawnSync(python, ['-m', 'py_compile', path], { encoding: 'utf8' });
+        assert.equal(checked.status, 0, `${entry.path}: ${checked.stderr || checked.error}`);
+      }
     }
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
 }
 
-test('framework installers generate safe, syntactically valid and secret-free handoff bundles', async (t) => {
+async function assertFastApiCanonical(bundle) {
+  const entry = bundle.files.find(
+    (candidate) => candidate.path === 'backend/app/atelier_integration/canonical.py',
+  );
+  assert(entry);
+  const directory = await mkdtemp(join(tmpdir(), 'atelier-canonical-'));
+  try {
+    const path = join(directory, 'canonical.py');
+    await writeFile(path, entry.content);
+    const value = {
+      z: [1e-7, 1e-6, 1e20, 1e21, -0, 1.2345678901234567e20],
+      a: { unicode: 'Atelier   safe', escaped: '\n"\\' },
+    };
+    const python = process.env.ATELIER_PYTHON ?? join(process.cwd(), '.venv/bin/python');
+    const script =
+      'import importlib.util,json,sys; s=importlib.util.spec_from_file_location("canonical",sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(m.canonical_json(json.loads(sys.argv[2])))';
+    const checked = spawnSync(python, ['-c', script, path, JSON.stringify(value)], {
+      encoding: 'utf8',
+    });
+    assert.equal(checked.status, 0, checked.stderr || checked.error);
+    assert.equal(checked.stdout.trimEnd(), canonical(value));
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+test('target installers generate safe, syntactically valid and secret-free handoff bundles', async (t) => {
   const f = await modelledFixture();
   t.after(() => f.db.close());
   const installs = new SurfaceInstallService(f.service, {
     controlOrigin: 'https://atelier.example',
   });
+  const studioFields = installSurfaceFields(f.service.model(f.who, f.tenant.id, f.project.id), String);
+  assert.match(studioFields, /name="target"/);
+  assert.match(studioFields, /value="vite-react-fastapi">Vite React \+ FastAPI/);
 
-  for (const framework of ['nextjs-app', 'react-router', 'dom']) {
+  for (const framework of ['nextjs-app', 'react-router', 'dom', 'vite-react-fastapi']) {
     const result = createInstall(installs, f, framework);
     assert.equal(result.install.status, 'waiting');
     assert.equal(result.bundle.publicVerification.originBound, 'https://app.example');
@@ -138,7 +177,7 @@ test('framework installers generate safe, syntactically valid and secret-free ha
     const content = JSON.stringify(result.bundle.files);
     assert(!content.includes(result.bundle.publicVerification.key.replace('atl_ins_', 'atl_pat_')));
     assert(!content.includes('ATELIER_HOST_TOKEN=atl_'));
-    assert.match(content, /authorityConfigured = false/);
+    assert.match(content, /authorityConfigured = false|AUTHORITY_CONFIGURED = False/);
     assert(!content.includes('<script>'));
     await assertGeneratedSyntax(result.bundle);
 
@@ -157,9 +196,56 @@ test('framework installers generate safe, syntactically valid and secret-free ha
       );
       assert.match(page.content, /\.\.\/\.\.\/\.\.\/components\/atelier/);
     }
+    if (framework === 'vite-react-fastapi') {
+      assert.deepEqual(result.bundle.install.target, {
+        id: 'vite-react-fastapi',
+        label: 'Vite React + FastAPI',
+        clientRuntime: 'react',
+        clientLanguage: 'typescript',
+        buildTool: 'vite',
+        serverFramework: 'fastapi',
+      });
+      assert(
+        result.bundle.files.some(
+          (entry) => entry.path === 'frontend/src/atelier/AtelierSurfaceRoute.tsx',
+        ),
+      );
+      assert(
+        result.bundle.files.some(
+          (entry) => entry.path === 'backend/app/atelier_integration/router.py',
+        ),
+      );
+      assert(!result.bundle.files.some((entry) => entry.path.endsWith('.mjs')));
+      const router = result.bundle.files.find(
+        (entry) => entry.path === 'backend/app/atelier_integration/router.py',
+      );
+      const contracts = result.bundle.files.find(
+        (entry) => entry.path === 'backend/app/atelier_integration/contracts.py',
+      );
+      const bridge = result.bundle.files.find(
+        (entry) => entry.path === 'backend/app/atelier_integration/bridge.py',
+      );
+      const ledger = result.bundle.files.find(
+        (entry) => entry.path === 'backend/app/atelier_integration/ledger.py',
+      );
+      assert.match(router.content, /Exact same-origin header required/);
+      assert.match(router.content, /100 \* 1024/);
+      assert.match(router.content, /environmentConfigured.*authorityConfigured/);
+      assert.match(contracts.content, /Ed25519PublicKey/);
+      assert.match(contracts.content, /BUNDLE_HASH_MISMATCH/);
+      assert.match(contracts.content, /Draft202012Validator/);
+      assert.match(contracts.content, /__proto__/);
+      assert.match(bridge.content, /HOST_SCOPE/);
+      assert.match(bridge.content, /HOST_PERMISSION/);
+      assert.match(bridge.content, /authorize_atelier/);
+      assert.match(bridge.content, /hmac\.compare_digest/);
+      assert.match(ledger.content, /BEGIN IMMEDIATE/);
+      assert.match(ledger.content, /ACTION_UNCERTAIN/);
+      await assertFastApiCanonical(result.bundle);
+    }
   }
 
-  for (const framework of ['nextjs-app', 'react-router', 'dom']) {
+  for (const framework of ['nextjs-app', 'react-router', 'dom', 'vite-react-fastapi']) {
     const embedded = createInstall(installs, f, framework, {
       mode: framework === 'react-router' ? 'drawer' : 'inline',
       routePath: '/existing/customer',

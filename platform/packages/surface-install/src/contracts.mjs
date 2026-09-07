@@ -2,8 +2,9 @@
 // Copyright (c) 2026 The Atelier Authors
 import { normalizeAllowedOrigin } from '../../discovery/src/contracts.mjs';
 import { assert, choice, text } from '../../control-plane/src/util.mjs';
+import { SURFACE_TARGETS } from './target-profiles.mjs';
 
-export const SURFACE_FRAMEWORKS = ['nextjs-app', 'react-router', 'dom'];
+export const SURFACE_FRAMEWORKS = SURFACE_TARGETS;
 export const SURFACE_MODES = ['route', 'inline', 'drawer'];
 
 function localPath(value, label, max = 160) {
@@ -23,7 +24,11 @@ function localPath(value, label, max = 160) {
 }
 
 export function normalizeSurfaceInstall(input, model) {
-  const framework = choice(input.framework, SURFACE_FRAMEWORKS, 'Framework');
+  const framework = choice(
+    input.target ?? input.framework,
+    SURFACE_FRAMEWORKS,
+    'Installation target',
+  );
   const mode = choice(input.mode ?? 'route', SURFACE_MODES, 'Surface mode');
   const routePath = localPath(input.routePath ?? '/atelier-workspace', 'Route path');
   const bridgePath = localPath(input.bridgePath ?? '/api/atelier', 'Bridge path');

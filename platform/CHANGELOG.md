@@ -2,6 +2,8 @@
 
 ## Unreleased — automatic API reference
 
+Adds a framework-agnostic surface-installer target core that records client runtime, source language, build tool and server framework independently. Adds first-class Vite React + FastAPI output with React TypeScript mounts and a native modular Python same-origin bridge; the generated bridge verifies Ed25519 releases, schema/scope/permissions, host authorization, confirmation bindings and durable command idempotency without a Node sidecar.
+
 Adds a deterministic OpenAPI 3.1 exporter for current project-model HTTP capabilities and a locally served, authenticated Redoc reference inside each Studio project. The generated document preserves contract provenance, review state, permissions, risk, confirmation, side effects, idempotency, reversibility and PII metadata. Documentation does not make an unreviewed capability callable.
 
 Adds self-service Studio signup with name, email and password. New accounts receive an authenticated browser session immediately without email verification and start with no access to existing workspaces.

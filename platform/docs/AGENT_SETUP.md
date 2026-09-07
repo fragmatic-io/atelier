@@ -41,7 +41,7 @@ In Studio:
 7. Open **API reference** for the automatically generated Redoc documentation. Download the OpenAPI 3.1 document if another tool needs it.
 8. Review the observed host design contract in Setup. Correct any token that does not represent the application, then approve that exact fingerprint.
 9. Configure the primary chatbot and optional bounded specialists. Review every specialist instruction and the shared read-only tool subset; specialists never receive commands.
-10. Design and publish the first surface, then choose **Install a surface**. Select the exact host framework, new-route/inline/drawer placement, application origin, customer route, navigation label, approved slot and same-origin bridge path. Download the generated bundle immediately.
+10. Design and publish the first surface, then choose **Install a surface**. Select the exact client/server installation target, new-route/inline/drawer placement, application origin, customer route, navigation label, approved slot and same-origin bridge path. Download the generated bundle immediately.
 
 Read [CUSTOMER_ONBOARDING.md](CUSTOMER_ONBOARDING.md) for the observer privacy contract, deduplication, evidence levels, status facts and required tests. Explicit source scanning remains available for separately authorized self-hosted/developer projects to extract React components and design tokens; it is not the default SaaS onboarding path.
 
@@ -60,9 +60,9 @@ node scripts/runner.mjs --config /private/atelier-runner.json
 
 The CLI process must run under a dedicated OS/container identity with an account home bound to this project. See [PROVIDERS.md](PROVIDERS.md) for the exact matrices and safety flags.
 
-## 4. Apply the generated framework bundle
+## 4. Apply the generated target bundle
 
-The downloaded `atelier-*.install.json` is the authoritative, one-time handoff. It contains a list of new files and explicit insertion patches for Next.js App Router, React Router with Express, or framework-neutral DOM with Node/Express. It also contains an origin-bound public install-verification key; it contains no host token or confirmation key.
+The downloaded `atelier-*.install.json` is the authoritative, one-time handoff. It contains a target profile plus new files and explicit insertion patches. Supported profiles are Vite React + FastAPI, Next.js App Router, React Router + Express, and framework-neutral DOM + Node/Express. The Vite target generates TypeScript browser files and a native modular Python bridge—no Node sidecar and no router assumption. The bundle also contains an origin-bound public install-verification key; it contains no host token or confirmation key.
 
 Give the bundle to the coding agent with the generated **Copy coding-agent prompt**. The agent must:
 

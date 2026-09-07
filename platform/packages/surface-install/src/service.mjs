@@ -4,10 +4,12 @@ import { projectAccess } from '../../control-plane/src/access.mjs';
 import { assert, hash, id, parseJson, token } from '../../control-plane/src/util.mjs';
 import { normalizeInstallReceipt, normalizeSurfaceInstall } from './contracts.mjs';
 import { generateSurfaceInstall } from './templates.mjs';
+import { surfaceTargetProfile } from './target-profiles.mjs';
 
 const view = (row) => ({
   id: row.id,
   framework: row.framework,
+  target: surfaceTargetProfile(row.framework),
   mode: row.mode,
   applicationOrigin: row.application_origin,
   routePath: row.route_path,

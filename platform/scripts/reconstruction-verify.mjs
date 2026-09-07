@@ -115,6 +115,7 @@ const expected = [
   'migrations/004-discovery-onboarding.sql',
   'migrations/005-surface-installs.sql',
   'migrations/006-design-contracts.sql',
+  'migrations/007-surface-install-targets.sql',
   'packages/discovery/src/service.mjs',
   'packages/discovery/src/design-contract.mjs',
   'packages/surface-install/src/service.mjs',

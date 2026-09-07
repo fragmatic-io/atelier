@@ -49,7 +49,7 @@ Hosted CI and Dependabot are intentionally not configured. Run this canonical lo
 4. Review the bounded host design contract captured from explicitly marked elements.
 5. Configure Claude CLI, Codex CLI, or an API provider. Claude CLI defaults to `claude-opus-4-8` at `high` effort. There is no provider fallback.
 6. Configure the primary agent and optional bounded read-only specialists.
-7. Generate a Next.js, React Router/Express, or DOM/Node route, inline mount, or drawer installer.
+7. Select an exact client/server target and generate a route, inline mount, or drawer installer. First-class targets include Vite React + FastAPI, Next.js App Router, React Router + Express, and DOM + Node.
 8. Verify route mounting, server authority, design binding, tools, confirmation behavior, and browser states before publishing.
 
 Start with the [platform operating guide](platform/README.md), [customer onboarding](platform/docs/CUSTOMER_ONBOARDING.md), [application/agent setup](platform/docs/AGENT_SETUP.md), [legacy-removal record](platform/docs/LEGACY_REMOVAL.md), and [repository hygiene audit](platform/docs/REPOSITORY_HYGIENE.md).
@@ -61,7 +61,7 @@ Start with the [platform operating guide](platform/README.md), [customer onboard
 | `platform/packages/control-plane` | Authentication, tenant/project scope, durable jobs, releases, providers, and API |
 | `platform/packages/discovery` | Privacy projection, runtime observation, design evidence, and onboarding facts |
 | `platform/packages/conversation` | Embedded agent, bounded specialists, tools, confirmations, and artifacts |
-| `platform/packages/surface-install` | Framework-aware customer-owned installers and factual receipts |
+| `platform/packages/surface-install` | Target-profile customer-owned installers and factual receipts |
 | `platform/packages/source-forge` | Bounded source generation, compilation, certification, and signing |
 | `platform/packages/mcp` | Read-only project-scoped coding-agent tools and generated skills |
 | `platform/apps` | Studio plus runnable host and embedded-agent examples |

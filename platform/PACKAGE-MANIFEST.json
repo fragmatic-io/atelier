@@ -3,8 +3,8 @@
   "package": "@atelier/platform",
   "version": "2.3.0-rc.1",
   "algorithm": "SHA-256",
-  "generatedAt": "2026-09-07T11:46:35.417Z",
-  "fileCount": 389,
+  "generatedAt": "2026-09-07T12:35:27.621Z",
+  "fileCount": 397,
   "files": [
     {
       "path": ".dockerignore",
@@ -20,8 +20,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 5572,
-      "sha256": "c7f808e74141013f230b35fd9d90b384ecd669a126172358ad69ac2c4d11b8ee",
+      "size": 6016,
+      "sha256": "b398fd7b702630a023041c9a39bc5b380751eab8ca2801100652af9573cd6444",
       "executable": false
     },
     {
@@ -32,8 +32,8 @@
     },
     {
       "path": "README.md",
-      "size": 9779,
-      "sha256": "17aad57a56f7a5e5cee9772f443d8868faf31f7a7ed9bbff2df6ee257ff7a045",
+      "size": 9794,
+      "sha256": "8612087c43542348a9839bc69c4b1dc64e2cd45740603f29db1c0712c963f457",
       "executable": false
     },
     {
@@ -164,8 +164,8 @@
     },
     {
       "path": "apps/studio/web/install-surface.mjs",
-      "size": 4413,
-      "sha256": "a866cb5bb20487e44b9fa45950cf8b7b7ee2bf24a4aa464848efb84075a611c5",
+      "size": 4868,
+      "sha256": "e2d2770eb4f0e62f6181613158e39d67c144bd004717be165dda0ae0a468b43b",
       "executable": false
     },
     {
@@ -212,14 +212,14 @@
     },
     {
       "path": "docs/AGENT_SETUP.md",
-      "size": 12044,
-      "sha256": "118d4ac96521d7ce089710f7a3b3e4ba75a39713765f9d75f2dce6d8fbe5ba4d",
+      "size": 12247,
+      "sha256": "a2f23f2b31e9232ba66ac8caf959ca59ff92121377068b3fb28bf72b0122b1e4",
       "executable": false
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "size": 7739,
-      "sha256": "c56a3e4cd6101a934ab1115ece9df0d6b4074475213793e5bbfd20102d7a9fb2",
+      "size": 7991,
+      "sha256": "2b0329958e1c971d0e44eece3cb616b920966058a02b2f825bdcd67afda80533",
       "executable": false
     },
     {
@@ -230,8 +230,8 @@
     },
     {
       "path": "docs/CUSTOMER_ONBOARDING.md",
-      "size": 15775,
-      "sha256": "618eda89f090e2e253844368edace8de366331f6b720b79bdf72d074a3c2a135",
+      "size": 16519,
+      "sha256": "e86199537e4ea65847448edf052adf4f0f4fc63fe0ca608aee25ce98038b354a",
       "executable": false
     },
     {
@@ -454,6 +454,12 @@
       "path": "migrations/006-design-contracts.sql",
       "size": 662,
       "sha256": "7afcbcd5fc515a23116764b6d30817e28f64bd8f1365d700388f6c4e478c19bb",
+      "executable": false
+    },
+    {
+      "path": "migrations/007-surface-install-targets.sql",
+      "size": 1713,
+      "sha256": "5d49ec66b99a9e3857643abd2f2aad3b634ea5b0a1b03ebba5391916f1085a08",
       "executable": false
     },
     {
@@ -1040,14 +1046,20 @@
     },
     {
       "path": "packages/surface-install/src/contracts.mjs",
-      "size": 2645,
-      "sha256": "f4caf88da5421908fa38bca12d56812ef25786d4a3d35f47ffa303136d4bf6b6",
+      "size": 2723,
+      "sha256": "a6bc3c745b4591f1b06cdac8939169bdea08472c3f951a723237622f2fde30dd",
       "executable": false
     },
     {
       "path": "packages/surface-install/src/service.mjs",
-      "size": 6745,
-      "sha256": "acd821503bcf9521b63534023d46f23fbc18649213503cb80bc3b9c9b5b5ec49",
+      "size": 6854,
+      "sha256": "7243b206a59a61600c061ccd21e65066441504d202718daae75020d0eae6d729",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/target-profiles.mjs",
+      "size": 1363,
+      "sha256": "36fb9a656b4d3b5ea02b486b1cfdd64ce562eb47a7b8d6bc70c27898013c318d",
       "executable": false
     },
     {
@@ -1060,6 +1072,36 @@
       "path": "packages/surface-install/src/template-express.mjs",
       "size": 3461,
       "sha256": "a33a84607e352ba8e8cc5565906230fb1b16a4810f5413a1d527984c6032de2f",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-fastapi-bridge.mjs",
+      "size": 12671,
+      "sha256": "58ce6514cb352d9ffbbfd7ffd5f67f6e06d9b93dda47a34b01c79bbc8d11edc6",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-fastapi-canonical.mjs",
+      "size": 1861,
+      "sha256": "9137ae23630d5647276069c1782eb2a89843fc1605949342f4bf3d4e9f51d703",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-fastapi-config.mjs",
+      "size": 2957,
+      "sha256": "991661f5ae6b6c59727551c317598cbbdd5d74cbbadc9750cd61387a358400b1",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-fastapi-contracts.mjs",
+      "size": 3609,
+      "sha256": "3a21a1b857d63d85270da65516fa9cc13a3e1c6719ddb50d3c35edfe19d76351",
+      "executable": false
+    },
+    {
+      "path": "packages/surface-install/src/template-fastapi-ledger.mjs",
+      "size": 3554,
+      "sha256": "a3d82bd5971d06b2c3e8f0aeaaedbde5baa7549326d3ca50113f50a9a7a76c35",
       "executable": false
     },
     {
@@ -1081,9 +1123,15 @@
       "executable": false
     },
     {
+      "path": "packages/surface-install/src/template-vite-fastapi.mjs",
+      "size": 5718,
+      "sha256": "a64441cdf5d1a752484cadee86bcffd80b8cdd10db6940c3ad9002aa3fabb9bd",
+      "executable": false
+    },
+    {
       "path": "packages/surface-install/src/templates.mjs",
-      "size": 1940,
-      "sha256": "7200c0f8618db07460ccb5c940ef9a7a34e739889eb76d121842a140e2ab83cf",
+      "size": 2273,
+      "sha256": "beb803758ea83963c8257db111cff0c6f4ef2c4114ee579f965c674f2086f527",
       "executable": false
     },
     {
@@ -1154,8 +1202,8 @@
     },
     {
       "path": "scripts/browser-integration.py",
-      "size": 16665,
-      "sha256": "fa7accb348a5c81e98a6610a995cf590c11998b427b2e8882ff63700d4c39bfb",
+      "size": 16984,
+      "sha256": "2801d7e2089233afada546499c7ae8d1570282b76b88aaa8267f09797e6095d4",
       "executable": false
     },
     {
@@ -1232,8 +1280,8 @@
     },
     {
       "path": "scripts/reconstruction-verify.mjs",
-      "size": 7084,
-      "sha256": "bf175a5fd7885c4a96e6028556fb1a4bd22d93aae5a13437c2ab3fc549df06aa",
+      "size": 7132,
+      "sha256": "09489abdd25f5285a9cbaec59b9283ac3e96c306abdba3cbc3c0d4a0798da66c",
       "executable": false
     },
     {
@@ -1388,8 +1436,8 @@
     },
     {
       "path": "tests/surface-install.test.mjs",
-      "size": 11374,
-      "sha256": "9ff1b656798c8dd436d09100443f3da1743968bb7b4a64414690553c1717d0db",
+      "size": 15573,
+      "sha256": "ce1107abe51272c2e9e45210b1cddec2a3b708bb165cf7f75496afe94fa92dad",
       "executable": false
     },
     {

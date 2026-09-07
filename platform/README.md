@@ -43,13 +43,13 @@ Open `http://127.0.0.1:4310`. The first boot prints a random development passwor
 
 Self-service signup is available at `/signup`. It requires a name, email address, and password of 12-256 characters, creates the browser session immediately, and performs no email-verification step. New accounts have no inherited workspace access; workspace membership still comes only from creating a workspace or accepting an invitation.
 
-For a customer or coding agent installing Atelier into another application, begin with the [guided customer onboarding](docs/CUSTOMER_ONBOARDING.md), then follow the complete [application integration handoff](docs/AGENT_SETUP.md). The normal SaaS path uses a privacy-safe browser observer and OpenAPI evidence without requiring source code. It then covers automatic Redoc documentation, capability review, provider/runner setup, a framework-aware route/mount installer, the server-authority bridge, embedded chat, rich response components, MCP registration, and deployment verification.
+For a customer or coding agent installing Atelier into another application, begin with the [guided customer onboarding](docs/CUSTOMER_ONBOARDING.md), then follow the complete [application integration handoff](docs/AGENT_SETUP.md). The normal SaaS path uses a privacy-safe browser observer and OpenAPI evidence without requiring source code. It then covers automatic Redoc documentation, capability review, provider/runner setup, an explicit client/server target route/mount installer, the server-authority bridge, embedded chat, rich response components, MCP registration, and deployment verification.
 
 The installable package exposes server authority, React slots, browser surfaces, providers, project MCP, the embedded-agent host/client/journal, the standalone chat and artifact mounts, and the source forge as documented subpath exports. Import `@atelier/platform/agent.css` inside the explicit host container for the scoped standalone chat theme.
 
 ## Product surfaces
 
-- Studio: fact-derived guided onboarding, origin-bound browser observation, OpenAPI import, optional redacted semantic samples, privacy-safe host design contracts, capability review, independent custom-surface and chatbot delivery, bounded specialist-agent setup, framework-aware route/mount generation with factual verification, automatic Redoc API reference, source generation, real browser certification, human approval, signing, publication, rollback, and audit.
+- Studio: fact-derived guided onboarding, origin-bound browser observation, OpenAPI import, optional redacted semantic samples, privacy-safe host design contracts, capability review, independent custom-surface and chatbot delivery, bounded specialist-agent setup, target-profile route/mount generation with factual verification, automatic Redoc API reference, source generation, real browser certification, human approval, signing, publication, rollback, and audit.
 - Capability review: filter and select operations, approve selected or all pending operations atomically, then make a separate explicit decision about agent access. Bulk review is rejected if the project model changed; reopening a review disables agent access and retains the original audit records.
 - Host runtime: the application retains authentication, object authorization, business data, and transactional idempotency. Atelier resolves signed additive surfaces and proposes only reviewed capabilities.
 - Embedded agent: durable private conversations, attachments, stop/retry, scoped tools, bounded read-only specialist consultations, primary-agent synthesis, exact-input confirmation, interactive artifacts, revision/pin/export behavior, and revocation checks.
@@ -82,7 +82,7 @@ Read [architecture](docs/ARCHITECTURE.md), [host integration](docs/INTEGRATION.m
 | `packages/source-forge`                            | React source contract, isolated compilation, certification, signing lifecycle |
 | `packages/conversation`                            | Embedded agent, tools, artifacts, observations, browser clients               |
 | `packages/discovery`                               | Browser observer, privacy projection, API evidence and onboarding status      |
-| `packages/surface-install`                         | Framework bundles, fail-closed authority stubs and factual install receipts   |
+| `packages/surface-install`                         | Client/server target bundles, fail-closed authority stubs and install receipts |
 | `packages/mcp`                                     | Read-only project-scoped coding-agent tools and generated skills              |
 | `packages/host-sdk`, `surface`, `adapters`         | Server authority and host rendering integrations                              |
 | `apps/studio`, `apps/agent-demo`, `apps/host-demo` | Operator product and runnable local integrations                              |
