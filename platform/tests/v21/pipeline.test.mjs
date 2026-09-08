@@ -6,6 +6,10 @@ import { verifySignedBundle } from '../../packages/runtime/src/index.mjs';
 import { projectAccess } from '../../packages/control-plane/src/access.mjs';
 import { applyDesign } from '../../packages/control-plane/src/pipeline.mjs';
 import { designRepairIssue } from '../../packages/control-plane/src/design-repair.mjs';
+import {
+  architectSchema,
+  selectedCapabilityModel,
+} from '../../packages/control-plane/src/capability-selection.mjs';
 test('end-to-end: source → real AST → three native kits → human review → signed deployment → rollback', async (t) => {
   const f = await fixture();
   t.after(() => f.db.close());
@@ -121,6 +125,14 @@ test('provider-neutral agent pipeline uses architect/designer/critic and persist
           workflow: ['Review', 'Act'],
           successCriteria: ['Complete safely'],
           avoid: ['Unverified actions'],
+          queryCapabilityIds: req.input.capabilities
+            .filter((capability) => capability.kind === 'query')
+            .slice(0, 8)
+            .map((capability) => capability.id),
+          actionCapabilityIds: req.input.capabilities
+            .filter((capability) => capability.kind === 'command')
+            .slice(0, 4)
+            .map((capability) => capability.id),
         };
       } else if (req.schema.properties.sections) {
         stages.push('designer');
@@ -187,6 +199,14 @@ test('model design repair receives exact approved coverage after an omission', a
           workflow: ['Review'],
           successCriteria: ['Complete safely'],
           avoid: ['Unverified actions'],
+          queryCapabilityIds: req.input.capabilities
+            .filter((capability) => capability.kind === 'query')
+            .slice(0, 8)
+            .map((capability) => capability.id),
+          actionCapabilityIds: req.input.capabilities
+            .filter((capability) => capability.kind === 'command')
+            .slice(0, 4)
+            .map((capability) => capability.id),
         };
       } else if (req.schema.properties.sections) {
         designerCalls += 1;
@@ -272,6 +292,40 @@ test('model design repair identifies the exact invented field and approved alter
   assert.equal(issue.details.capabilityId, 'analytics.summary');
   assert.deepEqual(issue.details.unapprovedFields, ['invented_trend']);
   assert.deepEqual(issue.details.approvedFields, ['risk_score', 'open_count']);
+});
+test('architect capability selection is bounded to the authorized surface inventory', () => {
+  const task = {
+    requiredInformation: Array.from({ length: 10 }, (_, index) => ({
+      capabilityId: `query_${index}`,
+      field: 'id',
+    })),
+    permittedActions: ['action_one'],
+  };
+  const schema = architectSchema(task);
+  assert.equal(schema.properties.queryCapabilityIds.maxItems, 8);
+  const model = {
+    capabilities: [
+      ...Array.from({ length: 10 }, (_, index) => ({ id: `query_${index}`, kind: 'query' })),
+      { id: 'action_one', kind: 'command' },
+      { id: 'outside', kind: 'query' },
+    ],
+  };
+  const selected = selectedCapabilityModel(model, task, {
+    queryCapabilityIds: ['query_2', 'query_4'],
+    actionCapabilityIds: ['action_one'],
+  });
+  assert.deepEqual(
+    selected.capabilities.map((capability) => capability.id),
+    ['query_2', 'query_4', 'action_one'],
+  );
+  assert.throws(
+    () =>
+      selectedCapabilityModel(model, task, {
+        queryCapabilityIds: ['outside'],
+        actionCapabilityIds: [],
+      }),
+    { code: 'INVALID_CAPABILITY_SELECTION' },
+  );
 });
 test('source snapshot never executes configuration, scripts, source modules or server actions', async (t) => {
   const f = await fixture();
