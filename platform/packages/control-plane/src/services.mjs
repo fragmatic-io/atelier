@@ -38,6 +38,7 @@ import { newApiToken, passwordMatches } from './crypto.mjs';
 import { validateOutput } from '../../providers/src/schema.mjs';
 import { DEFAULT_HOSTS, API_KINDS } from '../../providers/src/api.mjs';
 import { createOpenApiDocument } from '../../api-docs/src/openapi.mjs';
+import { sanitizeSlotContextSchema } from './slot-context.mjs';
 export const SOURCE_EXTENSIONS = new Set([
   '.js',
   '.jsx',
@@ -496,7 +497,7 @@ export class ControlService {
           allowedPiiFields: strings(x.allowedPiiFields ?? [], 'PII fields'),
           maxAdaptationLevel: integer(x.maxAdaptationLevel ?? 2, 'Adaptation level', 0, 3),
           fallback: 'host_ui',
-          contextSchema: { type: 'object', additionalProperties: true },
+          contextSchema: sanitizeSlotContextSchema(x.contextSchema),
         }));
       }
     }

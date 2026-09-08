@@ -47,6 +47,11 @@ export async function scanned(f) {
           mode: 'inline',
           allowedCapabilityGroups: ['customer.', 'intervention.'],
           allowWriteActions: true,
+          contextSchema: {
+            type: 'object',
+            properties: { customerId: { type: 'string' } },
+            required: ['customerId'],
+          },
         },
       ],
       separationOfDuties: false,

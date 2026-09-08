@@ -7,6 +7,25 @@ export const MAX_SURFACE_ACTION_CAPABILITIES = 4;
 
 const STR = { type: 'string', minLength: 1, maxLength: 200 };
 
+function requiredInputNames(capability) {
+  return [...new Set(capability.inputSchema?.required ?? [])];
+}
+
+export function surfaceExecutableModel(model, slotId) {
+  const slot = model.slots?.find((candidate) => candidate.id === slotId);
+  const guaranteedContext = new Set(slot?.contextSchema?.required ?? []);
+  return {
+    ...model,
+    capabilities: model.capabilities.filter((capability) => {
+      if (capability.kind !== 'query') return true;
+      return requiredInputNames(capability).every((name) => {
+        const property = capability.inputSchema?.properties?.[name];
+        return property?.['x-location'] !== 'header' && guaranteedContext.has(name);
+      });
+    }),
+  };
+}
+
 export function architectSchema(task) {
   const queryIds = [...new Set(task.requiredInformation.map((item) => item.capabilityId))];
   const actionIds = [...new Set(task.permittedActions)];

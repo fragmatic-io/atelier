@@ -153,6 +153,8 @@ The mounted client reports the current bundle hash while Studio verifies four fa
 
 Entity pages can provide a minimal synchronous `window.AtelierHost.context()` object containing only reviewed identifiers or coarse state required by tool inputs. This is optional client context, not a server bridge. It must not expose credentials, full records or arbitrary DOM content.
 
+Atelier will compose a required-input query into a surface only when the selected slot contract guarantees those inputs through `contextSchema.required`. Otherwise the query remains usable as an approved chatbot tool, where the model must first obtain or request the exact identifier. This prevents a dashboard from eagerly issuing invalid detail requests while preserving deeper multi-step investigation.
+
 Re-publishing an improved Atelier surface does not require a new route. The host keeps the same approved slot while signed release resolution selects the current compatible experience. Changes outside an Atelier-owned slot remain customer-owned code changes and must be delivered as an explicit reviewable patch.
 
 ## Product intelligence and personalization boundary

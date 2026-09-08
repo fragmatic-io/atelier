@@ -23,7 +23,11 @@ import {
   DESIGN_SYNTHESIS_SCHEMA,
 } from '../../design-genome/src/synthesis.mjs';
 import { designCoverage, designRepairIssue } from './design-repair.mjs';
-import { architectSchema, selectedCapabilityModel } from './capability-selection.mjs';
+import {
+  architectSchema,
+  selectedCapabilityModel,
+  surfaceExecutableModel,
+} from './capability-selection.mjs';
 const label = (s) =>
   String(s)
     .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -643,6 +647,7 @@ export class BuildPipeline {
     safeModel.capabilities = safeModel.capabilities.filter(
       (c) => c.kind === 'query' || c.securityReviewed,
     );
+    const executableModel = surfaceExecutableModel(safeModel, input.slotId);
     const compile = (projectModel) =>
       compileAdditiveExperience({
         actor: input.role,
@@ -652,7 +657,7 @@ export class BuildPipeline {
         slotId: input.slotId,
         contextClass: { role: input.role, taskCluster: input.slotId },
       });
-    let generationModel = safeModel;
+    let generationModel = executableModel;
     let compiled = compile(generationModel);
     assert(
       compiled.plan.queryPlan.length,
@@ -718,7 +723,7 @@ export class BuildPipeline {
         maxOutputTokens: 1500,
       });
       architecture = result.value;
-      generationModel = selectedCapabilityModel(safeModel, compiled.task, architecture);
+      generationModel = selectedCapabilityModel(executableModel, compiled.task, architecture);
       compiled = compile(generationModel);
       knowledge = buildKnowledge();
       provenance.push({ stage: 'architect', model: result.model, cacheHit: result.cacheHit });

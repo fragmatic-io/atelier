@@ -9,6 +9,7 @@ import { designRepairIssue } from '../../packages/control-plane/src/design-repai
 import {
   architectSchema,
   selectedCapabilityModel,
+  surfaceExecutableModel,
 } from '../../packages/control-plane/src/capability-selection.mjs';
 test('end-to-end: source → real AST → three native kits → human review → signed deployment → rollback', async (t) => {
   const f = await fixture();
@@ -325,6 +326,54 @@ test('architect capability selection is bounded to the authorized surface invent
         actionCapabilityIds: [],
       }),
     { code: 'INVALID_CAPABILITY_SELECTION' },
+  );
+});
+test('surface generation excludes queries whose required inputs are not guaranteed by slot context', () => {
+  const model = {
+    slots: [
+      {
+        id: 'finding.detail',
+        contextSchema: { type: 'object', required: ['finding_id'] },
+      },
+    ],
+    capabilities: [
+      {
+        id: 'analytics.summary',
+        kind: 'query',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+      },
+      {
+        id: 'finding.get',
+        kind: 'query',
+        inputSchema: {
+          type: 'object',
+          properties: { finding_id: { type: 'string', 'x-location': 'path' } },
+          required: ['finding_id'],
+        },
+      },
+      {
+        id: 'private.header-query',
+        kind: 'query',
+        inputSchema: {
+          type: 'object',
+          properties: { authorization: { type: 'string', 'x-location': 'header' } },
+          required: ['authorization'],
+        },
+      },
+      {
+        id: 'finding.review',
+        kind: 'command',
+        inputSchema: { type: 'object', required: ['finding_id'] },
+      },
+    ],
+  };
+  assert.deepEqual(
+    surfaceExecutableModel(model, 'workspace.overview').capabilities.map(({ id }) => id),
+    ['analytics.summary', 'finding.review'],
+  );
+  assert.deepEqual(
+    surfaceExecutableModel(model, 'finding.detail').capabilities.map(({ id }) => id),
+    ['analytics.summary', 'finding.get', 'finding.review'],
   );
 });
 test('source snapshot never executes configuration, scripts, source modules or server actions', async (t) => {
