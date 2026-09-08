@@ -306,7 +306,7 @@ export class DiscoveryService {
       scope,
       'design-synthesis',
       { contractFingerprint },
-      { dedupeKey: `design-synthesis:${contractFingerprint}` },
+      { dedupeKey: `design-synthesis:${contractFingerprint}`, retryTerminal: true },
     );
   }
 

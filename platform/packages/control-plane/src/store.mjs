@@ -130,7 +130,12 @@ export class Store {
       limit,
     );
   }
-  enqueue(scope, kind, input, { dedupeKey = id('request'), maxAttempts = 2 } = {}) {
+  enqueue(
+    scope,
+    kind,
+    input,
+    { dedupeKey = id('request'), maxAttempts = 2, retryTerminal = false } = {},
+  ) {
     const s = requireScope(scope);
     return this.db.transaction(() => {
       const existing = this.db.get(
@@ -146,7 +151,14 @@ export class Store {
           'IDEMPOTENCY_CONFLICT',
           'This request key was used with different input',
         );
-        return existing;
+        if (!retryTerminal || !['failed', 'cancelled'].includes(existing.status)) return existing;
+        this.db.run(
+          'UPDATE jobs SET dedupe_key=? WHERE tenant_id=? AND project_id=? AND id=?',
+          `${dedupeKey}:terminal:${existing.id}`,
+          s.tenantId,
+          s.projectId,
+          existing.id,
+        );
       }
       const active = this.db.get(
         "SELECT count(*) n FROM jobs WHERE tenant_id=? AND status IN ('queued','running')",

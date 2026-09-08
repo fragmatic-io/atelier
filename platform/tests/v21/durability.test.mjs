@@ -32,6 +32,34 @@ test('cancellation fences queued work and deduplicates client retries', async (t
   f.service.store.cancel(s, a.id);
   assert.equal(f.service.store.claim('worker'), null);
 });
+test('explicit terminal retry preserves failed history and queues one replacement', async (t) => {
+  const f = await fixture();
+  t.after(() => f.db.close());
+  const s = projectAccess(f.db, f.who, f.tenant.id, f.project.id);
+  const first = f.service.store.enqueue(s, 'design-synthesis', { contract: 'a' }, {
+    dedupeKey: 'design:a',
+    retryTerminal: true,
+  });
+  const claimed = f.service.store.claim('worker');
+  assert.equal(claimed.id, first.id);
+  assert.equal(f.service.store.finish(claimed, null, { code: 'CLI_EXIT' }), true);
+
+  const retry = f.service.store.enqueue(s, 'design-synthesis', { contract: 'a' }, {
+    dedupeKey: 'design:a',
+    retryTerminal: true,
+  });
+  assert.notEqual(retry.id, first.id);
+  assert.equal(retry.status, 'queued');
+  assert.equal(
+    f.db.get('SELECT status FROM jobs WHERE id=?', first.id).status,
+    'failed',
+  );
+  const duplicate = f.service.store.enqueue(s, 'design-synthesis', { contract: 'a' }, {
+    dedupeKey: 'design:a',
+    retryTerminal: true,
+  });
+  assert.equal(duplicate.id, retry.id);
+});
 test('database online backup restores immutable artifacts, secrets and migration checks', async (t) => {
   const dir = await mkdtemp(join(tmpdir(), 'atelier-backup-test-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
