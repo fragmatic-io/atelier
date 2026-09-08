@@ -303,7 +303,7 @@ export class CliProvider {
           '{"mcpServers":{}}',
           '--no-session-persistence',
           '--max-turns',
-          '2',
+          '4',
           '--model',
           this.model,
           '--effort',
