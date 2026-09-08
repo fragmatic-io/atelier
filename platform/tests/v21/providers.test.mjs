@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, chmod, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, chmod, rm, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ApiProvider } from '../../packages/providers/src/api.mjs';
@@ -8,6 +8,7 @@ import { CliProvider, runProcess, cliEnvironment } from '../../packages/provider
 import { validateOutput, checkSchema } from '../../packages/providers/src/schema.mjs';
 import { validateData } from '../../packages/providers/src/data-schema.mjs';
 import { ProviderError, requestJson } from '../../packages/providers/src/http.mjs';
+import { appendPrivateRunnerDiagnostic } from '../../scripts/runner-diagnostics.mjs';
 import { fixture } from './helpers.mjs';
 const schema = {
     type: 'object',
@@ -207,6 +208,35 @@ test('CLI process enforces timeout, cancellation and maximum output', async () =
       }),
     /byte limit/,
   );
+});
+test('CLI failures expose diagnostics only to a mode-600 private runner log', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'atelier-runner-diagnostic-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  let failure;
+  try {
+    await runProcess(
+      process.execPath,
+      ['-e', "console.error('private provider reason');process.exit(9)"],
+    );
+  } catch (error) {
+    failure = error;
+  }
+  assert.equal(failure.code, 'CLI_EXIT');
+  assert.equal(Object.keys(failure).includes('privateDiagnostics'), false);
+  assert.match(failure.privateDiagnostics.stderr, /private provider reason/);
+
+  const configPath = join(dir, 'runner.json');
+  await writeFile(configPath, '{}', { mode: 0o600 });
+  const logPath = await appendPrivateRunnerDiagnostic(configPath, {
+    taskId: 'inf_test',
+    provider: 'claude-cli',
+    code: failure.code,
+    diagnostics: failure.privateDiagnostics,
+  });
+  assert.equal((await stat(logPath)).mode & 0o077, 0);
+  const record = JSON.parse((await readFile(logPath, 'utf8')).trim());
+  assert.equal(record.taskId, 'inf_test');
+  assert.match(record.stderr, /private provider reason/);
 });
 test('CLI environment preserves OS account identity but strips control-plane and unrelated tenant secrets', () => {
   const env = cliEnvironment('claude-cli', {

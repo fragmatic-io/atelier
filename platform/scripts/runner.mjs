@@ -4,6 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { CliProvider } from '../packages/providers/src/cli.mjs';
 import { sleep } from '../packages/control-plane/src/util.mjs';
+import { appendPrivateRunnerDiagnostic } from './runner-diagnostics.mjs';
 const flag = process.argv.indexOf('--config');
 if (flag < 0) throw new Error('Usage: node scripts/runner.mjs --config /private/runner.json');
 const path = process.argv[flag + 1];
@@ -105,6 +106,16 @@ while (!stopping) {
         code: e.code ?? 'RUNNER_ERROR',
         message: 'Local model call failed. Inspect the private runner log.',
       };
+      try {
+        await appendPrivateRunnerDiagnostic(path, {
+          taskId: task.id,
+          provider: task.provider,
+          code: error.code,
+          diagnostics: e.privateDiagnostics,
+        });
+      } catch {
+        console.error(JSON.stringify({ event: 'runner.diagnostic.failed', taskId: task.id }));
+      }
       console.error(
         JSON.stringify({ event: 'runner.task.failed', taskId: task.id, code: error.code }),
       );

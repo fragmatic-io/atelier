@@ -85,14 +85,22 @@ export async function runProcess(
     );
     child.on('close', (code) => {
       if (abortedError) return finish(abortedError);
-      if (code !== 0)
-        return finish(
-          new ProviderError(
-            'CLI_EXIT',
-            `CLI exited with code ${code}. Inspect the runner privately; output is not exposed to tenants.`,
-            { sent: true },
-          ),
+      if (code !== 0) {
+        const error = new ProviderError(
+          'CLI_EXIT',
+          `CLI exited with code ${code}. Inspect the runner privately; output is not exposed to tenants.`,
+          { sent: true },
         );
+        Object.defineProperty(error, 'privateDiagnostics', {
+          enumerable: false,
+          value: {
+            exitCode: code,
+            stdout: Buffer.concat(stdout).toString('utf8'),
+            stderr: Buffer.concat(stderr).toString('utf8'),
+          },
+        });
+        return finish(error);
+      }
       finish(null, {
         stdout: Buffer.concat(stdout).toString('utf8'),
         stderr: Buffer.concat(stderr).toString('utf8'),
