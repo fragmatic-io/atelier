@@ -4,6 +4,8 @@ import { fixture, scanned, generated, runJob, sample } from './helpers.mjs';
 import { createSnapshot } from '../../scripts/snapshot.mjs';
 import { verifySignedBundle } from '../../packages/runtime/src/index.mjs';
 import { projectAccess } from '../../packages/control-plane/src/access.mjs';
+import { applyDesign } from '../../packages/control-plane/src/pipeline.mjs';
+import { designRepairIssue } from '../../packages/control-plane/src/design-repair.mjs';
 test('end-to-end: source → real AST → three native kits → human review → signed deployment → rollback', async (t) => {
   const f = await fixture();
   t.after(() => f.db.close());
@@ -234,6 +236,42 @@ test('model design repair receives exact approved coverage after an omission', a
   const result = await generated(f, { mode: 'model', variants: 1, apiFactory });
   assert.equal(result.releaseIds.length, 1);
   assert.equal(designerCalls, 2);
+});
+test('model design repair identifies the exact invented field and approved alternatives', () => {
+  const compiled = {
+    task: { permittedActions: [] },
+    plan: {
+      queryPlan: [{ capabilityId: 'analytics.summary', fields: ['risk_score', 'open_count'] }],
+      actionPlan: [],
+    },
+    bundle: {},
+  };
+  const design = {
+    title: 'Risk overview',
+    description: 'Current risk',
+    layout: 'focus',
+    rationale: 'Show reviewed evidence',
+    sections: [
+      {
+        title: 'Risk',
+        source: 'analytics.summary',
+        fields: ['risk_score', 'invented_trend'],
+        variant: 'metrics',
+      },
+    ],
+    actions: [],
+  };
+  let failure;
+  try {
+    applyDesign(compiled, design, null);
+  } catch (error) {
+    failure = error;
+  }
+  const issue = designRepairIssue(failure);
+  assert.equal(issue.code, 'UNAPPROVED_FIELD');
+  assert.equal(issue.details.capabilityId, 'analytics.summary');
+  assert.deepEqual(issue.details.unapprovedFields, ['invented_trend']);
+  assert.deepEqual(issue.details.approvedFields, ['risk_score', 'open_count']);
 });
 test('source snapshot never executes configuration, scripts, source modules or server actions', async (t) => {
   const f = await fixture();

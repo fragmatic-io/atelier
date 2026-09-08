@@ -147,11 +147,18 @@ export function applyDesign(compiled, design, model) {
   const seen = new Set();
   const sections = design.sections.map((s, i) => {
     assert(queryMap.has(s.source), 400, 'UNKNOWN_SOURCE', 'Design references an unapproved query');
+    const approvedFields = queryMap.get(s.source);
+    const unapprovedFields = [...new Set(s.fields.filter((field) => !approvedFields.has(field)))];
     assert(
-      s.fields.length && s.fields.every((f) => queryMap.get(s.source).has(f)),
+      s.fields.length && unapprovedFields.length === 0,
       400,
       'UNAPPROVED_FIELD',
       'Design includes a field outside the authorized task',
+      {
+        capabilityId: s.source,
+        unapprovedFields,
+        approvedFields: [...approvedFields],
+      },
     );
     seen.add(s.source);
     return { ...s, id: `region_${i}`, fields: [...new Set(s.fields)] };
