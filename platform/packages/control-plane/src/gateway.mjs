@@ -71,7 +71,9 @@ export class ModelGateway {
     checkSchema(schema);
     const { connection: c, config, model, effort } = this.connection(stage);
     const key = hash({
-      v: 3,
+      // Bump when prompts, schemas, or post-generation authority checks change so an
+      // artifact accepted under an older safety policy cannot be replayed after repair.
+      v: 4,
       tenant: this.scope.tenantId,
       project: this.scope.projectId,
       connection: c.id,
