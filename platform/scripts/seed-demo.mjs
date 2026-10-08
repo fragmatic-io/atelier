@@ -45,6 +45,12 @@ export async function seedDemo(
           {
             id: 'customer.detail.right-rail',
             mode: 'inline',
+            // Both demo hosts supply this route identity to customer.get.
+            contextSchema: {
+              type: 'object',
+              properties: { customerId: { type: 'string' } },
+              required: ['customerId'],
+            },
             allowedCapabilityGroups: ['customer.', 'intervention.'],
             allowWriteActions: true,
             allowedPiiFields: [],

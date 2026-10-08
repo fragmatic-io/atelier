@@ -12,6 +12,8 @@ Makes release readiness depend on executed local checks, stable clean source/loc
 
 Updates vulnerable production dependencies and builds the API reference asset from Redoc's externalized browser library so the served sanitizer and parser follow the installed dependency graph. Enables sanitization for imported HTML and Markdown descriptions. The upstream standalone bundle is no longer served with its embedded older sanitizer.
 
+Fixes demo bootstrap by declaring the customer slot's required `customerId` context, which the demo host already supplies. This keeps generation compatible with the current guard against queries with unbound required inputs.
+
 Adds the Intelligent UI roadmap with response-format planning, native composition, deterministic interactive tools, progressive rendering, state-preserving edits, and human-calibrated evaluation. Real browser, live-provider, target-deployment and independent review results must be produced for the exact release; this change does not self-certify those external paths.
 
 ## Unreleased — hosted runtime and intelligent design

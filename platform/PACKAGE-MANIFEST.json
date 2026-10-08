@@ -3,8 +3,8 @@
   "package": "@atelier/platform",
   "version": "2.3.0-rc.1",
   "algorithm": "SHA-256",
-  "generatedAt": "2026-10-08T11:51:39.742Z",
-  "fileCount": 442,
+  "generatedAt": "2026-10-08T12:15:46.934Z",
+  "fileCount": 443,
   "files": [
     {
       "path": ".dockerignore",
@@ -20,8 +20,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 8566,
-      "sha256": "d647ebaa51bce23ed48c5a385a99f3c2029e5b91a7146c27567402b2d9382f1c",
+      "size": 8792,
+      "sha256": "7d06b0409309b0da794e2adc4c79bc2fd8d09340b3efa4e0a7f2e9c987f086af",
       "executable": false
     },
     {
@@ -1442,8 +1442,8 @@
     },
     {
       "path": "scripts/seed-demo.mjs",
-      "size": 4365,
-      "sha256": "94eaaf1cc201eb2e9fb2ea9b0fee46de67817c18d6c12ac3a170b584bed10793",
+      "size": 4616,
+      "sha256": "de5d8c7ff91371aa68bb66f2035a5509218a342cbaf0616294d3e4a3e0011035",
       "executable": false
     },
     {
@@ -1660,6 +1660,12 @@
       "path": "tests/runtime-security.test.mjs",
       "size": 11777,
       "sha256": "3786ea3a630902230d0c1671de7d7349364df597df409fa1a3100bebbfb8c9ba",
+      "executable": false
+    },
+    {
+      "path": "tests/seed-demo.test.mjs",
+      "size": 2572,
+      "sha256": "5d8de324be2a9f843cb0ea8330a3b79eae9e4e4b6488d929b60f5d01e6e7e193",
       "executable": false
     },
     {
