@@ -1,36 +1,23 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
-import { createPublicKey, verify } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { collectSourceBinding, collectToolchain } from './acceptance/binding.mjs';
+import { loadEvidenceConfiguration, verifySignedReport } from './acceptance/evidence.mjs';
+import { ensure } from './acceptance/release-policy.mjs';
+import { resolveBrowserPython } from './run-browser-integration.mjs';
 
-const reportPath = process.env.ATELIER_SECURITY_REPORT;
-const signaturePath = process.env.ATELIER_SECURITY_SIGNATURE;
-const publicKeyPath = process.env.ATELIER_SECURITY_PUBLIC_KEY;
-if (!reportPath || !signaturePath || !publicKeyPath) {
-  throw new Error(
-    'SECURITY_REVIEW_BLOCKED: report, detached signature, and reviewer public key are required',
-  );
-}
-const [bytes, signature, publicKey] = await Promise.all([
-  readFile(reportPath),
-  readFile(signaturePath),
-  readFile(publicKeyPath),
-]);
-if (!verify(null, bytes, createPublicKey(publicKey), signature))
-  throw new Error('SECURITY_REVIEW_SIGNATURE: detached signature is invalid');
-const report = JSON.parse(bytes);
-const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-if (
-  report.commit !== commit ||
-  !report.reviewer ||
-  report.independent !== true ||
-  report.openCritical !== 0 ||
-  report.openHigh !== 0
-) {
-  throw new Error(
-    'SECURITY_REVIEW_FAILED: signed review does not approve this exact commit with zero open critical/high findings',
-  );
-}
-process.stdout.write(`${JSON.stringify({ passed: true, commit, reviewer: report.reviewer })}\n`);
+const root = fileURLToPath(new URL('../', import.meta.url));
+ensure(process.env.ATELIER_RELEASE_POLICY && process.env.ATELIER_RELEASE_EVIDENCE,
+  'SECURITY_REVIEW_BLOCKED', 'Supply the operator trust policy and signed security evidence manifest');
+const python = await resolveBrowserPython({ root });
+const binding = await collectSourceBinding(root, { toolchain: collectToolchain(root, { python }) });
+const configuration = await loadEvidenceConfiguration({
+  binding,
+  policyPath: process.env.ATELIER_RELEASE_POLICY,
+  manifestPath: process.env.ATELIER_RELEASE_EVIDENCE,
+});
+// Trust comes from the separately configured reviewer roster, never from a
+// public key supplied alongside an otherwise self-attested report.
+const result = await verifySignedReport('independent-security', configuration);
+process.stdout.write(`${JSON.stringify({ passed: true, ...result, gitCommit: binding.gitCommit })}\n`);

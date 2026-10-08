@@ -20,3 +20,15 @@ export function designRepairIssue(error) {
     details: error?.details ?? null,
   };
 }
+
+/** Critique is feedback to repair, never authority to change the approved coverage. */
+export function critiqueRepairIssues(critique) {
+  const issues = (critique?.issues ?? []).filter((issue) => typeof issue === 'string' && issue.trim());
+  return (issues.length ? issues : ['The independent critic rejected this candidate without a specific issue. Reassess task completion, hierarchy and host coherence.'])
+    .slice(0, 10)
+    .map((message) => ({
+      code: 'CRITIC_REJECTED',
+      message: message.slice(0, 400),
+      details: null,
+    }));
+}

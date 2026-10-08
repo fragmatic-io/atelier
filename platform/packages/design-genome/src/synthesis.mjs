@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 import { assert, canonical, hash } from '../../control-plane/src/util.mjs';
+import { DESIGN_ROLES, DESIGN_PROPERTIES } from './design-registry.mjs';
 
 const text = { type: 'string', minLength: 1, maxLength: 500 };
 export const DESIGN_SYNTHESIS_SCHEMA = {
@@ -30,8 +31,8 @@ export const DESIGN_SYNTHESIS_SCHEMA = {
               type: 'object',
               additionalProperties: false,
               properties: {
-                role: { type: 'string', enum: ['root', 'button', 'input', 'card', 'nav'] },
-                property: { type: 'string', minLength: 1, maxLength: 80 },
+                role: { type: 'string', enum: Object.keys(DESIGN_ROLES) },
+                property: { type: 'string', enum: Object.keys(DESIGN_PROPERTIES) },
                 value: { type: 'string', minLength: 1, maxLength: 300 },
               },
               required: ['role', 'property', 'value'],

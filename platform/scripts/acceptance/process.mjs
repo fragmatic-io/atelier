@@ -9,15 +9,19 @@ export async function runGate(
   evidenceDir,
   name,
   command,
-  { timeoutMs = 600_000, env = {} } = {},
+  { timeoutMs = 600_000, env = {}, requireTests = false } = {},
 ) {
   const started = Date.now();
   const output = [];
   let bytes = 0;
+  const childEnv = { ...process.env, ...env };
+  // A test invoking this helper must not make the independently spawned test
+  // command inherit Node's private child-runner protocol instead of TAP output.
+  delete childEnv.NODE_TEST_CONTEXT;
   const result = await new Promise((resolve) => {
     const child = spawn(command[0], command.slice(1), {
       cwd: root,
-      env: { ...process.env, ...env },
+      env: childEnv,
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: process.platform !== 'win32',
     });
@@ -46,15 +50,30 @@ export async function runGate(
     });
   });
   const log = `${name}.log`;
-  await writeFile(join(evidenceDir, log), Buffer.concat(output));
+  const captured = Buffer.concat(output);
+  await writeFile(join(evidenceDir, log), captured);
+  const summary = {};
+  if (requireTests) {
+    for (const key of ['tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo']) {
+      const values = [...captured.toString('utf8').matchAll(new RegExp(`^# ${key} (\\d+)\\r?$`, 'gm'))];
+      summary[key] = values.length ? Number(values.at(-1)[1]) : null;
+    }
+  }
+  const evidenceError = bytes === 0 ? 'Required gate produced no evidence output' :
+    bytes > 16 * 1024 * 1024 ? 'Required gate output exceeded the evidence capture limit' :
+    requireTests && !(summary.tests > 0 && summary.pass === summary.tests &&
+      ['fail', 'cancelled', 'skipped', 'todo'].every((key) => summary[key] === 0)) ?
+      'Required tests are missing, failed, cancelled, skipped, or TODO' : null;
   const gate = {
     name,
     command,
-    status: result.exitCode === 0 && !result.timedOut ? 'passed' : 'failed',
+    status: result.exitCode === 0 && !result.timedOut && !evidenceError ? 'passed' : 'failed',
     exitCode: result.exitCode,
     signal: result.signal ?? null,
     timedOut: result.timedOut,
-    error: result.error ?? null,
+    error: result.error ?? evidenceError,
+    outputBytes: bytes,
+    ...(requireTests ? { testSummary: summary } : {}),
     durationMs: Date.now() - started,
     log: relative(root, `${evidenceDir}/${log}`),
   };

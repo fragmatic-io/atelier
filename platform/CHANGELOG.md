@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — production UI evidence
+
+Adds one resolved host design context shared by generation, compilation, sandbox rendering and host exports. Approved typography, colors, navigation, logical padding and gap values survive the shared design property registry; changed contexts invalidate source/evidence binding.
+
+Adds caller-supplied immutable production task contracts, exact browser action assertions, retained JPEG captures, pinned axe-core analysis and visual critique of actual screenshots. Source repairs keep the same oracle, and publication retains human approval and current authorization. Studio exposes the quality profile, exact evidence binding, retained images and manual accessibility review.
+
+Fixes structured-surface critic repair by supplying the rejected candidate, its digest and specific critique to the next attempt. Adds twelve authored operational patterns across six task families; these are generation guidance, not a measured visual reference corpus.
+
+Makes release readiness depend on executed local checks, stable clean source/lock/toolchain binding, signed live-provider and full-workflow evidence, target deployment/recovery/load evidence, and an independently trusted security reviewer. Missing, stale, substituted or fixture reports cannot authorize release.
+
+Updates vulnerable production dependencies and builds the API reference asset from Redoc's externalized browser library so the served sanitizer and parser follow the installed dependency graph. Enables sanitization for imported HTML and Markdown descriptions. The upstream standalone bundle is no longer served with its embedded older sanitizer.
+
+Adds the Intelligent UI roadmap with response-format planning, native composition, deterministic interactive tools, progressive rendering, state-preserving edits, and human-calibrated evaluation. Real browser, live-provider, target-deployment and independent review results must be produced for the exact release; this change does not self-certify those external paths.
+
 ## Unreleased — hosted runtime and intelligent design
 
 Replaces framework-specific generated bridges with one origin-bound hosted module script. Atelier serves the signed surface, configured chatbot and approved design contract; the customer browser executes every reviewed API tool through its existing same-origin application session. Hosted conversation state uses a sealed short-lived install session that grants no customer API authority. The runtime denies unknown capabilities and cross-origin URLs, requires explicit command confirmation, forwards host CSRF for reviewed mutations, and requires no customer API credential, package or server bridge.

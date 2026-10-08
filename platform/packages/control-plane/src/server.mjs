@@ -7,7 +7,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { createRequire } from 'node:module';
+import { getApiDocsRenderer } from '../../api-docs/src/renderer.mjs';
 import { DiscoveryService } from '../../discovery/src/service.mjs';
 import { SurfaceInstallService } from '../../surface-install/src/service.mjs';
 import { HostedAgentService } from '../../surface-install/src/hosted-agent.mjs';
@@ -26,7 +26,6 @@ import { safeJob } from './services.mjs';
 import { mineWorkflowOpportunities } from '../../workflow/src/index.mjs';
 const webRoot = fileURLToPath(new URL('../../../apps/studio/web/', import.meta.url));
 const surfaceFile = fileURLToPath(new URL('../../surface/src/browser.mjs', import.meta.url));
-const redocFile = createRequire(import.meta.url).resolve('redoc/bundles/redoc.standalone.js');
 const observerFile = fileURLToPath(new URL('../../discovery/src/observer.js', import.meta.url));
 const embedFile = fileURLToPath(new URL('../../embed/src/runtime.mjs', import.meta.url));
 const embedClientFile = fileURLToPath(new URL('../../embed/src/api-client.mjs', import.meta.url));
@@ -381,19 +380,21 @@ export function createControlServer(
           'agent.css': 'agent.css',
         };
         const path =
-          name === 'redoc.standalone.js'
-            ? redocFile
-            : conversationAssets[name]
+          conversationAssets[name]
               ? fileURLToPath(
                   new URL('../../conversation/src/' + conversationAssets[name], import.meta.url),
                 )
               : name === 'surface.mjs'
                 ? surfaceFile
                 : join(webRoot, name);
-        const data = await readFile(path);
+        const rendererAsset = name === 'redoc.standalone.js' || name === 'redoc.licenses.txt';
+        const renderer = rendererAsset ? await getApiDocsRenderer() : null;
+        const data = renderer
+          ? name === 'redoc.licenses.txt' ? renderer.licenses : renderer.javascript
+          : await readFile(path);
         const publicRuntimeAsset = !!conversationAssets[name] || name === 'surface.mjs';
         res.writeHead(200, {
-          'Content-Type': mime[extname(name)] ?? 'application/octet-stream',
+          'Content-Type': name === 'redoc.licenses.txt' ? 'text/plain; charset=utf-8' : mime[extname(name)] ?? 'application/octet-stream',
           'Cache-Control': 'no-cache',
           ...(publicRuntimeAsset
             ? {

@@ -21,7 +21,7 @@ async function walk(dir) {
   const out = [];
   for (const e of entries) {
     if (
-      ['node_modules', 'vendor', '.git', 'evidence', '.atelier-data', 'coverage', 'dist'].includes(
+      ['node_modules', 'vendor', '.git', '.venv', '__pycache__', 'evidence', '.atelier-data', 'coverage', 'dist'].includes(
         e.name,
       )
     )
@@ -169,8 +169,10 @@ const tests = files
   .map((f) => relative(root, f))
   .sort();
 if (tests.length)
-  await run('executed-tests', [process.execPath, '--test', '--test-concurrency=1', ...tests], {
-    timeout: 300000,
+  await run('executed-tests', [process.execPath, '--test', '--test-reporter=tap', '--test-concurrency=1', ...tests], {
+    // The serial suite includes real compilers and durable workflow fixtures.
+    // Keep a finite budget consistent with canonical acceptance as it grows.
+    timeout: 600000,
   });
 else results.push({ name: 'executed-tests', status: 'failed', error: 'No test files found' });
 if (process.argv.includes('--package'))

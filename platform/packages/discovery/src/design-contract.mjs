@@ -1,49 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
 import { assert, choice, hash, noPrototypeKeys } from '../../control-plane/src/util.mjs';
-
-const ROLES = new Set(['root', 'button', 'input', 'card', 'nav']);
-const PROPERTIES = new Set([
-  'fontFamily',
-  'fontSize',
-  'fontWeight',
-  'lineHeight',
-  'color',
-  'backgroundColor',
-  'borderColor',
-  'borderRadius',
-  'paddingBlock',
-  'paddingInline',
-  'height',
-  'gap',
-  'boxShadow',
-]);
-
-function cssValue(value, role, property) {
-  assert(
-    typeof value === 'string' &&
-      value.length > 0 &&
-      value.length <= 180 &&
-      !/url\s*\(|[;{}<>]|javascript:/i.test(value) &&
-      /^[\w\s#().,%/'"+-]+$/.test(value),
-    400,
-    'DESIGN_VALUE',
-    `Unsafe ${role}.${property} design value`,
-  );
-  return value.trim();
-}
+import { DESIGN_ROLES, DESIGN_PROPERTIES, safeDesignValue } from '../../design-genome/src/design-registry.mjs';
 
 export function normalizeDesignContract(input, { partial = false } = {}) {
-  assert(input && typeof input === 'object', 400, 'DESIGN_CONTRACT', 'Design contract is required');
+  assert(input && typeof input === 'object' && !Array.isArray(input), 400, 'DESIGN_CONTRACT', 'Design contract is required');
   noPrototypeKeys(input);
+  assert(input.roles === undefined || (input.roles && typeof input.roles === 'object' && !Array.isArray(input.roles)), 400, 'DESIGN_ROLE', 'Invalid design roles');
   const roles = {};
   for (const [role, values] of Object.entries(input.roles ?? {})) {
-    assert(ROLES.has(role), 400, 'DESIGN_ROLE', 'Unknown design role');
-    assert(values && typeof values === 'object', 400, 'DESIGN_ROLE', 'Invalid design role');
+    assert(Object.hasOwn(DESIGN_ROLES, role), 400, 'DESIGN_ROLE', 'Unknown design role');
+    assert(values && typeof values === 'object' && !Array.isArray(values), 400, 'DESIGN_ROLE', 'Invalid design role');
     roles[role] = {};
     for (const [property, value] of Object.entries(values)) {
-      assert(PROPERTIES.has(property), 400, 'DESIGN_PROPERTY', 'Unknown design property');
-      roles[role][property] = cssValue(value, role, property);
+      assert(Object.hasOwn(DESIGN_PROPERTIES, property), 400, 'DESIGN_PROPERTY', 'Unknown design property');
+      roles[role][property] = safeDesignValue(value, role, property);
     }
     assert(Object.keys(roles[role]).length > 0, 400, 'DESIGN_ROLE', 'Empty design role');
   }
