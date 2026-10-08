@@ -14,6 +14,7 @@ const classifications = new Set([
 ]);
 
 export async function validateRequirements(root, profile = 'core') {
+  if (!['core', 'release'].includes(profile)) throw new Error('REQUIREMENTS_PROFILE: use core or release');
   const path = join(root, 'docs/v2.3/REQUIREMENTS.json');
   const ledger = JSON.parse(await readFile(path, 'utf8'));
   if (
@@ -50,8 +51,6 @@ export async function validateRequirements(root, profile = 'core') {
     if (['missing', 'partial'].includes(item.status)) errors.push(`${item.id} is ${item.status}`);
     if (item.status === 'externally_blocked' && !item.limitations.length)
       errors.push(`${item.id} is externally blocked without a reason`);
-    if (profile === 'release' && item.status !== 'verified')
-      errors.push(`${item.id} is ${item.status}; release profile requires verified`);
   }
   if (errors.length) throw new Error(`REQUIREMENTS_FAILED:\n${errors.join('\n')}`);
   return {
@@ -62,6 +61,9 @@ export async function validateRequirements(root, profile = 'core') {
         ledger.requirements.filter((item) => item.status === status).length,
       ]),
     ),
-    releaseReady: ledger.requirements.every((item) => item.status === 'verified'),
+    // A checked-in label describes the implementation record. It is not release
+    // authority; fresh local execution and signed external evidence own that.
+    declaredAllVerified: ledger.requirements.every((item) => item.status === 'verified'),
+    canAuthorizeRelease: false,
   };
 }

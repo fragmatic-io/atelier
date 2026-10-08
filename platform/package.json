@@ -109,6 +109,7 @@
     "@types/react-dom": "19.2.0",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
+    "axe-core": "4.14.0",
     "esbuild": "0.28.2",
     "postcss": "8.5.28",
     "react": "19.2.8",

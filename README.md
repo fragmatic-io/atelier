@@ -54,6 +54,12 @@ Hosted CI and Dependabot are intentionally not configured. Run this canonical lo
 
 Start with the [platform operating guide](platform/README.md), [customer onboarding](platform/docs/CUSTOMER_ONBOARDING.md), [application/agent setup](platform/docs/AGENT_SETUP.md), [legacy-removal record](platform/docs/LEGACY_REMOVAL.md), and [repository hygiene audit](platform/docs/REPOSITORY_HYGIENE.md).
 
+## Production UI quality
+
+Source generation uses a shared, versioned host design context. Production components require a caller-supplied task contract, independent interaction assertions, retained browser captures, automated accessibility analysis, visual review of actual screenshots, and human approval of the exact artifact. The standard profile provides explicitly labelled development smoke checks.
+
+See the [production UI contract and review workflow](platform/docs/PRODUCTION_UI.md), [Intelligent UI implementation plan](platform/docs/INTELLIGENT_UI_PLAN.md), and [signed release evidence requirements](platform/docs/RELEASE_EVIDENCE.md). The plan incorporates OpenAI's October 2026 Intelligent UI announcement and distinguishes current quality foundations from planned native composition, streaming and state-preserving edits.
+
 ## Canonical repository map
 
 | Path | Purpose |
@@ -68,4 +74,4 @@ Start with the [platform operating guide](platform/README.md), [customer onboard
 | `platform/tests`, `platform/scripts` | Unit, security, package, browser, and release acceptance gates |
 | `platform/docs` | Current architecture, operations, security, provider, and integration documentation |
 
-Atelier 2.3 remains a release candidate until the exact release commit has live scoped API-provider evidence and an independent signed security review. Local tests do not self-attest those external gates.
+Atelier 2.3 remains a release candidate until the exact clean release commit passes local gates and has trusted signed evidence for its live provider matrix, complete generation/host workflows, target deployment and recovery, and independent security review. Readiness is derived from those reports and their artifacts; local tests and ledger status labels cannot attest external execution.

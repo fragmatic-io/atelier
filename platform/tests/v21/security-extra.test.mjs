@@ -4,6 +4,7 @@ import { fixture, password, scanned, generated, runJob, sample } from './helpers
 import { clientAddress } from '../../packages/control-plane/src/server.mjs';
 import { SqliteActionLedger } from '../../packages/host-sdk/src/index.mjs';
 import { createSnapshot } from '../../scripts/snapshot.mjs';
+import { approvedDesign } from './design-fixtures.mjs';
 test('concurrent password change cannot revive a revoked session or overwrite the winner', async (t) => {
   const f = await fixture();
   t.after(() => f.db.close());
@@ -71,6 +72,7 @@ test('production promotion requires a different authorized reviewer; revocation 
   const f = await fixture();
   t.after(() => f.db.close());
   await scanned(f);
+  approvedDesign(f);
   const output = await generated(f, { variants: 1 });
   const staging = output.releaseIds[0];
   f.service.approve(f.who, f.tenant.id, f.project.id, staging, {

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 The Atelier Authors
-import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
 import { runGate } from './acceptance/process.mjs';
 import { validateRequirements } from './acceptance/requirements.mjs';
+import { collectSourceBinding, collectToolchain, sameBinding } from './acceptance/binding.mjs';
+import { verifyReleaseEvidence } from './acceptance/evidence.mjs';
 import { resolveBrowserPython } from './run-browser-integration.mjs';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
@@ -34,14 +34,15 @@ const requirementSummary = await validateRequirements(root, profile);
 const testFiles = (await tests(join(root, 'tests'))).sort();
 if (!testFiles.length) throw new Error('ACCEPTANCE_TESTS: no Node test files found');
 const python = await resolveBrowserPython({ root });
+const binding = await collectSourceBinding(root, { toolchain: collectToolchain(root, { python }) });
 const gates = [];
 gates.push(
   await runGate(
     root,
     evidenceDir,
     'node-tests',
-    [process.execPath, '--test', '--test-concurrency=4', ...testFiles],
-    { timeoutMs: 600_000 },
+    [process.execPath, '--test', '--test-reporter=tap', '--test-concurrency=4', ...testFiles],
+    { timeoutMs: 600_000, requireTests: true },
   ),
 );
 gates.push(
@@ -93,13 +94,21 @@ gates.push(
   ),
 );
 
-const lockHash = createHash('sha256')
-  .update(await readFile(join(root, 'package-lock.json')))
-  .digest('hex');
-let gitCommit = null;
-try {
-  gitCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-} catch {}
+const finalBinding = await collectSourceBinding(root, { toolchain: collectToolchain(root, { python }) });
+const stableSource = sameBinding(binding, finalBinding);
+gates.push({
+  name: 'source-stability',
+  status: stableSource ? 'passed' : 'failed',
+  code: stableSource ? null : 'SOURCE_CHANGED',
+  reason: stableSource ? 'Source and toolchain did not change during acceptance' : 'Source or toolchain changed while required gates were running',
+});
+const external = await verifyReleaseEvidence({
+  binding,
+  policyPath: process.env.ATELIER_RELEASE_POLICY,
+  manifestPath: process.env.ATELIER_RELEASE_EVIDENCE,
+});
+const corePassed = gates.every((gate) => gate.status === 'passed');
+const releaseReady = corePassed && binding.clean && external.passed;
 const report = {
   name: 'Atelier V2.3 canonical acceptance',
   release: '2.3.0-rc.1',
@@ -107,17 +116,21 @@ const report = {
   profile,
   node: process.version,
   python,
-  gitCommit,
-  packageLockSha256: lockHash,
+  gitCommit: binding.gitCommit,
+  packageLockSha256: binding.packageLockSha256,
+  binding,
+  sourceStable: stableSource,
   requirements: requirementSummary,
   gates,
-  passed: gates.every((gate) => gate.status === 'passed'),
-  releaseReady: gates.every((gate) => gate.status === 'passed') && requirementSummary.releaseReady,
+  external,
+  corePassed,
+  passed: profile === 'release' ? releaseReady : corePassed,
+  releaseReady,
 };
 await writeFile(join(evidenceDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
 await writeFile(
   join(evidenceDir, 'report.md'),
-  `# Atelier V2.3 acceptance\n\nProfile: **${profile}**  \nCommit: \`${gitCommit ?? 'unavailable'}\`  \nPackage lock SHA-256: \`${lockHash}\`\n\n${gates.map((gate) => `- **${gate.name}: ${gate.status}** — ${gate.durationMs} ms — ${gate.log}`).join('\n')}\n\nRelease ready: **${report.releaseReady ? 'yes' : 'no'}**. External gates remain visible in the requirements ledger.\n`,
+  `# Atelier V2.3 acceptance\n\nProfile: **${profile}**  \nCommit: \`${binding.gitCommit}\`  \nSource SHA-256: \`${binding.sourceTreeSha256}\`  \nPackage lock SHA-256: \`${binding.packageLockSha256}\`  \nClean committed source: **${binding.clean ? 'yes' : 'no'}**\n\n## Local gates\n\n${gates.map((gate) => `- **${gate.name}: ${gate.status}**${gate.log ? ` — ${gate.durationMs} ms — ${gate.log}` : ` — ${gate.reason}`}`).join('\n')}\n\n## External release gates\n\n${external.gates.map((gate) => `- **${gate.name}: ${gate.status}** — ${gate.reason ?? `signed by ${gate.signerIdentity}`}`).join('\n')}\n\nRelease ready: **${report.releaseReady ? 'yes' : 'no'}**. Readiness is derived from fresh execution and exact signed evidence; ledger labels cannot authorize promotion.\n`,
 );
 if (!report.passed) process.exitCode = 1;
 process.stdout.write(

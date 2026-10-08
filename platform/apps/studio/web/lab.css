@@ -87,6 +87,24 @@ p {
 .muted {
   color: var(--muted);
 }
+.quality-evidence {
+  margin-block: 20px;
+  padding-block: 16px;
+  border-block: 1px solid var(--line);
+}
+.quality-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px 12px;
+  font-size: 12px;
+}
+.quality-facts dt { color: var(--muted); }
+.quality-facts dd { margin: 0; overflow-wrap: anywhere; }
+.quality-evidence pre { max-height: 360px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.quality-evidence details { margin-block: 12px; }
+.quality-gallery figure { margin: 16px 0; }
+.quality-gallery img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+.quality-gallery figcaption { margin-block-start: 6px; overflow-wrap: anywhere; }
 .micro {
   font-size: 11px;
 }

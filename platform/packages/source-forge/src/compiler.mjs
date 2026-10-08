@@ -19,6 +19,21 @@ import { build } from 'esbuild';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import postcss from 'postcss';
+import {
+  DESIGN_CONTEXT_VERSION,
+  resolveDesignContext,
+  assertDesignContext,
+  normalizeDesignTokens,
+} from '../../design-genome/src/design-context.mjs';
+import {
+  DESIGN_REGISTRY_VERSION,
+  DESIGN_ROLES,
+  DESIGN_PROPERTIES,
+  designRoleStyles,
+} from '../../design-genome/src/design-registry.mjs';
+import { assertQualityContract } from './quality-contract.mjs';
+export { DESIGN_CONTEXT_VERSION, resolveDesignContext, assertDesignContext };
+export { COMPONENT_DESIGN_CONTRACT_SCHEMA } from '../../design-genome/src/component-contract.mjs';
 const require = createRequire(import.meta.url);
 export const FORGE_VERSION = '2.3.0-rc.1';
 const fail = (code, message, details) => {
@@ -439,11 +454,19 @@ function semantic(sources, folder) {
     allowSyntheticDefaultImports: true,
   };
 }
-const runtimeVersion = 'react-iframe-events-v2';
+const runtimeVersion = 'react-iframe-events-v3-design-context';
 const contractHash = () =>
   digest({
     forge: FORGE_VERSION,
     runtimeVersion,
+    designContextVersion: DESIGN_CONTEXT_VERSION,
+    designRegistryVersion: DESIGN_REGISTRY_VERSION,
+    designRoles: DESIGN_ROLES,
+    designProperties: DESIGN_PROPERTIES,
+    resolveDesignContext: resolveDesignContext.toString(),
+    assertDesignContext: assertDesignContext.toString(),
+    designRoleStyles: designRoleStyles.toString(),
+    assertQualityContract: assertQualityContract.toString(),
     react: require('react/package.json').version,
     reactDom: require('react-dom/package.json').version,
     compiler: ts.version,
@@ -453,8 +476,22 @@ const contractHash = () =>
   });
 export async function compileSourceKit(
   value,
-  { projectVersion = 'unbound', tokens = {}, approvedActions = [] } = {},
+  { projectVersion, tokens = {}, approvedActions = [], designContext = null, qualityContract = null } = {},
 ) {
+  const suppliedTokens = normalizeDesignTokens(tokens);
+  const resolvedContext = designContext == null
+    ? resolveDesignContext({ model: { projectVersion: projectVersion ?? 'unbound', designGenome: { hardTokens: { all: suppliedTokens } } } })
+    : structuredClone(assertDesignContext(designContext));
+  projectVersion ??= resolvedContext.projectVersion;
+  if (resolvedContext.projectVersion !== projectVersion)
+    fail('DESIGN_PROJECT_CHANGED', 'Design context belongs to another project version');
+  if (designContext != null && Object.keys(suppliedTokens).length && canonical(suppliedTokens) !== canonical(resolvedContext.tokens))
+    fail('DESIGN_TOKEN_OVERRIDE', 'Compiler tokens must match the resolved design context');
+  if (!resolvedContext.componentContracts.every((contract) => contract.interaction.actions.every((action) => approvedActions.includes(action))))
+    fail('UNAPPROVED_ACTION', 'Trusted component contracts expanded the approved action scope');
+  const resolvedQuality = qualityContract == null ? null : structuredClone(assertQualityContract(qualityContract));
+  if (resolvedQuality && !resolvedQuality.actionIds.every((action) => approvedActions.includes(action)))
+    fail('UNAPPROVED_ACTION', 'Quality contract expanded the approved action scope');
   const kit = structuredClone(value);
   plain(kit);
   validateData(kit, SOURCE_KIT_SCHEMA);
@@ -508,7 +545,7 @@ export async function compileSourceKit(
       transformers: { before: [transformer] },
     }).outputText;
   }
-  const bootstrap = `import React from 'react';import {createRoot} from 'react-dom/client';import Component from '@kit/main';const ctx=globalThis.__ATELIER_FRAME;delete globalThis.__ATELIER_FRAME;let work=0;globalThis.__atelierStep=()=>{if(++work>100000)throw new Error('Component work budget exceeded');};globalThis.__atelierIndex=v=>{if(!Number.isSafeInteger(v)||v<0)throw new Error('Only nonnegative array indexes are supported');return v;};for(const e of ['click','input','change','keydown'])addEventListener(e,()=>{work=0;},{capture:true});const send=(type,payload)=>parent.postMessage({atelier:1,channel:ctx.channel,type,payload},'*');const pending=new Map();let sequence=0;const emit=(capabilityId,input)=>{if(!ctx.actions.includes(capabilityId))return Promise.reject(new Error('Action not declared'));if(pending.size>=8)return Promise.reject(new Error('Too many actions'));const requestId=ctx.channel.slice(0,14)+'_'+(++sequence);return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending.delete(requestId);reject(new Error('Outcome uncertain; reconcile with host before retrying'));},30000);pending.set(requestId,{resolve,reject,timer});send('action',{requestId,capabilityId,input});});};addEventListener('message',e=>{if(e.source!==parent||e.data?.channel!==ctx.channel||e.data?.atelier!==1)return;const m=e.data;if(m.type==='action-result'){const q=pending.get(m.payload.requestId);if(q){clearTimeout(q.timer);pending.delete(m.payload.requestId);m.payload.error?q.reject(new Error(m.payload.error)):q.resolve(m.payload.result);}}});addEventListener('submit',e=>e.preventDefault(),true);addEventListener('click',e=>{const a=e.target?.closest?.('a');if(a&&!a.getAttribute('href')?.startsWith('#'))e.preventDefault();},true);addEventListener('error',e=>send('error',{message:String(e.message).slice(0,300)}));addEventListener('unhandledrejection',e=>send('error',{message:String(e.reason?.message??e.reason).slice(0,300)}));class Boundary extends React.Component{constructor(props){super(props);this.state={error:null};}static getDerivedStateFromError(e){return{error:e.message};}componentDidCatch(e){send('error',{message:e.message});}render(){return this.state.error?React.createElement('p',{role:'alert'},'This component could not render.'):this.props.children;}}createRoot(document.getElementById('root')).render(React.createElement(Boundary,null,React.createElement(Component,{data:ctx.data,state:ctx.state,context:{},emit})));requestAnimationFrame(()=>requestAnimationFrame(()=>send('ready',{digest:ctx.digest})));`;
+  const bootstrap = `import React from 'react';import {createRoot} from 'react-dom/client';import Component from '@kit/main';const ctx=globalThis.__ATELIER_FRAME;delete globalThis.__ATELIER_FRAME;const freeze=value=>{if(value&&typeof value==='object'){Object.values(value).forEach(freeze);Object.freeze(value);}return value;};const frameContext=freeze(ctx.context);let work=0;globalThis.__atelierStep=()=>{if(++work>100000)throw new Error('Component work budget exceeded');};globalThis.__atelierIndex=v=>{if(!Number.isSafeInteger(v)||v<0)throw new Error('Only nonnegative array indexes are supported');return v;};for(const e of ['click','input','change','keydown'])addEventListener(e,()=>{work=0;},{capture:true});const send=(type,payload)=>parent.postMessage({atelier:1,channel:ctx.channel,type,payload},'*');const pending=new Map();let sequence=0;const emit=(capabilityId,input)=>{if(!ctx.actions.includes(capabilityId))return Promise.reject(new Error('Action not declared'));if(pending.size>=8)return Promise.reject(new Error('Too many actions'));const requestId=ctx.channel.slice(0,14)+'_'+(++sequence);return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending.delete(requestId);reject(new Error('Outcome uncertain; reconcile with host before retrying'));},30000);pending.set(requestId,{resolve,reject,timer});send('action',{requestId,capabilityId,input});});};addEventListener('message',e=>{if(e.source!==parent||e.data?.channel!==ctx.channel||e.data?.atelier!==1)return;const m=e.data;if(m.type==='action-result'){const q=pending.get(m.payload.requestId);if(q){clearTimeout(q.timer);pending.delete(m.payload.requestId);m.payload.error?q.reject(new Error(m.payload.error)):q.resolve(m.payload.result);}}});addEventListener('submit',e=>e.preventDefault(),true);addEventListener('click',e=>{const a=e.target?.closest?.('a');if(a&&!a.getAttribute('href')?.startsWith('#'))e.preventDefault();},true);addEventListener('error',e=>send('error',{message:String(e.message).slice(0,300)}));addEventListener('unhandledrejection',e=>send('error',{message:String(e.reason?.message??e.reason).slice(0,300)}));class Boundary extends React.Component{constructor(props){super(props);this.state={error:null};}static getDerivedStateFromError(e){return{error:e.message};}componentDidCatch(e){send('error',{message:e.message});}render(){return this.state.error?React.createElement('p',{role:'alert'},'This component could not render.'):this.props.children;}}createRoot(document.getElementById('root')).render(React.createElement(Boundary,null,React.createElement(Component,{data:ctx.data,state:ctx.state,context:frameContext,emit})));requestAnimationFrame(()=>requestAnimationFrame(()=>send('ready',{digest:ctx.digest})));`;
   const result = await build({
     stdin: { contents: bootstrap, resolveDir: folder, sourcefile: 'bootstrap.jsx', loader: 'jsx' },
     bundle: true,
@@ -552,7 +589,9 @@ export async function compileSourceKit(
     target: 'react',
     kit,
     projectVersion,
-    tokens,
+    tokens: resolvedContext.tokens,
+    designContext: resolvedContext,
+    qualityContract: resolvedQuality,
     javascript,
     typeEvidence,
     executionContractHash: contractHash(),
@@ -565,6 +604,10 @@ export function verifyCompilation(compiled) {
   if (claimed !== digest(body)) fail('COMPONENT_TAMPER', 'Compiled component integrity failed');
   if (body.executionContractHash !== contractHash())
     fail('EXECUTION_CONTRACT_CHANGED', 'Rebuild after execution-contract changes');
+  assertDesignContext(body.designContext);
+  if (body.projectVersion !== body.designContext.projectVersion || canonical(body.tokens) !== canonical(body.designContext.tokens))
+    fail('DESIGN_CONTEXT_TAMPER', 'Compilation changed its resolved host design binding');
+  if (body.qualityContract != null) assertQualityContract(body.qualityContract);
   return compiled;
 }
 const json = (x) =>
@@ -582,7 +625,7 @@ export function sandboxDocument(
   {
     data = compiled.kit.sampleData,
     state = 'ready',
-    theme = 'light',
+    theme = compiled.designContext?.viewport?.colorScheme ?? 'light',
     direction = 'ltr',
     channel = randomBytes(24).toString('base64url'),
   } = {},
@@ -592,20 +635,25 @@ export function sandboxDocument(
   if (canonical(data).length > 262144) fail('ARTIFACT_SIZE', 'Rendered data exceeds 256 KB');
   const nonce = randomBytes(24).toString('base64');
   const csp = `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; connect-src 'none'; font-src 'none'; img-src data:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'`;
-  const tokenCSS = Object.entries(compiled.tokens ?? {})
-    .filter(
-      ([k, v]) =>
-        /^[a-z][a-z0-9-]*$/.test(k) &&
-        typeof v === 'string' &&
-        /^[a-zA-Z0-9#().,% /-]+$/.test(v) &&
-        !v.includes('url'),
-    )
+  const tokenCSS = Object.entries(compiled.designContext.tokens)
+    .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `--${k}:${v};`)
     .join('');
+  const hostDesign = compiled.designContext.contractFingerprint !== null || Object.keys(compiled.tokens).length > 0;
+  const defaults = hostDesign ? '' : '--surface:#fff;--soft:#f1f5fa;--text:#17283c;--muted:#62738a;--primary:#3863d4;--border:#dae2ed;';
+  const darkDefaults = hostDesign ? '' : '[data-theme=dark]{--surface:#142034;--soft:#1e2f47;--text:#e9effa;--muted:#a5b5cd;--border:#34465f}';
+  const roleCSS = designRoleStyles('#root', compiled.designContext.roles, { important: true });
+  const context = {
+    designContext: compiled.designContext,
+    tokens: compiled.designContext.tokens,
+    qualityContract: compiled.qualityContract,
+    theme: theme === 'dark' ? 'dark' : 'light',
+    direction: direction === 'rtl' ? 'rtl' : 'ltr',
+  };
   return {
     channel,
     csp: csp + '; sandbox allow-scripts',
-    html: `<!doctype html><html lang="en" dir="${direction === 'rtl' ? 'rtl' : 'ltr'}" data-theme="${theme === 'dark' ? 'dark' : 'light'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${csp}"><title>${esc(compiled.kit.name)}</title><style>:root{color-scheme:light;--surface:#fff;--soft:#f1f5fa;--text:#17283c;--muted:#62738a;--primary:#3863d4;--border:#dae2ed;${tokenCSS}}[data-theme=dark]{color-scheme:dark;--surface:#142034;--soft:#1e2f47;--text:#e9effa;--muted:#a5b5cd;--border:#34465f}*{box-sizing:border-box}body{margin:0;background:var(--surface);color:var(--text);font:15px/1.5 system-ui,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--primary);outline-offset:3px}svg{max-width:100%}button:disabled{opacity:.6;cursor:not-allowed}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}${compiled.kit.css}</style></head><body><main id="root"></main><script nonce="${nonce}">globalThis.__ATELIER_FRAME=${json({ channel, data, state, actions: compiled.kit.actions, digest: compiled.digest })};${compiled.javascript.replace(/<\/script/gi, '<\\/script')}</script></body></html>`,
+    html: `<!doctype html><html lang="en" dir="${direction === 'rtl' ? 'rtl' : 'ltr'}" data-theme="${theme === 'dark' ? 'dark' : 'light'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="${csp}"><title>${esc(compiled.kit.name)}</title><style>:root{color-scheme:${context.theme};${defaults}${tokenCSS}}${darkDefaults}*{box-sizing:border-box}body{margin:0;background:var(--surface,Canvas);color:var(--text,CanvasText);font-family:var(--font-family,system-ui,sans-serif);font-size:var(--font-size,15px);font-weight:var(--font-weight,400);line-height:var(--line-height,1.5)}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus-ring,Highlight);outline-offset:3px}svg{max-width:100%}button:disabled{opacity:.6;cursor:not-allowed}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}${compiled.kit.css}${roleCSS}</style></head><body><main id="root"></main><script nonce="${nonce}">globalThis.__ATELIER_FRAME=${json({ channel, data, state, context, actions: compiled.kit.actions, digest: compiled.digest })};${compiled.javascript.replace(/<\/script/gi, '<\\/script')}</script></body></html>`,
   };
 }
 export async function exportSourceKit(compiled, destination) {
@@ -624,16 +672,20 @@ export async function exportSourceKit(compiled, destination) {
         dataSchema: compiled.kit.dataSchema,
         actions: compiled.kit.actions,
         digest: compiled.digest,
+        designContextHash: compiled.designContext.hash,
+        qualityContractHash: compiled.qualityContract?.hash ?? null,
       },
       null,
       2,
     ),
+    'design-context.json': canonical(compiled.designContext),
+    ...(compiled.qualityContract ? { 'quality-contract.json': canonical(compiled.qualityContract) } : {}),
     'acceptance.json': JSON.stringify(
       { sampleData: compiled.kit.sampleData, tasks: compiled.kit.tasks },
       null,
       2,
     ),
-    'README.md': `# ${compiled.kit.name}\n\nReal React source with @project module aliases. Configure aliases in your host build. Editing invalidates previous approval: rebuild, evaluate, review. No provider credentials belong in this export.\n`,
+    'README.md': `# ${compiled.kit.name}\n\nReal React source with @project module aliases. Configure aliases in your host build. design-context.json records the exact resolved host tokens, role styles and approved guidance used for generation and certification; provide that context and scoped host styles when integrating the source. Any quality-contract.json contains the independent acceptance oracle. Editing source or either contract invalidates previous approval: rebuild, evaluate, review. No provider credentials belong in this export.\n`,
     ...Object.fromEntries(
       Object.entries(compiled.kit.modules).map(([k, v]) => ['modules/' + k + '.tsx', v]),
     ),

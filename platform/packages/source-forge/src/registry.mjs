@@ -12,7 +12,11 @@ import {
 } from '../../conversation/src/common.mjs';
 import { generateKeyPairSync, sign, verify } from 'node:crypto';
 import { compileIsolated } from './isolation.mjs';
-import { certifySourceKit, expectedCases } from './certifier.mjs';
+import { certifySourceKit, verifyBrowserEvidence } from './certifier.mjs';
+import { normalizeQualityContract, assertQualityContract } from './quality-contract.mjs';
+import { reviewSourceScreenshots, sourceQualityFindings } from './quality-review.mjs';
+import { assertDesignContext } from '../../design-genome/src/design-context.mjs';
+import { selectPatternGuidance } from '../../design-genome/src/pattern-guidance.mjs';
 const PLAN = {
   type: 'object',
   additionalProperties: false,
@@ -46,6 +50,55 @@ export class SourceRegistry {
     assert(s.project.model_id, 409, 'MODEL_REQUIRED', 'Scan the project first');
     return this.store.getArtifact(s, s.project.model_id, 'model').content;
   }
+  designContext(s) {
+    return this.service.currentDesignContext(s);
+  }
+  qualityContext(s, input, goal, actions) {
+    const settings = parseJson(s.project.settings_json, {});
+    const requested = input.qualityContract ?? {};
+    assert(requested && typeof requested === 'object' && !Array.isArray(requested), 400, 'QUALITY_CONTRACT', 'Supply a quality contract object');
+    const qualityContract = normalizeQualityContract(
+      { ...requested, ...(settings.visualReviewRequired ? { visualReviewRequired: true } : {}) },
+      { approvedActions: actions, goal, production: process.env.NODE_ENV === 'production' },
+    );
+    const designContext = this.designContext(s);
+    assert(qualityContract.profile !== 'production' || designContext.contractFingerprint, 409, 'DESIGN_REVIEW_REQUIRED', 'Production source requires an approved host design contract');
+    return { qualityContract, designContext };
+  }
+  assertCurrentContext(s, compiled) {
+    const currentProject = this.db.get(
+      'SELECT settings_json FROM projects WHERE tenant_id=? AND id=? AND archived_at IS NULL',
+      s.tenantId, s.projectId,
+    );
+    assert(currentProject, 404, 'PROJECT_ARCHIVED', 'Project is unavailable');
+    if (parseJson(currentProject.settings_json, {}).visualReviewRequired)
+      assert(compiled.qualityContract?.visualReviewRequired === true, 409, 'SOURCE_QUALITY_POLICY_CHANGED', 'Current project policy requires screenshot review; rebuild and recertify this source under the updated task contract');
+    if (compiled.designContext)
+      assert(compiled.designContext.hash === this.designContext(s).hash, 409, 'DESIGN_CONTEXT_CHANGED', 'Rebuild and recertify after approved host design evidence changes');
+    if (process.env.NODE_ENV === 'production')
+      assert(compiled.qualityContract?.profile === 'production' && compiled.designContext?.contractFingerprint, 409, 'PRODUCTION_QUALITY_REQUIRED', 'Production source needs current reviewed design and task contracts');
+  }
+  assertQualityEvidence(s, row, evidence) {
+    const compiled = this.store.getArtifact(s, row.artifact_id, 'compiled-component').content;
+    this.assertCurrentContext(s, compiled);
+    const quality = compiled.qualityContract ? assertQualityContract(compiled.qualityContract) : null;
+    if (quality) {
+      assert(evidence?.qualityContractHash === quality.hash && evidence.designContextHash === compiled.designContext?.hash && evidence.browserPassed === true, 409, 'QUALITY_EVIDENCE_REQUIRED', 'Passing evidence must match the immutable task and approved design context');
+      assert(evidence.captureArtifactId && evidence.captures?.length, 409, 'CAPTURE_EVIDENCE_REQUIRED', 'Retained exact-source screenshots are required');
+      const captured = this.store.getArtifact(s, evidence.captureArtifactId, 'component-captures').content;
+      assert(captured.digest === row.digest && captured.qualityContractHash === quality.hash && captured.designContextHash === compiled.designContext?.hash, 409, 'CAPTURE_EVIDENCE_INVALID', 'Retained captures belong to a different source or task');
+      verifyBrowserEvidence({ ...evidence, passed: evidence.browserPassed, captures: captured.captures }, compiled, { axeHash: evidence.axeHash ?? null });
+      if (quality.visualReviewRequired) {
+        const hashes = new Set(captured.captures.map((capture) => capture.sha256));
+        assert(evidence.visual?.required === true && evidence.visual.passed === true && evidence.visual.reviewedCaptureHashes?.length && evidence.visual.reviewedCaptureHashes.every((item) => hashes.has(item)), 409, 'VISUAL_REVIEW_REQUIRED', 'Passing actual screenshot review is required for this source');
+      }
+      if (quality.profile === 'production')
+        assert(evidence.protocol === 2 && evidence.axeHash && evidence.checks.every((check) => check.accessibility?.engine === 'axe-core' && check.accessibility.violations?.length === 0), 409, 'ACCESSIBILITY_EVIDENCE_REQUIRED', 'Production quality needs actual passing accessibility evidence');
+    }
+    if (process.env.NODE_ENV === 'production')
+      assert(evidence?.protocol === 2 && evidence.isolation === 'docker' && !evidence.fixtureOnly, 409, 'ISOLATED_CERTIFIER_REQUIRED', 'Production publication requires real isolated browser evidence, never privileged test fixtures');
+    return compiled;
+  }
   row(s, key) {
     const r = this.db.get(
       'SELECT * FROM component_versions WHERE tenant_id=? AND project_id=? AND id=?',
@@ -66,18 +119,22 @@ export class SourceRegistry {
   }
   get(who, t, p, key) {
     const s = projectAccess(this.db, who, t, p),
-      r = this.row(s, key);
+      r = this.row(s, key),
+      evidence = r.evidence_id ? this.store.getArtifact(s, r.evidence_id, 'component-evidence').content : null;
     return {
       ...r,
       compiled: this.store.getArtifact(s, r.artifact_id, 'compiled-component').content,
-      evidence: r.evidence_id
-        ? this.store.getArtifact(s, r.evidence_id, 'component-evidence').content
-        : null,
+      evidence,
+      captures: evidence?.captureArtifactId
+        ? this.store.getArtifact(s, evidence.captureArtifactId, 'component-captures').content.captures
+        : [],
     };
   }
-  async save(s, kit, signal) {
+  async save(s, kit, signal, context = this.qualityContext(s, {}, kit.description || kit.name, kit.actions)) {
     const model = this.model(s),
       actions = model.capabilities.filter((c) => c.securityReviewed === true).map((c) => c.id);
+    assertQualityContract(context.qualityContract);
+    assertDesignContext(context.designContext);
     assert(
       this.db.get(
         "SELECT count(*) n FROM component_versions WHERE tenant_id=? AND project_id=? AND status!='revoked'",
@@ -90,7 +147,7 @@ export class SourceRegistry {
     );
     const compiled = await this.compiler(
       kit,
-      { projectVersion: model.projectVersion, tokens: {}, approvedActions: actions },
+      { projectVersion: model.projectVersion, approvedActions: actions, ...context },
       signal,
     );
     return this.db.transaction(() => {
@@ -107,6 +164,7 @@ export class SourceRegistry {
         'PROJECT_CHANGED',
         'Project changed during compilation',
       );
+      this.assertCurrentContext(fresh, compiled);
       const old = this.db.get(
         'SELECT id,status FROM component_versions WHERE tenant_id=? AND project_id=? AND digest=?',
         s.tenantId,
@@ -136,7 +194,14 @@ export class SourceRegistry {
   import(who, t, p, input) {
     const s = projectAccess(this.db, who, t, p, 'edit');
     this.service.auth.rate(`source-import:${t}:${p}:${who.userId}`, { limit: 6, windowMs: 60000 });
-    return this.save(s, input.kit);
+    assert(input.kit && typeof input.kit === 'object' && Array.isArray(input.kit.actions), 400, 'SOURCE_KIT_REQUIRED', 'Supply a source kit with declared actions');
+    // An imported kit's description is descriptive copy, not a separately
+    // requested task. An explicit imported oracle supplies its task goal;
+    // generation, in contrast, must match the authoritative request.goal.
+    const taskGoal = input.qualityContract?.goal ?? (input.kit.description || input.kit.name);
+    const context = this.qualityContext(s, input, taskGoal, input.kit.actions);
+    this.store.artifact(s, 'source-quality-contract', { ...context, authoredBy: s.userId, origin: 'caller-supplied-import' });
+    return this.save(s, input.kit, undefined, context);
   }
   propose(who, t, p, input, dedupe) {
     const s = projectAccess(this.db, who, t, p, 'run');
@@ -156,22 +221,28 @@ export class SourceRegistry {
       'Choose reviewed capabilities',
     );
     const goal = text(input.goal, 'Component goal', { max: 4000 });
+    const context = this.qualityContext(s, input, goal, actions);
     const candidates = this.list(who, t, p).filter(
       (x) => x.status === 'published' && x.project_version === model.projectVersion,
     );
     const words = new Set(goal.toLowerCase().split(/\W+/));
-    const candidate = candidates.find((x) =>
-      x.name
-        .toLowerCase()
-        .split(/\W+/)
-        .every((w) => words.has(w)),
-    );
+    const candidate = candidates.find((x) => {
+      if (!x.name.toLowerCase().split(/\W+/).every((word) => words.has(word))) return false;
+      const row = this.row(s, x.id);
+      const compiled = this.store.getArtifact(s, row.artifact_id, 'compiled-component').content;
+      if (compiled.designContext?.hash !== context.designContext.hash || compiled.qualityContract?.hash !== context.qualityContract.hash) return false;
+      this.published(s, x.id);
+      return true;
+    });
     if (candidate && input.forceNew !== true) return { reused: true, component: candidate };
     this.service.auth.rate(`source-generate:${t}:${p}`, { limit: 10, windowMs: 60000 });
+    const contractRecord = this.store.artifact(s, 'source-quality-contract', {
+      ...context, authoredBy: s.userId, origin: 'caller-supplied-before-generation',
+    });
     return this.store.enqueue(
       s,
       'source-forge',
-      { goal, actions, modelId: s.project.model_id },
+      { goal, actions, modelId: s.project.model_id, qualityArtifactId: contractRecord.id },
       { dedupeKey: dedupe ?? id('source'), maxAttempts: 1 },
     );
   }
@@ -179,6 +250,7 @@ export class SourceRegistry {
     const s = projectAccess(this.db, who, t, p, 'run'),
       r = this.row(s, key);
     assert(r.status === 'draft', 409, 'COMPONENT_STATE', 'Only drafts can be certified');
+    this.assertCurrentContext(s, this.store.getArtifact(s, r.artifact_id, 'compiled-component').content);
     this.service.auth.rate(`source-certify:${t}:${p}`, { limit: 6, windowMs: 60000 });
     return this.store.enqueue(
       s,
@@ -187,10 +259,71 @@ export class SourceRegistry {
       { dedupeKey: id('cert'), maxAttempts: 1 },
     );
   }
+  retainEvidence(s, row, report, visual, checkpoint, job) {
+    return this.db.transaction(() => {
+      checkpoint(job, 'Retaining exact-source browser and visual evidence');
+      const fresh = projectAccess(this.db, { userId: s.userId }, s.tenantId, s.projectId);
+      assert(fresh.project.model_id === s.project.model_id && this.row(s, row.id).status === 'draft', 409, 'PROJECT_CHANGED', 'Project or component changed during evaluation');
+      const compiled = this.store.getArtifact(fresh, row.artifact_id, 'compiled-component').content;
+      this.assertCurrentContext(fresh, compiled);
+      const { captures, ...browser } = report;
+      const captureRecord = this.store.artifact(fresh, 'component-captures', {
+        digest: row.digest, designContextHash: report.designContextHash,
+        qualityContractHash: report.qualityContractHash, captures,
+      });
+      const passed = report.passed === true && (!visual.required || visual.passed === true);
+      const content = {
+        ...browser, passed, browserPassed: report.passed, visual,
+        captureArtifactId: captureRecord.id,
+        captures: captures.map(({ dataUrl, ...metadata }) => metadata),
+        findings: sourceQualityFindings(report, visual),
+        createdAt: this.clock(),
+      };
+      const evidence = this.store.artifact(fresh, 'component-evidence', content);
+      this.db.run('UPDATE component_versions SET evidence_id=? WHERE tenant_id=? AND project_id=? AND id=?', evidence.id, s.tenantId, s.projectId, row.id);
+      this.store.audit(fresh, 'component.certified', row.id, {
+        passed, checks: report.checks.length, evidenceId: evidence.id,
+        qualityContractHash: report.qualityContractHash, designContextHash: report.designContextHash,
+        reviewedCaptures: visual.reviewedCaptureHashes?.length ?? 0,
+      });
+      return { componentId: row.id, passed, checks: report.checks.length, evidenceId: evidence.id, findings: content.findings };
+    });
+  }
+  async certifyComponent(s, row, { gateway, signal, checkpoint, job }) {
+    const compiled = this.store.getArtifact(s, row.artifact_id, 'compiled-component').content;
+    this.assertCurrentContext(s, compiled);
+    checkpoint(job, 'Running isolated browser, task and accessibility acceptance');
+    const report = await this.certifier(compiled, { signal });
+    verifyBrowserEvidence(report, compiled, { axeHash: report.axeHash ?? null });
+    let visual = {
+      status: compiled.qualityContract?.visualReviewRequired ? 'blocked-by-browser' : 'not-required',
+      required: compiled.qualityContract?.visualReviewRequired ?? false,
+      passed: null, reviewedCaptureHashes: [], batches: [],
+    };
+    if (report.passed) {
+      try {
+        checkpoint(job, 'Reviewing actual source screenshots against the task and host');
+        visual = await reviewSourceScreenshots(gateway, compiled, report, { signal });
+      } catch (error) {
+        visual = { ...visual, status: 'unavailable', passed: false, code: error.code ?? 'VISUAL_REVIEW_FAILED' };
+        this.retainEvidence(s, row, report, visual, checkpoint, job);
+        throw error;
+      }
+    }
+    return this.retainEvidence(s, row, report, visual, checkpoint, job);
+  }
   async execute(s, job, input, { gateway, signal, checkpoint }) {
     assert(s.project.model_id === input.modelId, 409, 'PROJECT_CHANGED', 'Project model changed');
     if (job.kind === 'source-forge') {
       const model = this.model(s);
+      assert(input.qualityArtifactId, 409, 'QUALITY_CONTRACT_REQUIRED', 'Queue generation with an immutable task contract');
+      const contextRecord = this.store.getArtifact(s, input.qualityArtifactId, 'source-quality-contract').content;
+      const context = { qualityContract: assertQualityContract(contextRecord.qualityContract), designContext: assertDesignContext(contextRecord.designContext) };
+      this.assertCurrentContext(s, context);
+      const patternGuidance = selectPatternGuidance({
+        task: { goal: input.goal, requiredInformation: [], permittedActions: input.actions },
+        model, designContext: context.designContext, limit: 3,
+      });
       checkpoint(job, 'Planning the component');
       const plan = await gateway.generate({
         stage: 'architect',
@@ -199,6 +332,9 @@ export class SourceRegistry {
         input: {
           goal: input.goal,
           designGenome: model.designGenome,
+          designContext: context.designContext,
+          taskContract: context.qualityContract,
+          patternGuidance,
           components: model.components?.slice(0, 30) ?? [],
           actions: input.actions,
         },
@@ -210,10 +346,13 @@ export class SourceRegistry {
         goal: input.goal,
         plan: plan.value,
         modelId: input.modelId,
+        qualityArtifactId: input.qualityArtifactId,
+        designContextHash: context.designContext.hash,
+        qualityContractHash: context.qualityContract.hash,
       });
       const { MODEL_KIT_SCHEMA, decodeModelKit } = await import('./compiler.mjs');
       let repairs = [];
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < context.qualityContract.maxRepairAttempts; attempt++) {
         checkpoint(job, 'Authoring project-specific React source', { attempt });
         const output = await gateway.generate({
           stage: 'component',
@@ -224,6 +363,9 @@ export class SourceRegistry {
             actions: input.actions,
             plan: plan.value,
             designGenome: model.designGenome,
+            designContext: context.designContext,
+            taskContract: context.qualityContract,
+            patternGuidance,
             repairs,
           },
           schema: MODEL_KIT_SCHEMA,
@@ -240,7 +382,7 @@ export class SourceRegistry {
           );
           await this.compiler(
             kit,
-            { projectVersion: model.projectVersion, approvedActions: input.actions },
+            { projectVersion: model.projectVersion, approvedActions: input.actions, ...context },
             signal,
           );
           checkpoint(job, 'Independent task and design review');
@@ -248,7 +390,7 @@ export class SourceRegistry {
             stage: 'critic',
             system:
               'Review actual source against the goal and design brief. Check task completeness, asynchronous states, data grounding, responsive composition and meaningful acceptance tests. Return specific repair guidance. You are not browser/security certification and may not claim tests ran.',
-            input: { goal: input.goal, plan: plan.value, kit },
+            input: { goal: input.goal, plan: plan.value, kit, designContext: context.designContext, taskContract: context.qualityContract, patternGuidance },
             schema: CRITIC,
             signal,
             maxOutputTokens: 2200,
@@ -260,7 +402,7 @@ export class SourceRegistry {
           });
           if (!review.value.acceptable) {
             repairs = review.value.issues;
-            if (attempt < 2) continue;
+            if (attempt + 1 < context.qualityContract.maxRepairAttempts) continue;
             assert(
               false,
               409,
@@ -270,15 +412,25 @@ export class SourceRegistry {
             );
           }
           checkpoint(job, 'Persisting component source');
+          const saved = await this.save(s, kit, signal, context);
+          if (context.qualityContract.visualReviewRequired || context.qualityContract.scenarios.length) {
+            const quality = await this.certifyComponent(s, this.row(s, saved.id), { gateway, signal, checkpoint, job });
+            if (!quality.passed) {
+              repairs = [{ priorSourceDigest: saved.digest, evidenceId: quality.evidenceId, findings: quality.findings }];
+              if (attempt + 1 < context.qualityContract.maxRepairAttempts) continue;
+              assert(false, 409, 'SOURCE_QUALITY_REJECTED', 'Source did not pass the immutable task, browser and visual quality policy', { componentId: saved.id, evidenceId: quality.evidenceId, findings: quality.findings });
+            }
+            return { ...saved, ...quality, planId: planArtifact.id, reviewId: critique.id, next: 'review' };
+          }
           return {
-            ...(await this.save(s, kit, signal)),
+            ...saved,
             planId: planArtifact.id,
             reviewId: critique.id,
             next: 'certify',
           };
         } catch (e) {
           if (
-            attempt === 2 ||
+            attempt + 1 === context.qualityContract.maxRepairAttempts ||
             ![
               'SOURCE_TYPES',
               'SOURCE_POLICY',
@@ -301,50 +453,7 @@ export class SourceRegistry {
       'COMPONENT_CHANGED',
       'Draft changed',
     );
-    const compiled = this.store.getArtifact(s, row.artifact_id, 'compiled-component').content;
-    checkpoint(job, 'Running isolated browser acceptance');
-    const report = await this.certifier(compiled, { signal });
-    checkpoint(job, 'Binding acceptance evidence');
-    const required = expectedCases().map((x) => x.name),
-      actual = new Set((report.checks ?? []).map((x) => x.name));
-    assert(
-      report.digest === row.digest &&
-        actual.size === report.checks.length &&
-        required.every((x) => actual.has(x)),
-      409,
-      'EVIDENCE_INVALID',
-      'Evidence is missing, duplicated or not bound to source',
-    );
-    const passed =
-      report.passed === true &&
-      report.checks.every((x) => x.passed === true) &&
-      report.checks
-        .filter((x) => x.name.startsWith('ready'))
-        .every((x) => x.tasks === compiled.kit.tasks.length);
-    return this.db.transaction(() => {
-      checkpoint(job, 'Committing browser evidence');
-      const current = projectAccess(this.db, { userId: s.userId }, s.tenantId, s.projectId);
-      assert(
-        current.project.model_id === input.modelId && this.row(s, row.id).status === 'draft',
-        409,
-        'PROJECT_CHANGED',
-        'Project changed during evaluation',
-      );
-      const a = this.store.artifact(s, 'component-evidence', {
-        ...report,
-        passed,
-        createdAt: this.clock(),
-      });
-      this.db.run(
-        'UPDATE component_versions SET evidence_id=? WHERE tenant_id=? AND project_id=? AND id=?',
-        a.id,
-        s.tenantId,
-        s.projectId,
-        row.id,
-      );
-      this.store.audit(s, 'component.certified', row.id, { passed, checks: report.checks.length });
-      return { componentId: row.id, passed, checks: report.checks.length };
-    });
+    return this.certifyComponent(s, row, { gateway, signal, checkpoint, job });
   }
   approve(who, t, p, key, input) {
     const s = projectAccess(this.db, who, t, p, 'review');
@@ -378,6 +487,9 @@ export class SourceRegistry {
         'EVIDENCE_REQUIRED',
         'Current exact-source passing evidence is required',
       );
+      const compiled = this.assertQualityEvidence(s, r, e);
+      if (compiled.qualityContract?.profile === 'production' && e.checks.some((check) => check.accessibility?.incomplete?.length))
+        assert(input.accessibilityReviewed === true, 400, 'ACCESSIBILITY_REVIEW_REQUIRED', 'Review the accessibility findings that need human judgment');
       assert(
         !parseJson(s.project.settings_json, {}).separationOfDuties || r.created_by !== who.userId,
         403,
@@ -403,6 +515,9 @@ export class SourceRegistry {
     return this.db.transaction(() => {
       const r = this.row(s, key);
       assert(r.status === 'approved', 409, 'APPROVAL_REQUIRED', 'Human source approval required');
+      const evidence = r.evidence_id ? this.store.getArtifact(s, r.evidence_id, 'component-evidence').content : null;
+      assert(evidence?.passed && evidence.digest === r.digest, 409, 'EVIDENCE_REQUIRED', 'Publication requires passing exact-source evidence');
+      this.assertQualityEvidence(s, r, evidence);
       assert(
         r.project_version === this.model(s).projectVersion,
         409,
@@ -510,7 +625,9 @@ export class SourceRegistry {
       'PROJECT_CHANGED',
       'Rebuild against current project',
     );
-    return this.store.getArtifact(fresh, r.artifact_id, 'compiled-component').content;
+    const compiled = this.store.getArtifact(fresh, r.artifact_id, 'compiled-component').content;
+    this.assertCurrentContext(fresh, compiled);
+    return compiled;
   }
   signingKey(s) {
     let key = this.db.get(

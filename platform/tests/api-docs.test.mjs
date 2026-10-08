@@ -1,9 +1,38 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
 import { createOpenApiDocument } from '../packages/api-docs/src/openapi.mjs';
 import { createControlServer } from '../packages/control-plane/src/server.mjs';
 import { fixture, password, scanned } from './v21/helpers.mjs';
+
+test('the API reference enables sanitization for imported HTML and Markdown descriptions', async () => {
+  const spec = {
+    openapi: '3.1.0',
+    info: { title: 'Synthetic API', description: '<img src=x onerror="alert(1)">' },
+    paths: {},
+  };
+  const mount = {};
+  const calls = [];
+  const document = { querySelector: () => mount, title: '' };
+  const source = await readFile(new URL('../apps/studio/web/api-docs.mjs', import.meta.url), 'utf8');
+  await runInNewContext(`(async () => {\n${source}\n})()`, {
+    document,
+    location: { pathname: '/api-reference/tenant-synthetic/project-synthetic' },
+    window: { Redoc: { init: (...args) => calls.push(args) } },
+    fetch: async (url, options) => {
+      assert.equal(url, '/api/tenants/tenant-synthetic/projects/project-synthetic/openapi');
+      assert.equal(options.credentials, 'same-origin');
+      return { ok: true, json: async () => spec };
+    },
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], spec);
+  assert.equal(calls[0][1].sanitize, true);
+  assert.equal(calls[0][2], mount);
+  assert.equal(document.title, 'Synthetic API — Atelier');
+});
 
 test('project model exports deterministic OpenAPI 3.1 operations and review metadata', async (t) => {
   const f = await fixture();

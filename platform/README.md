@@ -24,7 +24,7 @@ The maintained Node suite is intentionally limited to distinct core and security
 
 Hosted CI and Dependabot are intentionally absent. Run this canonical local gate against the exact commit before pushing; do not interpret a GitHub branch-protection bypass as test evidence.
 
-The default `core` profile may pass while external release gates remain blocked. `npm run acceptance -- --profile=release` requires every ledger item to be verified and therefore refuses a release when live API-provider or independent security evidence is absent. The production application/certifier images and real isolated browser certification passed locally; registry scanning remains a deployment-specific requirement. See [the requirements ledger](docs/v2.3/REQUIREMENTS.json).
+The default `core` profile may pass while external release gates remain blocked. `npm run acceptance -- --profile=release` requires all executed local gates, unchanged clean source, and four signed reports bound to the exact source, lockfile and toolchain: live provider matrix, complete generation/host workflow, target deployment/recovery/load behavior, and independent security review. Configure the separate operator trust policy and evidence manifest as described in [release evidence](docs/RELEASE_EVIDENCE.md). Ledger labels describe implementation status and cannot authorize release. Historic image/browser results do not certify changed source or a new target environment.
 
 ## Start Studio
 
@@ -57,9 +57,13 @@ The installable package exposes server authority, React slots, browser surfaces,
 
 ## Source generation and publication
 
-The source forge produces React TSX and CSS against exact locked compiler dependencies. Imports, data contracts, actions, dynamic access, CSS egress, output size, and execution are bounded. Local certification exercises 17 state/viewport/theme/direction cases per component. Production refuses local certification and requires the network-disabled container mode.
+The source forge produces React TSX and CSS against exact locked compiler dependencies. Imports, data contracts, actions, dynamic access, CSS egress, output size, and execution are bounded. A single resolved design context carries approved host roles, tokens, synthesis and component contracts through generation, compilation and evidence. Changing that context invalidates the affected certification.
+
+Standard certification exercises 17 state/viewport/theme/direction smoke cases per component. The production quality profile adds narrow/tablet/RTL coverage, immutable caller-supplied task scenarios, exact action/input assertions, pinned axe-core analysis and actual screenshot critique by the configured visual provider. Screenshots are retained with source/design/task hashes and exposed in Studio. Production runtime refuses local certification and requires the network-disabled container mode. See [production UI quality](docs/PRODUCTION_UI.md) for the contract and review flow.
 
 A component progresses through distinct draft, certified, human-approved, signed/published, and revoked states. Unit fixture evidence cannot cross the production HTTP boundary. Published artifacts are rechecked against current project version, signing key, token, membership, and capability reviews.
+
+The [Intelligent UI plan](docs/INTELLIGENT_UI_PLAN.md) describes the next phases: choosing the appropriate response format, composing reviewed primitives, local interactive tools, progressive rendering, stable edits, design evaluations and measured performance. The roadmap does not claim those later features are implemented by the quality foundation alone.
 
 ## Provider boundary
 

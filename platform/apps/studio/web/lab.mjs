@@ -4,6 +4,7 @@ import { AgentClient, sameOriginTransport } from '/assets/agent-client.mjs';
 import { IndexedDbJournal } from '/assets/agent-journal.mjs';
 import { mountAgentChat, confirmAction } from '/assets/chat.mjs';
 import { mountArtifactFrame } from '/assets/artifact-frame.mjs';
+import { qualityEvidencePanel, sourceGenerationRequest } from '/assets/quality-review.mjs';
 const root = document.getElementById('lab');
 const el = (tag, attrs = {}, ...children) => {
   const e = document.createElement(tag);
@@ -276,7 +277,10 @@ async function forge(c, epoch) {
     const f = file.files?.[0];
     if (!f) return;
     if (f.size > 500000) throw new Error('Source kit exceeds 500 KB');
-    const v = await api(base() + '/components', { kit: JSON.parse(await f.text()) });
+    const imported = JSON.parse(await f.text());
+    const v = await api(base() + '/components', imported.kit ? {
+      kit: imported.kit, qualityContract: imported.qualityContract,
+    } : { kit: imported });
     await detail(c, v.id, state.epoch);
   });
   c.replaceChildren(
@@ -306,8 +310,8 @@ async function forge(c, epoch) {
       el(
         'div',
         { class: 'metric' },
-        el('strong', { text: '17' }),
-        el('span', { text: 'Browser state/viewport cases' }),
+        el('strong', { text: 'Evidence' }),
+        el('span', { text: 'Bound to each exact artifact' }),
       ),
     ),
   );
@@ -406,6 +410,7 @@ async function detail(c, id, epoch) {
       text: 'A model cannot approve its own code. Changing source, contracts or the runtime invalidates acceptance.',
     }),
     el('pre', { class: 'micro', text: 'SHA-256\n' + v.digest }),
+    qualityEvidencePanel(el, v),
   );
   c.replaceChildren(
     heading(v.name, v.compiled.kit.description, [
@@ -473,6 +478,9 @@ async function detail(c, id, epoch) {
         ),
       );
     if (v.evidence?.passed) {
+      const manualAccessibility = v.compiled.qualityContract?.profile === 'production' &&
+        v.evidence.checks.some((check) => check.accessibility?.incomplete?.length);
+      const accessibility = el('input', { type: 'checkbox', 'aria-label': 'Accessibility findings reviewed' });
       const note = el('textarea', {
         'aria-label': 'Review note',
         rows: '4',
@@ -480,10 +488,17 @@ async function detail(c, id, epoch) {
       });
       review.append(
         note,
+        ...(manualAccessibility ? [el('label', { class: 'row' }, accessibility,
+          'I reviewed the accessibility findings that require human judgment.')] : []),
         el('button', {
           class: 'button primary',
           text: 'Approve exact artifact',
           onclick: run(async () => {
+            if (manualAccessibility && !accessibility.checked) {
+              notice('Inspect the accessibility findings and confirm your review before approving.');
+              accessibility.focus();
+              return;
+            }
             if (
               await confirmAction(root, {
                 title: 'Approve this artifact?',
@@ -496,6 +511,7 @@ async function detail(c, id, epoch) {
                 digest: v.digest,
                 previewReviewed: true,
                 tasksReviewed: true,
+                accessibilityReviewed: accessibility.checked,
                 note: note.value,
               });
               await detail(c, id, state.epoch);
@@ -558,6 +574,11 @@ function generate() {
       rows: '6',
       placeholder: 'A capacity planner for exploring how moving work changes team availability…',
     }),
+    profile = el('select', { 'aria-label': 'Quality profile' },
+      el('option', { value: 'production', text: 'Production · independent tasks and visual review' }),
+      el('option', { value: 'standard', text: 'Standard · development smoke checks' })),
+    contractFile = el('input', { type: 'file', accept: '.json', 'aria-label': 'Independent task contract' }),
+    contractSummary = el('p', { class: 'micro muted', role: 'status', text: 'No independent task contract selected.' }),
     error = el('p', { role: 'alert' });
   d.append(
     el('span', { class: 'eyebrow', text: 'PROJECT-NATIVE CODE GENERATION' }),
@@ -567,6 +588,10 @@ function generate() {
       text: 'The configured architect, component and critic models/CLI create and inspect a draft. Nothing publishes automatically.',
     }),
     goal,
+    el('label', { class: 'field' }, 'Quality profile', profile),
+    el('label', { class: 'field' }, 'Independent task contract (.json)', contractFile),
+    contractSummary,
+    el('p', { class: 'micro muted', text: 'Production requires a task contract written by you or a reviewer, with expected interactions and synthetic or redacted fixture data. It is fixed before generation and reviewed against the resulting UI.' }),
     error,
     el(
       'div',
@@ -575,12 +600,19 @@ function generate() {
       el('button', {
         class: 'button primary',
         text: 'Generate draft',
-        onclick: async () => {
+        onclick: async (event) => {
+          const submit = event.currentTarget;
+          submit.disabled = true;
+          error.textContent = '';
+          const enteredGoal = goal.value;
+          const selectedProfile = profile.value;
           try {
-            const job = await api(base() + '/components/generate', {
-              goal: goal.value,
-              actions: [],
-            });
+            const selected = contractFile.files?.[0];
+            if (selected && selected.size > 160000) throw new Error('Task contract exceeds 160 KB');
+            const contract = selected ? JSON.parse(await selected.text()) : null;
+            const request = sourceGenerationRequest({ goal: enteredGoal, profile: selectedProfile, contract });
+            if (!d.isConnected || !d.open) return;
+            const job = await api(base() + '/components/generate', request);
             d.close();
             if (job.reused) {
               notice('A published project component matches this task.');
@@ -589,12 +621,27 @@ function generate() {
             await waitJob(job.id);
             await render();
           } catch (e) {
-            error.textContent = e.message;
+            if (d.isConnected) error.textContent = e.message;
+            else notice(e);
+          } finally {
+            submit.disabled = false;
           }
         },
       }),
     ),
   );
+  contractFile.onchange = async () => {
+    try {
+      const selected = contractFile.files?.[0];
+      if (!selected) { contractSummary.textContent = 'No independent task contract selected.'; return; }
+      if (selected.size > 160000) throw new Error('Task contract exceeds 160 KB');
+      const imported = JSON.parse(await selected.text());
+      const request = sourceGenerationRequest({ profile: profile.value, contract: imported });
+      contractSummary.textContent = `${request.qualityContract.scenarios?.length ?? 0} independent scenarios. Requested capabilities: ${request.actions.length ? request.actions.join(', ') : 'none'}. Task: ${request.goal}`;
+    } catch (e) {
+      contractSummary.textContent = e.message;
+    }
+  };
   d.onclose = () => d.remove();
   root.append(d);
   d.showModal();

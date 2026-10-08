@@ -33,6 +33,8 @@ else {
     window.Redoc.init(
       spec,
       {
+        // Imported schemas and discovery descriptions are untrusted content.
+        sanitize: true,
         expandResponses: '200,201',
         hideDownloadButton: true,
         nativeScrollbars: true,

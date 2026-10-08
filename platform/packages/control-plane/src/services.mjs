@@ -39,6 +39,7 @@ import { validateOutput } from '../../providers/src/schema.mjs';
 import { DEFAULT_HOSTS, API_KINDS } from '../../providers/src/api.mjs';
 import { createOpenApiDocument } from '../../api-docs/src/openapi.mjs';
 import { sanitizeSlotContextSchema } from './slot-context.mjs';
+import { resolveDesignContext } from '../../design-genome/src/design-context.mjs';
 export const SOURCE_EXTENSIONS = new Set([
   '.js',
   '.jsx',
@@ -1199,6 +1200,32 @@ export class ControlService {
     if (!s.project.model_id) return null;
     return this.store.getArtifact(s, s.project.model_id, 'model').content;
   }
+  /** Read one current, project-scoped design snapshot. A scope's project row
+   * may predate an awaited model call; approved design changes do not update it. */
+  currentDesignContext(scope) {
+    const s = requireScope(scope);
+    return this.db.transaction(() => {
+      const project = this.db.get(
+        'SELECT model_id FROM projects WHERE tenant_id=? AND id=? AND archived_at IS NULL',
+        s.tenantId, s.projectId,
+      );
+      assert(project?.model_id, 409, 'MODEL_REQUIRED', 'A current project model is required');
+      const model = this.store.getArtifact(s, project.model_id, 'model').content;
+      const observed = this.db.get(
+        'SELECT approved_contract_json FROM design_observations WHERE tenant_id=? AND project_id=? AND approved_at IS NOT NULL ORDER BY approved_at DESC LIMIT 1',
+        s.tenantId, s.projectId,
+      );
+      const approvedContract = parseJson(observed?.approved_contract_json);
+      const synthesis = this.db.get(
+        "SELECT artifact_id,contract_fingerprint FROM design_syntheses WHERE tenant_id=? AND project_id=? AND status='approved' ORDER BY reviewed_at DESC,id DESC LIMIT 1",
+        s.tenantId, s.projectId,
+      );
+      const approvedSynthesis = synthesis && approvedContract && synthesis.contract_fingerprint === hash(approvedContract)
+        ? this.store.getArtifact(s, synthesis.artifact_id, 'design-synthesis').content
+        : null;
+      return resolveDesignContext({ model, approvedContract, approvedSynthesis });
+    });
+  }
   openApi(identity, t, p) {
     const project = this.project(identity, t, p);
     const model = this.model(identity, t, p);
@@ -1627,16 +1654,16 @@ export class ControlService {
       );
     const approved = bool(input.approved, true);
     const note = text(input.note ?? '', 'Review note', { min: 0, max: 1000 });
-    if (approved) {
-      this.validateRelease(s, row);
-      assert(
-        input.previewReviewed === true,
-        400,
-        'PREVIEW_REVIEW_REQUIRED',
-        'Review the rendered preview, loading/empty/error states and keyboard interaction before approval',
-      );
-    }
     this.db.transaction(() => {
+      if (approved) {
+        this.validateRelease(s, row);
+        assert(
+          input.previewReviewed === true,
+          400,
+          'PREVIEW_REVIEW_REQUIRED',
+          'Review the rendered preview, loading/empty/error states and keyboard interaction before approval',
+        );
+      }
       const result = this.db.run(
         "UPDATE releases SET status=?,approved_by=?,approved_at=?,note=? WHERE tenant_id=? AND project_id=? AND id=? AND status='draft'",
         approved ? 'approved' : 'rejected',
@@ -1666,47 +1693,68 @@ export class ControlService {
     });
     return { status: approved ? 'approved' : 'rejected' };
   }
-  validateRelease(s, row) {
-    const artifact =
-      row.artifact ?? this.store.getArtifact(s, row.artifact_id, 'experience').content;
-    const current = this.store.getArtifact(s, s.project.model_id, 'model').content;
-    assert(
-      artifact.bundle.tenantId === s.tenantId && artifact.bundle.projectId === s.projectId,
-      409,
-      'SCOPE_MISMATCH',
-      'Release scope is invalid',
-    );
-    assert(
-      artifact.bundle.projectVersion === current.projectVersion,
-      409,
-      'PROJECT_CHANGED',
-      'Project model changed; generate and review a fresh release',
-    );
-    const evaluation = evaluateBundle(artifact.bundle, current);
-    assert(
-      evaluation.approved && artifact.evaluation?.approved,
-      409,
-      'QUALITY_GATE',
-      'Release does not pass evaluation',
-    );
-    assert(
-      artifact.bundle.experiencePlan.actionPlan.every((a) =>
-        current.capabilities.some((c) => c.id === a.capabilityId && c.securityReviewed),
-      ),
-      409,
-      'UNREVIEWED_ACTION',
-      'All published actions must have a developer-reviewed security contract',
-    );
-    if (parseJson(s.project.settings_json, {}).visualReviewRequired) {
-      const reviews = this.visualReviews(s, row.artifact_id);
-      assert(
-        reviews.some((x) => x.result.approved === true),
-        409,
-        'VISUAL_REVIEW_REQUIRED',
-        'A passing screenshot critique for this exact artifact is required by project policy',
+  validateRelease(s, row, { environment = row.environment } = {}) {
+    return this.db.transaction(() => {
+      const artifact =
+        row.artifact ?? this.store.getArtifact(s, row.artifact_id, 'experience').content;
+      const project = this.db.get(
+        'SELECT model_id,settings_json FROM projects WHERE tenant_id=? AND id=? AND archived_at IS NULL',
+        s.tenantId, s.projectId,
       );
-    }
-    return artifact;
+      assert(project?.model_id, 409, 'MODEL_REQUIRED', 'A current project model is required');
+      const current = this.store.getArtifact(s, project.model_id, 'model').content;
+      assert(
+        artifact.bundle.tenantId === s.tenantId && artifact.bundle.projectId === s.projectId,
+        409,
+        'SCOPE_MISMATCH',
+        'Release scope is invalid',
+      );
+      assert(
+        artifact.bundle.projectVersion === current.projectVersion,
+        409,
+        'PROJECT_CHANGED',
+        'Project model changed; generate and review a fresh release',
+      );
+      const designContext = this.currentDesignContext(s);
+      const provenance = artifact.bundle.provenance ?? {};
+      const production = environment === 'production' || process.env.NODE_ENV === 'production';
+      // Pre-context artifacts remain a staging-only compatibility path when no
+      // approved host evidence exists. An explicitly missing/malformed new hash
+      // must not be mistaken for a legacy artifact.
+      const legacy = !Object.hasOwn(provenance, 'designContextHash') && !Object.hasOwn(provenance, 'designContractFingerprint');
+      assert(
+        legacy ? !production && designContext.contractFingerprint === null : provenance.designContextHash === designContext.hash,
+        409,
+        'DESIGN_CONTEXT_CHANGED',
+        'Approved host design changed or this release lacks its current binding; generate and review a fresh release',
+      );
+      assert(!production || designContext.contractFingerprint, 409, 'DESIGN_REVIEW_REQUIRED', 'Production releases require an approved host design contract');
+      const evaluation = evaluateBundle(artifact.bundle, current);
+      assert(
+        evaluation.approved && artifact.evaluation?.approved,
+        409,
+        'QUALITY_GATE',
+        'Release does not pass evaluation',
+      );
+      assert(
+        artifact.bundle.experiencePlan.actionPlan.every((a) =>
+          current.capabilities.some((c) => c.id === a.capabilityId && c.securityReviewed),
+        ),
+        409,
+        'UNREVIEWED_ACTION',
+        'All published actions must have a developer-reviewed security contract',
+      );
+      if (parseJson(project.settings_json, {}).visualReviewRequired) {
+        const reviews = this.visualReviews(s, row.artifact_id);
+        assert(
+          reviews.some((x) => x.result.approved === true),
+          409,
+          'VISUAL_REVIEW_REQUIRED',
+          'A passing screenshot critique for this exact artifact is required by project policy',
+        );
+      }
+      return artifact;
+    });
   }
   publish(identity, t, p, r, input = {}) {
     const s = projectAccess(this.db, identity, t, p, 'publish');
@@ -1718,8 +1766,8 @@ export class ControlService {
       'Approve the release before publishing',
     );
     projectAccess(this.db, { userId: row.approved_by }, t, p, 'review');
-    const artifact = this.validateRelease(s, row);
     return this.db.transaction(() => {
+      const artifact = this.validateRelease(s, row);
       const current = this.db.get(
         'SELECT * FROM deployments WHERE tenant_id=? AND project_id=? AND slot_id=? AND environment=?',
         t,
@@ -1847,22 +1895,24 @@ export class ControlService {
       'RELEASE_STATE',
       'Publish to staging before promotion',
     );
-    this.validateRelease(s, row);
-    const next = id('rel');
-    this.db.run(
-      'INSERT INTO releases(tenant_id,project_id,id,artifact_id,slot_id,environment,status,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?)',
-      t,
-      p,
-      next,
-      row.artifact_id,
-      row.slot_id,
-      'production',
-      'draft',
-      identity.userId,
-      this.clock(),
-    );
-    this.store.audit(s, 'release.promoted', next, { from: r });
-    return { id: next, status: 'draft', environment: 'production' };
+    return this.db.transaction(() => {
+      this.validateRelease(s, row, { environment: 'production' });
+      const next = id('rel');
+      this.db.run(
+        'INSERT INTO releases(tenant_id,project_id,id,artifact_id,slot_id,environment,status,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?)',
+        t,
+        p,
+        next,
+        row.artifact_id,
+        row.slot_id,
+        'production',
+        'draft',
+        identity.userId,
+        this.clock(),
+      );
+      this.store.audit(s, 'release.promoted', next, { from: r });
+      return { id: next, status: 'draft', environment: 'production' };
+    });
   }
   rollback(identity, t, p, { slotId, environment, revision }) {
     const s = projectAccess(this.db, identity, t, p, 'publish');

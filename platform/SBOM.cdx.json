@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:5abb7c8e-9302-4769-9e8d-77530c74bd00",
+  "serialNumber": "urn:uuid:5580e95b-d608-484b-8e0b-fd9e298179be",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-07T02:17:50.155Z",
+    "timestamp": "2026-10-08T11:36:39.602Z",
     "lifecycles": [
       {
         "phase": "build"
@@ -15,7 +15,7 @@
       {
         "vendor": "npm",
         "name": "cli",
-        "version": "10.9.8"
+        "version": "11.9.0"
       }
     ],
     "component": {
@@ -27,10 +27,6 @@
       "description": "Multi-tenant, multi-project additive interface studio and scoped host runtime",
       "purl": "pkg:npm/%40atelier/platform@2.3.0-rc.1",
       "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": ""
-        },
         {
           "name": "cdx:npm:package:private",
           "value": "true"
@@ -59,15 +55,10 @@
       "name": "@babel/runtime",
       "version": "7.29.7",
       "scope": "required",
-      "author": "The Babel Team",
+      "author": "The Babel Team (https://babel.dev/team)",
       "description": "babel's modular runtime helpers",
       "purl": "pkg:npm/%40babel/runtime@7.29.7",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@babel/runtime"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -75,15 +66,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/babel/babel.git"
+          "url": "https://github.com/babel/babel.git"
         },
         {
           "type": "website",
           "url": "https://babel.dev/docs/en/next/babel-runtime"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/babel/babel/issues"
         }
       ],
       "hashes": [
@@ -108,28 +95,11 @@
       "scope": "required",
       "description": "A function to check whether a prop is valid for HTML and SVG elements",
       "purl": "pkg:npm/%40emotion/is-prop-valid@1.4.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@emotion/is-prop-valid"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/@emotion/is-prop-valid/-/is-prop-valid-1.4.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/emotion-js/emotion.git#main"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/emotion-js/emotion/tree/main#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/emotion-js/emotion/issues"
         }
       ],
       "hashes": [
@@ -154,28 +124,11 @@
       "scope": "required",
       "description": "emotion's memoize utility",
       "purl": "pkg:npm/%40emotion/memoize@0.9.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@emotion/memoize"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/@emotion/memoize/-/memoize-0.9.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/emotion-js/emotion.git#main"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/emotion-js/emotion/tree/main#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/emotion-js/emotion/issues"
         }
       ],
       "hashes": [
@@ -193,41 +146,28 @@
       ]
     },
     {
-      "bom-ref": "@esbuild/darwin-arm64@0.28.2",
+      "bom-ref": "@esbuild/linux-x64@0.28.2",
       "type": "library",
-      "name": "@esbuild/darwin-arm64",
+      "name": "@esbuild/linux-x64",
       "version": "0.28.2",
       "scope": "optional",
-      "description": "The macOS ARM 64-bit binary for esbuild, a JavaScript bundler.",
-      "purl": "pkg:npm/%40esbuild/darwin-arm64@0.28.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@esbuild/darwin-arm64"
-        }
-      ],
+      "description": "The Linux 64-bit binary for esbuild, a JavaScript bundler.",
+      "purl": "pkg:npm/%40esbuild/linux-x64@0.28.2",
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.28.2.tgz"
+          "url": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.28.2.tgz"
         },
         {
           "type": "vcs",
           "url": "git+https://github.com/evanw/esbuild.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/evanw/esbuild#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/evanw/esbuild/issues"
         }
       ],
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "9f82aa90e42badac4725c82333546fc1b8a07d028828956933bc69f8ab318b2512ad17485e7b7bdd586b3c0c747d5e388607e62152a3c4c37d275b798f249593"
+          "content": "e314d9af5154992a105b85c85a68addedcd0ad44d933e3773f45d5f3144e298179d177c8ef178ef74fb56d9bcdc3122e7d0f610d0551247e588603d517c03f1d"
         }
       ],
       "licenses": [
@@ -246,12 +186,7 @@
       "scope": "required",
       "description": "JSON Safe Parser & Schema Validator",
       "purl": "pkg:npm/%40exodus/schemasafe@1.3.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@exodus/schemasafe"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -259,7 +194,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/ExodusMovement/schemasafe.git"
+          "url": "https://github.com/ExodusMovement/schemasafe.git"
         },
         {
           "type": "website",
@@ -290,15 +225,10 @@
       "name": "@modelcontextprotocol/server",
       "version": "2.0.0",
       "scope": "required",
-      "author": "Anthropic, PBC",
+      "author": "Anthropic, PBC (https://anthropic.com)",
       "description": "Model Context Protocol implementation for TypeScript - Server package",
       "purl": "pkg:npm/%40modelcontextprotocol/server@2.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@modelcontextprotocol/server"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -311,10 +241,6 @@
         {
           "type": "website",
           "url": "https://modelcontextprotocol.io"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/modelcontextprotocol/typescript-sdk/issues"
         }
       ],
       "hashes": [
@@ -337,15 +263,10 @@
       "name": "@nodable/entities",
       "version": "3.0.0",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.com)",
       "description": "Entity parser for XML, HTML, External entites with security and NCR control",
       "purl": "pkg:npm/%40nodable/entities@3.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@nodable/entities"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -354,14 +275,6 @@
         {
           "type": "vcs",
           "url": "git+https://github.com/nodable/val-parsers.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/nodable/val-parsers#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/nodable/val-parsers/issues"
         }
       ],
       "hashes": [
@@ -387,28 +300,15 @@
       "author": "Evgeny Poberezkin",
       "description": "Another JSON Schema Validator",
       "purl": "pkg:npm/%40redocly/ajv@8.11.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@redocly/ajv"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/@redocly/ajv/-/ajv-8.11.2.tgz"
         },
         {
-          "type": "vcs",
-          "url": "git+https://github.com/ajv-validator/ajv.git"
-        },
-        {
           "type": "website",
           "url": "https://ajv.js.org"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/ajv-validator/ajv/issues"
         }
       ],
       "hashes": [
@@ -432,12 +332,7 @@
       "version": "0.22.0",
       "scope": "required",
       "purl": "pkg:npm/%40redocly/config@0.22.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@redocly/config"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -459,40 +354,31 @@
       ]
     },
     {
-      "bom-ref": "@redocly/openapi-core@1.34.19",
+      "bom-ref": "@redocly/openapi-core@1.34.20",
       "type": "library",
       "name": "@redocly/openapi-core",
-      "version": "1.34.19",
+      "version": "1.34.20",
       "scope": "required",
-      "purl": "pkg:npm/%40redocly/openapi-core@1.34.19",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@redocly/openapi-core"
-        }
-      ],
+      "purl": "pkg:npm/%40redocly/openapi-core@1.34.20",
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/@redocly/openapi-core/-/openapi-core-1.34.19.tgz"
+          "url": "https://registry.npmjs.org/@redocly/openapi-core/-/openapi-core-1.34.20.tgz"
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Redocly/redocly-cli.git"
+          "url": "https://github.com/Redocly/redocly-cli.git"
         },
         {
           "type": "website",
           "url": "https://github.com/Redocly/redocly-cli"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/Redocly/redocly-cli/issues"
         }
       ],
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "a3fd1582c057830718d65c9ea9c56d4867534003e7560828d1f6c554f9719795d50ca51c547d0e2d1aaddc26e4c01c93e45537d39134884d0eecccd38630db97"
+          "content": "ca978167fe8129747dfbbfd3b5b2a16e5e14803eeb68784f4b5da892794a9e8d80f3e967164c48c2213f02496ee8bd9c77f8a81fe7c25ae3318bdfe9dc4c803f"
         }
       ],
       "licenses": [
@@ -511,12 +397,7 @@
       "scope": "required",
       "description": "TypeScript definitions for json-schema",
       "purl": "pkg:npm/%40types/json-schema@7.0.15",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@types/json-schema"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -524,15 +405,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
         },
         {
           "type": "website",
           "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/json-schema"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
         }
       ],
       "hashes": [
@@ -557,12 +434,7 @@
       "scope": "required",
       "description": "TypeScript definitions for node",
       "purl": "pkg:npm/%40types/node@22.19.17",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@types/node"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -570,15 +442,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
         },
         {
           "type": "website",
           "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
         }
       ],
       "hashes": [
@@ -603,12 +471,7 @@
       "scope": "required",
       "description": "TypeScript definitions for react",
       "purl": "pkg:npm/%40types/react@19.2.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@types/react"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -616,15 +479,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
         },
         {
           "type": "website",
           "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
         }
       ],
       "hashes": [
@@ -649,12 +508,7 @@
       "scope": "required",
       "description": "TypeScript definitions for react-dom",
       "purl": "pkg:npm/%40types/react-dom@19.2.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@types/react-dom"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -662,15 +516,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
         },
         {
           "type": "website",
           "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react-dom"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
         }
       ],
       "hashes": [
@@ -695,12 +545,7 @@
       "scope": "optional",
       "description": "TypeScript definitions for trusted-types",
       "purl": "pkg:npm/%40types/trusted-types@2.0.7",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@types/trusted-types"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -708,15 +553,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
         },
         {
           "type": "website",
           "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/trusted-types"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/issues"
         }
       ],
       "hashes": [
@@ -739,15 +580,10 @@
       "name": "agent-base",
       "version": "7.1.4",
       "scope": "required",
-      "author": "Nathan Rajlich",
+      "author": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)",
       "description": "Turn a function into an `http.Agent` instance",
       "purl": "pkg:npm/agent-base@7.1.4",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/agent-base"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -755,15 +591,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/TooTallNate/proxy-agents.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/TooTallNate/proxy-agents#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/TooTallNate/proxy-agents/issues"
+          "url": "https://github.com/TooTallNate/proxy-agents.git"
         }
       ],
       "hashes": [
@@ -789,28 +617,15 @@
       "author": "Evgeny Poberezkin",
       "description": "Another JSON Schema Validator",
       "purl": "pkg:npm/ajv@8.20.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ajv"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/ajv/-/ajv-8.20.0.tgz"
         },
         {
-          "type": "vcs",
-          "url": "git+https://github.com/ajv-validator/ajv.git"
-        },
-        {
           "type": "website",
           "url": "https://ajv.js.org"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/ajv-validator/ajv/issues"
         }
       ],
       "hashes": [
@@ -836,12 +651,7 @@
       "author": "Evgeny Poberezkin",
       "description": "Format validation for Ajv v7+",
       "purl": "pkg:npm/ajv-formats@3.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ajv-formats"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -883,28 +693,11 @@
       "author": "Sindre Sorhus",
       "description": "Regular expression for matching ANSI escape codes",
       "purl": "pkg:npm/ansi-regex@5.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ansi-regex"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/chalk/ansi-regex.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/chalk/ansi-regex#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/chalk/ansi-regex/issues"
         }
       ],
       "hashes": [
@@ -930,28 +723,11 @@
       "author": "Sindre Sorhus",
       "description": "ANSI escape codes for styling strings in the terminal",
       "purl": "pkg:npm/ansi-styles@4.3.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ansi-styles"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/chalk/ansi-styles.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/chalk/ansi-styles#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/chalk/ansi-styles/issues"
         }
       ],
       "hashes": [
@@ -974,15 +750,10 @@
       "name": "anynum",
       "version": "1.0.1",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.work/)",
       "description": "Normalize all Unicode decimal digits (Devanagari, Arabic, Thai, etc.) to ASCII numerals. Zero dependencies, performance-first.",
       "purl": "pkg:npm/anynum@1.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/anynum"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -990,15 +761,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/NaturalIntelligence/anynum.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/NaturalIntelligence/anynum#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/NaturalIntelligence/anynum/issues"
+          "url": "https://github.com/NaturalIntelligence/anynum"
         }
       ],
       "hashes": [
@@ -1023,28 +786,11 @@
       "scope": "required",
       "description": "CLI arguments parser. Native port of python's argparse.",
       "purl": "pkg:npm/argparse@2.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/argparse"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/nodeca/argparse.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/nodeca/argparse#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/nodeca/argparse/issues"
         }
       ],
       "hashes": [
@@ -1062,6 +808,43 @@
       ]
     },
     {
+      "bom-ref": "axe-core@4.14.0",
+      "type": "library",
+      "name": "axe-core",
+      "version": "4.14.0",
+      "scope": "required",
+      "description": "Accessibility engine for automated Web UI testing",
+      "purl": "pkg:npm/axe-core@4.14.0",
+      "properties": [],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/axe-core/-/axe-core-4.14.0.tgz"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/dequelabs/axe-core.git"
+        },
+        {
+          "type": "website",
+          "url": "https://www.deque.com/axe/"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "f564d9c448ec67b6f5dd31fc24f99b576cfc0876e5f34ff6866dd73c41b826035d40b2bcd480515e64b11df3003a44aa41e4714ffd1dc0d0f3d863a6df3ce971"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ]
+    },
+    {
       "bom-ref": "balanced-match@1.0.2",
       "type": "library",
       "name": "balanced-match",
@@ -1070,12 +853,7 @@
       "author": "Julian Gruber",
       "description": "Match balanced character pairs, like \"{\" and \"}\"",
       "purl": "pkg:npm/balanced-match@1.0.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/balanced-match"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1088,10 +866,6 @@
         {
           "type": "website",
           "url": "https://github.com/juliangruber/balanced-match"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/juliangruber/balanced-match/issues"
         }
       ],
       "hashes": [
@@ -1109,24 +883,19 @@
       ]
     },
     {
-      "bom-ref": "brace-expansion@2.1.4",
+      "bom-ref": "brace-expansion@2.1.7",
       "type": "library",
       "name": "brace-expansion",
-      "version": "2.1.4",
+      "version": "2.1.7",
       "scope": "required",
       "author": "Julian Gruber",
       "description": "Brace expansion as known from sh/bash",
-      "purl": "pkg:npm/brace-expansion@2.1.4",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/brace-expansion"
-        }
-      ],
+      "purl": "pkg:npm/brace-expansion@2.1.7",
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.4.tgz"
+          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.7.tgz"
         },
         {
           "type": "vcs",
@@ -1135,16 +904,12 @@
         {
           "type": "website",
           "url": "https://github.com/juliangruber/brace-expansion"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/juliangruber/brace-expansion/issues"
         }
       ],
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "8467d5ccfc6d85b7f7fb6ca383f441b3ad1c074161a814bfcef755ff8c27e3f0663746cd30c1cf73857f05b1627aa7f54ca0061801e76387928da8c29747f65e"
+          "content": "b996dec3536a7663c34cc27c6a1d72f9bfbd40426b7e45c593745c4d0c375f48d6ff1454bc52ac83509f41d49819d4db5d9584c6d53727771cc6d9dfc35162d2"
         }
       ],
       "licenses": [
@@ -1161,15 +926,10 @@
       "name": "call-me-maybe",
       "version": "1.0.2",
       "scope": "required",
-      "author": "Eric McCarthy",
+      "author": "Eric McCarthy <eric@limulus.net> (http://www.limulus.net/)",
       "description": "Let your JS API users either give you a callback or receive a promise",
       "purl": "pkg:npm/call-me-maybe@1.0.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/call-me-maybe"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1211,12 +971,7 @@
       "author": "James Halliday",
       "description": "recursively transform key strings to camel-case",
       "purl": "pkg:npm/camelize@1.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/camelize"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1229,10 +984,6 @@
         {
           "type": "website",
           "url": "https://github.com/ljharb/camelize"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/ljharb/camelize/issues"
         }
       ],
       "hashes": [
@@ -1258,12 +1009,7 @@
       "author": "Jed Watson",
       "description": "A simple utility for conditionally joining classNames together",
       "purl": "pkg:npm/classnames@2.5.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/classnames"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1272,14 +1018,6 @@
         {
           "type": "vcs",
           "url": "git+https://github.com/JedWatson/classnames.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/JedWatson/classnames#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/JedWatson/classnames/issues"
         }
       ],
       "hashes": [
@@ -1302,31 +1040,14 @@
       "name": "cliui",
       "version": "8.0.1",
       "scope": "required",
-      "author": "Ben Coe",
+      "author": "Ben Coe <ben@npmjs.com>",
       "description": "easily create complex multi-column command-line-interfaces",
       "purl": "pkg:npm/cliui@8.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/cliui"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/cliui/-/cliui-8.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/yargs/cliui.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/yargs/cliui#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/yargs/cliui/issues"
         }
       ],
       "hashes": [
@@ -1352,28 +1073,11 @@
       "author": "Luke Edwards",
       "description": "A tiny (239B) utility for constructing className strings conditionally.",
       "purl": "pkg:npm/clsx@2.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/clsx"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/lukeed/clsx.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/lukeed/clsx#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/lukeed/clsx/issues"
         }
       ],
       "hashes": [
@@ -1396,31 +1100,14 @@
       "name": "color-convert",
       "version": "2.0.1",
       "scope": "required",
-      "author": "Heather Arthur",
+      "author": "Heather Arthur <fayearthur@gmail.com>",
       "description": "Plain color conversion functions",
       "purl": "pkg:npm/color-convert@2.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/color-convert"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/Qix-/color-convert.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Qix-/color-convert#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/Qix-/color-convert/issues"
         }
       ],
       "hashes": [
@@ -1443,15 +1130,10 @@
       "name": "color-name",
       "version": "1.1.4",
       "scope": "required",
-      "author": "DY",
+      "author": "DY <dfcreative@gmail.com>",
       "description": "A list of color names and its values",
       "purl": "pkg:npm/color-name@1.1.4",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/color-name"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1459,7 +1141,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+ssh://git@github.com/colorjs/color-name.git"
+          "url": "git@github.com:colorjs/color-name.git"
         },
         {
           "type": "website",
@@ -1493,28 +1175,11 @@
       "author": "Jorge Bucaran",
       "description": "Easily set the text color and style in the terminal.",
       "purl": "pkg:npm/colorette@1.4.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/colorette"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/colorette/-/colorette-1.4.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/jorgebucaran/colorette.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/jorgebucaran/colorette#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/jorgebucaran/colorette/issues"
         }
       ],
       "hashes": [
@@ -1540,12 +1205,7 @@
       "author": "Denis Pushkarev",
       "description": "Standard library",
       "purl": "pkg:npm/core-js@3.50.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/core-js"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1584,31 +1244,14 @@
       "name": "css-color-keywords",
       "version": "1.0.0",
       "scope": "required",
-      "author": "Jakob Krigovsky",
+      "author": "Jakob Krigovsky <jakob@krigovsky.com>",
       "description": "A list of all CSS color keywords.",
       "purl": "pkg:npm/css-color-keywords@1.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/css-color-keywords"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/css-color-keywords/-/css-color-keywords-1.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/sonicdoe/css-color-keywords.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/sonicdoe/css-color-keywords#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/sonicdoe/css-color-keywords/issues"
         }
       ],
       "hashes": [
@@ -1634,12 +1277,7 @@
       "author": "Jacob Parker",
       "description": "Convert CSS text to a React Native stylesheet object",
       "purl": "pkg:npm/css-to-react-native@3.2.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/css-to-react-native"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1678,31 +1316,14 @@
       "name": "csstype",
       "version": "3.2.3",
       "scope": "required",
-      "author": "Fredrik Nicol",
+      "author": "Fredrik Nicol <fredrik.nicol@gmail.com>",
       "description": "Strict TypeScript and Flow types for style based on MDN data",
       "purl": "pkg:npm/csstype@3.2.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/csstype"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/frenic/csstype.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/frenic/csstype#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/frenic/csstype/issues"
         }
       ],
       "hashes": [
@@ -1725,15 +1346,10 @@
       "name": "debug",
       "version": "4.4.3",
       "scope": "required",
-      "author": "Josh Junon",
+      "author": "Josh Junon (https://github.com/qix-)",
       "description": "Lightweight debugging utility for Node.js and the browser",
       "purl": "pkg:npm/debug@4.4.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/debug"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1742,14 +1358,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/debug-js/debug.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/debug-js/debug#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/debug-js/debug/issues"
         }
       ],
       "hashes": [
@@ -1774,12 +1382,7 @@
       "scope": "required",
       "description": "A collection of the most useful property decorators.",
       "purl": "pkg:npm/decko@1.2.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/decko"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1788,14 +1391,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/developit/decko.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/developit/decko#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/developit/decko/issues"
         }
       ],
       "hashes": [
@@ -1806,24 +1401,19 @@
       ]
     },
     {
-      "bom-ref": "dompurify@3.4.15",
+      "bom-ref": "dompurify@3.4.16",
       "type": "library",
       "name": "dompurify",
-      "version": "3.4.15",
+      "version": "3.4.16",
       "scope": "required",
-      "author": "Dr.-Ing. Mario Heiderich, Cure53",
+      "author": "Dr.-Ing. Mario Heiderich, Cure53 <mario@cure53.de> (https://cure53.de/)",
       "description": "DOMPurify is a DOM-only, super-fast, uber-tolerant XSS sanitizer for HTML, MathML and SVG. It runs as JavaScript and works in all modern browsers, as well as in Node.js (via jsdom). DOMPurify is written by security people who have vast background in web attacks and XSS. Fear not.",
-      "purl": "pkg:npm/dompurify@3.4.15",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/dompurify"
-        }
-      ],
+      "purl": "pkg:npm/dompurify@3.4.16",
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.15.tgz"
+          "url": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.16.tgz"
         },
         {
           "type": "vcs",
@@ -1841,7 +1431,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "11406333e07e9640c4e35884f360c34827e4a0f19f5f1f08c45c4f3233739bf524e310deb7beeb4cdf70aa5c65560ef590aed71ae50cbfac14c49530c2ff97cb"
+          "content": "b2aa3ea4da77a918422296e0462d72f13824dbb068d91cbbc34742d4d05e3537590a15a3cfd5dbfca3a865b44ffd1ea9419f34430f18857c35de159605b3119d"
         }
       ],
       "licenses": [
@@ -1859,12 +1449,7 @@
       "author": "Mathias Bynens",
       "description": "A regular expression to match all Emoji-only symbols as per the Unicode Standard.",
       "purl": "pkg:npm/emoji-regex@8.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/emoji-regex"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1872,15 +1457,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/mathiasbynens/emoji-regex.git"
+          "url": "https://github.com/mathiasbynens/emoji-regex.git"
         },
         {
           "type": "website",
           "url": "https://mths.be/emoji-regex"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/mathiasbynens/emoji-regex/issues"
         }
       ],
       "hashes": [
@@ -1903,15 +1484,10 @@
       "name": "es6-promise",
       "version": "3.3.1",
       "scope": "required",
-      "author": "Yehuda Katz, Tom Dale, Stefan Penner and contributors",
+      "author": "Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)",
       "description": "A lightweight library that provides tools for organizing asynchronous code",
       "purl": "pkg:npm/es6-promise@3.3.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/es6-promise"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1920,10 +1496,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/stefanpenner/es6-promise.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/stefanpenner/es6-promise#readme"
         },
         {
           "type": "issue-tracker",
@@ -1952,12 +1524,7 @@
       "scope": "required",
       "description": "An extremely fast JavaScript and CSS bundler and minifier.",
       "purl": "pkg:npm/esbuild@0.28.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/esbuild"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -1966,14 +1533,6 @@
         {
           "type": "vcs",
           "url": "git+https://github.com/evanw/esbuild.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/evanw/esbuild#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/evanw/esbuild/issues"
         }
       ],
       "hashes": [
@@ -1999,28 +1558,11 @@
       "author": "Luke Edwards",
       "description": "A tiny (183B to 210B) and fast utility to ascend parent directories",
       "purl": "pkg:npm/escalade@3.2.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/escalade"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/escalade/-/escalade-3.2.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/lukeed/escalade.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/lukeed/escalade#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/lukeed/escalade/issues"
         }
       ],
       "hashes": [
@@ -2046,12 +1588,7 @@
       "author": "Arnout Kazemier",
       "description": "EventEmitter3 focuses on performance while maintaining a Node.js AND browser compatible interface.",
       "purl": "pkg:npm/eventemitter3@5.0.4",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/eventemitter3"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2060,10 +1597,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/primus/eventemitter3.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/primus/eventemitter3#readme"
         },
         {
           "type": "issue-tracker",
@@ -2093,12 +1626,7 @@
       "author": "Evgeny Poberezkin",
       "description": "Fast deep equal",
       "purl": "pkg:npm/fast-deep-equal@3.1.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/fast-deep-equal"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2140,12 +1668,7 @@
       "author": "David Mark Clements",
       "description": "Safely and quickly serialize JavaScript objects",
       "purl": "pkg:npm/fast-safe-stringify@2.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/fast-safe-stringify"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2179,24 +1702,19 @@
       ]
     },
     {
-      "bom-ref": "fast-uri@3.1.7",
+      "bom-ref": "fast-uri@3.1.8",
       "type": "library",
       "name": "fast-uri",
-      "version": "3.1.7",
+      "version": "3.1.8",
       "scope": "required",
-      "author": "Vincent Le Goff",
+      "author": "Vincent Le Goff <vince.legoff@gmail.com> (https://github.com/zekth)",
       "description": "Dependency-free RFC 3986 URI toolbox",
-      "purl": "pkg:npm/fast-uri@3.1.7",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/fast-uri"
-        }
-      ],
+      "purl": "pkg:npm/fast-uri@3.1.8",
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.7.tgz"
+          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.8.tgz"
         },
         {
           "type": "vcs",
@@ -2214,7 +1732,7 @@
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "74ebd95738dd65dcfba6177dbfa8c26f0c6b056ddf2ba9fc45cd02b5d98ce1bba6ccc9f1cb005886ea61e89f35f51470fe4bbeacb6de9707ccba792dbb35551e"
+          "content": "19932d6544cd4693952040a85f02cd652e7150613e99535b4c1f21ffb4708764c559c05088fcd3832662d39045f543192a42c9bfc5c14494e553bce0f3e65f32"
         }
       ],
       "licenses": [
@@ -2231,15 +1749,10 @@
       "name": "fast-xml-builder",
       "version": "1.3.1",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.com)",
       "description": "Build XML from JSON without C/C++ based libraries",
       "purl": "pkg:npm/fast-xml-builder@1.3.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/fast-xml-builder"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2248,14 +1761,6 @@
         {
           "type": "vcs",
           "url": "git+https://github.com/NaturalIntelligence/fast-xml-builder.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/NaturalIntelligence/fast-xml-builder#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/NaturalIntelligence/fast-xml-builder/issues"
         }
       ],
       "hashes": [
@@ -2278,15 +1783,10 @@
       "name": "fast-xml-parser",
       "version": "5.11.1",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.com)",
       "description": "Validate XML, Parse XML, Build XML without C/C++ based libraries",
       "purl": "pkg:npm/fast-xml-parser@5.11.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/fast-xml-parser"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2295,14 +1795,6 @@
         {
           "type": "vcs",
           "url": "git+https://github.com/NaturalIntelligence/fast-xml-parser.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/NaturalIntelligence/fast-xml-parser#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/NaturalIntelligence/fast-xml-parser/issues"
         }
       ],
       "hashes": [
@@ -2325,15 +1817,10 @@
       "name": "foreach",
       "version": "2.0.6",
       "scope": "required",
-      "author": "Manuel Stofer",
+      "author": "Manuel Stofer <manuelstofer@gmail.com>",
       "description": "foreach component + npm package",
       "purl": "pkg:npm/foreach@2.0.6",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/foreach"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2341,15 +1828,7 @@
         },
         {
           "type": "vcs",
-          "url": "git://github.com/manuelstofer/foreach.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/manuelstofer/foreach#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/manuelstofer/foreach/issues"
+          "url": "git://github.com/manuelstofer/foreach"
         }
       ],
       "hashes": [
@@ -2374,12 +1853,7 @@
       "scope": "required",
       "author": "Stefan Penner",
       "purl": "pkg:npm/get-caller-file@2.0.5",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/get-caller-file"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2418,15 +1892,10 @@
       "name": "http2-client",
       "version": "1.3.5",
       "scope": "required",
-      "author": "Eyald",
+      "author": "Eyald <hisco@googlegroups.com‬>",
       "description": "Drop-in replacement for Nodes http and https that transparently make http request to both http1 / http2 server, it's using the ALPN protocol",
       "purl": "pkg:npm/http2-client@1.3.5",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/http2-client"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2434,7 +1903,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/hisco/http2-client.git"
+          "url": "https://github.com/hisco/http2-client.git"
         },
         {
           "type": "website",
@@ -2465,15 +1934,10 @@
       "name": "https-proxy-agent",
       "version": "7.0.6",
       "scope": "required",
-      "author": "Nathan Rajlich",
+      "author": "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io/)",
       "description": "An HTTP(s) proxy `http.Agent` implementation for HTTPS",
       "purl": "pkg:npm/https-proxy-agent@7.0.6",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/https-proxy-agent"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2481,15 +1945,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/TooTallNate/proxy-agents.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/TooTallNate/proxy-agents#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/TooTallNate/proxy-agents/issues"
+          "url": "https://github.com/TooTallNate/proxy-agents.git"
         }
       ],
       "hashes": [
@@ -2515,28 +1971,11 @@
       "author": "Sindre Sorhus",
       "description": "Check if the character represented by a given Unicode code point is fullwidth",
       "purl": "pkg:npm/is-fullwidth-code-point@3.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-fullwidth-code-point"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/sindresorhus/is-fullwidth-code-point.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/sindresorhus/is-fullwidth-code-point#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/sindresorhus/is-fullwidth-code-point/issues"
         }
       ],
       "hashes": [
@@ -2559,15 +1998,10 @@
       "name": "is-unsafe",
       "version": "2.0.2",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.com/)",
       "description": "Zero-dependency, DOM-free, pure predicate for detecting unsafe strings across HTML, XML, SVG, SQL, SHELL, and REGEX contexts",
       "purl": "pkg:npm/is-unsafe@2.0.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-unsafe"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2575,15 +2009,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/NaturalIntelligence/is-unsafe.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/NaturalIntelligence/is-unsafe#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/NaturalIntelligence/is-unsafe/issues"
+          "url": "https://github.com/NaturalIntelligence/is-unsafe"
         }
       ],
       "hashes": [
@@ -2609,28 +2035,11 @@
       "author": "Gustaf Andersson",
       "description": "The most efficient JS implementation calculating the Levenshtein distance, i.e. the difference between two strings.",
       "purl": "pkg:npm/js-levenshtein@1.1.6",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/js-levenshtein"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/js-levenshtein/-/js-levenshtein-1.1.6.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/gustf/js-levenshtein.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/gustf/js-levenshtein#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/gustf/js-levenshtein/issues"
         }
       ],
       "hashes": [
@@ -2656,28 +2065,11 @@
       "author": "Simon Lydell",
       "description": "A regex that tokenizes JavaScript.",
       "purl": "pkg:npm/js-tokens@4.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/js-tokens"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/lydell/js-tokens.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/lydell/js-tokens#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/lydell/js-tokens/issues"
         }
       ],
       "hashes": [
@@ -2695,42 +2087,25 @@
       ]
     },
     {
-      "bom-ref": "js-yaml@4.3.1",
+      "bom-ref": "js-yaml@4.3.2",
       "type": "library",
       "name": "js-yaml",
-      "version": "4.3.1",
+      "version": "4.3.2",
       "scope": "required",
-      "author": "Vladimir Zapparov",
+      "author": "Vladimir Zapparov <dervus.grim@gmail.com>",
       "description": "YAML 1.2 parser and serializer",
-      "purl": "pkg:npm/js-yaml@4.3.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/js-yaml"
-        }
-      ],
+      "purl": "pkg:npm/js-yaml@4.3.2",
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.3.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/nodeca/js-yaml.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/nodeca/js-yaml#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/nodeca/js-yaml/issues"
+          "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.3.2.tgz"
         }
       ],
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "098e9cac6ab7d77317f06930bc1eedce0a7df6f8d0c58d7efb9cb5d3f04a37f1947c7a9668e19030d66406fa92cec64a5a4fe28f01e55b3ce42ee96c18786359"
+          "content": "48534ebd227e0e07fff409fdd38631f828129483c2908a5aa38aa8e7596979edb94c845e8dd1f7ae1478119306a0dc77fd33f73bec335ae893165e2ca9b96dcc"
         }
       ],
       "licenses": [
@@ -2747,15 +2122,10 @@
       "name": "json-pointer",
       "version": "0.6.2",
       "scope": "required",
-      "author": "Manuel Stofer",
+      "author": "Manuel Stofer <manuel@smallpdf.com>",
       "description": "Some utilities for JSON pointers described by RFC 6901",
       "purl": "pkg:npm/json-pointer@0.6.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/json-pointer"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2768,10 +2138,6 @@
         {
           "type": "website",
           "url": "https://github.com/manuelstofer/json-pointer"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/manuelstofer/json-pointer/issues"
         }
       ],
       "hashes": [
@@ -2797,12 +2163,7 @@
       "author": "Evgeny Poberezkin",
       "description": "Traverse JSON Schema passing each schema object to callback",
       "purl": "pkg:npm/json-schema-traverse@1.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/json-schema-traverse"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2841,15 +2202,10 @@
       "name": "loose-envify",
       "version": "1.4.0",
       "scope": "required",
-      "author": "Andres Suarez",
+      "author": "Andres Suarez <zertosh@gmail.com>",
       "description": "Fast (and loose) selective `process.env` replacer using js-tokens instead of an AST",
       "purl": "pkg:npm/loose-envify@1.4.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/loose-envify"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2862,10 +2218,6 @@
         {
           "type": "website",
           "url": "https://github.com/zertosh/loose-envify"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/zertosh/loose-envify/issues"
         }
       ],
       "hashes": [
@@ -2891,12 +2243,7 @@
       "author": "Oliver Nightingale",
       "description": "Simple full-text search in your browser.",
       "purl": "pkg:npm/lunr@2.3.9",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/lunr"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -2904,15 +2251,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/olivernn/lunr.js.git"
+          "url": "https://github.com/olivernn/lunr.js.git"
         },
         {
           "type": "website",
           "url": "https://lunrjs.com"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/olivernn/lunr.js/issues"
         }
       ],
       "hashes": [
@@ -2938,20 +2281,11 @@
       "author": "Julian Kühnel",
       "description": "Highlight keywords using JavaScript. Intended for every use case. Can e.g. be used to mark text in search results.",
       "purl": "pkg:npm/mark.js@8.11.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/mark.js"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/mark.js/-/mark.js-8.11.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/julmot/mark.js.git"
         },
         {
           "type": "website",
@@ -2985,20 +2319,11 @@
       "author": "Christopher Jeffrey",
       "description": "A markdown parser built for speed",
       "purl": "pkg:npm/marked@4.3.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/marked"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/marked/-/marked-4.3.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git://github.com/markedjs/marked.git"
         },
         {
           "type": "website",
@@ -3029,15 +2354,10 @@
       "name": "minimatch",
       "version": "5.1.9",
       "scope": "required",
-      "author": "Isaac Z. Schlueter",
+      "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)",
       "description": "a glob matcher in javascript",
       "purl": "pkg:npm/minimatch@5.1.9",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/minimatch"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3046,14 +2366,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/isaacs/minimatch.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/isaacs/minimatch#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/isaacs/minimatch/issues"
         }
       ],
       "hashes": [
@@ -3079,12 +2391,7 @@
       "author": "Michel Weststrate",
       "description": "Simple, scalable state management.",
       "purl": "pkg:npm/mobx@6.16.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/mobx"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3126,12 +2433,7 @@
       "author": "Michel Weststrate",
       "description": "React bindings for MobX. Create fully reactive components.",
       "purl": "pkg:npm/mobx-react@9.2.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/mobx-react"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3139,7 +2441,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/mobxjs/mobx.git"
+          "url": "https://github.com/mobxjs/mobx.git"
         },
         {
           "type": "website",
@@ -3173,12 +2475,7 @@
       "author": "Daniel K.",
       "description": "Lightweight React bindings for MobX based on React 16.8+ and Hooks",
       "purl": "pkg:npm/mobx-react-lite@4.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/mobx-react-lite"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3186,7 +2483,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/mobxjs/mobx.git"
+          "url": "https://github.com/mobxjs/mobx.git"
         },
         {
           "type": "website",
@@ -3219,28 +2516,11 @@
       "scope": "required",
       "description": "Tiny millisecond conversion utility",
       "purl": "pkg:npm/ms@2.1.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ms"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/vercel/ms.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/vercel/ms#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/vercel/ms/issues"
         }
       ],
       "hashes": [
@@ -3263,31 +2543,14 @@
       "name": "nanoid",
       "version": "3.3.18",
       "scope": "required",
-      "author": "Andrey Sitnik",
+      "author": "Andrey Sitnik <andrey@sitnik.ru>",
       "description": "A tiny (116 bytes), secure URL-friendly unique string ID generator",
       "purl": "pkg:npm/nanoid@3.3.18",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/nanoid"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.18.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/ai/nanoid.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/ai/nanoid#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/ai/nanoid/issues"
         }
       ],
       "hashes": [
@@ -3313,12 +2576,7 @@
       "author": "David Frank",
       "description": "A light-weight module that brings window.fetch to node.js",
       "purl": "pkg:npm/node-fetch@2.7.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/node-fetch"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3326,7 +2584,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/bitinn/node-fetch.git"
+          "url": "https://github.com/bitinn/node-fetch.git"
         },
         {
           "type": "website",
@@ -3360,12 +2618,7 @@
       "author": "David Frank",
       "description": "Implementation of window.fetch which can use http2 seamlessly",
       "purl": "pkg:npm/node-fetch-h2@2.3.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/node-fetch-h2"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3373,7 +2626,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/mikeralphson/node-fetch-h2.git"
+          "url": "https://github.com/mikeralphson/node-fetch-h2.git"
         },
         {
           "type": "website",
@@ -3407,12 +2660,7 @@
       "author": "Alejandro Gonzalez Sole",
       "description": "A lightweight Node.js module to recursively read files in a directory using ES6 Promises",
       "purl": "pkg:npm/node-readfiles@0.2.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/node-readfiles"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3421,14 +2669,6 @@
         {
           "type": "vcs",
           "url": "git+https://github.com/guatedude2/node-readfiles.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/guatedude2/node-readfiles#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/guatedude2/node-readfiles/issues"
         }
       ],
       "hashes": [
@@ -3454,12 +2694,7 @@
       "author": "Mike Ralphson",
       "description": "Common utility functions for oas-kit",
       "purl": "pkg:npm/oas-kit-common@1.0.8",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-kit-common"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3467,11 +2702,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Mermade/oas-kit.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Mermade/oas-kit#readme"
+          "url": "https://github.com/Mermade/oas-kit.git"
         },
         {
           "type": "issue-tracker",
@@ -3501,12 +2732,7 @@
       "author": "Mike Ralphson",
       "description": "Default linter plugin for oas-validator",
       "purl": "pkg:npm/oas-linter@3.2.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-linter"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3514,11 +2740,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Mermade/oas-kit.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Mermade/oas-kit#readme"
+          "url": "https://github.com/Mermade/oas-kit.git"
         },
         {
           "type": "issue-tracker",
@@ -3545,31 +2767,18 @@
       "name": "yaml",
       "version": "1.10.3",
       "scope": "required",
-      "author": "Eemeli Aro",
+      "author": "Eemeli Aro <eemeli@gmail.com>",
       "description": "JavaScript parser and stringifier for YAML",
       "purl": "pkg:npm/yaml@1.10.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-linter/node_modules/yaml"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/yaml/-/yaml-1.10.3.tgz"
         },
         {
-          "type": "vcs",
-          "url": "git+https://github.com/eemeli/yaml.git"
-        },
-        {
           "type": "website",
           "url": "https://eemeli.org/yaml/v1/"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/eemeli/yaml/issues"
         }
       ],
       "hashes": [
@@ -3595,12 +2804,7 @@
       "author": "Mike Ralphson",
       "description": "Resolve external $refs in OpenAPI (swagger) 2.0 / 3.x definitions",
       "purl": "pkg:npm/oas-resolver@2.5.6",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-resolver"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3608,11 +2812,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Mermade/oas-kit.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Mermade/oas-kit#readme"
+          "url": "https://github.com/Mermade/oas-kit.git"
         },
         {
           "type": "issue-tracker",
@@ -3634,53 +2834,6 @@
       ]
     },
     {
-      "bom-ref": "yaml@1.10.3",
-      "type": "library",
-      "name": "yaml",
-      "version": "1.10.3",
-      "scope": "required",
-      "author": "Eemeli Aro",
-      "description": "JavaScript parser and stringifier for YAML",
-      "purl": "pkg:npm/yaml@1.10.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-resolver/node_modules/yaml"
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/yaml/-/yaml-1.10.3.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/eemeli/yaml.git"
-        },
-        {
-          "type": "website",
-          "url": "https://eemeli.org/yaml/v1/"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/eemeli/yaml/issues"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "bc861e175bb70a39610057a43cf024da1fcabf84f798090ca31e4eca6462250074b290cfd742c7bedf8aec6f4dcba36eb8c01bdb9ffa9f5ab252301c18d7ff00"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ]
-    },
-    {
       "bom-ref": "oas-schema-walker@1.1.5",
       "type": "library",
       "name": "oas-schema-walker",
@@ -3689,12 +2842,7 @@
       "author": "Mike Ralphson",
       "description": "Library to walk OAS 3 schema objects and call a callback",
       "purl": "pkg:npm/oas-schema-walker@1.1.5",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-schema-walker"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3702,11 +2850,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Mermade/oas-kit.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Mermade/oas-kit#readme"
+          "url": "https://github.com/Mermade/oas-kit.git"
         },
         {
           "type": "issue-tracker",
@@ -3736,12 +2880,7 @@
       "author": "Mike Ralphson",
       "description": "Parser/validator for OpenAPI 3.x definitions",
       "purl": "pkg:npm/oas-validator@5.0.8",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-validator"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3749,11 +2888,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Mermade/oas-kit.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Mermade/oas-kit#readme"
+          "url": "https://github.com/Mermade/oas-kit.git"
         },
         {
           "type": "issue-tracker",
@@ -3775,53 +2910,6 @@
       ]
     },
     {
-      "bom-ref": "yaml@1.10.3",
-      "type": "library",
-      "name": "yaml",
-      "version": "1.10.3",
-      "scope": "required",
-      "author": "Eemeli Aro",
-      "description": "JavaScript parser and stringifier for YAML",
-      "purl": "pkg:npm/yaml@1.10.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/oas-validator/node_modules/yaml"
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/yaml/-/yaml-1.10.3.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/eemeli/yaml.git"
-        },
-        {
-          "type": "website",
-          "url": "https://eemeli.org/yaml/v1/"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/eemeli/yaml/issues"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "bc861e175bb70a39610057a43cf024da1fcabf84f798090ca31e4eca6462250074b290cfd742c7bedf8aec6f4dcba36eb8c01bdb9ffa9f5ab252301c18d7ff00"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ]
-    },
-    {
       "bom-ref": "object-assign@4.1.1",
       "type": "library",
       "name": "object-assign",
@@ -3830,28 +2918,11 @@
       "author": "Sindre Sorhus",
       "description": "ES2015 `Object.assign()` ponyfill",
       "purl": "pkg:npm/object-assign@4.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/object-assign"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/sindresorhus/object-assign.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/sindresorhus/object-assign#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/sindresorhus/object-assign/issues"
         }
       ],
       "hashes": [
@@ -3874,15 +2945,10 @@
       "name": "openapi-sampler",
       "version": "1.7.5",
       "scope": "required",
-      "author": "Roman Hotsiy",
+      "author": "Roman Hotsiy <gotsijroman@gmail.com>",
       "description": "Tool for generation samples based on OpenAPI payload/response schema",
       "purl": "pkg:npm/openapi-sampler@1.7.5",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/openapi-sampler"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3890,7 +2956,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Redocly/openapi-sampler.git"
+          "url": "https://github.com/Redocly/openapi-sampler.git"
         },
         {
           "type": "website",
@@ -3924,12 +2990,7 @@
       "author": "James Halliday",
       "description": "the path module from node core for browsers",
       "purl": "pkg:npm/path-browserify@1.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/path-browserify"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3942,10 +3003,6 @@
         {
           "type": "website",
           "url": "https://github.com/browserify/path-browserify"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/browserify/path-browserify/issues"
         }
       ],
       "hashes": [
@@ -3968,15 +3025,10 @@
       "name": "path-expression-matcher",
       "version": "1.6.2",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.com)",
       "description": "Efficient path tracking and pattern matching for XML/JSON parsers",
       "purl": "pkg:npm/path-expression-matcher@1.6.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/path-expression-matcher"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -3984,7 +3036,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/NaturalIntelligence/path-expression-matcher.git"
+          "url": "https://github.com/NaturalIntelligence/path-expression-matcher"
         },
         {
           "type": "website",
@@ -4015,15 +3067,10 @@
       "name": "perfect-scrollbar",
       "version": "1.5.6",
       "scope": "required",
-      "author": "Hyunje Jun",
+      "author": "Hyunje Jun <me@noraesae.net>",
       "description": "Minimalistic but perfect custom scrollbar plugin",
       "purl": "pkg:npm/perfect-scrollbar@1.5.6",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/perfect-scrollbar"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4031,7 +3078,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/mdbootstrap/perfect-scrollbar.git"
+          "url": "https://github.com/mdbootstrap/perfect-scrollbar"
         },
         {
           "type": "website",
@@ -4065,28 +3112,11 @@
       "author": "Alexey Raspopov",
       "description": "The tiniest and the fastest library for terminal output formatting with ANSI colors",
       "purl": "pkg:npm/picocolors@1.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/picocolors"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/alexeyraspopov/picocolors.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/alexeyraspopov/picocolors#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/alexeyraspopov/picocolors/issues"
         }
       ],
       "hashes": [
@@ -4112,28 +3142,11 @@
       "author": "Blake Embrey",
       "description": "Pluralize and singularize any word",
       "purl": "pkg:npm/pluralize@8.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/pluralize"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/pluralize/-/pluralize-8.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/blakeembrey/pluralize.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/blakeembrey/pluralize#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/blakeembrey/pluralize/issues"
         }
       ],
       "hashes": [
@@ -4156,15 +3169,10 @@
       "name": "polished",
       "version": "4.3.1",
       "scope": "required",
-      "author": "Brian Hough",
+      "author": "Brian Hough <hello@brianhough.co> (https://polished.js.org)",
       "description": "A lightweight toolset for writing styles in Javascript.",
       "purl": "pkg:npm/polished@4.3.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/polished"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4177,10 +3185,6 @@
         {
           "type": "website",
           "url": "https://polished.js.org"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/styled-components/polished/issues"
         }
       ],
       "hashes": [
@@ -4203,23 +3207,14 @@
       "name": "postcss",
       "version": "8.5.28",
       "scope": "required",
-      "author": "Andrey Sitnik",
+      "author": "Andrey Sitnik <andrey@sitnik.es>",
       "description": "Tool for transforming styles with JS plugins",
       "purl": "pkg:npm/postcss@8.5.28",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/postcss"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/postcss/-/postcss-8.5.28.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/postcss/postcss.git"
         },
         {
           "type": "website",
@@ -4250,15 +3245,10 @@
       "name": "postcss-value-parser",
       "version": "4.2.0",
       "scope": "required",
-      "author": "Bogdan Chadkin",
+      "author": "Bogdan Chadkin <trysound@yandex.ru>",
       "description": "Transforms css values and at-rule params into the tree",
       "purl": "pkg:npm/postcss-value-parser@4.2.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/postcss-value-parser"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4266,7 +3256,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/TrySound/postcss-value-parser.git"
+          "url": "https://github.com/TrySound/postcss-value-parser.git"
         },
         {
           "type": "website",
@@ -4300,12 +3290,7 @@
       "author": "Lea Verou",
       "description": "Lightweight, robust, elegant syntax highlighting. A spin-off project from Dabblet.",
       "purl": "pkg:npm/prismjs@1.30.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/prismjs"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4314,14 +3299,6 @@
         {
           "type": "vcs",
           "url": "git+https://github.com/PrismJS/prism.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/PrismJS/prism#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/PrismJS/prism/issues"
         }
       ],
       "hashes": [
@@ -4346,20 +3323,11 @@
       "scope": "required",
       "description": "Runtime type checking for React props and similar objects.",
       "purl": "pkg:npm/prop-types@15.8.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/prop-types"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/facebook/prop-types.git"
         },
         {
           "type": "website",
@@ -4392,12 +3360,7 @@
       "scope": "required",
       "description": "React is a JavaScript library for building user interfaces.",
       "purl": "pkg:npm/react@19.2.8",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/react"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4405,15 +3368,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/react/react.git"
+          "url": "https://github.com/react/react.git"
         },
         {
           "type": "website",
           "url": "https://react.dev/"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/react/react/issues"
         }
       ],
       "hashes": [
@@ -4438,12 +3397,7 @@
       "scope": "required",
       "description": "React package for working with the DOM.",
       "purl": "pkg:npm/react-dom@19.2.8",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/react-dom"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4451,7 +3405,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/react/react.git"
+          "url": "https://github.com/react/react.git"
         },
         {
           "type": "website",
@@ -4484,12 +3438,7 @@
       "scope": "required",
       "description": "Brand checking of React Elements.",
       "purl": "pkg:npm/react-is@16.13.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/react-is"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4497,7 +3446,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/facebook/react.git"
+          "url": "https://github.com/facebook/react.git"
         },
         {
           "type": "website",
@@ -4531,12 +3480,7 @@
       "author": "Matt Zabriskie",
       "description": "An accessible and easy tab component for ReactJS",
       "purl": "pkg:npm/react-tabs@6.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/react-tabs"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4544,7 +3488,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/reactjs/react-tabs.git"
+          "url": "https://github.com/reactjs/react-tabs.git"
         },
         {
           "type": "website",
@@ -4575,15 +3519,10 @@
       "name": "redoc",
       "version": "2.5.0",
       "scope": "required",
-      "author": "Roman Hotsiy",
+      "author": "Roman Hotsiy <gotsijroman@gmail.com>",
       "description": "ReDoc",
       "purl": "pkg:npm/redoc@2.5.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/redoc"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4591,15 +3530,7 @@
         },
         {
           "type": "vcs",
-          "url": "git://github.com/Redocly/redoc.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Redocly/redoc#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/Redocly/redoc/issues"
+          "url": "git://github.com/Redocly/redoc"
         }
       ],
       "hashes": [
@@ -4625,12 +3556,7 @@
       "author": "Mike Ralphson",
       "description": "Utility functions to deal with references in objects",
       "purl": "pkg:npm/reftools@1.1.9",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/reftools"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4638,7 +3564,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Mermade/oas-kit.git"
+          "url": "https://github.com/Mermade/oas-kit.git"
         },
         {
           "type": "website",
@@ -4669,15 +3595,10 @@
       "name": "require-directory",
       "version": "2.1.1",
       "scope": "required",
-      "author": "Troy Goode",
+      "author": "Troy Goode <troygoode@gmail.com> (http://github.com/troygoode/)",
       "description": "Recursively iterates over specified directory, require()'ing each file, and returning a nested hash structure containing those modules.",
       "purl": "pkg:npm/require-directory@2.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/require-directory"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4719,28 +3640,11 @@
       "author": "Vsevolod Strukchinsky",
       "description": "Require module from string",
       "purl": "pkg:npm/require-from-string@2.0.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/require-from-string"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/floatdrop/require-from-string.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/floatdrop/require-from-string#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/floatdrop/require-from-string/issues"
         }
       ],
       "hashes": [
@@ -4765,12 +3669,7 @@
       "scope": "required",
       "description": "Cooperative scheduler for the browser environment.",
       "purl": "pkg:npm/scheduler@0.27.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/scheduler"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4778,7 +3677,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/facebook/react.git"
+          "url": "https://github.com/facebook/react.git"
         },
         {
           "type": "website",
@@ -4809,15 +3708,10 @@
       "name": "should",
       "version": "13.2.3",
       "scope": "required",
-      "author": "TJ Holowaychuk",
+      "author": "TJ Holowaychuk <tj@vision-media.ca>, Denis Bardadym <bardadymchik@gmail.com>",
       "description": "test framework agnostic BDD-style assertions",
       "purl": "pkg:npm/should@13.2.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/should"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4825,15 +3719,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/shouldjs/should.js.git"
+          "url": "https://github.com/shouldjs/should.js.git"
         },
         {
           "type": "website",
           "url": "https://github.com/shouldjs/should.js"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/shouldjs/should.js/issues"
         }
       ],
       "hashes": [
@@ -4856,15 +3746,10 @@
       "name": "should-equal",
       "version": "2.0.0",
       "scope": "required",
-      "author": "Denis Bardadym",
+      "author": "Denis Bardadym <bardadymchik@gmail.com>",
       "description": "Deep comparison of 2 instances for should.js",
       "purl": "pkg:npm/should-equal@2.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/should-equal"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4872,7 +3757,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/shouldjs/equal.git"
+          "url": "https://github.com/shouldjs/equal.git"
         },
         {
           "type": "website",
@@ -4903,15 +3788,10 @@
       "name": "should-format",
       "version": "3.0.3",
       "scope": "required",
-      "author": "Denis Bardadym",
+      "author": "Denis Bardadym <bardadymchik@gmail.com>",
       "description": "Formatting of objects for should.js",
       "purl": "pkg:npm/should-format@3.0.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/should-format"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4920,14 +3800,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/shouldjs/format.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/shouldjs/format#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/shouldjs/format/issues"
         }
       ],
       "hashes": [
@@ -4950,15 +3822,10 @@
       "name": "should-type",
       "version": "1.4.0",
       "scope": "required",
-      "author": "Denis Bardadym",
+      "author": "Denis Bardadym <bardadymchik@gmail.com>",
       "description": "Simple module to get instance type. Like a bit more advanced version of typeof",
       "purl": "pkg:npm/should-type@1.4.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/should-type"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -4966,7 +3833,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/shouldjs/type.git"
+          "url": "https://github.com/shouldjs/type.git"
         },
         {
           "type": "website",
@@ -4997,15 +3864,10 @@
       "name": "should-type-adaptors",
       "version": "1.1.0",
       "scope": "required",
-      "author": "Denis Bardadym",
+      "author": "Denis Bardadym <bardadymchik@gmail.com>",
       "description": "Small utility functions to use the same traversing etc code on different types",
       "purl": "pkg:npm/should-type-adaptors@1.1.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/should-type-adaptors"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5044,15 +3906,10 @@
       "name": "should-util",
       "version": "1.0.1",
       "scope": "required",
-      "author": "Denis Bardadym",
+      "author": "Denis Bardadym <bardadymchik@gmail.com>",
       "description": "Utility functions",
       "purl": "pkg:npm/should-util@1.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/should-util"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5091,15 +3948,10 @@
       "name": "slugify",
       "version": "1.4.7",
       "scope": "required",
-      "author": "Simeon Velichkov",
+      "author": "Simeon Velichkov <simeonvelichkov@gmail.com> (https://simov.github.io)",
       "description": "Slugifies a String",
       "purl": "pkg:npm/slugify@1.4.7",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/slugify"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5107,15 +3959,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/simov/slugify.git"
+          "url": "https://github.com/simov/slugify.git"
         },
         {
           "type": "website",
           "url": "https://github.com/simov/slugify"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/simov/slugify/issues"
         }
       ],
       "hashes": [
@@ -5133,42 +3981,29 @@
       ]
     },
     {
-      "bom-ref": "source-map-js@1.2.1",
+      "bom-ref": "source-map-js@1.2.2",
       "type": "library",
       "name": "source-map-js",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "scope": "required",
-      "author": "Valentin 7rulnik Semirulnik",
+      "author": "Valentin 7rulnik Semirulnik <v7rulnik@gmail.com>",
       "description": "Generates and consumes source maps",
-      "purl": "pkg:npm/source-map-js@1.2.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/source-map-js"
-        }
-      ],
+      "purl": "pkg:npm/source-map-js@1.2.2",
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/7rulnik/source-map-js.git"
+          "url": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz"
         },
         {
           "type": "website",
           "url": "https://github.com/7rulnik/source-map-js"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/7rulnik/source-map-js/issues"
         }
       ],
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "51758c2a12cec1529bef6f0852d40f5f17d853ebac7726ed52b2bff2e184f0240cbeb84ea70bf30c1c23d108522fb31073bbc8b084811bc550f3e203431a5f40"
+          "content": "2868fff18e37c77e5a6550edb7e27898ad61a0b18750b3187d290e0c93508cd0c2de85b53ea3e8c4cc28d292d4b1633f5041b338dfcdc5e1f2c047cd5cd3f757"
         }
       ],
       "licenses": [
@@ -5187,12 +4022,7 @@
       "scope": "required",
       "description": "A polyfill for `position: sticky` for browsers that don't support it yet.",
       "purl": "pkg:npm/stickyfill@1.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/stickyfill"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5200,15 +4030,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+ssh://git@github.com/webmodules/stickyfill.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/webmodules/stickyfill#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/webmodules/stickyfill/issues"
+          "url": "git@github.com:webmodules/stickyfill.git"
         }
       ],
       "hashes": [
@@ -5227,28 +4049,11 @@
       "author": "Sindre Sorhus",
       "description": "Get the visual width of a string - the number of columns required to display it",
       "purl": "pkg:npm/string-width@4.2.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/string-width"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/sindresorhus/string-width.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/sindresorhus/string-width#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/sindresorhus/string-width/issues"
         }
       ],
       "hashes": [
@@ -5274,28 +4079,11 @@
       "author": "Sindre Sorhus",
       "description": "Strip ANSI escape codes from a string",
       "purl": "pkg:npm/strip-ansi@6.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/strip-ansi"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/chalk/strip-ansi.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/chalk/strip-ansi#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/chalk/strip-ansi/issues"
         }
       ],
       "hashes": [
@@ -5318,15 +4106,10 @@
       "name": "strnum",
       "version": "2.4.2",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.work/)",
       "description": "Parse String to Number based on configuration",
       "purl": "pkg:npm/strnum@2.4.2",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/strnum"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5334,15 +4117,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/NaturalIntelligence/strnum.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/NaturalIntelligence/strnum#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/NaturalIntelligence/strnum/issues"
+          "url": "https://github.com/NaturalIntelligence/strnum"
         }
       ],
       "hashes": [
@@ -5368,12 +4143,7 @@
       "author": "Glen Maddern",
       "description": "Fast, expressive styling for React.",
       "purl": "pkg:npm/styled-components@6.5.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/styled-components"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5412,31 +4182,18 @@
       "name": "stylis",
       "version": "4.3.6",
       "scope": "required",
-      "author": "Sultan Tarimo",
+      "author": "Sultan Tarimo <sultantarimo@me.com>",
       "description": "A Light–weight CSS Preprocessor",
       "purl": "pkg:npm/stylis@4.3.6",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/stylis"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/stylis/-/stylis-4.3.6.tgz"
         },
         {
-          "type": "vcs",
-          "url": "git+https://github.com/thysultan/stylis.js.git"
-        },
-        {
           "type": "website",
           "url": "https://github.com/thysultan/stylis.js"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/thysultan/stylis.js/issues"
         }
       ],
       "hashes": [
@@ -5459,15 +4216,10 @@
       "name": "swagger2openapi",
       "version": "7.0.8",
       "scope": "required",
-      "author": "Mike Ralphson",
+      "author": "Mike Ralphson <mike.ralphson@gmail.com>",
       "description": "Convert Swagger 2.0 definitions to OpenApi 3.0 and validate",
       "purl": "pkg:npm/swagger2openapi@7.0.8",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/swagger2openapi"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5475,11 +4227,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/Mermade/oas-kit.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/Mermade/oas-kit#readme"
+          "url": "https://github.com/Mermade/oas-kit.git"
         },
         {
           "type": "issue-tracker",
@@ -5501,67 +4249,15 @@
       ]
     },
     {
-      "bom-ref": "yaml@1.10.3",
-      "type": "library",
-      "name": "yaml",
-      "version": "1.10.3",
-      "scope": "required",
-      "author": "Eemeli Aro",
-      "description": "JavaScript parser and stringifier for YAML",
-      "purl": "pkg:npm/yaml@1.10.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/swagger2openapi/node_modules/yaml"
-        }
-      ],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/yaml/-/yaml-1.10.3.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/eemeli/yaml.git"
-        },
-        {
-          "type": "website",
-          "url": "https://eemeli.org/yaml/v1/"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/eemeli/yaml/issues"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "bc861e175bb70a39610057a43cf024da1fcabf84f798090ca31e4eca6462250074b290cfd742c7bedf8aec6f4dcba36eb8c01bdb9ffa9f5ab252301c18d7ff00"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC"
-          }
-        }
-      ]
-    },
-    {
       "bom-ref": "tr46@0.0.3",
       "type": "library",
       "name": "tr46",
       "version": "0.0.3",
       "scope": "required",
-      "author": "Sebastian Mayr",
+      "author": "Sebastian Mayr <npm@smayr.name>",
       "description": "An implementation of the Unicode TR46 spec",
       "purl": "pkg:npm/tr46@0.0.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/tr46"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5603,12 +4299,7 @@
       "author": "Microsoft Corp.",
       "description": "TypeScript is a language for application scale JavaScript development",
       "purl": "pkg:npm/typescript@5.8.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/typescript"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5616,7 +4307,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/microsoft/TypeScript.git"
+          "url": "https://github.com/microsoft/TypeScript.git"
         },
         {
           "type": "website",
@@ -5649,12 +4340,7 @@
       "scope": "required",
       "description": "A stand-alone types package for Undici",
       "purl": "pkg:npm/undici-types@6.21.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/undici-types"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5696,12 +4382,7 @@
       "author": "https://github.com/andreinwald",
       "description": "Replacement for abandoned library URI.js (uri-js)",
       "purl": "pkg:npm/uri-js-replace@1.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/uri-js-replace"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5714,10 +4395,6 @@
         {
           "type": "website",
           "url": "https://github.com/andreinwald/uri-js-replace"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/andreinwald/uri-js-replace/issues"
         }
       ],
       "hashes": [
@@ -5740,14 +4417,9 @@
       "name": "url-template",
       "version": "2.0.8",
       "scope": "required",
-      "author": "Bram Stein",
+      "author": "Bram Stein <b.l.stein@gmail.com> (http://www.bramstein.com)",
       "purl": "pkg:npm/url-template@2.0.8",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/url-template"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5756,14 +4428,6 @@
         {
           "type": "vcs",
           "url": "git://github.com/bramstein/url-template.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/bramstein/url-template#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/bramstein/url-template/issues"
         }
       ],
       "hashes": [
@@ -5781,12 +4445,7 @@
       "scope": "required",
       "description": "Backwards compatible shim for React's useSyncExternalStore. Works with any React that supports hooks.",
       "purl": "pkg:npm/use-sync-external-store@1.6.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/use-sync-external-store"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5794,15 +4453,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/facebook/react.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/facebook/react#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/facebook/react/issues"
+          "url": "https://github.com/facebook/react.git"
         }
       ],
       "hashes": [
@@ -5825,31 +4476,14 @@
       "name": "webidl-conversions",
       "version": "3.0.1",
       "scope": "required",
-      "author": "Domenic Denicola",
+      "author": "Domenic Denicola <d@domenic.me> (https://domenic.me/)",
       "description": "Implements the WebIDL algorithms for converting to and from JavaScript values",
       "purl": "pkg:npm/webidl-conversions@3.0.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/webidl-conversions"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-3.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/jsdom/webidl-conversions.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/jsdom/webidl-conversions#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/jsdom/webidl-conversions/issues"
         }
       ],
       "hashes": [
@@ -5872,31 +4506,14 @@
       "name": "whatwg-url",
       "version": "5.0.0",
       "scope": "required",
-      "author": "Sebastian Mayr",
+      "author": "Sebastian Mayr <github@smayr.name>",
       "description": "An implementation of the WHATWG URL Standard's URL API and parsing machinery",
       "purl": "pkg:npm/whatwg-url@5.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/whatwg-url"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/whatwg-url/-/whatwg-url-5.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/jsdom/whatwg-url.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/jsdom/whatwg-url#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/jsdom/whatwg-url/issues"
         }
       ],
       "hashes": [
@@ -5922,28 +4539,11 @@
       "author": "Sindre Sorhus",
       "description": "Wordwrap a string with ANSI escape codes",
       "purl": "pkg:npm/wrap-ansi@7.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/wrap-ansi"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/chalk/wrap-ansi.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/chalk/wrap-ansi#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/chalk/wrap-ansi/issues"
         }
       ],
       "hashes": [
@@ -5966,15 +4566,10 @@
       "name": "xml-naming",
       "version": "0.3.0",
       "scope": "required",
-      "author": "Amit Gupta",
+      "author": "Amit Gupta (https://solothought.com)",
       "description": "Validates XML name productions — Name, NCName, QName, NMToken, NMTokens — for XML 1.0 and 1.1",
       "purl": "pkg:npm/xml-naming@0.3.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/xml-naming"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -5982,11 +4577,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/NaturalIntelligence/xml-naming.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/NaturalIntelligence/xml-naming#readme"
+          "url": "https://github.com/NaturalIntelligence/xml-naming"
         },
         {
           "type": "issue-tracker",
@@ -6013,23 +4604,14 @@
       "name": "y18n",
       "version": "5.0.8",
       "scope": "required",
-      "author": "Ben Coe",
+      "author": "Ben Coe <bencoe@gmail.com>",
       "description": "the bare-bones internationalization library used by yargs",
       "purl": "pkg:npm/y18n@5.0.8",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/y18n"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/yargs/y18n.git"
         },
         {
           "type": "website",
@@ -6060,31 +4642,18 @@
       "name": "yaml",
       "version": "2.9.0",
       "scope": "required",
-      "author": "Eemeli Aro",
+      "author": "Eemeli Aro <eemeli@gmail.com>",
       "description": "JavaScript parser and stringifier for YAML",
       "purl": "pkg:npm/yaml@2.9.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/yaml"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
           "url": "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz"
         },
         {
-          "type": "vcs",
-          "url": "git+https://github.com/eemeli/yaml.git"
-        },
-        {
           "type": "website",
           "url": "https://eemeli.org/yaml/"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/eemeli/yaml/issues"
         }
       ],
       "hashes": [
@@ -6108,12 +4677,7 @@
       "version": "0.0.43",
       "scope": "required",
       "purl": "pkg:npm/yaml-ast-parser@0.0.43",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/yaml-ast-parser"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -6121,7 +4685,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/mulesoft-labs/yaml-ast-parser.git"
+          "url": "https://github.com/mulesoft-labs/yaml-ast-parser.git"
         },
         {
           "type": "website",
@@ -6154,12 +4718,7 @@
       "scope": "required",
       "description": "yargs the modern, pirate-themed, successor to optimist.",
       "purl": "pkg:npm/yargs@17.7.3",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/yargs"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -6167,15 +4726,11 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/yargs/yargs.git"
+          "url": "https://github.com/yargs/yargs.git"
         },
         {
           "type": "website",
           "url": "https://yargs.js.org/"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/yargs/yargs/issues"
         }
       ],
       "hashes": [
@@ -6198,15 +4753,10 @@
       "name": "yargs-parser",
       "version": "21.1.1",
       "scope": "required",
-      "author": "Ben Coe",
+      "author": "Ben Coe <ben@npmjs.com>",
       "description": "the mighty option parser used by yargs",
       "purl": "pkg:npm/yargs-parser@21.1.1",
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/yargs-parser"
-        }
-      ],
+      "properties": [],
       "externalReferences": [
         {
           "type": "distribution",
@@ -6214,15 +4764,7 @@
         },
         {
           "type": "vcs",
-          "url": "git+https://github.com/yargs/yargs-parser.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/yargs/yargs-parser#readme"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/yargs/yargs-parser/issues"
+          "url": "https://github.com/yargs/yargs-parser.git"
         }
       ],
       "hashes": [
@@ -6250,6 +4792,7 @@
         "@types/react-dom@19.2.0",
         "ajv@8.20.0",
         "ajv-formats@3.0.1",
+        "axe-core@4.14.0",
         "esbuild@0.28.2",
         "postcss@8.5.28",
         "react@19.2.8",
@@ -6274,7 +4817,7 @@
       "dependsOn": []
     },
     {
-      "ref": "@esbuild/darwin-arm64@0.28.2",
+      "ref": "@esbuild/linux-x64@0.28.2",
       "dependsOn": []
     },
     {
@@ -6303,14 +4846,14 @@
       "dependsOn": []
     },
     {
-      "ref": "@redocly/openapi-core@1.34.19",
+      "ref": "@redocly/openapi-core@1.34.20",
       "dependsOn": [
         "@redocly/ajv@8.11.2",
         "@redocly/config@0.22.0",
         "colorette@1.4.0",
         "https-proxy-agent@7.0.6",
         "js-levenshtein@1.1.6",
-        "js-yaml@4.3.1",
+        "js-yaml@4.3.2",
         "minimatch@5.1.9",
         "pluralize@8.0.0",
         "yaml-ast-parser@0.0.43"
@@ -6350,7 +4893,7 @@
       "ref": "ajv@8.20.0",
       "dependsOn": [
         "fast-deep-equal@3.1.3",
-        "fast-uri@3.1.7",
+        "fast-uri@3.1.8",
         "json-schema-traverse@1.0.0",
         "require-from-string@2.0.2"
       ]
@@ -6380,11 +4923,15 @@
       "dependsOn": []
     },
     {
+      "ref": "axe-core@4.14.0",
+      "dependsOn": []
+    },
+    {
       "ref": "balanced-match@1.0.2",
       "dependsOn": []
     },
     {
-      "ref": "brace-expansion@2.1.4",
+      "ref": "brace-expansion@2.1.7",
       "dependsOn": [
         "balanced-match@1.0.2"
       ]
@@ -6458,7 +5005,7 @@
       "dependsOn": []
     },
     {
-      "ref": "dompurify@3.4.15",
+      "ref": "dompurify@3.4.16",
       "dependsOn": [
         "@types/trusted-types@2.0.7"
       ]
@@ -6474,7 +5021,7 @@
     {
       "ref": "esbuild@0.28.2",
       "dependsOn": [
-        "@esbuild/darwin-arm64@0.28.2"
+        "@esbuild/linux-x64@0.28.2"
       ]
     },
     {
@@ -6494,7 +5041,7 @@
       "dependsOn": []
     },
     {
-      "ref": "fast-uri@3.1.7",
+      "ref": "fast-uri@3.1.8",
       "dependsOn": []
     },
     {
@@ -6551,7 +5098,7 @@
       "dependsOn": []
     },
     {
-      "ref": "js-yaml@4.3.1",
+      "ref": "js-yaml@4.3.2",
       "dependsOn": [
         "argparse@2.0.1"
       ]
@@ -6587,7 +5134,7 @@
     {
       "ref": "minimatch@5.1.9",
       "dependsOn": [
-        "brace-expansion@2.1.4"
+        "brace-expansion@2.1.7"
       ]
     },
     {
@@ -6665,10 +5212,6 @@
       ]
     },
     {
-      "ref": "yaml@1.10.3",
-      "dependsOn": []
-    },
-    {
       "ref": "oas-schema-walker@1.1.5",
       "dependsOn": []
     },
@@ -6684,10 +5227,6 @@
         "should@13.2.3",
         "yaml@1.10.3"
       ]
-    },
-    {
-      "ref": "yaml@1.10.3",
-      "dependsOn": []
     },
     {
       "ref": "object-assign@4.1.1",
@@ -6732,7 +5271,7 @@
       "dependsOn": [
         "nanoid@3.3.18",
         "picocolors@1.1.1",
-        "source-map-js@1.2.1"
+        "source-map-js@1.2.2"
       ]
     },
     {
@@ -6782,10 +5321,10 @@
         "react@19.2.8",
         "react-dom@19.2.8",
         "styled-components@6.5.3",
-        "@redocly/openapi-core@1.34.19",
+        "@redocly/openapi-core@1.34.20",
         "classnames@2.5.1",
         "decko@1.2.0",
-        "dompurify@3.4.15",
+        "dompurify@3.4.16",
         "eventemitter3@5.0.4",
         "json-pointer@0.6.2",
         "lunr@2.3.9",
@@ -6864,7 +5403,7 @@
       "dependsOn": []
     },
     {
-      "ref": "source-map-js@1.2.1",
+      "ref": "source-map-js@1.2.2",
       "dependsOn": []
     },
     {
@@ -6921,10 +5460,6 @@
         "yaml@1.10.3",
         "yargs@17.7.3"
       ]
-    },
-    {
-      "ref": "yaml@1.10.3",
-      "dependsOn": []
     },
     {
       "ref": "tr46@0.0.3",
